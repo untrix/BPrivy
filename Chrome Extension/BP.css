@@ -1,0 +1,45 @@
+#bpPanel	{
+				margin: 0px;
+				padding: 0px;
+				color: white;
+				background-color: black;
+				opacity: 0.3;
+				border: thin solid red;
+				z-index: 100000;
+				width: auto;
+				cursor: default;
+			}
+
+.bp-container {
+				border-style: hidden;
+				border-width: 0px;
+				margin: 0px;
+				padding: 0px;
+				width:auto;
+			}
+
+#bpPanelTitle {
+				display: block;
+				border: inherit;
+				text-align:center;
+				width: auto;
+				font-weight: bold;
+				cursor:default;
+			}
+			
+.bp-user-io	{
+				float:left;
+ 		 		border-width: thin;
+ 		 		display: inline;
+ 		 		background-color: white;
+ 		 		color: black;
+ 		 	}
+ 		 
+.bp-pass-io {
+				float: right;
+			 	border-width: thin;
+			 	display: inline;
+			 	background-color: white;
+			 	color: black;
+			}
+			

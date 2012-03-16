@@ -1,0 +1,22 @@
+{
+  "name": "BPrivy",
+  "version": "1.0",
+  "description":"Personal Password Manager. Encrypted passwords are stored in a file. Take the File with you and use with any computer",
+  "icons": {
+	     "128": "icon128.png",
+  	     "16": "icon16.png"
+	   },
+  "permissions": ["contextMenus", "tabs", "<all_urls>"],
+  "background_page": "BP_Main.html",
+  "content_scripts": [
+	{
+	"matches": ["<all_urls>"],
+	"js": ["jquery.js", "jquery-ui.js", "BP_CS.js"],
+	"css": ["BP.css"],
+	"all_frames": true
+	}
+  ],
+  "browser_action": {
+	"default_icon": "icon16.png"
+  }
+}

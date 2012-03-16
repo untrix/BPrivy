@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head> <title> BPrivy Background Page</title>
+<script>
+var g = new Object;
+
+function GetCreds(url)
+{
+	return [{username: "username1", password: "password1"}, {username: "username2", password: "password2"}, {username: "username3", password:"password3"}];
+}
+
+function Lookup(info, tab)
+{
+	if (info.menuItemId == g.ContextMenuID)
+	{
+		console.info("BPMenuItem was clicked on page ");
+		if (info.pageUrl)
+			url = info.pageUrl;
+		else if (tab.url)
+			url = tab.url;
+		console.info("info: " + JSON.stringify(info));
+		console.info("tab: " + JSON.stringify(tab));
+		var creds = GetCreds(url);
+		console.info(creds);
+		/*chrome.tabs.executeScript(tab.id, {file: "content_script.js"});*/
+	}
+}
+
+function ShowOptionsMenu(records)
+{
+	var i, record, menuProps;
+	for (i=0; i < records.length; i+=1)
+	{
+		record = records[i];
+		menuProps = {"type": "normal", "title": record.username, "contexts": ["editable"], "parentId": g.ContextMenuID};
+		chrome.contextMenus.create(menuProps);
+	}
+}
+
+function BPClick(tab)
+{
+	chrome.tabs.sendRequest(tab.id, {});
+}
+
+function Main()
+{
+	chrome.browserAction.onClicked.addListener(BPClick);
+}
+
+/*
+function BPMenuClick(info, tab)
+{
+	if (info.menuItemId == g.ContextMenuID)
+	{
+		console.info("BPMenuItem was clicked on page " + info.pageUrl);
+		chrome.tabs.sendRequest(tab.id, {});
+	}
+}
+*/
+
+/*
+function Main()
+{
+	var menuProperties = {"type": "normal", "title": "Privy DB", "contexts": ["editable"], "onclick": MenuClick, "documentUrlPatterns": document.location};
+	var menu_id = chrome.contextMenus.create(menuProperties);
+	console.info("Menu Item ID " + menu_id + " Created");
+	//menuProperties = {"type": "normal", "title": "Privy",  "onclick": MenuClick, "parentId": menu_id};
+	//var child_menu = chrome.contextMenus.create(menuProperties);
+	//console.info("Child Menu ID " + child_menu + " Created");
+	return menu_id;
+}
+
+var g.ContextMenuID = Main();
+
+console.info("Menu Item ID = " + g.ContextMenuID);
+*/
+
+Main();
+
+</script>
+</head>
+<body></body>
+</html>
