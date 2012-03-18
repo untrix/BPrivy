@@ -5,7 +5,7 @@
 				background-color: black;
 				opacity: 0.3;
 				border: thin solid red;
-				z-index: 100000;
+				//z-index: 9007199254740992;
 				width: auto;
 				cursor: default;
 			}
@@ -24,7 +24,7 @@
 				text-align:center;
 				width: auto;
 				font-weight: bold;
-				cursor:default;
+				cursor:move;
 			}
 			
 .bp-user-io	{
@@ -43,3 +43,10 @@
 			 	color: black;
 			}
 			
+[draggable] {
+			  /*-moz-user-select: none;
+			  -khtml-user-select: none;
+			  -webkit-user-select: none;
+			  user-select: none;*/
+			  cursor: move;
+			}

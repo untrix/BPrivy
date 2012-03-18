@@ -1,6 +1,34 @@
 /* Global declaration for JSLint */
 /*global document */
 
+function handleDragStart(e)
+{
+	console.info("DragStartHandler entered");
+	//$("#bpPanel").draggable("destroy");
+	e.dataTransfer.effectAllowed = "copy";
+	e.dataTransfer.dropEffect = "copy";
+	var data = this.value;
+	console.info("setting data to " + data);
+	e.dataTransfer.setData('text/plain', data);
+	console.info("DataTransfer.items = "+e.dataTransfer.items[0]);
+	console.info("tranfer data = " + e.dataTransfer.getData("text/plain"));
+	//e.dataTransfer.setDragImage(this, 0, 0);
+	e.stopImmediatePropagation();
+	//e.preventDefault();
+	return true;
+}
+
+function preventDefault(e)
+{
+	console.log("pd invoked");
+	e.preventDefault();
+}
+
+function handleDragEnd(e)
+{
+	console.info("DragEnd received");
+}
+
 // Private namespace in a Function Closure
 var bp = ( function() {
 	// Element IDs and Selectors
@@ -57,84 +85,48 @@ var bp = ( function() {
 			return retval;
 		},
 
-		"DragStartHandler": function (win, event)
-		{
-			win.console.info("DratStartHandler entered");
-			event.dataTransfer.effectAllowed = "copy";
-			event.dataTransfer.setData("text/plain", event.target.value)
-		},
 		
 		"InsertIOItem": function (win, jq, id, user, pass)
 		{
 			var userid = "username" + id;
 			var passid = "password" + id;
-			var j_liu = $(win.document.createElement("li")).addClass(containerClass);
-			var j_lip = $(win.document.createElement("li")).addClass(containerClass);
-			var j_inu = $("<input type='text' />").attr(
-//			var j_inu = $("<p></p>").attr(
-														{draggable: true, 
-														 readonly: true,
-														 required: true,
-														 id: userid, 
-														 value:user,
-														 size: 12,
-														 maxlength: 100}
-												 ).addClass(userIOClass);
-			j_inu.on("dragstart", function(e){console.info("username drag starting");});
-
-			var j_inp = $("<input type='password' />").attr(
-//			var j_inp = $("<p></p>").attr(
-															{draggable: true,
-															 readonly: true,
-															 required: true, 
-															 id: passid, 
-															 value:pass,
-															 size:12, maxlength: 100}
-													 ).addClass(passwIOClass);
-			
-			j_inp.on("dragstart", function(e){console.info("password drag starting");});
-			
-			
-			j_liu.append(j_inu);
-			j_lip.append(j_inp);
-			
-			jq.append(j_liu).append(j_lip);
-		},
-		
-		"InsertIOItem2": function (win, jq, id, user, pass)
-		{
-			var userid = "username" + id;
-			var passid = "password" + id;
 			var j_li = $(win.document.createElement("li")).addClass(containerClass);
-			var j_inu = $("<input type='text' />").attr(
-//			var j_inu = $("<p></p>").attr(
-														{/*draggable: true,*/ 
-														 /*readonly: true,*/
-														 required: true,
+			//var j_inu = $("<input type='text' />").attr(
+			var j_inu = $("<div></div>").attr(
+														{draggable: true,
+															//contenteditable: true,
+														 //required: true,
 														 id: userid, 
 														 value:user,
 														 size: 12,
 														 maxlength: 100}
-												 ).addClass(userIOClass);
-			j_inu.on("dragstart", function(e){console.info("username drag starting");});
+												 ).addClass(userIOClass).text(user);
 
-			var j_inp = $("<input type='password' />").attr(
-//			var j_inp = $("<p></p>").attr(
+			var j_inp = $("<input type='text' />").attr(
 															{draggable: true,
-															 readonly: true,
+																contenteditable: true,
 															 required: true, 
 															 id: passid, 
 															 value:pass,
 															 size:12, maxlength: 100}
 													 ).addClass(passwIOClass);
-			
-			j_inp.on("dragstart", function(e){console.info("password drag starting");});
-			
+						
 			
 			j_li.append(j_inu);
 			j_li.append(j_inp);
 			
 			jq.append(j_li);
+
+			//j_inu.on("dragstart", handleDragStart);
+			j_inu[0].addEventListener('dragstart', handleDragStart, false);
+			j_inu[0].addEventListener('dragend', handleDragEnd, false);
+			//j_inp.on("dragstart", handleDragStart);
+			j_inp[0].addEventListener('dragstart', handleDragStart, false);
+			j_inp[0].addEventListener('dragend', handleDragEnd, false);
+			j_inp[0].addEventListener('dragover', preventDefault, false);
+			j_inp[0].addEventListener('drop', preventDefault, false);
+			j_inp[0].addEventListener('dragenter', preventDefault, false);
+			j_inp[0].addEventListener('dragleave', preventDefault, false);
 		},
 		
 		"createPanelTitle": function (win) {
@@ -154,8 +146,8 @@ var bp = ( function() {
 			
 			var ul = $("<ul></ul>").attr("id", panelListId).addClass(containerClass);
 			ul.append(_f.createPanelTitle(win));
-			_f.InsertIOItem2(win, ul, "1", "username1", "password1");
-			_f.InsertIOItem2(win, ul, "2", "user2", "passw2");
+			_f.InsertIOItem(win, ul, "1", "username1", "password1");
+			_f.InsertIOItem(win, ul, "2", "user2", "passw2");
 			panel.append(ul);
 			
 			if (document.body) {
@@ -175,7 +167,7 @@ var bp = ( function() {
 
 			// Make it draggable after all above mentioned style properties have been applied to the element.
 			// Otherwise draggable() will override those properties.
-			panel.draggable();
+			//panel.draggable();
 			
 			return panel;
 		},
@@ -193,7 +185,6 @@ var bp = ( function() {
 	};
 	return _f;
 }() );
-
 
 function BPCClick(request, sender, sendResponse) {
 	// Only show the panel in the top-level frame.
