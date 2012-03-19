@@ -1,7 +1,6 @@
 /* Global declaration for JSLint */
 /*global document */
 
-
 // Private namespace in a Function Closure
 var bp = ( function() {
 	// Element IDs and Selectors
@@ -29,8 +28,8 @@ var bp = ( function() {
 			return panelSelector;
 		},
 		
-		"DoCreatePanel" : function(window) {
-			return (window.top == window.self);
+		"DoCreatePanel" : function() {
+			return (top == self);
 		},
 		
 		"IsDocVisible" : function(document) {
@@ -86,6 +85,7 @@ var bp = ( function() {
 			var data = e.target.value;
 			console.info("setting data to " + data);
 			e.dataTransfer.setData('text/plain', data);
+			e.dataTransfer.setData('text/x-bp-content', e.target.id);
 			//e.dataTransfer.setDragImage(e.target, 0, 0);
 			e.stopPropagation();
 			console.info("DataTransfer.items = "+e.dataTransfer.items[0]);
@@ -99,11 +99,11 @@ var bp = ( function() {
 			j[0].addEventListener('dragend', _f.handleDragEnd, false);
 		},
 		
-		"InsertIOItem": function (win, jq, id, user, pass)
+		"InsertIOItem": function (jq, id, user, pass)
 		{
 			var userid = "username" + id;
 			var passid = "password" + id;
-			var j_li = $(win.document.createElement("li")).addClass(containerClass);
+			var j_li = $(document.createElement("li")).addClass(containerClass);
 
 			var j_inu = $("<span></span>").attr(
 												{draggable: true,
@@ -136,26 +136,26 @@ var bp = ( function() {
 			j_li[0].addEventListener('mousedown', _f.stopPropagation, false);
 		},
 		
-		"createPanelTitle": function (win) {
-			return $(win.document.createElement("div")).attr({
+		"createPanelTitle": function () {
+			return $(document.createElement("div")).attr({
 						id: panelTitleId
 					}).text("BPrivy");
 		},
 
 		// CREATE THE CONTROL-PANEL
-		"CreatePanel": function(win)
+		"CreatePanel": function()
 		{
 			var panelW, winW, left;
-			var document = win.document;
+			//var document = win.document;
 
 			var tmp_el = document.createElement("div");
 			var panel = $(tmp_el).attr('id', panelId).addClass(panelClass);
 			
 			var ul = $("<ul></ul>").attr("id", panelListId).addClass(containerClass);
 			
-			ul.append(_f.createPanelTitle(win));
-			_f.InsertIOItem(win, ul, "1", "username1", "password1");
-			_f.InsertIOItem(win, ul, "2", "user2", "passw2");
+			ul.append(_f.createPanelTitle());
+			_f.InsertIOItem(ul, "1", "username1", "password1");
+			_f.InsertIOItem(ul, "2", "user2", "passw2");
 			_f.addDragListeners(ul);
 
 			panel.append(ul);
@@ -185,60 +185,87 @@ var bp = ( function() {
 			return panel;
 		},
 		
-		"GetPanel": function (win)
+		"GetPanel": function ()
 		{
-			var el = win.document.getElementById(bp.bpcPanelId());
+			var el = document.getElementById(bp.bpcPanelId());
 			if(el)
 				return $(el);
 			else
 				console.error("BPGetPanel could not find BPPanel");
 		},
 
- 		"watchDrops": function()
+		"dropHandler": function(e)
+		{
+			console.info("DropHandler invoked");
+			var data = e.dataTransfer.getData("text/x-bp-content"); 
+			if (data)
+			{
+				console.info("Data from element " + data + " dropped at element " + e.target.id);
+			}
+		},
+		
+		"isUserid": function (el)
+		 {
+			 if (el.type)
+			 	return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");
+			 else
+				 return true; // text type by default
+		 },
+		
+		 "isPassword": function (el)
+		 {
+		 	return (el.type === "password");
+		 },
+
+		"probe": function (e)
+		{
+			console.log("probe invoked");	
+		},
+		
+ 		"setupDNDLinks": function()
  		{
- 			
- 		} 
+ 			$("input").each(function(i, e) {
+ 				if (_f.isUserid(e) || _f.isPassword(e))
+ 				{
+ 					e.addEventListener("drop", _f.dropHandler, true);
+ 					e.addEventListener("dragover", _f.probe, false);
+ 					console.log("Added event listener for element " + e.id + "/" + e.name);
+ 				}
+ 			});
+ 		},
+ 		
+		"clickBP": function (request, sender, sendResponse)
+		{
+			// Only show the panel in the top-level frame.
+			if(bp.DoCreatePanel()) 
+			{
+				var p = bp.GetPanel();
+				if (p) p.toggle();
+			}
+		
+			sendResponse({});
+			return;
+		},
+		
+		"main": function()
+		{
+			if(bp.DoCreatePanel()) 
+			{
+				console.log("BP_CS entered on page " + location.href);
+				_f.CreatePanel();
+				_f.setupDNDLinks();
+				chrome.extension.onRequest.addListener(_f.clickBP);
+			}
+		} 		 
 	};
+	
 	return _f;
 }() );
 
-function BPCClick(request, sender, sendResponse) {
-	// Only show the panel in the top-level frame.
-	if(bp.DoCreatePanel(this)) 
-	{
-		var p = bp.GetPanel(this);
-		if (p) p.toggle();
-	}
-
-	sendResponse({});
-	return;
-}
-
-function BPCMain() {
-	if(bp.DoCreatePanel(this)) 
-	{
-		console.log("BP_CS entered on page " + this.location.href);
-		bp.CreatePanel(this);
-		chrome.extension.onRequest.addListener(BPCClick);
-	}
-}
-
-BPCMain();
+bp.main();
 
 /*
- function IsUserID(el)
- {
- if (el.type)
- return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");
- else
- return true; // text type by default
- }
-
- function IsPassword(el)
- {
- return (el.type === "password");
- }
-
+ 
  function Fill(request, sender, sendResponse)
  {
  console.log("Received BPClick event");
