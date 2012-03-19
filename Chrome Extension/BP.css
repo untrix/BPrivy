@@ -2,20 +2,24 @@
 				margin: 0px;
 				padding: 0px;
 				color: white;
-				background-color: black;
-				opacity: 0.3;
-				border: thin solid red;
-				//z-index: 9007199254740992;
-				width: auto;
+				background-color: white;
+				//opacity: 0.3;
+				border: thin solid gray;
+				z-index: 9007199254740992;
+				width: auto; height: auto; line-height: auto;
 				cursor: default;
+				font-size: 13px;
+				font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
 			}
 
 .bp-container {
+				//background-color: white;
 				border-style: hidden;
 				border-width: 0px;
 				margin: 0px;
 				padding: 0px;
-				width:auto;
+				width:auto; height: auto;
+				list-style-type: none;
 			}
 
 #bpPanelTitle {
@@ -23,30 +27,31 @@
 				border: inherit;
 				text-align:center;
 				width: auto;
+				cursor:default;
+				background-color: gray;
+				color: white;
+				-moz-user-select: none;
+				-khtml-user-select: none;
+				-webkit-user-select: none;
+				user-select: none; 
 				font-weight: bold;
-				cursor:move;
 			}
-			
-.bp-user-io	{
-				float:left;
- 		 		border-width: thin;
- 		 		display: inline;
+
+.bp-out		{
+ 		 		border: thin solid gray;
+ 		 		//display: inline;
  		 		background-color: white;
  		 		color: black;
+ 		 		width: 10ex; height: 1.3em;
+ 		 		cursor: move;
+ 		 		text-align:justify;
+ 		 		line-height
+ 		 	}
+			
+.bp-user-out{
+				float:left;
  		 	}
  		 
-.bp-pass-io {
+.bp-pass-out{
 				float: right;
-			 	border-width: thin;
-			 	display: inline;
-			 	background-color: white;
-			 	color: black;
-			}
-			
-[draggable] {
-			  /*-moz-user-select: none;
-			  -khtml-user-select: none;
-			  -webkit-user-select: none;
-			  user-select: none;*/
-			  cursor: move;
 			}

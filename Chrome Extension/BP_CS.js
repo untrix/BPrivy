@@ -1,33 +1,6 @@
 /* Global declaration for JSLint */
 /*global document */
 
-function handleDragStart(e)
-{
-	console.info("DragStartHandler entered");
-	//$("#bpPanel").draggable("destroy");
-	e.dataTransfer.effectAllowed = "copy";
-	e.dataTransfer.dropEffect = "copy";
-	var data = this.value;
-	console.info("setting data to " + data);
-	e.dataTransfer.setData('text/plain', data);
-	console.info("DataTransfer.items = "+e.dataTransfer.items[0]);
-	console.info("tranfer data = " + e.dataTransfer.getData("text/plain"));
-	//e.dataTransfer.setDragImage(this, 0, 0);
-	e.stopImmediatePropagation();
-	//e.preventDefault();
-	return true;
-}
-
-function preventDefault(e)
-{
-	console.log("pd invoked");
-	e.preventDefault();
-}
-
-function handleDragEnd(e)
-{
-	console.info("DragEnd received");
-}
 
 // Private namespace in a Function Closure
 var bp = ( function() {
@@ -41,10 +14,9 @@ var bp = ( function() {
 	var panelClass = "bp-panel";
 	var userInpClass = "bp-user-in";
 	var passInpClass = "bp-pass-in";
+	var outputClass  = "bp-out";
 	var userOutClass = "bp-user-out";
 	var passOutClass = "bp-pass-out";
-	var userIOClass = "bp-user-io";
-	var passwIOClass = "bp-pass-io";
 	var panelTitleClass = "bp-panel-title";
 	var containerClass = "bp-container";
 
@@ -85,48 +57,83 @@ var bp = ( function() {
 			return retval;
 		},
 
+		"preventDefault": function (e)
+		{
+			console.log("pd invoked");
+			e.preventDefault();
+			return false;
+		},
+		
+		"stopPropagation": function (e)
+		{
+			console.info("stopPropagation invoked");
+			e.stopPropagation();
+			return true;
+		},
+		
+		"handleDragEnd": function (e)
+		{
+			console.info("DragEnd received");
+			return true;
+		},
+
+		"handleDragStart": function (e)
+		{
+			console.info("DragStartHandler entered");
+			//$("#bpPanel").draggable("destroy");
+			e.dataTransfer.effectAllowed = "copy";
+			//e.dataTransfer.dropEffect = "copy";
+			var data = e.target.value;
+			console.info("setting data to " + data);
+			e.dataTransfer.setData('text/plain', data);
+			//e.dataTransfer.setDragImage(e.target, 0, 0);
+			e.stopPropagation();
+			console.info("DataTransfer.items = "+e.dataTransfer.items[0]);
+			console.info("tranfer data = " + e.dataTransfer.getData("text/plain"));
+			return true;
+		},
+		
+		"addDragListeners": function (j)
+		{
+			j[0].addEventListener('dragstart', _f.handleDragStart, false);
+			j[0].addEventListener('dragend', _f.handleDragEnd, false);
+		},
 		
 		"InsertIOItem": function (win, jq, id, user, pass)
 		{
 			var userid = "username" + id;
 			var passid = "password" + id;
 			var j_li = $(win.document.createElement("li")).addClass(containerClass);
-			//var j_inu = $("<input type='text' />").attr(
-			var j_inu = $("<div></div>").attr(
-														{draggable: true,
-															//contenteditable: true,
-														 //required: true,
-														 id: userid, 
-														 value:user,
-														 size: 12,
-														 maxlength: 100}
-												 ).addClass(userIOClass).text(user);
 
-			var j_inp = $("<input type='text' />").attr(
-															{draggable: true,
-																contenteditable: true,
-															 required: true, 
-															 id: passid, 
-															 value:pass,
-															 size:12, maxlength: 100}
-													 ).addClass(passwIOClass);
+			var j_inu = $("<span></span>").attr(
+												{draggable: true,
+													//contenteditable: true,
+												 //required: true,
+												 id: userid, 
+												 value:user,
+												 //size: 12,
+												 //maxlength: 100
+												 }
+												).addClass(outputClass + " " + userOutClass).text(user);
+
+			var j_inp = $("<span></span>").attr(
+												{
+													draggable: true,
+													//contenteditable: true,
+												    //required: true, 
+													id: passid, 
+													value: pass,
+													//size:12,
+													//cols: 12, rows: 1,
+													//maxlength: 100,
+												}
+												).addClass(outputClass + " " + passOutClass).text("...");
 						
-			
-			j_li.append(j_inu);
-			j_li.append(j_inp);
-			
-			jq.append(j_li);
+			jq.append(j_li.append(j_inu).append(j_inp));
 
-			//j_inu.on("dragstart", handleDragStart);
-			j_inu[0].addEventListener('dragstart', handleDragStart, false);
-			j_inu[0].addEventListener('dragend', handleDragEnd, false);
-			//j_inp.on("dragstart", handleDragStart);
-			j_inp[0].addEventListener('dragstart', handleDragStart, false);
-			j_inp[0].addEventListener('dragend', handleDragEnd, false);
-			j_inp[0].addEventListener('dragover', preventDefault, false);
-			j_inp[0].addEventListener('drop', preventDefault, false);
-			j_inp[0].addEventListener('dragenter', preventDefault, false);
-			j_inp[0].addEventListener('dragleave', preventDefault, false);
+			// Prevent mousedown to bubble up in order to prevent panel dragging by
+			// jquery-ui.
+			j_li[0].addEventListener('mousedown', _f.stopPropagation, false);
 		},
 		
 		"createPanelTitle": function (win) {
@@ -145,9 +152,12 @@ var bp = ( function() {
 			var panel = $(tmp_el).attr('id', panelId).addClass(panelClass);
 			
 			var ul = $("<ul></ul>").attr("id", panelListId).addClass(containerClass);
+			
 			ul.append(_f.createPanelTitle(win));
 			_f.InsertIOItem(win, ul, "1", "username1", "password1");
 			_f.InsertIOItem(win, ul, "2", "user2", "passw2");
+			_f.addDragListeners(ul);
+
 			panel.append(ul);
 			
 			if (document.body) {
@@ -158,16 +168,19 @@ var bp = ( function() {
 			// by setting position:relative. Also we can use right:0px here because draggable() does not like it.
 			// Hence we need to calculate the left value :(			
 			panelW = panel.outerWidth();
-			winW = $(window).width();
+			winW = document.body.clientWidth ? document.body.clientWidth :
+					$(document.body).innerWidth();
 			
 			left = (winW-panelW);
 			left = (left>0)? left: 0;
+			
+			console.info("WinW = " + winW + " panelW = " + panelW);
 
 			panel.css({position: 'fixed', top: '0px', 'left': left + "px"});
 
 			// Make it draggable after all above mentioned style properties have been applied to the element.
 			// Otherwise draggable() will override those properties.
-			//panel.draggable();
+			panel.draggable();
 			
 			return panel;
 		},
@@ -179,9 +192,12 @@ var bp = ( function() {
 				return $(el);
 			else
 				console.error("BPGetPanel could not find BPPanel");
-		}
+		},
 
- 
+ 		"watchDrops": function()
+ 		{
+ 			
+ 		} 
 	};
 	return _f;
 }() );
