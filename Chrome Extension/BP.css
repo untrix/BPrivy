@@ -27,7 +27,7 @@
 				border: inherit;
 				text-align:center;
 				width: auto;
-				cursor:move;
+				cursor:default;
 				background-color: gray;
 				color: white;
 				-moz-user-select: none;
@@ -43,7 +43,7 @@
  		 		background-color: white;
  		 		color: black;
  		 		width: 10ex; height: 1.3em;
- 		 		cursor:crosshair;
+ 		 		cursor: move;
  		 		text-align:justify;
  		 		line-height
  		 	}
