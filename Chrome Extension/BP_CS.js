@@ -3,7 +3,7 @@
 
 // All code is in a block scope defined via. an anynymous function
 //(function() {
-
+	
 	// Element IDs and Selectors
 	var bp_g =
 	{
