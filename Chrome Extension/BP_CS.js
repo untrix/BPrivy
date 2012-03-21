@@ -1,8 +1,15 @@
+
+/**
+ * @author Sumeet Singh
+ * @mail sumeet@untrix.com
+ * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ */
+
 /* Global declaration for JSLint */
 /*global document */
 
 // All code is in a block scope defined via. an anynymous function
-//(function() {
+var bpcs =(function() {
 	
 	// Element IDs and Selectors
 	var bp_g =
@@ -250,10 +257,9 @@
 			chrome.extension.onRequest.addListener(clickBP);
 		}
 	} 		 
-
 	
 	main();
-//}());
+}());
 
 
 /*
