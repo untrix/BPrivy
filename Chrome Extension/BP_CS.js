@@ -8,8 +8,62 @@
 /* Global declaration for JSLint */
 /*global document */
 
-// All code is in a block scope defined via. an anynymous function
-var bpcs =(function() {
+/****************************************************************************/
+/*****************************Module 3db ************************************/
+/****************************************************************************/
+// The following pattern defines a module, all who's contents are encolsed inside a
+// anonymous function scope. The returned object holds references to the public
+// interface of the module. The remaining functions and variables are private to the module.
+//var bpModule3db = (function () {
+/*ModuleBegin */
+
+/*ModuleInterfaceGetter 3db */
+function getModuleInterface(url) 
+{
+    // Fields of an event-record
+    var fields = ['username', 'password', 'url', 'tag'];
+    
+    var saveRecord = function(o)
+    {
+        if (o && o.url && o.username)
+        {
+            var url = sanitizeUrl(o.url);
+            eRecords[url][o.username] = o;
+            return true;
+        }
+        else
+            return false;
+    }
+    
+    var getRecord = function(url, username)
+    {
+        if (url && username)
+            return eRecords[url][username];
+    }
+
+    return {"saveRecord": saveRecord,
+            "getRecord": getRecord};
+}
+
+var bpModule3db = getModuleInterface();
+/*ModuleEnd */
+//return getModuleInterface();}());
+
+/****************************************************************************/
+/**************************** Module bpcs ***********************************/
+/****************************************************************************/
+
+/* Global declaration for JSLint */
+/*global document $ console chrome */
+
+
+// The following pattern defines a module, all who's contents are encolsed inside a
+// anonymous function scope. The returned object holds references to the public
+// interface of the module. The remaining functions and variables are private to the module.
+//var bpModuleCS =(function() {
+/*ModuleBegin */
+
+	function getModuleInterface(){}
 	
 	// Element IDs and Selectors
 	var bp_g =
@@ -27,11 +81,29 @@ var bpcs =(function() {
 		
 		//
 		"bpContentType": "x-bp-content",
-		"draggedElementID": null
+		"draggedElementID": null,
+		
+		// Content Types
+		"CTPropName": "bpContentType",
+		"CTPropValUserid": "userid",
+		"CTPropValPass": "pass"
 	};
 
-	function DoCreatePanel() {
-		return (top == self);
+    function isUserid(el)
+     {
+         if (el.type)
+            {return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");}
+         else
+             {return true;} // text type by default
+     }
+    
+     function isPassword (el)
+     {
+        return (el.type === "password");
+     }
+
+	function DoCreatePanel(win) {
+		return (win.top == win.self);
 	}
 	
 	function IsDocVisible(document) {
@@ -42,16 +114,20 @@ var bpcs =(function() {
 	{
 		var retval = true;
 		console.info("Entered IsFrameVisible");
-		if (frame.hidden)
+		if (frame.hidden) {
 			retval = false;
-		else if (!frame.style)
+		}
+		else if (!frame.style) {
 			retval = true;
+		}
 		else// frame.style exists
 		{
-			if(frame.style.visibility && frame.style.visibility === 'hidden')
+			if(frame.style.visibility && frame.style.visibility === 'hidden') {
 				retval = false;
-			else if(frame.style.display && frame.style.display === 'none')
+			}
+			else if(frame.style.display && frame.style.display === 'none') {
 				retval = false;
+			}
 		}
 
 		console.info("Exiting IsFrameVisible");
@@ -77,7 +153,14 @@ var bpcs =(function() {
 		{
 			if (bp_g.draggedElementID && ($("#"+bp_g.draggedElementID).val() === e.target.value))
 			{
-				var name = $(document.getElementById(bp_g.draggedElementID)).attr("name");
+			    var link = {};
+			    link.tag = e.target.tagName;
+			    link.tagid = e.target.id;
+			    link.tagname = e.target.name;
+			    link.tagtype = e.target.type;
+				link.name = $(document.getElementById(bp_g.draggedElementID)).attr("name");
+				
+				bpModule3db.saveLink(link);
 				//console.info("Linking elements " + bp_g.draggedElementID + "/" + name + " and " + e.target.id + "/" + e.target.name);
 			}
 		}
@@ -144,11 +227,12 @@ var bpcs =(function() {
 			 //required: true,
 			 id: userid,
 			 name: userid,
-			 value:user,
+			 value: user,
 			 //size: 12,
 			 //maxlength: 100
 			 }
 			).addClass(bp_g.outputClass + " " + bp_g.userOutClass).text(user);
+		(j_inu[0])[bp_g.CTPropName] = bp_g.CTPropValUserid;
 
 		var j_inp = $("<span></span>").attr(
 			{
@@ -157,13 +241,14 @@ var bpcs =(function() {
 			    //required: true, 
 				id: passid,
 				name: userid,
-				value: pass,
+				value: pass
 				//size:12,
 				//cols: 12, rows: 1,
 				//maxlength: 100,
 			}
 			).addClass(bp_g.outputClass + " " + bp_g.passOutClass).text("...");
-					
+        (j_inp[0])[bp_g.CTPropName] = bp_g.CTPropValPass;
+        
 		jq.append(j_li.append(j_inu).append(j_inp));
 
 		// Prevent mousedown to bubble up in order to prevent panel dragging by
@@ -222,19 +307,6 @@ var bpcs =(function() {
 		return panel;
 	}
 
-	function isUserid(el)
-	 {
-		 if (el.type)
-		 	return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");
-		 else
-			 return true; // text type by default
-	 }
-	
-	 function isPassword (el)
-	 {
-	 	return (el.type === "password");
-	 }
-
 	function clickBP (request, sender, sendResponse)
 	{
 		// Only show the panel in the top-level frame.
@@ -256,10 +328,13 @@ var bpcs =(function() {
 			setupDNDWatchers();
 			chrome.extension.onRequest.addListener(clickBP);
 		}
-	} 		 
+	}
 	
 	main();
-}());
+
+	var bpModuleCS = getModuleInterface();
+/*ModuleEnd */
+//return getModuleInterface();}());
 
 
 /*
@@ -308,7 +383,7 @@ var bpcs =(function() {
 					// console.log(items[i].kind + ":" + items[i].type);
 				// }
 			// }
-// 			
+// 
 			// if (found)
 			// {
 				// console.info("found x-bp-content data hovering over element " + e.target.id + "/" + e.target.name); 
