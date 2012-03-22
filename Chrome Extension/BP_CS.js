@@ -1,15 +1,23 @@
-
 /**
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 
-/* Global declaration for JSLint */
-/*global document */
+/****************************************************************************/
+/**************************** Module bpcs ***********************************/
+/****************************************************************************/
 
-// All code is in a block scope defined via. an anynymous function
-var bpcs =(function() {
+/* Global declaration for JSLint */
+/*global $ console chrome bpModule3db */
+/*jslint browser: true, devel: true */
+
+/**
+ * @ModuleBegin CS
+ */
+var bpModuleCS =(function() {
+
+	function getModuleInterface(){}
 	
 	// Element IDs and Selectors
 	var bp_g =
@@ -30,8 +38,21 @@ var bpcs =(function() {
 		"draggedElementID": null
 	};
 
-	function DoCreatePanel() {
-		return (top == self);
+    function isUserid(el)
+     {
+         if (el.type)
+            {return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");}
+         else
+             {return true;} // text type by default
+     }
+    
+     function isPassword (el)
+     {
+        return (el.type === "password");
+     }
+
+	function DoCreatePanel(win) {
+		return (win.top == win.self);
 	}
 	
 	function IsDocVisible(document) {
@@ -42,16 +63,20 @@ var bpcs =(function() {
 	{
 		var retval = true;
 		console.info("Entered IsFrameVisible");
-		if (frame.hidden)
+		if (frame.hidden) {
 			retval = false;
-		else if (!frame.style)
+		}
+		else if (!frame.style) {
 			retval = true;
+		}
 		else// frame.style exists
 		{
-			if(frame.style.visibility && frame.style.visibility === 'hidden')
+			if(frame.style.visibility && frame.style.visibility === 'hidden') {
 				retval = false;
-			else if(frame.style.display && frame.style.display === 'none')
+			}
+			else if(frame.style.display && frame.style.display === 'none') {
 				retval = false;
+			}
 		}
 
 		console.info("Exiting IsFrameVisible");
@@ -77,7 +102,14 @@ var bpcs =(function() {
 		{
 			if (bp_g.draggedElementID && ($("#"+bp_g.draggedElementID).val() === e.target.value))
 			{
-				var name = $(document.getElementById(bp_g.draggedElementID)).attr("name");
+			    var link = {};
+			    link[bpModule3db.tagPropName] = e.target.tagName;
+			    link[bpModule3db.tagidPropName] = e.target.id;
+			    link[bpModule3db.tagnamePropName] = e.target.name;
+			    link[bpModule3db.tagtypePropName] = e.target.type;
+				link[bpModule3db.ctPropName] = $(document.getElementById(bp_g.draggedElementID)).data(bpModule3db.ctPropName);
+				
+				bpModule3db.saveLink(link);
 				//console.info("Linking elements " + bp_g.draggedElementID + "/" + name + " and " + e.target.id + "/" + e.target.name);
 			}
 		}
@@ -144,11 +176,12 @@ var bpcs =(function() {
 			 //required: true,
 			 id: userid,
 			 name: userid,
-			 value:user,
+			 value: user
 			 //size: 12,
 			 //maxlength: 100
 			 }
 			).addClass(bp_g.outputClass + " " + bp_g.userOutClass).text(user);
+		(j_inu[0])[bp_g.CTPropName] = bp_g.CTPropValUserid;
 
 		var j_inp = $("<span></span>").attr(
 			{
@@ -157,13 +190,14 @@ var bpcs =(function() {
 			    //required: true, 
 				id: passid,
 				name: userid,
-				value: pass,
+				value: pass
 				//size:12,
 				//cols: 12, rows: 1,
 				//maxlength: 100,
 			}
 			).addClass(bp_g.outputClass + " " + bp_g.passOutClass).text("...");
-					
+        (j_inp[0])[bp_g.CTPropName] = bp_g.CTPropValPass;
+        
 		jq.append(j_li.append(j_inu).append(j_inp));
 
 		// Prevent mousedown to bubble up in order to prevent panel dragging by
@@ -222,23 +256,10 @@ var bpcs =(function() {
 		return panel;
 	}
 
-	function isUserid(el)
-	 {
-		 if (el.type)
-		 	return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");
-		 else
-			 return true; // text type by default
-	 }
-	
-	 function isPassword (el)
-	 {
-	 	return (el.type === "password");
-	 }
-
 	function clickBP (request, sender, sendResponse)
 	{
 		// Only show the panel in the top-level frame.
-		if(DoCreatePanel()) 
+		if(DoCreatePanel(this)) 
 		{
 			$(document.getElementById(bp_g.panelId)).toggle();
 		}
@@ -249,17 +270,20 @@ var bpcs =(function() {
 	
 	function main()
 	{
-		if(DoCreatePanel()) 
+		if(DoCreatePanel(this)) 
 		{
 			console.log("BP_CS entered on page " + location.href);
 			CreatePanel();
 			setupDNDWatchers();
 			chrome.extension.onRequest.addListener(clickBP);
 		}
-	} 		 
+	}
 	
 	main();
-}());
+
+	var bpModuleCS = getModuleInterface();
+return getModuleInterface();}());
+/** @ModuleEnd */
 
 
 /*
@@ -308,7 +332,7 @@ var bpcs =(function() {
 					// console.log(items[i].kind + ":" + items[i].type);
 				// }
 			// }
-// 			
+// 
 			// if (found)
 			// {
 				// console.info("found x-bp-content data hovering over element " + e.target.id + "/" + e.target.name); 
