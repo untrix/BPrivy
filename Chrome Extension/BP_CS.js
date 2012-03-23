@@ -5,8 +5,23 @@
  */
 
 /* Global declaration for JSLint */
-/*global $ console chrome bp_3db */
-/*jslint browser: true, devel: true */
+/*global $, console, chrome, bp_3db */
+/*jslint browser:true, devel:true */
+
+// HTMLElement IDs. Visible to other scripts as well as the browser.
+/*members 
+ * eid_panel, eid_panelTitle, eid_panelList, eid_userElement, eid_passElement
+ */
+
+// CSS Class Names. Visible to the browser.
+/*members
+ * css_panel, css_output, css_userOut, css_passOut, css_container
+ */
+
+// Externally visible proprietary properties.
+/*members
+ * data_value, data_dataType, data_peerID
+ */
 
 /**
  * @ModuleBegin CS
@@ -24,38 +39,41 @@
 	{
 	    // Element ID values. These could clash with other HTML elements
 	    // Therefore they need to be crafted to be globally unique.
-		panelId: "com.untrix.bpPanel", // Used by panel elements
-		panelTitleId:"com.untrix.bpPanelTitle", // Used by panel elements
-		panelListId:"com.untrix.bpPanelList", // Used by panel elements
-		userElementIDPrefix: "com.untrix.bp-username-", // Used by panel elements
-		passElementIDPrefix: "com.untrix.bp-pass-", // Used by panel elements
+		eid_panel: "com.untrix.bpPanel", // Used by panel elements
+		eid_panelTitle:"com.untrix.bpPanelTitle", // Used by panel elements
+		eid_panelList:"com.untrix.bpPanelList", // Used by panel elements
+		eid_userElement: "com.untrix.bp-username-", // ID Prefix used by panel elements
+		eid_passElement: "com.untrix.bp-pass-", // ID Prefix Used by panel elements
 	
 		// CSS Class Names. Visible as value of 'class' attribute in HTML
 		// and used as keys in CSS selectors. These need to be globally
 		// unique as well. We need these here in order to ensure they're
 		// globally unique and also as a single location to map to CSS files.
-		panelClass: "bp-panel",
-		outputClass:"bp-out",
-		userOutClass: "bp-user-out",
-		passOutClass: "bp-pass-out",
-		containerClass: "bp-container",
+		css_panel: "bp-panel",
+		css_output:"bp-out",
+		css_userOut: "bp-user-out",
+		css_passOut: "bp-pass-out",
+		css_container: "bp-container",
 		
 		// These are 'data' attribute names. If implemented as jQuery data
 		// these won't manifest as HTML content attributes, hence won't
 		// clash with other HTML elements. However, their names could clash
 		// with jQuery. Hence they are placed here so that they maybe easily
 		// changed if needed.
-		value: "bpValue",
-		dataType: "dataType",
-		peerID: 'bpPeerID'
+		data_value: "bpValue",
+		data_dataType: "dataType",
+		data_peerID: 'bpPeerID'
     };
 
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
+    /*members
+     * dt_userid, dt_pass
+     */
     var dt =
     {
-        userid: "userid",   // Represents data-type userid
-        pass: "pass"        // Represents data-type password
+        dt_userid: "userid",   // Represents data-type userid
+        dt_pass: "pass"        // Represents data-type password
 	};
 
     var draggedElementID = null;
@@ -64,6 +82,7 @@
 
     function isUserid(el)
      {
+         /*members type */
          if (el.type)
             {return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");}
          else
@@ -76,10 +95,12 @@
      }
 
 	function DoCreatePanel(win) {
+	    /*members top, self */
 		return (win.top == win.self);
 	}
 	
 	function IsDocVisible(document) {
+	    /*members webkitVisibilityState, body, is*/
 		return ((document.webkitVisibilityState && (document.webkitVisibilityState === 'visible')) || ($(document.body).is(":visible")));
 	}
 
@@ -148,7 +169,7 @@
 			    record.elementName = e.target.name;
 			    record.elementType = e.target.type;
                 record.elementDataType = $(dragged_el).data(n.dataType);
-			    			
+                
 				bp_3db.saveTagDescription(record);
 				
 				var p = $(dragged_el).data(n.peerID);
