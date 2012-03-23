@@ -4,39 +4,63 @@
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 
-/****************************************************************************/
-/**************************** Module bpcs ***********************************/
-/****************************************************************************/
-
 /* Global declaration for JSLint */
-/*global $ console chrome bpModule3db */
+/*global $ console chrome bp_3db */
 /*jslint browser: true, devel: true */
 
 /**
  * @ModuleBegin CS
  */
-var bpModuleCS =(function() {
+//var bp_CS =(function() {
 
 	function getModuleInterface(){}
 	
-	// Element IDs and Selectors
-	var bp_g =
+	// Names used in the code. A mapping is being defined here because
+	// these names are externally visible and therefore may need to be
+	// changed in order to prevent name clashes with other libraries.
+	// These are all merely nouns/strings and do not share a common
+	// semantic. They are grouped according to semantics.
+	var n =
 	{
-		"panelId": "bpPanel",
-		"panelTitleId":"bpPanelTitle",
-		"panelListId":"bpPanelList",
+	    // Element ID values. These could clash with other HTML elements
+	    // Therefore they need to be crafted to be globally unique.
+		panelId: "com.untrix.bpPanel", // Used by panel elements
+		panelTitleId:"com.untrix.bpPanelTitle", // Used by panel elements
+		panelListId:"com.untrix.bpPanelList", // Used by panel elements
+		userElementIDPrefix: "com.untrix.bp-username-", // Used by panel elements
+		passElementIDPrefix: "com.untrix.bp-pass-", // Used by panel elements
 	
-		// CSS Class Names
-		"panelClass": "bp-panel",
-		"outputClass":"bp-out",
-		"userOutClass": "bp-user-out",
-		"passOutClass": "bp-pass-out",
-		"containerClass": "bp-container",
+		// CSS Class Names. Visible as value of 'class' attribute in HTML
+		// and used as keys in CSS selectors. These need to be globally
+		// unique as well. We need these here in order to ensure they're
+		// globally unique and also as a single location to map to CSS files.
+		panelClass: "bp-panel",
+		outputClass:"bp-out",
+		userOutClass: "bp-user-out",
+		passOutClass: "bp-pass-out",
+		containerClass: "bp-container",
 		
-		//
-		"bpContentType": "x-bp-content",
-		"draggedElementID": null
+		// These are 'data' attribute names. If implemented as jQuery data
+		// these won't manifest as HTML content attributes, hence won't
+		// clash with other HTML elements. However, their names could clash
+		// with jQuery. Hence they are placed here so that they maybe easily
+		// changed if needed.
+		value: "bpValue",
+		dataType: "dataType",
+		peerID: 'bpPeerID'
+    };
+
+    // 'enumerated' values used internally only. We need these here in order
+    // to be able to use the same values consistently across modules.
+    var dt =
+    {
+        userid: "userid",   // Represents data-type userid
+        pass: "pass"        // Represents data-type password
 	};
+
+    var draggedElementID = null;
+    
+    function decrypt(str) {return str;}
 
     function isUserid(el)
      {
@@ -96,21 +120,42 @@ var bpModuleCS =(function() {
 		e.stopPropagation();
 	}
 	
+	function autoFillPeer(el, data)
+	{
+        var p = findPeerElement(el);
+        if (p)
+        {
+            if (data.type() === n.pass) {
+                p.value = decrypt(data);
+            }
+            else {
+                p.value = data;
+            }
+        }
+	}
+	
 	function setupDNDWatchers()
 	{
 		function inputHandler(e)
 		{
-			if (bp_g.draggedElementID && ($("#"+bp_g.draggedElementID).val() === e.target.value))
+            var record = bp_3db.constructRecord(), dragged_el;
+            dragged_el = draggedElementID ? document.getElementById(draggedElementID) : null;
+            
+			if ( dragged_el && ($(dragged_el).val() === e.target.value))
 			{
-			    var link = {};
-			    link[bpModule3db.tagPropName] = e.target.tagName;
-			    link[bpModule3db.tagidPropName] = e.target.id;
-			    link[bpModule3db.tagnamePropName] = e.target.name;
-			    link[bpModule3db.tagtypePropName] = e.target.type;
-				link[bpModule3db.ctPropName] = $(document.getElementById(bp_g.draggedElementID)).data(bpModule3db.ctPropName);
+			    record.tagName = e.target.tagName;
+			    record.elementID = e.target.id;
+			    record.elementName = e.target.name;
+			    record.elementType = e.target.type;
+                record.elementDataType = $(dragged_el).data(n.dataType);
+			    			
+				bp_3db.saveTagDescription(record);
 				
-				bpModule3db.saveLink(link);
-				//console.info("Linking elements " + bp_g.draggedElementID + "/" + name + " and " + e.target.id + "/" + e.target.name);
+				var p = $(dragged_el).data(n.peerID);
+				if (p) {
+				    autoFillPeer(e.target, $(p).data(n.value));
+				}
+				//console.info("Linking elements " + draggedElementID + "/" + name + " and " + e.target.id + "/" + e.target.name);
 			}
 		}
 		
@@ -131,7 +176,7 @@ var bpModuleCS =(function() {
 		return el;
 	}
 	
-	function makeItemsDraggable(j_container)
+	function makeDataDraggable(j_container)
 	{
 		function handleDragStart (e)
 		{
@@ -139,16 +184,20 @@ var bpModuleCS =(function() {
 			//$("#bpPanel").draggable("destroy");
 			e.dataTransfer.effectAllowed = "copyLink";
 			//e.dataTransfer.dropEffect = "copy";
-			var data = e.target.value;
+			var data = $(e.target).data(n.value);
+			if ($(e.target).data(n.dataType) === n.pass) {
+			    data = decrypt(data);
+			}
+			
 			//console.info("setting data to " + data + " and bpcontent to " + e.target.id);
 			e.dataTransfer.setData('text/plain', data);
-			e.dataTransfer.setData(bp_g.bpContentType, e.target.id);
+			//e.dataTransfer.setData(n.bpContentType, e.target.id);
 			//e.dataTransfer.addElement(e.target);
-			e.dataTransfer.setDragImage(createImageElement("icon16.png"), 0, 0);
+			//e.dataTransfer.setDragImage(createImageElement("icon16.png"), 0, 0);
 			//e.stopPropagation();
 			//console.info("DataTransfer.items = "+ e.dataTransfer.items.toString());
 			//console.info("tranfer data = " + e.dataTransfer.getData("text/plain"));
-			bp_g.draggedElementID = e.target.id;
+			draggedElementID = e.target.id;
 			return true;
 		}
 
@@ -157,7 +206,7 @@ var bpModuleCS =(function() {
 		function handleDragEnd(e)
 		{
 			console.info("DragEnd received");
-			bp_g.draggedElementID = null;
+			draggedElementID = null;
 			return true;
 		}
 
@@ -166,22 +215,21 @@ var bpModuleCS =(function() {
 	
 	function insertIOItem (jq, id, user, pass)
 	{
-		var userid = "username" + id;
-		var passid = "password" + id;
-		var j_li = $(document.createElement("li")).addClass(bp_g.containerClass);
+		var userid = n.userElementIDPrefix + id;
+		var passid = n.passElementIDPrefix + id;
+		var j_li = $(document.createElement("li")).addClass(n.containerClass);
 
 		var j_inu = $("<span></span>").attr(
 			{draggable: true,
 			 //contenteditable: true,
 			 //required: true,
 			 id: userid,
-			 name: userid,
-			 value: user
+			 name: userid
 			 //size: 12,
 			 //maxlength: 100
 			 }
-			).addClass(bp_g.outputClass + " " + bp_g.userOutClass).text(user);
-		(j_inu[0])[bp_g.CTPropName] = bp_g.CTPropValUserid;
+			).addClass(n.outputClass + " " + n.userOutClass).text(user);
+		j_inu.data(n.dataType, dt.userid).data(n.value, user);
 
 		var j_inp = $("<span></span>").attr(
 			{
@@ -189,14 +237,13 @@ var bpModuleCS =(function() {
 				//contenteditable: true,
 			    //required: true, 
 				id: passid,
-				name: userid,
-				value: pass
+				name: userid
 				//size:12,
 				//cols: 12, rows: 1,
 				//maxlength: 100,
 			}
-			).addClass(bp_g.outputClass + " " + bp_g.passOutClass).text("...");
-        (j_inp[0])[bp_g.CTPropName] = bp_g.CTPropValPass;
+			).addClass(n.outputClass + " " + n.passOutClass).text("...");
+        j_inp.data(n.dataType, dt.pass).data(n.value, pass);
         
 		jq.append(j_li.append(j_inu).append(j_inp));
 
@@ -208,7 +255,7 @@ var bpModuleCS =(function() {
     function createPanelTitle ()
 	{
 		return $(document.createElement("div")).attr({
-					id: bp_g.panelTitleId
+					id: n.panelTitleId
 				}).text("BPrivy");
 	}
 
@@ -219,15 +266,15 @@ var bpModuleCS =(function() {
 		//var document = win.document;
 
 		var tmp_el = document.createElement("div");
-		var panel = $(tmp_el).attr('id', bp_g.panelId).addClass(bp_g.panelClass);
+		var panel = $(tmp_el).attr('id', n.panelId).addClass(n.panelClass);
 		
-		var ul = $("<ul></ul>").attr("id", bp_g.panelListId).addClass(bp_g.containerClass);
+		var ul = $("<ul></ul>").attr("id", n.panelListId).addClass(n.containerClass);
 		
 		ul.append(createPanelTitle());
 		insertIOItem(ul, "1", "username1", "password1");
 		insertIOItem(ul, "2", "user2", "passw2");
 		// Attache dragStart and End listener to container in order to make its items draggable.
-		makeItemsDraggable(ul);
+		makeDataDraggable(ul);
 
 		panel.append(ul);
 		
@@ -261,7 +308,7 @@ var bpModuleCS =(function() {
 		// Only show the panel in the top-level frame.
 		if(DoCreatePanel(this)) 
 		{
-			$(document.getElementById(bp_g.panelId)).toggle();
+			$(document.getElementById(n.panelId)).toggle();
 		}
 	
 		sendResponse({});
@@ -281,8 +328,8 @@ var bpModuleCS =(function() {
 	
 	main();
 
-	var bpModuleCS = getModuleInterface();
-return getModuleInterface();}());
+	var bp_CS = getModuleInterface();
+//return bp_CS;}());
 /** @ModuleEnd */
 
 
@@ -312,7 +359,7 @@ return getModuleInterface();}());
 		// "dropHandler": function(e)
 		// {
 			// console.info("DropHandler invoked");
-			// var data = e.dataTransfer.getData(bp_g.bpContentType); 
+			// var data = e.dataTransfer.getData(n.bpContentType); 
 			// if (data)
 				// console.info("Data from element " + data + " dropped at element " + e.target.id);
 			// }
@@ -327,7 +374,7 @@ return getModuleInterface();}());
 			// {
 				// for (var i = 0; i < items.length; i++)
 				// {
-					// if (items[i].type === bp_g.bpContentType)
+					// if (items[i].type === n.bpContentType)
 						// found = true;
 					// console.log(items[i].kind + ":" + items[i].type);
 				// }

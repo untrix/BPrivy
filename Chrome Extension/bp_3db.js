@@ -11,43 +11,61 @@
 /**
  * @ModuleBegin 3db
  */
-var bpModule3db = (function () {
+var bp_3db = (function () {
 
     // DB Keywords
-    var keywords = {
-        ctPropName : "bpContentType",
-        ctPropValUserid : "userid",
-        ctPropValPass : "pass",
-        tagPropName : "tag.tagName",
-        tagidPropName : "tag.id",
-        tagnamePropName : "tag.name",
-        tagtypePropName : "tag.type"
+    var n = {
+        url : "url",
+        dbType: "dbType",
+        tagDB: "tagDB",
+        dataType: "dataType",
+        CT : {key: "bpContentType", userid: "ctUserid", pass: "ctPass"},
+        tagName : "tagName",
+        id : "attrId",
+        name : "attrName",
+        type : "attrType"
     };
+    
+    function toString(o) {
+        var str = "", name;
+        for (name in o) {
+            if (o.hasOwnProperty(name)) {
+                str += (name.toString() + ":" + o[name].toString() + ", ");
+            }
+        }
+        
+        return str;
+    }
+    
+    function Record() {}
+    Record.prototype.dbType = function () {
+        if (this[n.dbType]) {
+            return this[prop.DB.key];
+        }
+    };
+    Record.prototype.toString = toString;
+    function constructRecord() {
+        var o = new Record();
+        return o;    
+    }
     
     /** ModuleInterfaceGetter 3db */
     function getModuleInterface(url) {
-        // Fields of an event-record
-        var fields = ['username', 'password', 'url', 'tag'], temp_name;
-    
-        var saveLink = function (l)
+        var saveTagDescription = function (el)
         {
-            console.info("Saving link " + l.toString());
+            console.info("Saving Tag " + toString(el));
         };
         
-        var iface = {
-            "saveLink" : saveLink
-        };
-    
-        for (temp_name in keywords) {
-            if (keywords.hasOwnProperty(temp_name)) {
-                iface[temp_name] = keywords[temp_name];
-            }
-        }
+        //Assemble the interface    
+        var iface = {};
+        Object.defineProperty(iface, "prop", {value: prop, writable: false, enumerable: false, configurable: false});
+        Object.defineProperty(iface, "saveTagDescription", {value: saveTagDescription, writable: false, enumerable: false, configurable: false});
+        Object.defineProperty(iface, "constructRecord", {value: constructRecord, writable: false, enumerable: false, configurable: false});
 
         return iface;
     }
     
-    var bpModule3db = getModuleInterface();
+    var bp_3db = getModuleInterface();
 
-return getModuleInterface();}());
+return bp_3db;}());
 /** @ModuleEnd */
