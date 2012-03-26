@@ -6,6 +6,7 @@
 /* Global declaration for JSLint */
 /*global document */
 
+"use strict";
 Function.prototype.defineMethod = function (name, value)
 {
 	this.prototype[name] = value;

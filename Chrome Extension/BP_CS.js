@@ -23,6 +23,7 @@
  * data_value, data_dataType, data_peerID
  */
 
+"use strict";
 /**
  * @ModuleBegin CS
  */

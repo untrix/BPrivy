@@ -11,6 +11,7 @@
 /**
  * @ModuleBegin 3db
  */
+"use strict";
 var bp_3db = (function () {
 
     // DB Keywords
@@ -62,6 +63,8 @@ var bp_3db = (function () {
         Object.defineProperty(iface, "saveTagDescription", {value: saveTagDescription, writable: false, enumerable: false, configurable: false});
         Object.defineProperty(iface, "constructRecord", {value: constructRecord, writable: false, enumerable: false, configurable: false});
 
+        Object.seal(iface);
+        Object.preventExtensions(iface);
         return iface;
     }
     
