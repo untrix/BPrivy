@@ -2,25 +2,16 @@
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
- */
 
+ */
 /* Global declaration for JSLint */
 /*global $, console, chrome, bp_3db */
 /*jslint browser:true, devel:true */
-
-// HTMLElement IDs. Visible to other scripts as well as the browser.
-/*members 
- * eid_panel, eid_panelTitle, eid_panelList, eid_userElement, eid_passElement
- */
-
-// CSS Class Names. Visible to the browser.
-/*members
- * css_panel, css_output, css_userOut, css_passOut, css_container
- */
-
-// Externally visible proprietary properties.
-/*members
- * data_value, data_dataType, data_peerID
+/*properties console.info, console.log, console.warn */
+/*properties 
+ * el.type, document.webkitVisibilityState, document.body, win.top, win.self,
+ * frame.hidden, frame.style, style.visibility, style.display, ev.preventDefault,
+ * ev.stopPropagation, bp_3db.constructRecord, document.getElementById
  */
 
 "use strict";
@@ -36,76 +27,83 @@
 	// changed in order to prevent name clashes with other libraries.
 	// These are all merely nouns/strings and do not share a common
 	// semantic. They are grouped according to semantics.
-	var n =
-	{
-	    // Element ID values. These could clash with other HTML elements
-	    // Therefore they need to be crafted to be globally unique.
-		eid_panel: "com.untrix.bpPanel", // Used by panel elements
-		eid_panelTitle:"com.untrix.bpPanelTitle", // Used by panel elements
-		eid_panelList:"com.untrix.bpPanelList", // Used by panel elements
-		eid_userElement: "com.untrix.bp-username-", // ID Prefix used by panel elements
-		eid_passElement: "com.untrix.bp-pass-", // ID Prefix Used by panel elements
+    // Element ID values. These could clash with other HTML elements
+
+    // Therefore they need to be crafted to be globally unique.
+    /*properties 
+     * eid_panel, eid_panelTitle, eid_panelList, eid_userElement, eid_passElement
+     */
+	var eid_pane = "com.untrix.bpPanel"; // Used by panel elements
+	var eid_panelTitle ="com.untrix.bpPanelTitle"; // Used by panel elements
+	var eid_panelList ="com.untrix.bpPanelList"; // Used by panel elements
+	var eid_userElement = "com.untrix.bp-username-"; // ID Prefix used by panel elements
+	var eid_passElement = "com.untrix.bp-pass-"; // ID Prefix Used by panel elements
+
+	// CSS Class Names. Visible as value of 'class' attribute in HTML
+	// and used as keys in CSS selectors. These need to be globally
+	// unique as well. We need these here in order to ensure they're
+	// globally unique and also as a single location to map to CSS files.
+    /*properties
+     * css_panel, css_output, css_userOut, css_passOut, css_container
+     */
+	var css_panel = "bp-panel";
+	var css_output ="bp-out";
+	var css_userOut = "bp-user-out";
+	var css_passOut = "bp-pass-out";
+	var css_container = "bp-container";
 	
-		// CSS Class Names. Visible as value of 'class' attribute in HTML
-		// and used as keys in CSS selectors. These need to be globally
-		// unique as well. We need these here in order to ensure they're
-		// globally unique and also as a single location to map to CSS files.
-		css_panel: "bp-panel",
-		css_output:"bp-out",
-		css_userOut: "bp-user-out",
-		css_passOut: "bp-pass-out",
-		css_container: "bp-container",
-		
-		// These are 'data' attribute names. If implemented as jQuery data
-		// these won't manifest as HTML content attributes, hence won't
-		// clash with other HTML elements. However, their names could clash
-		// with jQuery. Hence they are placed here so that they maybe easily
-		// changed if needed.
-		data_value: "bpValue",
-		data_dataType: "dataType",
-		data_peerID: 'bpPeerID'
-    };
+	// These are 'data' attribute names. If implemented as jQuery data
+	// these won't manifest as HTML content attributes, hence won't
+	// clash with other HTML elements. However, their names could clash
+	// with jQuery. Hence they are placed here so that they maybe easily
+	// changed if needed.
+    /*properties
+     * data_value, data_dataType, data_peerID
+     */
+	var pn_d_value = "bpValue";
+	var pn_d_dataType = "dataType";
+	var pn_d_peerID = 'bpPeerID';
 
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
-    /*members
+    /*properties
      * dt_userid, dt_pass
      */
-    var dt =
-    {
-        dt_userid: "userid",   // Represents data-type userid
-        dt_pass: "pass"        // Represents data-type password
-	};
+    var e_dt_userid = "userid";   // Represents data-type userid
+    var e_dt_pass = "pass";        // Represents data-type password
 
+    /*properties draggedElementID */
     var draggedElementID = null;
     
+    /** Decrypts password */
     function decrypt(str) {return str;}
 
+    /** Intelligently returns true if the element is a userid/username input field */
     function isUserid(el)
      {
-         /*members type */
          if (el.type)
             {return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");}
          else
              {return true;} // text type by default
      }
     
+    /** Intelligently returns true if the element is a password field */
      function isPassword (el)
      {
         return (el.type === "password");
      }
 
-	function DoCreatePanel(win) {
-	    /*members top, self */
+    /** Returns true if the BPrivy control panel should be created in the supplied browsing context */
+	function doCreatePanel(win) {
 		return (win.top == win.self);
 	}
 	
-	function IsDocVisible(document) {
-	    /*members webkitVisibilityState, body, is*/
+	function isDocVisible(document) {
+        /*properties is */
 		return ((document.webkitVisibilityState && (document.webkitVisibilityState === 'visible')) || ($(document.body).is(":visible")));
 	}
 
-	function IsFrameVisible(frame)
+	function isFrameVisible(frame)
 	{
 		var retval = true;
 		console.info("Entered IsFrameVisible");
@@ -129,29 +127,29 @@
 		return retval;
 	}
 
-	function preventDefault (e)
+	function preventDefault (ev)
 	{
 		console.log("pd invoked");
-		e.preventDefault();
+		ev.preventDefault();
 		return false;
 	}
 	
-	function stopPropagation(e)
+	function stopPropagation(ev)
 	{
 		//console.info("stopPropagation invoked");
-		e.stopPropagation();
+		ev.stopPropagation();
 	}
 	
 	function autoFillPeer(el, data)
 	{
-        var p = findPeerElement(el);
-        if (p)
+        var p_el = findPeerElement(el);
+        if (p_el)
         {
-            if (data.type() === n.pass) {
-                p.value = decrypt(data);
+            if (data.type() === e_dt_pass) {
+                p_el.value = decrypt(data);
             }
             else {
-                p.value = data;
+                p_el.value = data;
             }
         }
 	}
@@ -169,13 +167,13 @@
 			    record.elementID = e.target.id;
 			    record.elementName = e.target.name;
 			    record.elementType = e.target.type;
-                record.elementDataType = $(dragged_el).data(n.dataType);
+                record.elementDataType = $(dragged_el).data(pn_d_dataType);
                 
 				bp_3db.saveTagDescription(record);
 				
-				var p = $(dragged_el).data(n.peerID);
+				var p = $(dragged_el).data(pn_d_peerID);
 				if (p) {
-				    autoFillPeer(e.target, $(p).data(n.value));
+				    autoFillPeer(e.target, $(p).data(pn_d_value));
 				}
 				//console.info("Linking elements " + draggedElementID + "/" + name + " and " + e.target.id + "/" + e.target.name);
 			}
@@ -206,8 +204,8 @@
 			//$("#bpPanel").draggable("destroy");
 			e.dataTransfer.effectAllowed = "copyLink";
 			//e.dataTransfer.dropEffect = "copy";
-			var data = $(e.target).data(n.value);
-			if ($(e.target).data(n.dataType) === n.pass) {
+			var data = $(e.target).data(pn_d_value);
+			if ($(e.target).data(pn_d_dataType) === e_dt_pass) {
 			    data = decrypt(data);
 			}
 			
