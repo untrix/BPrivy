@@ -1,5 +1,5 @@
 
-#bpPanel	{
+#com-untrix-bpPanel	{
 				margin: 0px;
 				padding: 0px;
 				color: white;
@@ -23,7 +23,7 @@
 				list-style-type: none;
 			}
 
-#bpPanelTitle {
+#com-untrix-bpPanelTitle {
 				display: block;
 				border: inherit;
 				text-align:center;

@@ -5,23 +5,27 @@
 
  */
 /* Global declaration for JSLint */
-/*global $, console, chrome, bp_3db */
-/*jslint browser:true, devel:true */
+/*global $, console, chrome, window */
+/*jslint browser : true, devel : true */
 /*properties console.info, console.log, console.warn */
 /*properties 
  * el.type, document.webkitVisibilityState, document.body, win.top, win.self,
  * frame.hidden, frame.style, style.visibility, style.display, ev.preventDefault,
- * ev.stopPropagation, bp_3db.constructRecord, document.getElementById
+ * ev.stopPropagation, document.getElementById
  */
 
 "use strict";
 /**
  * @ModuleBegin CS
  */
-//var bp_CS =(function() {
+(function() {
+    /** @import-module-begin bp_3db */
+    var e_dt_userid = bp_3db.e_dt_userid;   // Represents data-type userid
+    var e_dt_pass = bp_3db.e_dt_pass;        // Represents data-type password
+    var constructERecord = bp_3db.constructERecord;
+    var saveERecord = bp_3db.saveERecord;
+    /** @import-module-end */
 
-	function getModuleInterface(){}
-	
 	// Names used in the code. A mapping is being defined here because
 	// these names are externally visible and therefore may need to be
 	// changed in order to prevent name clashes with other libraries.
@@ -29,23 +33,18 @@
 	// semantic. They are grouped according to semantics.
     // Element ID values. These could clash with other HTML elements
 
-    // Therefore they need to be crafted to be globally unique.
-    /*properties 
-     * eid_panel, eid_panelTitle, eid_panelList, eid_userElement, eid_passElement
-     */
-	var eid_pane = "com.untrix.bpPanel"; // Used by panel elements
-	var eid_panelTitle ="com.untrix.bpPanelTitle"; // Used by panel elements
-	var eid_panelList ="com.untrix.bpPanelList"; // Used by panel elements
-	var eid_userElement = "com.untrix.bp-username-"; // ID Prefix used by panel elements
-	var eid_passElement = "com.untrix.bp-pass-"; // ID Prefix Used by panel elements
+    // Therefore they need to be crafted to be globally unique within the DOM.
+
+	var eid_panel = "com-untrix-bpPanel"; // Used by panel elements
+	var eid_panelTitle ="com-untrix-bpPanelTitle"; // Used by panel elements
+	var eid_panelList ="com-untrix-bpPanelList"; // Used by panel elements
+	var eid_userElement = "com-untrix-bp-username-"; // ID Prefix used by panel elements
+	var eid_passElement = "com-untrix-bp-pass-"; // ID Prefix Used by panel elements
 
 	// CSS Class Names. Visible as value of 'class' attribute in HTML
 	// and used as keys in CSS selectors. These need to be globally
 	// unique as well. We need these here in order to ensure they're
 	// globally unique and also as a single location to map to CSS files.
-    /*properties
-     * css_panel, css_output, css_userOut, css_passOut, css_container
-     */
 	var css_panel = "bp-panel";
 	var css_output ="bp-out";
 	var css_userOut = "bp-user-out";
@@ -57,22 +56,10 @@
 	// clash with other HTML elements. However, their names could clash
 	// with jQuery. Hence they are placed here so that they maybe easily
 	// changed if needed.
-    /*properties
-     * data_value, data_dataType, data_peerID
-     */
 	var pn_d_value = "bpValue";
 	var pn_d_dataType = "dataType";
 	var pn_d_peerID = 'bpPeerID';
 
-    // 'enumerated' values used internally only. We need these here in order
-    // to be able to use the same values consistently across modules.
-    /*properties
-     * dt_userid, dt_pass
-     */
-    var e_dt_userid = "userid";   // Represents data-type userid
-    var e_dt_pass = "pass";        // Represents data-type password
-
-    /*properties draggedElementID */
     var draggedElementID = null;
     
     /** Decrypts password */
@@ -140,6 +127,9 @@
 		ev.stopPropagation();
 	}
 	
+	function findPeerElement(el)
+	{}
+	
 	function autoFillPeer(el, data)
 	{
         var p_el = findPeerElement(el);
@@ -158,18 +148,27 @@
 	{
 		function inputHandler(e)
 		{
-            var record = bp_3db.constructRecord(), dragged_el;
-            dragged_el = draggedElementID ? document.getElementById(draggedElementID) : null;
+		    console.info("inputHandler invoked");
+            var elementRec = constructERecord(), dragged_el;
+            if (draggedElementID) {
+                dragged_el = document.getElementById(draggedElementID);
+                console.info("DraggedElementID is " + draggedElementID);
+            }
+            else {
+                console.info("DraggedElementID is null");
+            }
             
-			if ( dragged_el && ($(dragged_el).val() === e.target.value))
+			if ( dragged_el && ($(dragged_el).data(pn_d_value) === e.target.value))
 			{
-			    record.tagName = e.target.tagName;
-			    record.elementID = e.target.id;
-			    record.elementName = e.target.name;
-			    record.elementType = e.target.type;
-                record.elementDataType = $(dragged_el).data(pn_d_dataType);
-                
-				bp_3db.saveTagDescription(record);
+			    elementRec.tagName = e.target.tagName;
+			    elementRec.id = e.target.id;
+			    elementRec.name = e.target.name;
+			    elementRec.type = e.target.type;
+                elementRec.dataType = $(dragged_el).data(pn_d_dataType);
+                elementRec.location = window.location;
+                //elementRec.location = document.location;
+                                
+				saveERecord(elementRec);
 				
 				var p = $(dragged_el).data(pn_d_peerID);
 				if (p) {
@@ -235,9 +234,9 @@
 	
 	function insertIOItem (jq, id, user, pass)
 	{
-		var userid = n.userElementIDPrefix + id;
-		var passid = n.passElementIDPrefix + id;
-		var j_li = $(document.createElement("li")).addClass(n.containerClass);
+		var userid = eid_userElement + id;
+		var passid = eid_passElement + id;
+		var j_li = $(document.createElement("li")).addClass(css_container);
 
 		var j_inu = $("<span></span>").attr(
 			{draggable: true,
@@ -248,8 +247,8 @@
 			 //size: 12,
 			 //maxlength: 100
 			 }
-			).addClass(n.outputClass + " " + n.userOutClass).text(user);
-		j_inu.data(n.dataType, dt.userid).data(n.value, user);
+			).addClass(css_output + " " + css_userOut).text(user);
+		j_inu.data(pn_d_dataType, e_dt_userid).data(pn_d_value, user);
 
 		var j_inp = $("<span></span>").attr(
 			{
@@ -262,8 +261,8 @@
 				//cols: 12, rows: 1,
 				//maxlength: 100,
 			}
-			).addClass(n.outputClass + " " + n.passOutClass).text("...");
-        j_inp.data(n.dataType, dt.pass).data(n.value, pass);
+			).addClass(css_output + " " + css_passOut).text("...");
+        j_inp.data(pn_d_dataType, e_dt_pass).data(pn_d_value, pass);
         
 		jq.append(j_li.append(j_inu).append(j_inp));
 
@@ -275,20 +274,20 @@
     function createPanelTitle ()
 	{
 		return $(document.createElement("div")).attr({
-					id: n.panelTitleId
+					id: eid_panelTitle
 				}).text("BPrivy");
 	}
 
 	// CREATE THE CONTROL-PANEL
-	function CreatePanel()
+	function createPanel()
 	{
 		var panelW, winW, left;
 		//var document = win.document;
 
 		var tmp_el = document.createElement("div");
-		var panel = $(tmp_el).attr('id', n.panelId).addClass(n.panelClass);
+		var panel = $(tmp_el).attr('id', eid_panel).addClass(css_panel);
 		
-		var ul = $("<ul></ul>").attr("id", n.panelListId).addClass(n.containerClass);
+		var ul = $("<ul></ul>").attr("id", eid_panelList).addClass(css_container);
 		
 		ul.append(createPanelTitle());
 		insertIOItem(ul, "1", "username1", "password1");
@@ -326,9 +325,9 @@
 	function clickBP (request, sender, sendResponse)
 	{
 		// Only show the panel in the top-level frame.
-		if(DoCreatePanel(this)) 
+		if(doCreatePanel(window)) 
 		{
-			$(document.getElementById(n.panelId)).toggle();
+			$(document.getElementById(eid_panel)).toggle();
 		}
 	
 		sendResponse({});
@@ -337,10 +336,10 @@
 	
 	function main()
 	{
-		if(DoCreatePanel(this)) 
+		if(doCreatePanel(window)) 
 		{
 			console.log("BP_CS entered on page " + location.href);
-			CreatePanel();
+			createPanel();
 			setupDNDWatchers();
 			chrome.extension.onRequest.addListener(clickBP);
 		}
@@ -348,8 +347,7 @@
 	
 	main();
 
-	var bp_CS = getModuleInterface();
-//return bp_CS;}());
+}());
 /** @ModuleEnd */
 
 

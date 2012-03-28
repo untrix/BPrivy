@@ -13,9 +13,9 @@ Function.prototype.defineMethod = function (name, value)
 	return this;
 };
 
-function bp_common_clone()
+var bp_common_clone = function ()
 {
-    if (typeof this !== "object") {
+    if ((typeof this) !== "object") {
         return;
     }
     
@@ -26,7 +26,7 @@ function bp_common_clone()
         }
     }
     return o;
-}
+};
 
 Object.defineProperty(Object.prototype, "bp_common_clone", {value: bp_common_clone, writable: false, enumerable: false, configurable: false});
 
