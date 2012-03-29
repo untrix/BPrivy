@@ -20,7 +20,7 @@
 /**
  * @module CS
  */
-(function() {
+function com_bprivy_CS(_win) {
     /** @import-module-begin 3db */
     {
     var m3db = bp_GetModule_3db();
@@ -63,6 +63,7 @@
 	var css_container = "com-bprivy-li";
     var css_container2 = "com-bprivy-ul";
 	var css_xButton = "com-bprivy-x";
+	var css_hidden = "com-bprivy-hidden";
 	
 	// These are 'data' attribute names. If implemented as jQuery data
 	// these won't manifest as HTML content attributes, hence won't
@@ -76,6 +77,7 @@
     // Globals
     var g_draggedElementID = null;
     var g_j_xBtn = null;
+    var g_win = _win;
     
     /** Decrypts password */
     function decrypt(str) {return str;}
@@ -159,7 +161,7 @@
         }
 	}
 	
-	function setupDNDWatchers()
+	function setupDNDWatchers(win)
 	{
 		function inputHandler(e)
 		{
@@ -180,7 +182,7 @@
 			    elementRec.name = e.target.name;
 			    elementRec.type = e.target.type;
                 elementRec.dataType = $(dragged_el).data(pn_d_dataType);
-                elementRec.location = window.location;
+                elementRec.location = win.location;
                 //elementRec.location = document.location;
                                 
 				saveERecord(elementRec);
@@ -193,7 +195,7 @@
 			}
 		}
 		
-		$("input").each(function(i, el) {
+		$(win.document.getElementsByTagName('input')).each(function(i, el) {
 			if (isUserid(el) || isPassword(el))
 			{
 				el.addEventListener("input", inputHandler, false);
@@ -349,7 +351,7 @@
 	function clickBP (request, sender, sendResponse)
 	{
 		// Only show the panel in the top-level frame.
-		if(doCreatePanel(window)) 
+		if(doCreatePanel(g_win)) 
 		{
 			$(document.getElementById(eid_panel)).toggle();
 		}
@@ -360,23 +362,25 @@
 	
 	function main()
 	{
-		if(doCreatePanel(window)) 
+		if(doCreatePanel(g_win)) 
 		{
 			console.log("BP_CS entered on page " + location.href);
 			createPanel();
-			setupDNDWatchers();
+			setupDNDWatchers(g_win);
 			chrome.extension.onRequest.addListener(clickBP);
-			var el = window.document.createElement('bp-data');
-			$(el).prop("hidden", true);
-			$(el).appendTo(window.document.body);
+			var el = g_win.document.createElement('com-bprivy-data');
+			el.setAttribute('id', 'com.facebook.www1/login.asp?b=a&x=y#abc');
+			$(el).prop("hidden", true).addClass(css_hidden);
+			$(el).appendTo(g_win.document.body);
 		}
 	}
 	
-	main();
+	return main;
 
-}());
+}
 /** @ModuleEnd */
 
+com_bprivy_CS(window)();
 
 /*
  

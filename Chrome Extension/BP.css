@@ -93,3 +93,7 @@
                 color: green;
                 /*vertical-align: middle;*/
 			}
+			
+.com-bprivy-hidden {
+                display:none;
+            }
