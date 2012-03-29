@@ -1,58 +1,95 @@
 
-#com-untrix-bpPanel	{
-				margin: 0px;
-				padding: 0px;
+#com-bprivy-panel	{
+				margin: 2px;
+				padding: 2px;
 				color: white;
-				background-color: white;
-				//opacity: 0.3;
+				border-radius: 4px;
+				background-color: black;
+				opacity: 1;
 				border: thin solid gray;
 				z-index: 9007199254740992;
-				width: auto; height: auto; line-height: auto;
+				width: auto; height: auto; line-height: normal;
 				cursor: default;
 				font-size: 13px;
 				font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
 			}
 
-.bp-container {
-				//background-color: white;
-				border-style: hidden;
-				border-width: 0px;
+.com-bprivy-li {
+				/*background-color: white;*/
+                border: thin solid gray;
+                border-radius: 2px;
+                border-collapse:collapse;
+				color: gray;
+/*				border-style: hidden;
+				border-width: 0px;*/
 				margin: 0px;
 				padding: 0px;
 				width:auto; height: auto;
 				list-style-type: none;
+				/*opacity: 0.5;*/
 			}
 
-#com-untrix-bpPanelTitle {
+.com-bprivy-ul {
+                /*background-color: white;*/
+                color: gray;
+                border-style: hidden;
+                border-width: 0px;
+                margin: 0px;
+                padding: 0px;
+                width:auto; height: auto;
+                list-style-type: none;
+                /*opacity: 0.5;*/
+            }
+
+#com-bprivy-panelTitle {
 				display: block;
 				border: inherit;
 				text-align:center;
+				vertical-align: middle;
 				width: auto;
-				cursor:move;
+				cursor: default;
 				background-color: gray;
 				color: white;
 				-moz-user-select: none;
 				-khtml-user-select: none;
 				-webkit-user-select: none;
-				user-select: none; 
+				user-select: none;
 				font-weight: bold;
+				opacity: 1.0;
 			}
 
-.bp-out		{
- 		 		border: thin solid gray;
- 		 		//display: inline;
- 		 		background-color: white;
- 		 		color: black;
+.com-bprivy-x {
+                display: inline;
+                float: right;
+                background-color: #804000;
+                color: white;
+                border: thin outset black;
+                vertical-align: middle;
+                text-align: center;
+                width: .8em;
+                height: .8em;
+            }
+            
+.com-bprivy-out		{
+                display: block;
+                /*border: thin solid gray;
+                border-radius: 2px;*/
+                /*background-color: white;*/
  		 		width: 10ex; height: 1.3em;
- 		 		cursor:crosshair;
- 		 		text-align:justify;
- 		 		line-height
+ 		 		cursor: pointer;
+ 		 		overflow: hidden;
  		 	}
 			
-.bp-user-out{
-				float:left;
+.com-bprivy-user-out{
+                text-align:justify;
+                color: #0080ff;
+				/*float:left;*/
  		 	}
- 		 
-.bp-pass-out{
-				float: right;
+
+.com-bprivy-pass-out{
+				/*float: right;*/
+				border-top: thin solid gray;
+				text-align: center;
+                color: green;
+                /*vertical-align: middle;*/
 			}

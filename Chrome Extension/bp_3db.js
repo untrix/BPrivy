@@ -7,12 +7,13 @@
 /* Global declaration for JSLint */
 /*global document */
 /*jslint browser:true, devel:true */
+/** @remove Only used in debug builds */
+"use strict";
 
 /**
  * @ModuleBegin 3db
  */
-"use strict";
-var bp_3db = (function () {
+function bp_GetModule_3db() {
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
     var e_dt_userid = "userid";   // Represents data-type userid
@@ -163,5 +164,5 @@ var bp_3db = (function () {
     
     var bp_3db = getModuleInterface();
 
-return bp_3db;}());
+return bp_3db;}
 /** @ModuleEnd */
