@@ -2,7 +2,11 @@
 <html>
 <head> <title> BPrivy Background Page</title>
 <script>
-var g = new Object;
+/* JSLint directives */
+/*global chrome, window */
+/*jslint browser : true, devel : true, es5 : true */
+/*properties console.info, console.log, console.warn */
+var g = {contextMenuID: null};
 
 function GetCreds(url)
 {
@@ -11,13 +15,16 @@ function GetCreds(url)
 
 function Lookup(info, tab)
 {
+    var url;
 	if (info.menuItemId == g.ContextMenuID)
 	{
 		console.info("BPMenuItem was clicked on page ");
-		if (info.pageUrl)
+		if (info.pageUrl) {
 			url = info.pageUrl;
-		else if (tab.url)
+		}
+		else if (tab.url) {
 			url = tab.url;
+		}
 		console.info("info: " + JSON.stringify(info));
 		console.info("tab: " + JSON.stringify(tab));
 		var creds = GetCreds(url);
@@ -42,42 +49,46 @@ function BPClick(tab)
 	chrome.tabs.sendRequest(tab.id, {});
 }
 
-function Main()
+function Main2()
 {
 	chrome.browserAction.onClicked.addListener(BPClick);
+    document.designMode = 'on';// enables saving the document
 }
 
-/*
+
 function BPMenuClick(info, tab)
 {
 	if (info.menuItemId == g.ContextMenuID)
 	{
 		console.info("BPMenuItem was clicked on page " + info.pageUrl);
-		chrome.tabs.sendRequest(tab.id, {});
+		BPClick(tab);
 	}
 }
-*/
 
-/*
-function Main()
+
+function main()
 {
-	var menuProperties = {"type": "normal", "title": "Privy DB", "contexts": ["editable"], "onclick": MenuClick, "documentUrlPatterns": document.location};
+	var menuProperties = {"type": "normal", "title": "BPrivy", "contexts": ["all"], "onclick": BPMenuClick, "documentUrlPatterns": document.url};
 	var menu_id = chrome.contextMenus.create(menuProperties);
 	console.info("Menu Item ID " + menu_id + " Created");
+
+    chrome.browserAction.onClicked.addListener(BPClick);
+    document.designMode = 'on';// enables saving the document
 	//menuProperties = {"type": "normal", "title": "Privy",  "onclick": MenuClick, "parentId": menu_id};
 	//var child_menu = chrome.contextMenus.create(menuProperties);
 	//console.info("Child Menu ID " + child_menu + " Created");
+	
 	return menu_id;
 }
 
-var g.ContextMenuID = Main();
+g.ContextMenuID = main();
 
 console.info("Menu Item ID = " + g.ContextMenuID);
-*/
-
-Main();
 
 </script>
 </head>
-<body></body>
+<body>
+    <div id='com-bprivy-passworddb' hidden></div>
+    <div id="com-bprivy-tagdb" hidden></div>
+</body>
 </html>

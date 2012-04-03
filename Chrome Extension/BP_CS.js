@@ -4,7 +4,7 @@
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
 
  */
-/* Global declaration for JSLint */
+/* JSLint directives */
 /*global $, console, chrome, window, bp_GetModule_3db */
 /*jslint browser : true, devel : true, es5 : true */
 /*properties console.info, console.log, console.warn */
@@ -20,7 +20,8 @@
 /**
  * @module CS
  */
-function com_bprivy_CS(_win) {
+function com_bprivy_CS(_win) 
+{
     /** @import-module-begin 3db */
     {
     var m3db = bp_GetModule_3db();
@@ -92,7 +93,7 @@ function com_bprivy_CS(_win) {
      }
     
     /** Intelligently returns true if the element is a password field */
-     function isPassword (el)
+    function isPassword (el)
      {
         return (el.type === "password");
      }
@@ -293,22 +294,24 @@ function com_bprivy_CS(_win) {
 		var j_div = $(document.createElement("div")).attr({
 					id: eid_panelTitle
 				}).text("BPrivy");
-        g_j_xBtn = $(document.createElement("button")).prop(
+        g_j_xBtn = $(document.createElement("button")).attr(
                     {    
                         type: "button",
-                        id: eid_xButton
+                        id: eid_xButton,
+                        accesskey: "q",
+                        'for': eid_panel
                     }).addClass(css_xButton);
         j_div.append(g_j_xBtn);
 		return j_div;
 	}
 
 	// CREATE THE CONTROL-PANEL
-	function createPanel()
+	function createPanel(win)
 	{
 		var panelW, winW, left;
-		//var document = win.document;
+		var doc = win.document;
 
-		var tmp_el = document.createElement("div");
+		var tmp_el = doc.createElement("div");
 		var j_panel = $(tmp_el).attr('id', eid_panel).addClass(css_panel);
 		
 		var j_ul = $("<ul></ul>").attr("id", eid_panelList).addClass(css_container2);
@@ -321,7 +324,7 @@ function com_bprivy_CS(_win) {
 
 		j_panel.append(j_ul);
 		
-		if (document.body) {
+		if (doc.body) {
 			j_panel.hide().appendTo('body');
 		}
 		
@@ -329,8 +332,8 @@ function com_bprivy_CS(_win) {
 		// by setting position:relative. Also we can use right:0px here because draggable() does not like it.
 		// Hence we need to calculate the left value :(			
 		panelW = j_panel.outerWidth();
-		winW = document.body.clientWidth ? document.body.clientWidth :
-				$(document.body).innerWidth();
+		winW = doc.body.clientWidth ? doc.body.clientWidth :
+				$(doc.body).innerWidth();
 		
 		left = (winW-panelW);
 		left = (left>0)? left: 0;
@@ -342,9 +345,22 @@ function com_bprivy_CS(_win) {
 		// Make it draggable after all above mentioned style properties have been applied to the element.
 		// Otherwise draggable() will override those properties.
 		j_panel.draggable();
+		
 		// Make it closable via. the x button
 		g_j_xBtn[0].addEventListener("click", function(){j_panel.toggle();});
 		
+/*		var l_btn = doc.createElement("button");
+		var j_btn = $(l_btn).attr({
+                                                         type: 'button',
+                                                         id: eid_Button,
+                                                         accesskey: 'p',
+                                                         hidden: 'hidden',
+                                                         'for': eid_panel,
+                                                         'class': css_hidden
+	                                                 }).appendTo(doc.body);
+	                                                 
+	    l_btn.addEventListener("click", function (e){console.info("click"); j_panel.toggle();});
+	    console.log('accesskey and label are ' + l_btn.accessKey + " and " + l_btn.accessKeyLabel);*/
 		return j_panel;
 	}
 
@@ -365,9 +381,11 @@ function com_bprivy_CS(_win) {
 		if(doCreatePanel(g_win)) 
 		{
 			console.log("BP_CS entered on page " + location.href);
-			createPanel();
+			createPanel(g_win);
 			setupDNDWatchers(g_win);
 			chrome.extension.onRequest.addListener(clickBP);
+			
+			// experimentation
 			var el = g_win.document.createElement('com-bprivy-data');
 			el.setAttribute('id', 'com.facebook.www1/login.asp?b=a&x=y#abc');
 			$(el).prop("hidden", true).addClass(css_hidden);
