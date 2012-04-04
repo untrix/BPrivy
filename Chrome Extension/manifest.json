@@ -6,7 +6,7 @@
 	     "128": "icon128.png",
   	     "16": "icon16.png"
 	   },
-  "permissions": ["contextMenus", "tabs", "<all_urls>"],
+  "permissions": ["contextMenus", "tabs", "webRequest", "<all_urls>"],
   "background_page": "BP_Main.html",
   "content_scripts": [
 	{

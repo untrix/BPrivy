@@ -77,7 +77,6 @@ function com_bprivy_CS(_win)
 
     // Globals
     var g_draggedElementID = null;
-    var g_j_xBtn = null;
     var g_win = _win;
     
     /** Decrypts password */
@@ -99,8 +98,8 @@ function com_bprivy_CS(_win)
      }
 
     /** Returns true if the BPrivy control panel should be created in the supplied browsing context */
-	function doCreatePanel(win) {
-		return (win.top == win.self);
+	function canHavePanel(win) {
+		return (win.top === win.self);
 	}
 	
 	function isDocVisible(document) {
@@ -294,14 +293,16 @@ function com_bprivy_CS(_win)
 		var j_div = $(document.createElement("div")).attr({
 					id: eid_panelTitle
 				}).text("BPrivy");
-        g_j_xBtn = $(document.createElement("button")).attr(
+        var j_xBtn = $(document.createElement("button")).attr(
                     {    
                         type: "button",
                         id: eid_xButton,
                         accesskey: "q",
                         'for': eid_panel
                     }).addClass(css_xButton);
-        j_div.append(g_j_xBtn);
+        // Make it closable via. the x button
+        j_xBtn[0].addEventListener("click", togglePanel);
+        j_div.append(j_xBtn);
 		return j_div;
 	}
 
@@ -346,8 +347,7 @@ function com_bprivy_CS(_win)
 		// Otherwise draggable() will override those properties.
 		j_panel.draggable();
 		
-		// Make it closable via. the x button
-		g_j_xBtn[0].addEventListener("click", function(){j_panel.toggle();});
+
 		
 /*		var l_btn = doc.createElement("button");
 		var j_btn = $(l_btn).attr({
@@ -364,32 +364,44 @@ function com_bprivy_CS(_win)
 		return j_panel;
 	}
 
+    function togglePanel(e)
+    {
+        // Only show the panel in the top-level frame.
+        if(canHavePanel(g_win)) 
+        {
+            var el = document.getElementById(eid_panel);
+            if (el)
+            {
+                g_draggedElementID = null;
+                $(el).remove();
+            }
+            else
+            {
+                createPanel(g_win).show();
+            }
+        }        
+    }
+    
 	function clickBP (request, sender, sendResponse)
 	{
-		// Only show the panel in the top-level frame.
-		if(doCreatePanel(g_win)) 
-		{
-			$(document.getElementById(eid_panel)).toggle();
-		}
-	
+		togglePanel(request);
 		sendResponse({});
-		return;
 	}
 	
 	function main()
 	{
-		if(doCreatePanel(g_win)) 
+		if(canHavePanel(g_win)) 
 		{
 			console.log("BP_CS entered on page " + location.href);
-			createPanel(g_win);
+			//createPanel(g_win);
 			setupDNDWatchers(g_win);
 			chrome.extension.onRequest.addListener(clickBP);
 			
 			// experimentation
-			var el = g_win.document.createElement('com-bprivy-data');
+/*			var el = g_win.document.createElement('com-bprivy-data');
 			el.setAttribute('id', 'com.facebook.www1/login.asp?b=a&x=y#abc');
 			$(el).prop("hidden", true).addClass(css_hidden);
-			$(el).appendTo(g_win.document.body);
+			$(el).appendTo(g_win.document.body);*/
 		}
 	}
 	
