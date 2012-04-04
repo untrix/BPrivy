@@ -25,8 +25,8 @@ function com_bprivy_CS(_win)
     /** @import-module-begin 3db */
     {
     var m3db = bp_GetModule_3db();
-    var e_dt_userid = m3db.e_dt_userid;   // Represents data-type userid
-    var e_dt_pass = m3db.e_dt_pass;        // Represents data-type password
+    var e_dt_userid = m3db.dt_userid;   // Represents data-type userid
+    var e_dt_pass = m3db.dt_pass;        // Represents data-type password
     var constructERecord = m3db.constructERecord;
     var saveERecord = m3db.saveERecord;
     /**

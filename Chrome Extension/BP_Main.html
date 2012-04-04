@@ -46,10 +46,10 @@ function ShowOptionsMenu(records)
 
 function BPClick(tab)
 {
-	chrome.tabs.sendRequest(tab.id, {});
+	chrome.tabs.sendRequest(tab.id, {click: true});
 }
 
-function Main2()
+function main2()
 {
 	chrome.browserAction.onClicked.addListener(BPClick);
     document.designMode = 'on';// enables saving the document

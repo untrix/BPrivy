@@ -16,10 +16,10 @@
 function bp_GetModule_3db() {
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
-    var e_dt_userid = "userid";   // Represents data-type userid
-    var e_dt_pass = "pass";        // Represents data-type password
+    var dt_userid = "userid";   // Represents data-type userid
+    var dt_pass = "pass";        // Represents data-type password
 
-    var learningDB = [];
+    var knowledgeDB = [];
     function Url (location) // constructor of URLs
     {
         var desc_o = {value: null, writable: true, enumerable: true, configurable: false};//Object descriptor
@@ -50,35 +50,37 @@ function bp_GetModule_3db() {
         this.hash = location.hash;
     }
     
-    Url.prototype.toString = function () 
+    Url.prototype.toJson = function ()
     {
-        var str = "protocol = " + this.protocol + '\r\n';
-        var i, p_s = this.path_segments, h_s = this.hostname_segments;
-        for (i=0, str+="Reverse Hostname Segments = " + h_s.length + " \r\n"; i<h_s.length; ++i)
-        {
-            str += (h_s[i] + '\r\n');
-        }
-
-        for (i=0, str+="Path Segments = " + p_s.length + " \r\n"; i<p_s.length; ++i)
-        {
-            str += (p_s[i] + '\r\n');
-        }
-        
-        return str;
+        return JSON.stringify(this, null, 2);
+        // var LF = '\n';
+        // var str = "protocol = " + this.protocol + LF;
+        // var i, p_s = this.path_segments, h_s = this.hostname_segments;
+        // for (i=0, str+="Reverse Hostname Segments = " + h_s.length + LF; i<h_s.length; ++i)
+        // {
+            // str += (h_s[i] + LF);
+        // }
+// 
+        // for (i=0, str+="Path Segments = " + p_s.length + LF; i<p_s.length; ++i)
+        // {
+            // str += (p_s[i] + LF);
+        // }
+//         
+        // return str;
     };
     
-    function toString(o) {
-        var str = "", name;
-        for (name in o) {
-            if (o.hasOwnProperty(name)) {
-                str += (name + ":" + o[name] + ", ");
-            }
-        }
-        return str;
-    }
-    
     function Record() {}
-    //Record.prototype.toString = toString;
+    Record.prototype.toJson = function ()
+    {
+        return JSON.stringify(this, null, 2);
+        // var str = "", props = Object.getOwnPropertyNames(this);
+        // props.forEach(function (name, i, props)
+        // {
+            // str += (name + ":" + this[ name ] + ", ");
+        // }, this);
+        // return str;
+    };
+    
     function constructERecord() {
         var o = new Record();
         var descriptor = {value: null, writable: true, enumerable: true, configurable: false};
@@ -95,6 +97,7 @@ function bp_GetModule_3db() {
         return o;    
     }
     
+    //Knowledge Record
     function constructKRecord() {
         var o = new Record();
         var descriptor = {value: null, writable: true, enumerable: true, configurable: false};
@@ -118,7 +121,7 @@ function bp_GetModule_3db() {
     function getModuleInterface(url) {
         var saveERecord = function (eRec)
         {
-            console.info("Saving Tag " + toString(eRec));
+            console.info("Saving Tag " + eRec.toJson());
             var kRec = constructKRecord();
             kRec.tagName = eRec.tagName;
             kRec.id = eRec.id;
@@ -132,16 +135,14 @@ function bp_GetModule_3db() {
             kRec.location.pathname = eRec.location.pathname;
             kRec.location.hash = eRec.location.hash;
             kRec.location.search = eRec.location.search;
-            kRec.url = kRec.location.protocol + "//" +
-                       kRec.location.host +
-                       kRec.location.pathname + "?" +
-                       kRec.location.search + "#"   +
-                       kRec.location.hash;
+            kRec.url = eRec.location.href;
             
-            console.info("Saved Record " + toString(kRec));
+            var json = kRec.toJson();
+            knowledgeDB.push(json);
+            console.info("Saved Record " + json);
             
-            var url = new Url(kRec.location);
-            console.info("Parsed URL = " + url.toString());
+            //var url = new Url(kRec.location);
+            //console.info("Parsed URL = " + url.toJson());
         };
 
         var getElements = function (location)
@@ -152,8 +153,8 @@ function bp_GetModule_3db() {
         var iface = {};
         Object.defineProperties(iface, 
         {
-            e_dt_userid: {value: e_dt_userid, writable: false, enumerable: false, configurable: false},
-            e_dt_pass: {value: e_dt_pass, writable: false, enumerable: false, configurable: false},
+            dt_userid: {value: dt_userid, writable: false, enumerable: false, configurable: false},
+            dt_pass: {value: dt_pass, writable: false, enumerable: false, configurable: false},
             saveERecord: {value: saveERecord, writable: false, enumerable: false, configurable: false},
             constructERecord: {value: constructERecord, writable: false, enumerable: false, configurable: false}
         });
