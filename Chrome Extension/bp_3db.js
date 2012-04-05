@@ -5,7 +5,7 @@
  */
 
 /* Global declaration for JSLint */
-/*global document */
+/*global document com_bprivy_GetModule_CSPlatform*/
 /*jslint browser:true, devel:true */
 /** @remove Only used in debug builds */
 "use strict";
@@ -13,11 +13,15 @@
 /**
  * @ModuleBegin 3db
  */
-function bp_GetModule_3db() {
+function com_bprivy_GetModule_3db() {
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
     var dt_userid = "userid";   // Represents data-type userid
     var dt_pass = "pass";        // Represents data-type password
+    var dt_kRecord = "K-Record";  // Represents a K-Record
+    var dt_eRecord = "E-Record";  // Represents a E-Record
+    
+    var postMsgToMothership = com_bprivy_GetModule_CSPlatform().postMsgToMothership;
 
     var knowledgeDB = [];
     function Url (location) // constructor of URLs
@@ -41,6 +45,10 @@ function bp_GetModule_3db() {
         // The following keys will be used for dictionary lookup.
         this.hostname_segments = location.hostname.split('.');
         this.hostname_segments.reverse();
+        
+        // Split pathname into path segments.
+        // First remove leading slashes
+        location.pathname = location.pathname.replace(/^\/+/,'');
         this.path_segments = location.pathname.split('/');
 
         // The following properties are not being used for dictionary lookup.
@@ -69,20 +77,15 @@ function bp_GetModule_3db() {
         // return str;
     };
     
-    function Record() {}
-    Record.prototype.toJson = function ()
+    function toJson ()
     {
         return JSON.stringify(this, null, 2);
-        // var str = "", props = Object.getOwnPropertyNames(this);
-        // props.forEach(function (name, i, props)
-        // {
-            // str += (name + ":" + this[ name ] + ", ");
-        // }, this);
-        // return str;
-    };
+    }
     
+    function ERecord() {this.dt = dt_eRecord;}
+    ERecord.prototype.toJson = toJson;
     function constructERecord() {
-        var o = new Record();
+        var o = new ERecord();
         var descriptor = {value: null, writable: true, enumerable: true, configurable: false};
         Object.defineProperties(o, 
         {
@@ -96,10 +99,12 @@ function bp_GetModule_3db() {
         Object.preventExtensions(o);
         return o;    
     }
-    
+
     //Knowledge Record
+    function KRecord() {this.dt = dt_kRecord;}
+    KRecord.prototype.toJson = toJson;
     function constructKRecord() {
-        var o = new Record();
+        var o = new KRecord();
         var descriptor = {value: null, writable: true, enumerable: true, configurable: false};
         var descriptor2 = {value: {}, writable: true, enumerable: true, configurable: false};
         
@@ -121,7 +126,7 @@ function bp_GetModule_3db() {
     function getModuleInterface(url) {
         var saveERecord = function (eRec)
         {
-            console.info("Saving Tag " + eRec.toJson());
+            //console.info("Saving Tag " + eRec.toJson());
             var kRec = constructKRecord();
             kRec.tagName = eRec.tagName;
             kRec.id = eRec.id;
@@ -137,9 +142,7 @@ function bp_GetModule_3db() {
             kRec.location.search = eRec.location.search;
             kRec.url = eRec.location.href;
             
-            var json = kRec.toJson();
-            knowledgeDB.push(json);
-            console.info("Saved Record " + json);
+            postMsgToMothership(kRec);
             
             //var url = new Url(kRec.location);
             //console.info("Parsed URL = " + url.toJson());

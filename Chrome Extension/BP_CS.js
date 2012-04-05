@@ -5,7 +5,7 @@
 
  */
 /* JSLint directives */
-/*global $, console, chrome, window, bp_GetModule_3db */
+/*global $, console, window */
 /*jslint browser : true, devel : true, es5 : true */
 /*properties console.info, console.log, console.warn */
 /*properties 
@@ -22,19 +22,22 @@
  */
 function com_bprivy_CS(_win) 
 {
-    /** @import-module-begin 3db */
+    /** @import-module-begin 3db Platform */
     {
-    var m3db = bp_GetModule_3db();
-    var e_dt_userid = m3db.dt_userid;   // Represents data-type userid
-    var e_dt_pass = m3db.dt_pass;        // Represents data-type password
-    var constructERecord = m3db.constructERecord;
-    var saveERecord = m3db.saveERecord;
-    /**
-     * @remove
-     * Ensure we're not using any values other than those declared above.
-     */
-    m3db = null;
-    } 
+        var m3db = com_bprivy_GetModule_3db();
+        var e_dt_userid = m3db.dt_userid;   // Represents data-type userid
+        var e_dt_pass = m3db.dt_pass;        // Represents data-type password
+        var constructERecord = m3db.constructERecord;
+        var saveERecord = m3db.saveERecord;
+        /** @debug-only */
+        m3db = null;
+        
+        var mCSPlatform = com_bprivy_GetModule_CSPlatform();
+        var registerMsgListener = mCSPlatform.registerMsgListener;
+        var getURL = mCSPlatform.getURL;
+        /** @debug-only */
+        mCSPlatform = null;
+    }
     /** @import-module-end */
 
 	// Names used in the code. A mapping is being defined here because
@@ -207,7 +210,7 @@ function com_bprivy_CS(_win)
 	function createImageElement(imgPath)
 	{
 		var el = document.createElement("img");
-		el.src = chrome.extension.getURL(imgPath);
+		el.src = getURL(imgPath);
 		
 		return el;
 	}
@@ -395,7 +398,7 @@ function com_bprivy_CS(_win)
 			console.log("BP_CS entered on page " + location.href);
 			//createPanel(g_win);
 			setupDNDWatchers(g_win);
-			chrome.extension.onRequest.addListener(clickBP);
+			registerMsgListener(clickBP);
 			
 			// experimentation
 /*			var el = g_win.document.createElement('com-bprivy-data');

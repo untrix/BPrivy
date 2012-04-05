@@ -1,18 +1,18 @@
 {
   "name": "BPrivy",
   "version": "1.0",
-  "description":"Personal Password Manager. Encrypted passwords are stored in a file. Take the File with you and use with any computer",
+  "description":"BPrivy Password Manager. Personal Protected and Portable (3P) Passwords. Encrypted passwords are stored in a file. Keep the file in a memory card in your wallet or save in your phone, access from any computer!",
   "icons": {
 	     "128": "icon128.png",
   	     "16": "icon16.png"
 	   },
   "permissions": ["contextMenus", "tabs", "webRequest", "<all_urls>"],
-  "background_page": "BP_Main.html",
+  "background_page": "bp_Main.html",
   "content_scripts": [
 	{
 	"matches": ["<all_urls>"],
-	"js": ["jquery.js", "jquery-ui.js", "bp_common.js", "bp_3db.js", "BP_CS.js"],
-	"css": ["BP.css"]
+	"js": ["jquery.js", "jquery-ui.js", "bp_common.js", "bp_CSPlatformChrome.js", "bp_3db.js", "bp_CS.js"],
+	"css": ["bp.css"]
 ///	"all_frames": true
 	}
   ],
