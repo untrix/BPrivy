@@ -1,43 +1,13 @@
 <!DOCTYPE HTML>
 <html>
 <head> <title> BPrivy Background Page</title>
-<script src="bp_MainChrome.js"></script>
-<script src="bp_CSPlatformChrome.js"></script>
-<script src="bp_3db.js"></script>
-<script>
-/* JSLint directives */
-/*global window com_bprivy_GetModule_MainPlatform */
-/*jslint browser : true, devel : true, es5 : true */
-/*properties console.info, console.log, console.warn */
-
-"use strict";
-(function() 
-{
-    /** @import-module-begin */
-    var mChrome = com_bprivy_GetModule_MainPlatform();
-    var registerMsgListener = mChrome.registerMsgListener;
-    var init = mChrome.init;
-    
-    mChrome = null;
-    /* @import-module-end */
-   
-    init(window);
-    
-    function onRequest (rq, sender, funcSendResponse) 
-    {
-        console.info("Mothership Received object of type " + rq.dt);
-        funcSendResponse({ack: true});
-    }
-    
-    registerMsgListener(onRequest);
-        
-})();
-
-
-</script>
 </head>
 <body>
-    <div id='com-bprivy-passworddb' hidden></div>
-    <div id="com-bprivy-tagdb" hidden></div>
+<script src='bp_Common.js' type="text/javascript"></script>
+<script src="bp_MainChrome.js" type="text/javascript"></script>
+<script src="bp_CSPlatformChrome.js" type="text/javascript"></script>
+<script src="bp_3db.js" type="text/javascript"></script>
+<script src="jquery.js" type="text/javascript"></script>
+<script src="bp_Main.js" type="text/javascript"></script>
 </body>
 </html>

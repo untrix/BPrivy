@@ -23,13 +23,12 @@ function com_bprivy_GetModule_3db() {
     
     var postMsgToMothership = com_bprivy_GetModule_CSPlatform().postMsgToMothership;
 
-    var knowledgeDB = [];
     function Url (location) // constructor of URLs
     {
-        var desc_o = {value: null, writable: true, enumerable: true, configurable: false};//Object descriptor
+        var desc_o = {value: undefined, writable: true, enumerable: true, configurable: false};//Object descriptor
         var desc_a = {value: [], writable: true, enumerable: true, configurable: false};  //Array descriptor
-        var desc_n = {value: null, writable: true, enumerable: true, configurable: false};//Number descriptor
-        var desc_s = {value: null, writable: true, enumerable: true, configurable: false};//String descriptor
+        var desc_n = {value: undefined, writable: true, enumerable: true, configurable: false};//Number descriptor
+        var desc_s = {value: undefined, writable: true, enumerable: true, configurable: false};//String descriptor
 
         Object.defineProperties(this,
         {
@@ -77,16 +76,16 @@ function com_bprivy_GetModule_3db() {
         // return str;
     };
     
-    function toJson ()
+    function ToJson ()
     {
         return JSON.stringify(this, null, 2);
     }
     
     function ERecord() {this.dt = dt_eRecord;}
-    ERecord.prototype.toJson = toJson;
+    ERecord.prototype.toJson = ToJson;
     function constructERecord() {
         var o = new ERecord();
-        var descriptor = {value: null, writable: true, enumerable: true, configurable: false};
+        var descriptor = {value: undefined, writable: true, enumerable: true, configurable: false};
         Object.defineProperties(o, 
         {
             location: descriptor,
@@ -100,49 +99,13 @@ function com_bprivy_GetModule_3db() {
         return o;    
     }
 
-    //Knowledge Record
-    function KRecord() {this.dt = dt_kRecord;}
-    KRecord.prototype.toJson = toJson;
-    function constructKRecord() {
-        var o = new KRecord();
-        var descriptor = {value: null, writable: true, enumerable: true, configurable: false};
-        var descriptor2 = {value: {}, writable: true, enumerable: true, configurable: false};
-        
-        Object.defineProperties(o, 
-        {
-            url: descriptor,
-            location: descriptor2,
-            tagName: descriptor,
-            id: descriptor,
-            name: descriptor,
-            type: descriptor,
-            dataType: descriptor
-        });
-        Object.preventExtensions(o);
-        return o;    
-    }
+
 
     /** ModuleInterfaceGetter 3db */
     function getModuleInterface(url) {
         var saveERecord = function (eRec)
         {
-            //console.info("Saving Tag " + eRec.toJson());
-            var kRec = constructKRecord();
-            kRec.tagName = eRec.tagName;
-            kRec.id = eRec.id;
-            kRec.name = eRec.name;
-            kRec.type = eRec.type;
-            kRec.dataType = eRec.dataType;
-            kRec.location.protocol = eRec.location.protocol;
-            kRec.location.host = eRec.location.host;
-            kRec.location.hostname = eRec.location.hostname;
-            kRec.location.port = eRec.location.port;
-            kRec.location.pathname = eRec.location.pathname;
-            kRec.location.hash = eRec.location.hash;
-            kRec.location.search = eRec.location.search;
-            kRec.url = eRec.location.href;
-            
-            postMsgToMothership(kRec);
+            postMsgToMothership(eRec);
             
             //var url = new Url(kRec.location);
             //console.info("Parsed URL = " + url.toJson());
@@ -158,6 +121,7 @@ function com_bprivy_GetModule_3db() {
         {
             dt_userid: {value: dt_userid, writable: false, enumerable: false, configurable: false},
             dt_pass: {value: dt_pass, writable: false, enumerable: false, configurable: false},
+            dt_eRecord: {value: dt_eRecord, writable: false, enumerable: false, configurable: false},
             saveERecord: {value: saveERecord, writable: false, enumerable: false, configurable: false},
             constructERecord: {value: constructERecord, writable: false, enumerable: false, configurable: false}
         });

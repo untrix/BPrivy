@@ -2,7 +2,6 @@
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
-
  */
 /* JSLint directives */
 /*global $, console, window */
@@ -22,24 +21,22 @@
  */
 function com_bprivy_CS(_win) 
 {
-    /** @import-module-begin 3db Platform */
-    {
-        var m3db = com_bprivy_GetModule_3db();
-        var e_dt_userid = m3db.dt_userid;   // Represents data-type userid
-        var e_dt_pass = m3db.dt_pass;        // Represents data-type password
-        var constructERecord = m3db.constructERecord;
-        var saveERecord = m3db.saveERecord;
-        /** @debug-only */
-        m3db = null;
-        
-        var mCSPlatform = com_bprivy_GetModule_CSPlatform();
-        var registerMsgListener = mCSPlatform.registerMsgListener;
-        var getURL = mCSPlatform.getURL;
-        /** @debug-only */
-        mCSPlatform = null;
-    }
-    /** @import-module-end */
-
+    /** @import-module-begin 3db */
+    var m = com_bprivy_GetModule_3db();
+    var e_dt_userid = m.dt_userid;   // Represents data-type userid
+    var e_dt_pass = m.dt_pass;        // Represents data-type password
+    var constructERecord = m.constructERecord;
+    var saveERecord = m.saveERecord;
+    /** @import-module-begin CSPlatform */
+    m = com_bprivy_GetModule_CSPlatform();
+    var registerMsgListener = m.registerMsgListener;
+    var getURL = m.getURL;
+    /** @import-module-begin Common */
+    m = com_bprivy_GetModule_Common();
+    var css_hidden = m.css_hidden;
+    /** @import-module-end */    m = null;
+    
+    /** @globals-begin */
 	// Names used in the code. A mapping is being defined here because
 	// these names are externally visible and therefore may need to be
 	// changed in order to prevent name clashes with other libraries.
@@ -67,7 +64,6 @@ function com_bprivy_CS(_win)
 	var css_container = "com-bprivy-li";
     var css_container2 = "com-bprivy-ul";
 	var css_xButton = "com-bprivy-x";
-	var css_hidden = "com-bprivy-hidden";
 	
 	// These are 'data' attribute names. If implemented as jQuery data
 	// these won't manifest as HTML content attributes, hence won't
@@ -78,9 +74,10 @@ function com_bprivy_CS(_win)
 	var pn_d_dataType = "dataType";
 	var pn_d_peerID = 'bpPeerID';
 
-    // Globals
+    // Other Globals
     var g_draggedElementID = null;
     var g_win = _win;
+    /** @globals-end **/
     
     /** Decrypts password */
     function decrypt(str) {return str;}
@@ -185,7 +182,7 @@ function com_bprivy_CS(_win)
 			    elementRec.name = e.target.name;
 			    elementRec.type = e.target.type;
                 elementRec.dataType = $(dragged_el).data(pn_d_dataType);
-                elementRec.location = win.location;
+                elementRec.location = win.document.location;
                 //elementRec.location = document.location;
                                 
 				saveERecord(elementRec);
