@@ -5,12 +5,12 @@
  */
 
 /* JSLint directives */
-/*global $ window com_bprivy_GetModule_MainPlatform com_bprivy_GetModule_3db com_bprivy_GetModule_Common */
+/*global $ document com_bprivy_GetModule_MainPlatform com_bprivy_GetModule_3db com_bprivy_GetModule_Common */
 /*jslint browser:true, devel:true, es5:true, vars:true */
 /*properties console.info, console.log, console.warn */
 
 "use strict";
-(function(win) 
+(function(doc) 
 {
     /** @import-module-begin MainPlatform */
     var m = com_bprivy_GetModule_MainPlatform();
@@ -27,24 +27,105 @@
 
     /** @globals-begin */
     var kDB;
-    var eid_kDB = "com-bprivy-kDB";
-    
+    var C_HTTP_PROTO = "http:";
+    var C_HTTPS_PROTO = "https:";
+    // C_VALUES is a property name that should never
+    // clash withe a URL segment. Hence the bracket
+    // characters are being used because they are
+    // excluded in rfc 2396 
+    var C_VALUES = "{v}";
+    var C_PARENT = "{p}";
     /** @globals-end **/
     
     
-    initScaffolding(win);
-    (function initDB() {
-        kDB = win.document.getElementById(eid_kDB);
-        if (!kDB) {
-            kDB = win.document.createElement('div');
-            $(kDB).attr({
-               id: eid_kDB,
-               'class': css_hidden,
-               hidden: 'hidden' 
-            }).appendTo(win.document.body);
-        }
-    })();
+    initScaffolding(doc);
     
+    /** @begin-class-def DNode */
+        function DNode ()
+        {
+            // Following properties will be added as needed
+            // An object containing values keyed by their data types
+            // e.g. this[C_VALUES] = {'username1':'password1', 'username2':'password2'};
+            // Multiple child-node references indexed by their key segment.
+            // e.g. this['yahoo.'] = child-node;
+            // e.g. this['google.'] = child-node;
+            // e.g. this['/path1'] = child-node;
+            // e.g. this['www'] = child-node;
+            // e.g. this['www:8080'] = child-node;
+        }
+        kDB = new DNode();
+        
+        // Non-Recursive insert. Usually invoked at the root of a tree.
+        // 
+        DNode.prototype.insert = function (rec) 
+        {
+            var n = this;
+            do {
+                n = n.tryInsert(rec);
+            } while (n);
+        };
+        
+        DNode.prototype.tryInsert = function(rec)
+        {
+            var k = rec.keys.pop();
+            if (!k) {
+                var v = rec.value, va = this[C_VALUES];
+                if (!va) {
+                    this[C_VALUES] = (va = {});
+                }
+                va[v.key] = v;
+            }
+            else {
+                var n = this[k];
+                if (!n) {
+                    this[k] = (n = new DNode());
+                }
+                
+                return n; // Non-recursive
+                // n.insert(rec); Tail-recursive.
+            }
+        };
+        
+        // Non-recursive findBest match method. Usually invoked at the root node.
+        // keys is an array of key segments in reverse order. Upon return, if keys
+        // still has some values remaining then it indicates a partial match. The
+        // remaining key-segments did not match. Only the removed (pop'd) segments
+        // matched at the node that was returned. The node may not have a value
+        // in it though. You can traverse up the tree using reverse links to find
+        // one with a value. Depending on the use-case you may find the entire
+        // sub-tree rooted at the returned node useful as well.
+        DNode.prototype.findBestMatch = function (keys) 
+        {
+            // usually (this === root-node)
+            var r = this, n;
+            do {
+                n = r;
+                r = n.tryFind(keys);
+            } while (r !== n);
+            
+            return n;
+        };
+        
+        DNode.prototype.tryFind = function(keys) 
+        {
+            var k = keys.increment(), n;
+            if (!k) {
+                return this;
+            }
+            else {
+                n =  this[k];
+                if (!n) {
+                    keys.decrement();
+                    return this;
+                }
+                else {
+                    return n; // Not recursive.
+                    // return n.findBest(keys); Tail recursive.
+                }
+            }
+        };
+    /** @begin-class-def **/
+
     //Knowledge Record
     function KRecord(eRec) {
         // Make sure to deep-copy all values into kRec instead of
@@ -68,73 +149,30 @@
         // kRec.location.hash = eRec.location.hash;
         // kRec.location.search = eRec.location.search;
         // kRec.url = eRec.location.href;
-        if (eRec.location.protocol) {
-            eRec.location.protocol = eRec.location.protocol.toLowerCase();
+        var l = eRec.location;
+        var t = l.protocol;
+        if (t) {
+            l.protocol = t.toLowerCase();
         }
         
-        if (!eRec.location.port) {
-            switch (eRec.location.protocol) {
-                case "http:":
-                    eRec.location.port = 80;
+        if (!l.port) {
+            switch (l.protocol) {
+                case C_HTTP_PROTO:
+                    l.port = 80;
                     break;
-                case "https:":
-                    eRec.location.port = 443;
+                case C_HTTPS_PROTO:
+                    l.port = 443;
                     break;
             }
         }
         
         this.eRec = eRec;
+        this.key = l.href;
+        this.parentKey = l.hostname + l.port;
     }
     KRecord.prototype.dt = dt_kRecord;
-    // KRecord.prototype.toJson = function() {return JSON.stringify(this, null, 2);};
-    // function constructKRecord() {
-        // var o = new KRecord();
-        // var descriptor = {value: undefined, writable: true, enumerable: true, configurable: false};
-        // var descriptor2 = {value: {}, writable: true, enumerable: true, configurable: false};
-//         
-        // Object.defineProperties(o, 
-        // {
-            // url: descriptor,
-            // location: descriptor2,
-            // tagName: descriptor,
-            // id: descriptor,
-            // name: descriptor,
-            // type: descriptor,
-            // dataType: descriptor
-        // });
-        // Object.preventExtensions(o);
-        // return o;    
-    // }
-  
-    function saveERecord (kRec) {
-        var el;
+    KRecord.prototype.saveKRecord = function (kDB){kDB.insert(this);};
 
-        switch (kRec.eRec.location.protocol)
-        {
-            case "http:":
-            case "https:":
-                el = win.document.getElementById(kRec.eRec.href);
-                if (el) {
-                    $(el).remove();
-                }
-                el = win.document.createElement('li');
-                $(el).attr({
-                    id: kRec.eRec.href,
-                    'class': css_hidden,
-                    hidden: 'hidden',
-                    'data-tagName': kRec.eRec.tagName,
-                    'data-id': kRec.eRec.id,
-                    'data-name': kRec.eRec.name,
-                    'data-type': kRec.eRec.type,
-                    'data-dataType': kRec.eRec.dataType
-                }).appendTo(kDB);
-            
-                break;
-                
-            default:
-            // Discard it for now
-        }
-    }
         
     function foo (o) {}
 
@@ -144,7 +182,7 @@
         switch (rq.dt)
         {
             case dt_eRecord:
-                saveERecord(new KRecord(rq));
+                (new KRecord(rq)).saveKRecord(kDB);
                 break;
             case "foo":
                 foo(rq);
@@ -152,4 +190,4 @@
         funcSendResponse({ack: true});
     }
     registerMsgListener(onRequest);
-})(window);
+})(document);
