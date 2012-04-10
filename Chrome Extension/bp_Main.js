@@ -11,7 +11,7 @@
 /*properties console.info, console.log, console.warn */
 
 "use strict";
-(function(doc) 
+(function Main(doc) 
 {
     /** @import-module-begin MainPlatform */
     var m = com_bprivy_GetModule_MainPlatform();
