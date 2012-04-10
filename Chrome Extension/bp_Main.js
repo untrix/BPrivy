@@ -1,4 +1,5 @@
 /**
+ * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
@@ -27,25 +28,48 @@
 
     /** @globals-begin */
     var kDB;
-    var C_HTTP_PROTO = "http:";
-    var C_HTTPS_PROTO = "https:";
-    // C_VALUES is a property name that should never
+    /** @constant */
+    var HTTP_PROTO = "http:";
+    var HTTPS_PROTO = "https:";
+    // VALUES is a property name that should never
     // clash withe a URL segment. Hence the bracket
     // characters are being used because they are
     // excluded in rfc 2396 
-    var C_VALUES = "{v}";
-    var C_PARENT = "{p}";
+    /** @constant */
+    var VALUES = "{v}";
+    /** @constant */
+    var PARENT = "{p}";
+    /** @constant return value of comparison function */
+    var EQUAL = Number(0);
+    /** @constant return value of comparison function */
+    var SUB = Number(1);
+    /** @constant return value of comparison function */
+    var SUPER = Number(2);
+    /** @constant return value of comparison function */
+    var DIFF = Number(3);
     /** @globals-end **/
     
     
     initScaffolding(doc);
+    
+    function compareKeys (k1, k2) {
+        var i, t, f = Boolean(k1.length > k2.length);
+        if (f) {t = k1; k1 = k2; k2 = t;}
+        for (i=0; i<k1.length; i++) {
+            if (k1[i] !== k2[i]) {return DIFF;}
+        }
+        
+        if (k1.length === k2.length) {return EQUAL;}
+        else if (!f) {return SUB;}
+        else {return SUPER;}
+    }
     
     /** @begin-class-def DNode */
         function DNode ()
         {
             // Following properties will be added as needed
             // An object containing values keyed by their data types
-            // e.g. this[C_VALUES] = {'username1':'password1', 'username2':'password2'};
+            // e.g. this[VALUES] = {'username1':'password1', 'username2':'password2'};
             // Multiple child-node references indexed by their key segment.
             // e.g. this['yahoo.'] = child-node;
             // e.g. this['google.'] = child-node;
@@ -69,9 +93,9 @@
         {
             var k = rec.keys.pop();
             if (!k) {
-                var v = rec.value, va = this[C_VALUES];
+                var v = rec.value, va = this[VALUES];
                 if (!va) {
-                    this[C_VALUES] = (va = {});
+                    this[VALUES] = (va = {});
                 }
                 va[v.key] = v;
             }
@@ -108,19 +132,34 @@
         
         DNode.prototype.tryFind = function(keys) 
         {
-            var k = keys.increment(), n;
+            var k = keys.incr(), n;
             if (!k) {
                 return this;
             }
             else {
                 n =  this[k];
                 if (!n) {
-                    keys.decrement();
+                    keys.decr();
                     return this;
                 }
                 else {
-                    return n; // Not recursive.
-                    // return n.findBest(keys); Tail recursive.
+                    if (n instanceof DNode) {
+                        return n; // Not recursive.
+                        // return n.findBest(keys); Tail recursive.
+                    }
+                    else {//(instanceof KNode)
+                        var keys2 = n.keys;
+                        var c = compareKeys(keys,keys2);
+                        switch (c) {
+                            case DIFF:
+                            case SUB:
+                                return this;
+                            
+                            case SUPER:
+                            case EQUAL:
+                                return n.next;
+                        }
+                    }
                 }
             }
         };
@@ -157,10 +196,10 @@
         
         if (!l.port) {
             switch (l.protocol) {
-                case C_HTTP_PROTO:
+                case HTTP_PROTO:
                     l.port = 80;
                     break;
-                case C_HTTPS_PROTO:
+                case HTTPS_PROTO:
                     l.port = 443;
                     break;
             }
