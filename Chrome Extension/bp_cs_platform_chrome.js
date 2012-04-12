@@ -22,10 +22,17 @@ function com_bprivy_GetModule_CSPlatform()
         {
             function rcvAck (rsp) 
             {
-                if (!rsp && chrome.extension.lastError)
-                    console.log(chrome.extension.lastError.message);
+                if (!rsp) {if (chrome.extension.lastError) {
+                       console.log(chrome.extension.lastError.message);
+                    }
+                }
             }
             chrome.extension.sendRequest(o, rcvAck);
+        },
+        
+        rpcToMothership: function (req, respCallback)
+        {
+            chrome.extension.sendRequest(req, respCallback);
         },
         
         registerMsgListener: function(foo)

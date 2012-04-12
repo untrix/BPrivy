@@ -1,11 +1,11 @@
 /**
- * @preserve
+ * @preserve 
+ * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 /* JSLint directives */
-/*global $, console, window */
+/*global $, console, window, com_bprivy_GetModule_3db, com_bprivy_GetModule_CSPlatform, com_bprivy_GetModule_Common */
 /*jslint browser : true, devel : true, es5 : true */
 /*properties console.info, console.log, console.warn */
 /*properties 
@@ -28,6 +28,7 @@ function com_bprivy_CS(_win)
     var e_dt_pass = m.dt_pass;        // Represents data-type password
     var constructERecord = m.constructERecord;
     var saveERecord = m.saveERecord;
+    var getDB = m.getDB;
     /** @import-module-begin CSPlatform */
     m = com_bprivy_GetModule_CSPlatform();
     var registerMsgListener = m.registerMsgListener;
@@ -78,6 +79,8 @@ function com_bprivy_CS(_win)
     // Other Globals
     var g_draggedElementID = null;
     var g_win = _win;
+    var g_kDB;
+    var g_pDB;
     /** @globals-end **/
     
     /** Decrypts password */
@@ -167,7 +170,7 @@ function com_bprivy_CS(_win)
 		function inputHandler(e)
 		{
 		    console.info("inputHandler invoked");
-            var elementRec = constructERecord(), dragged_el;
+            var eRec = constructERecord(), dragged_el;
             if (g_draggedElementID) {
                 dragged_el = document.getElementById(g_draggedElementID);
                 console.info("DraggedElementID is " + g_draggedElementID);
@@ -178,15 +181,14 @@ function com_bprivy_CS(_win)
             
 			if ( dragged_el && ($(dragged_el).data(pn_d_value) === e.target.value))
 			{
-			    elementRec.tagName = e.target.tagName;
-			    elementRec.id = e.target.id;
-			    elementRec.name = e.target.name;
-			    elementRec.type = e.target.type;
-                elementRec.dataType = $(dragged_el).data(pn_d_dataType);
-                elementRec.location = win.document.location;
-                //elementRec.location = document.location;
+			    eRec.tagName = e.target.tagName;
+			    eRec.id = e.target.id;
+			    eRec.name = e.target.name;
+			    eRec.type = e.target.type;
+                eRec.recKey = $(dragged_el).data(pn_d_dataType);
+                eRec.loc = win.document.location;
                                 
-				saveERecord(elementRec);
+				saveERecord(eRec);
 				
 				var p = $(dragged_el).data(pn_d_peerID);
 				if (p) {
@@ -365,6 +367,15 @@ function com_bprivy_CS(_win)
 		return j_panel;
 	}
 
+    /** 
+     * Invoked upon receipt of KDB records from 3DB module.
+     * @param {db}  Holds KDB records relevant to this page. 
+     */
+    function loadDB (kdb) {
+        g_kDB = kdb;
+        console.info("bp_cs retrieved K-Records\n" + JSON.stringify(g_kDB));
+    }
+     
     function togglePanel(e)
     {
         // Only show the panel in the top-level frame.
@@ -395,6 +406,7 @@ function com_bprivy_CS(_win)
 		{
 			console.log("BP_CS entered on page " + location.href);
 			//createPanel(g_win);
+            getDB(win.document.location, loadDB);
 			setupDNDWatchers(g_win);
 			registerMsgListener(clickBP);
 			

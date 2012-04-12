@@ -11,13 +11,24 @@
 "use strict";
 function com_bprivy_GetModule_Common () {
     /** @globals-begin */      
-    var css_hidden = "com-bprivy-hidden";
+    var CSS_HIDDEN = "com-bprivy-hidden";
     /** @globals-end **/
    
+    function bp_throw (str) {
+        throw str;
+    }
+    
+    function toJson(o)
+    {
+        return JSON.stringify(o, null, 2);
+    }
+
     var iface = {};
     Object.defineProperties(iface, 
     {
-        css_hidden: {value: css_hidden, writable: false, enumerable: false, configurable: false}
+        CSS_HIDDEN: {value: CSS_HIDDEN, writable: false, enumerable: false, configurable: false},
+        bp_throw: {value: bp_throw, writable: false, enumerable: false, configurable: false},
+        toJson: {value: toJson, writable: false, enumerable: false, configurable: false}
     });
     Object.preventExtensions(iface);
 

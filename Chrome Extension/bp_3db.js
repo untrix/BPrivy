@@ -17,116 +17,141 @@
 function com_bprivy_GetModule_3db() {
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
-    var dt_userid = "userid";   // Represents data-type userid
-    var dt_pass = "pass";        // Represents data-type password
-    var dt_kRecord = "K-Record";  // Represents a K-Record
-    var dt_eRecord = "E-Record";  // Represents a E-Record
+    /** @constant */
+    var dt_userid = "dt_userid";   // Represents data-type userid
+    /** @constant */
+    var dt_pass = "dt_pass";        // Represents data-type password
+    /** @constant */
+    var dt_eRecord = "E-Record";  // Represents a E-Record (html-element record)
+    /** @constant */
+    var dt_pRecord = "P-Record";  // Represents a P-Record (password record)
+    /** @constant */
+   var cm_getDB = "cm_getDB"; // Represents a getDB command
+    /** @constant */
+    var PROTO_HTTP = "http:";
+    /** @constant */
+    var PROTO_HTTPS = "https:";
     
     var postMsgToMothership = com_bprivy_GetModule_CSPlatform().postMsgToMothership;
-
-    function Url (location) // constructor of URLs
-    {
-        var desc_o = {value: undefined, writable: true, enumerable: true, configurable: false};//Object descriptor
-        var desc_a = {value: [], writable: true, enumerable: true, configurable: false};  //Array descriptor
-        var desc_n = {value: undefined, writable: true, enumerable: true, configurable: false};//Number descriptor
-        var desc_s = {value: undefined, writable: true, enumerable: true, configurable: false};//String descriptor
-
-        Object.defineProperties(this,
+    var rpcToMothership = com_bprivy_GetModule_CSPlatform().rpcToMothership;
+   
+    function ERecord() {
+        var descriptor = {writable: true, enumerable: true, configurable: true};
+        Object.defineProperties(this, 
         {
-            protocol: desc_o,
-            hostname_segments: desc_a,
-            port: desc_n,
-            path_segments: desc_a,
-            query_segments: desc_a,
-            hash: desc_s
-        });
-        Object.preventExtensions(this);
-        
-        // The following keys will be used for dictionary lookup.
-        this.hostname_segments = location.hostname.split('.');
-        this.hostname_segments.reverse();
-        
-        // Split pathname into path segments.
-        // First remove leading slashes
-        location.pathname = location.pathname.replace(/^\/+/,'');
-        this.path_segments = location.pathname.split('/');
-
-        // The following properties are not being used for dictionary lookup.
-        this.query_segments = location.search.split('&');
-        this.protocol = location.protocol;
-        this.port = location.port;
-        this.hash = location.hash;
-    }
-    
-    Url.prototype.toJson = function ()
-    {
-        return JSON.stringify(this, null, 2);
-        // var LF = '\n';
-        // var str = "protocol = " + this.protocol + LF;
-        // var i, p_s = this.path_segments, h_s = this.hostname_segments;
-        // for (i=0, str+="Reverse Hostname Segments = " + h_s.length + LF; i<h_s.length; ++i)
-        // {
-            // str += (h_s[i] + LF);
-        // }
-// 
-        // for (i=0, str+="Path Segments = " + p_s.length + LF; i<p_s.length; ++i)
-        // {
-            // str += (p_s[i] + LF);
-        // }
-//         
-        // return str;
-    };
-    
-    function ToJson ()
-    {
-        return JSON.stringify(this, null, 2);
-    }
-    
-    function ERecord() {this.dt = dt_eRecord;}
-    ERecord.prototype.toJson = ToJson;
-    function constructERecord() {
-        var o = new ERecord();
-        var descriptor = {value: undefined, writable: true, enumerable: true, configurable: false};
-        Object.defineProperties(o, 
-        {
-            location: descriptor,
+            dt: {value: dt_eRecord, writable: false, enumerable: true, configurable: false},
+            loc: descriptor,
+            recKey: descriptor,
             tagName: descriptor,
             id: descriptor,
             name: descriptor,
-            type: descriptor,
-            dataType: descriptor
+            type: descriptor
         });
-        Object.preventExtensions(o);
-        return o;    
+        Object.preventExtensions(this);
+    }
+    ERecord.prototype.toJson = function ()
+    {
+        return JSON.stringify(this, null, 2);
+    };
+    function constructERecord() {
+        return new ERecord();    
     }
 
+    /** 
+     * Dissects document.location into URL segment array suitable for
+     * insertion into a DNode.
+     */
+    function newUrla (l)
+    {
+        var ha, pa, qa, pr, pn, urla = [], i, s;
 
+        // Split hostname into an array of strings.
+        ha = l.hostname.split('.');
+        ha.reverse();
+        
+        // Split pathname into path segments.
+        // First remove leading slashes
+        s = l.pathname.replace(/^\/+/,'');
+        // Now split into an array of strings.
+        pa = s.split('/');
+
+        qa = l.search.split('&');
+        if (l.protocol) {
+            pr = l.protocol.toLowerCase();
+        }
+        
+        if (l.port) {
+            i = Number(l.port);
+            switch(pr) {
+                case PROTO_HTTP:
+                    if(i !== 80) {pn = i;}
+                break;
+                case PROTO_HTTPS:
+                    if(i !== 443) {pn = i;}
+                break;
+                default:
+                    pn = i;
+            }
+        }
+        
+        // Construct the url segment array
+                // if (pr) {
+            // switch(pr) {
+               // case PROTO_HTTP:
+                    // urla.push('http://');
+                    // break;
+                // case PROTO_HTTPS:
+                    // urla.push('https://');
+                    // break;
+                // default:
+                    // urla.push(pr + '//');           
+            // }
+        // }
+        if (ha) {
+            for (i=0; i<ha.length; i++) {
+                urla.push(ha[i].toLowerCase() + '.');
+            }
+        }
+        if (pn) {urla.push(':' + pn);}
+        if (pa) {
+            for (i=0; i<pa.length; i++) {
+                if (pa[i] !== '') {
+                    urla.push('/' + pa[i]);
+                }
+            }
+        }
+        
+        return urla;
+    }
 
     /** ModuleInterfaceGetter 3db */
-    function getModuleInterface(url) {
+    function getModuleInterface(url)
+    {
         var saveERecord = function (eRec)
         {
             postMsgToMothership(eRec);
-            
-            //var url = new Url(kRec.location);
-            //console.info("Parsed URL = " + url.toJson());
+        };
+        
+        var getDB = function(loc, callback)
+        {
+            return rpcToMothership({dt:cm_getDB, loc: loc}, callback);
         };
 
-        var getElements = function (location)
-        {
-            
-        };
         //Assemble the interface    
         var iface = {};
         Object.defineProperties(iface, 
         {
-            dt_userid: {value: dt_userid, writable: false, enumerable: false, configurable: false},
-            dt_pass: {value: dt_pass, writable: false, enumerable: false, configurable: false},
-            dt_eRecord: {value: dt_eRecord, writable: false, enumerable: false, configurable: false},
-            saveERecord: {value: saveERecord, writable: false, enumerable: false, configurable: false},
-            constructERecord: {value: constructERecord, writable: false, enumerable: false, configurable: false}
+            dt_userid: {value: dt_userid},
+            dt_pass: {value: dt_pass},
+            dt_eRecord: {value: dt_eRecord},
+            dt_pRecord: {value: dt_pRecord},
+            dt_getERecords: {value: dt_getERecords},
+            saveERecord: {value: saveERecord},
+            constructERecord: {value: constructERecord},
+            getDB: {value: getDB},
+            newUrla: {value: newUrla}
         });
-        Object.seal(iface);
+        Object.freeze(iface);
 
         return iface;
     }
