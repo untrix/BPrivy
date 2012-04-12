@@ -24,8 +24,8 @@ function com_bprivy_CS(_win)
 {
     /** @import-module-begin 3db */
     var m = com_bprivy_GetModule_3db();
-    var e_dt_userid = m.dt_userid;   // Represents data-type userid
-    var e_dt_pass = m.dt_pass;        // Represents data-type password
+    var dt_userid = m.dt_userid;   // Represents data-type userid
+    var dt_pass = m.dt_pass;        // Represents data-type password
     var constructERecord = m.constructERecord;
     var saveERecord = m.saveERecord;
     var getDB = m.getDB;
@@ -79,8 +79,7 @@ function com_bprivy_CS(_win)
     // Other Globals
     var g_draggedElementID = null;
     var g_win = _win;
-    var g_kDB;
-    var g_pDB;
+    var g_db;
     /** @globals-end **/
     
     /** Decrypts password */
@@ -156,7 +155,7 @@ function com_bprivy_CS(_win)
         var p_el = findPeerElement(el);
         if (p_el)
         {
-            if (data.type() === e_dt_pass) {
+            if (data.type() === dt_pass) {
                 p_el.value = decrypt(data);
             }
             else {
@@ -224,7 +223,7 @@ function com_bprivy_CS(_win)
 			e.dataTransfer.effectAllowed = "copyLink";
 			//e.dataTransfer.dropEffect = "copy";
 			var data = $(e.target).data(pn_d_value);
-			if ($(e.target).data(pn_d_dataType) === e_dt_pass) {
+			if ($(e.target).data(pn_d_dataType) === dt_pass) {
 			    data = decrypt(data);
 			}
 			
@@ -268,7 +267,7 @@ function com_bprivy_CS(_win)
 			 //maxlength: 100
 			 }
 			).addClass(css_output + " " + css_userOut).text(user);
-		j_inu.data(pn_d_dataType, e_dt_userid).data(pn_d_value, user);
+		j_inu.data(pn_d_dataType, dt_userid).data(pn_d_value, user);
 
 		var j_inp = $("<span></span>").attr(
 			{
@@ -282,7 +281,7 @@ function com_bprivy_CS(_win)
 				//maxlength: 100,
 			}
 			).addClass(css_output + " " + css_passOut).text("*****");
-        j_inp.data(pn_d_dataType, e_dt_pass).data(pn_d_value, pass);
+        j_inp.data(pn_d_dataType, dt_pass).data(pn_d_value, pass);
         
 		jq.append(j_li.append(j_inu).append(j_inp));
 
@@ -367,13 +366,48 @@ function com_bprivy_CS(_win)
 		return j_panel;
 	}
 
+    /**
+     * Autofills element described by 'ed' with string 'str'.
+     */
+    function autoFillEl (ed, str) {
+        
+    }
+    
     /** 
      * Invoked upon receipt of KDB records from 3DB module.
      * @param {db}  Holds KDB records relevant to this page. 
      */
-    function loadDB (kdb) {
-        g_kDB = kdb;
-        console.info("bp_cs retrieved K-Records\n" + JSON.stringify(g_kDB));
+    function autoFill (db)
+    {
+        var kdb, pdb, ue, pe, nma, u, p, j;
+        g_db = db;
+        console.info("bp_cs retrieved K-Records\n" + JSON.stringify(g_db));
+
+        // auto-fill
+        // if we don't have a stored username/password, then there is nothing
+        // to autofill. 
+        if (!(pdb = g_db[P_DB])) {
+            return;
+        }
+        else {
+            nma = Object.getOwnPropertyNames(pdb); 
+            // if there is more than one username, do not autofill
+            if (nma && (nma.length() !== 1)) {
+                return;
+            }
+            else if ((kdb = g_db[K_DB])) {
+                ue = kdb[dt_userid];
+                pe = kdb[dt_pass];
+                if (ue) {
+                    u = nma[0];
+                    autoFillEl(ue, u);
+                }
+                if (pe) {
+                    p = pdb[nma[0]];
+                    fillInput(pe, p);
+                }
+            }
+        }
     }
      
     function togglePanel(e)
@@ -406,7 +440,7 @@ function com_bprivy_CS(_win)
 		{
 			console.log("BP_CS entered on page " + location.href);
 			//createPanel(g_win);
-            getDB(g_win.document.location, loadDB);
+            getDB(g_win.document.location, autoFill);
 			setupDNDWatchers(g_win);
 			registerMsgListener(clickBP);
 			

@@ -1,7 +1,7 @@
 {
   "name": "BPrivy",
-  "version": "1.0",
-  "description":"BPrivy Password Manager. Personal Protected and Portable (3P) Passwords. Encrypted passwords are stored in a file. Keep the file in a memory card in your wallet or save in your phone, access from any computer!",
+  "version": "0.5",
+  "description":"BPrivy Password Keychain. Personal Protected and Portable. Keep your encrypted passwords in your wallet/purse, keychain or on your phone, access from any computer!",
   "icons": {
 	     "128": "icon128.png",
   	     "16": "icon16.png"
