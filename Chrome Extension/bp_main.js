@@ -146,7 +146,8 @@
     };
     Iterator.prototype.isBelowTLD = function()
     {
-        
+        var s = this._a[this._i];
+        return (s.search(/^\{[st]\}.+/) === (-1));
     };
     function compare (i1, i2)
     {
@@ -186,14 +187,7 @@
     g_kdb = new DNode();
     g_pdb = new DNode();
     
-    /** Non-Recursive insert. Usually invoked at the root of a tree. */
-    DNode.prototype.insert = function (drec)
-    {       
-        var n = this;    
-        do {
-            n = n.tryInsert(drec);
-        } while (n);
-    };
+
     /** Helper function to DNode.prototype.insert */
     DNode.prototype.tryInsert = function (drec)
     {
@@ -217,40 +211,14 @@
             // n.insert(rec); Tail-recursive.
         }
     };
-
-    /**
-     * Non-recursive findBest match method. Invoked at the root node.
-     * 
-     * @param urli is an Iterator over url segments. The function will walk the url
-     * segment array and navigate the dictionary by following nodes that match
-     * the current url-segment. The walk will stop when/if a matching node isn't
-     * found or if the url segment array is exhausted. Upon return, urli.count() 
-     * indicates the number of unmatched url segments at the tail of the url array.
-     * The segments before urli.count() matched. The matched node however, may not
-     * have a value in it though. You will need to walk either up or down the tree
-     * to find values depending on your use case.
-    */
-    DNode.prototype.findBestNode = function (urli, dt) 
-    {
-        var dbNm = getDbName(dt), ndb, n = this, idb;
-        /*var stack = [];*/
-        // Walk down the dictionary tree.
+    /** Non-Recursive insert. Usually invoked at the root of a tree. */
+    DNode.prototype.insert = function (drec)
+    {       
+        var n = this;    
         do {
-            //stack.push(n);
-            // save node if it has the desired data type
-            if (n[dbNm]) {ndb = n; idb = urli.pos();}
-            n = n.tryFind(urli);
+            n = n.tryInsert(drec);
         } while (n);
-        
-        // Now walk back up to find some data.
-        /*if (dbNm) {
-            while ((n = stack.pop()))
-            {
-                if ((db = n[dbNm])) { return db;}
-            }
-        }*/
     };
-    
     DNode.prototype.tryFind = function(urli) 
     {
         var k = urli.get(), n;
@@ -286,6 +254,33 @@
             }
         }
     };
+    /**
+     * Non-recursive findBest match method. Invoked at the root node. Returns the
+     * DNode that best matches {urli}
+     * 
+     * @param urli is an Iterator over url segments. The function will walk the url
+     * segment array and navigate the dictionary by following nodes that match
+     * the current url-segment. The walk will stop when/if a matching node isn't
+     * found or if the url segment array is exhausted. Upon return, urli.count() 
+     * indicates the number of unmatched url segments at the tail of the url array.
+     * The segments before urli.count() matched. The matched node however, may not
+     * have a value in it though. You will need to walk either up or down the tree
+     * to find values depending on your use case.
+    */
+    DNode.prototype.findBestNode = function (urli, dt) 
+    {
+        var n, r = this;
+        // Walk down the dictionary tree.
+        do {
+            n = r;
+            r = n.tryFind(urli);
+        } while (r);
+        
+        return n;
+    };
+    /**
+     * Returns K_DB records that best match urli.
+     */
     DNode.prototype.findKDB = function (urli)
     {
         var n , r = this;
@@ -303,26 +298,41 @@
             return n[K_DB];
         }
     };
+    /**
+     * Returns P_DB records that best match urli.
+     */
     DNode.prototype.findPDB = function(urli) 
     {
-        var ndb, n = this, idb;
+        var n = this, n2, idb;
         // Walk down the dictionary tree.
         do {
             // save node if it has the desired data type
-            if (n[P_DB]) {ndb = n; idb = urli.pos();}
+            if (n[P_DB]) {n2 = n; idb = urli.pos();}
             n = n.tryFind(urli);
         } while (n);
         
         // in the case of PDB, the data is only useful if it is
         // below the top-level-domain. Hence we should check urli
         // to determine that.
-        if (ndb) {
+        if (n2) {
             urli.seek(idb);
             if (urli.isBelowTLD()) {
-                return ndb;
+                return n2[P_DB];
             }
         }
     };
+    /**
+     * Returns K_DB and P_DB records that best match urli.
+     */
+    function getDB(urli) 
+    {
+        var kdb, pdb, r;
+        r = {};
+        r[K_DB] = g_kdb.findKDB(urli);
+        urli.rwnd();
+        r[P_DB] = g_pdb.findPDB(urli);
+        return r;
+    }
     /** @end-class-def **/
 
 
@@ -356,7 +366,7 @@
         else if (rq.dt === cm_getDB)
         {
             var urli = new Iterator(newUrla(rq.loc));
-            var db = g_kdb.getDB(urli);
+            var db = getDB(urli);
             funcSendResponse(db);
         }
     }

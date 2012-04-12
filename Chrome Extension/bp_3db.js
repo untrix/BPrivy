@@ -98,25 +98,37 @@ function com_bprivy_GetModule_3db() {
                 // if (pr) {
             // switch(pr) {
                // case PROTO_HTTP:
-                    // urla.push('http://');
+                    // urla.push('{s}http');
                     // break;
                 // case PROTO_HTTPS:
-                    // urla.push('https://');
+                    // urla.push('{s}https');
                     // break;
                 // default:
-                    // urla.push(pr + '//');           
+                    // urla.push('{s}' + pr);           
             // }
         // }
+
         if (ha) {
             for (i=0; i<ha.length; i++) {
-                urla.push(ha[i].toLowerCase() + '.');
+                if (i===0) {
+                    // Top-Level Domain. Doesn't account for TLDs like 'co.in' though.
+                    urla.push('{t}' + ha[i].toLowerCase());
+                }
+                else if (i === (ha.length-1)) {
+                    // Host name
+                    urla.push('{h}' + ha[i].toLowerCase());
+                }
+                else {
+                    // Second level domain
+                    urla.push('{d}' + ha[i].toLowerCase());
+                }
             }
         }
-        if (pn) {urla.push(':' + pn);}
+        if (pn) {urla.push('{o}' + pn);}
         if (pa) {
             for (i=0; i<pa.length; i++) {
                 if (pa[i] !== '') {
-                    urla.push('/' + pa[i]);
+                    urla.push('{p}' + pa[i]);
                 }
             }
         }
@@ -145,7 +157,7 @@ function com_bprivy_GetModule_3db() {
             dt_pass: {value: dt_pass},
             dt_eRecord: {value: dt_eRecord},
             dt_pRecord: {value: dt_pRecord},
-            dt_getERecords: {value: dt_getERecords},
+            cm_getDB: {value: cm_getDB},
             saveERecord: {value: saveERecord},
             constructERecord: {value: constructERecord},
             getDB: {value: getDB},

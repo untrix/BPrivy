@@ -406,7 +406,7 @@ function com_bprivy_CS(_win)
 		{
 			console.log("BP_CS entered on page " + location.href);
 			//createPanel(g_win);
-            getDB(win.document.location, loadDB);
+            getDB(g_win.document.location, loadDB);
 			setupDNDWatchers(g_win);
 			registerMsgListener(clickBP);
 			
