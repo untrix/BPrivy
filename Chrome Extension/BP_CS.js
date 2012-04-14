@@ -9,7 +9,7 @@
 /*jslint browser : true, devel : true, es5 : true */
 /*properties console.info, console.log, console.warn */
 /*properties 
- * el.type, document.webkitVisibilityState, document.body, win.top, win.self,
+ * el.type, win.top, win.self,
  * frame.hidden, frame.style, style.visibility, style.display, ev.preventDefault,
  * ev.stopPropagation, document.getElementById
  */
@@ -20,7 +20,7 @@
 /**
  * @module CS
  */
-function com_bprivy_CS(_win) 
+function com_bprivy_CS(g_win) 
 {
     /** @import-module-begin 3db */
     var m = com_bprivy_GetModule_3db();
@@ -29,6 +29,8 @@ function com_bprivy_CS(_win)
     var constructERecord = m.constructERecord;
     var saveERecord = m.saveERecord;
     var getDB = m.getDB;
+    var deleteERecord = m.deleteRecord;
+    var newUrla = m.newUrla;
     /** @import-module-begin CSPlatform */
     m = com_bprivy_GetModule_CSPlatform();
     var registerMsgListener = m.registerMsgListener;
@@ -77,9 +79,10 @@ function com_bprivy_CS(_win)
 	var pn_d_peerID = 'bpPeerID';
 
     // Other Globals
-    var g_draggedElementID = null;
-    var g_win = _win;
+    var g_doc = g_win.doc;
+    var g_loc = g_doc.location;
     var g_db;
+    var g_draggedElementID;
     /** @globals-end **/
     
     /** Decrypts password */
@@ -171,7 +174,7 @@ function com_bprivy_CS(_win)
 		    console.info("inputHandler invoked");
             var eRec = constructERecord(), dragged_el;
             if (g_draggedElementID) {
-                dragged_el = document.getElementById(g_draggedElementID);
+                dragged_el = g_doc.getElementById(g_draggedElementID);
                 console.info("DraggedElementID is " + g_draggedElementID);
             }
             else {
@@ -185,7 +188,7 @@ function com_bprivy_CS(_win)
 			    eRec.name = e.target.name;
 			    eRec.type = e.target.type;
                 eRec.recKey = $(dragged_el).data(pn_d_dataType);
-                eRec.loc = win.document.location;
+                eRec.loc = g_doc.location;
                                 
 				saveERecord(eRec);
 				
@@ -197,7 +200,7 @@ function com_bprivy_CS(_win)
 			}
 		}
 		
-		$(win.document.getElementsByTagName('input')).each(function(i, el) {
+		$(g_doc.getElementsByTagName('input')).each(function(i, el) {
 			if (isUserid(el) || isPassword(el))
 			{
 				el.addEventListener("input", inputHandler, false);
@@ -208,7 +211,7 @@ function com_bprivy_CS(_win)
 	
 	function createImageElement(imgPath)
 	{
-		var el = document.createElement("img");
+		var el = g_doc.createElement("img");
 		el.src = getURL(imgPath);
 		
 		return el;
@@ -255,7 +258,7 @@ function com_bprivy_CS(_win)
 	{
 		var userid = eid_userElement + id;
 		var passid = eid_passElement + id;
-		var j_li = $(document.createElement("li")).addClass(css_container);
+		var j_li = $(g_doc.createElement("li")).addClass(css_container);
 
 		var j_inu = $("<span></span>").attr(
 			{draggable: true,
@@ -292,10 +295,10 @@ function com_bprivy_CS(_win)
 	
     function createPanelTitle ()
 	{
-		var j_div = $(document.createElement("div")).attr({
+		var j_div = $(g_doc.createElement("div")).attr({
 					id: eid_panelTitle
 				}).text("BPrivy");
-        var j_xBtn = $(document.createElement("button")).attr(
+        var j_xBtn = $(g_doc.createElement("button")).attr(
                     {    
                         type: "button",
                         id: eid_xButton,
@@ -369,8 +372,48 @@ function com_bprivy_CS(_win)
     /**
      * Autofills element described by 'ed' with string 'str'.
      */
-    function autoFillEl (ed, str) {
-        
+    function autoFillEl (er, str, dcrpt) {
+        var nl, el, doc = g_doc, i, ell = [];
+        if (er.id) 
+        {
+            el = doc.getElementById(er.id);
+            if (!el) {el = null;}
+        }
+        if((el === undefined) && er.name) 
+        {
+            nl = doc.getElementsByName(er.name);
+
+            for (i=0; i<nl.length; i++) 
+            {
+                if (nl.item(i).tagName !== er.tagName) {
+                        continue;
+                }
+                if ((er.type) && 
+                    (nl.item(i).type !== er.type)) {
+                        continue;
+                }
+                ell.push(nl.item(i));
+            }
+            
+            if (ell.length === 1) {
+                el = ell[0];
+            }
+            else {
+                el = null;
+            }
+        }
+        if (el===null) {
+            // Implies that the record was bad. Remove it
+            // from the DB.
+            deleteERecord(g_loc);
+            console.warning('Deleting ERecord at ' + JSON.stringify(g_loc));
+        }
+        else if (el) {
+            // We found the element. AutoFill it if it is an input element.
+            if (er.tagName === 'input') {
+                el.value = dcrpt ? decrypt(str) : str;
+            }
+        }
     }
     
     /** 
@@ -379,7 +422,7 @@ function com_bprivy_CS(_win)
      */
     function autoFill (db)
     {
-        var kdb, pdb, ue, pe, nma, u, p, j;
+        var kdb, pdb, uer, per, nma, u, p, j;
         g_db = db;
         console.info("bp_cs retrieved K-Records\n" + JSON.stringify(g_db));
 
@@ -396,15 +439,15 @@ function com_bprivy_CS(_win)
                 return;
             }
             else if ((kdb = g_db[K_DB])) {
-                ue = kdb[dt_userid];
-                pe = kdb[dt_pass];
-                if (ue) {
+                uer = kdb[dt_userid];
+                per = kdb[dt_pass];
+                if (uer) {
                     u = nma[0];
-                    autoFillEl(ue, u);
+                    autoFillEl(uer, u);
                 }
-                if (pe) {
+                if (per) {
                     p = pdb[nma[0]];
-                    fillInput(pe, p);
+                    autoFillEl(per, p, true);
                 }
             }
         }
@@ -415,7 +458,7 @@ function com_bprivy_CS(_win)
         // Only show the panel in the top-level frame.
         if(canHavePanel(g_win)) 
         {
-            var el = document.getElementById(eid_panel);
+            var el = g_doc.getElementById(eid_panel);
             if (el)
             {
                 g_draggedElementID = null;
@@ -440,15 +483,15 @@ function com_bprivy_CS(_win)
 		{
 			console.log("BP_CS entered on page " + location.href);
 			//createPanel(g_win);
-            getDB(g_win.document.location, autoFill);
+            getDB(g_loc, autoFill);
 			setupDNDWatchers(g_win);
 			registerMsgListener(clickBP);
 			
 			// experimentation
-/*			var el = g_win.document.createElement('com-bprivy-data');
+/*			var el = g_doc.createElement('com-bprivy-data');
 			el.setAttribute('id', 'com.facebook.www1/login.asp?b=a&x=y#abc');
 			$(el).prop("hidden", true).addClass(css_hidden);
-			$(el).appendTo(g_win.document.body);*/
+			$(el).appendTo(g_doc.body);*/
 		}
 	}
 	
@@ -464,7 +507,7 @@ com_bprivy_CS(window)();
  function Fill(request, sender, sendResponse)
  {
  console.log("Received BPClick event");
- var el = document.activeElement;
+ var el = g_doc.activeElement;
  var response = [];
  if ((el instanceof HTMLInputElement))
  {
