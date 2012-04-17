@@ -40,6 +40,7 @@ function com_bprivy_GetModule_3db() {
      * excluded in rfc 3986.
      */ 
     var K_DB = "{kdb}";
+    //var K_DB2 = "{kdb2}";
     /** 
      * Holds username/password records inside a D-Node.
      * @constant
@@ -53,17 +54,19 @@ function com_bprivy_GetModule_3db() {
     var postMsgToMothership = com_bprivy_GetModule_CSPlatform().postMsgToMothership;
     var rpcToMothership = com_bprivy_GetModule_CSPlatform().rpcToMothership;
    
-    function ERecord() {
+    function ERecord() 
+    {
         var descriptor = {writable: true, enumerable: true, configurable: true};
+        var descriptor2 = {writable: true, enumerable: true, configurable: false};
         Object.defineProperties(this, 
         {
             dt: {value: dt_eRecord, writable: false, enumerable: true, configurable: false},
             loc: descriptor,
-            recKey: descriptor,
-            tagName: descriptor,
-            id: descriptor,
-            name: descriptor,
-            type: descriptor
+            fieldType: descriptor2,
+            tagName: descriptor2,
+            id: descriptor2,
+            name: descriptor2,
+            type: descriptor2
         });
         Object.preventExtensions(this);
     }
@@ -75,6 +78,22 @@ function com_bprivy_GetModule_3db() {
         return new ERecord();    
     }
 
+    function PRecord() 
+    {
+        Object.defineProperties(this,
+            {
+                dt: {value: dt_pRecord, writable: false, enumerable: true, configurable: false},
+                loc: {writable: true, enumerable: true, configurable: true},
+                userid: {writable: true, enumerable: true, configurable: false},
+                pass: {writable: true, enumerable: true, configurable: false}
+            }
+        );
+        Object.preventExtensions(this);
+    }
+    function constructPRecord()
+    {
+        return new PRecord();
+    }
     /** 
      * Dissects document.location into URL segment array suitable for
      * insertion into a DNode.
@@ -157,9 +176,14 @@ function com_bprivy_GetModule_3db() {
     /** ModuleInterfaceGetter 3db */
     function getModuleInterface(url)
     {
-        var saveERecord = function (eRec)
+        var saveRecord = function (eRec)
         {
             postMsgToMothership(eRec);
+        };
+        
+        var deleteRecord = function (erec)
+        {
+            console.warning('Deleting Record ' + JSON.stringify(erec));
         };
         
         var getDB = function(loc, callback)
@@ -167,6 +191,16 @@ function com_bprivy_GetModule_3db() {
             return rpcToMothership({dt:cm_getDB, loc: loc}, callback);
         };
 
+        var recKey = function(rec)
+        {
+            if (rec.dt === dt_eRecord) {
+                return rec.fieldType;
+            }
+            else if (rec.dt === dt_pRecord) {
+                return rec.userid;
+            }
+        };
+        
         //Assemble the interface    
         var iface = {};
         Object.defineProperties(iface, 
@@ -176,12 +210,16 @@ function com_bprivy_GetModule_3db() {
             dt_eRecord: {value: dt_eRecord},
             dt_pRecord: {value: dt_pRecord},
             cm_getDB: {value: cm_getDB},
-            saveERecord: {value: saveERecord},
+            K_DB: {value: K_DB},
+            //K_DB2: {value: K_DB2},
+            P_DB: {value: P_DB},
+            saveRecord: {value: saveRecord},
+            deleteRecord: {value: deleteRecord},
             constructERecord: {value: constructERecord},
+            constructPRecord: {value: constructPRecord},
             getDB: {value: getDB},
             newUrla: {value: newUrla},
-            K_DB: {value: K_DB},
-            P_DB: {value: P_DB}
+            recKey: {value: recKey}
         });
         Object.freeze(iface);
 

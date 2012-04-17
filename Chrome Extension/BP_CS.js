@@ -27,11 +27,13 @@ function com_bprivy_CS(g_win)
     var dt_userid = m.dt_userid;   // Represents data-type userid
     var dt_pass = m.dt_pass;        // Represents data-type password
     var constructERecord = m.constructERecord;
-    var saveERecord = m.saveERecord;
+    var constructPRecord = m.constructPRecord;
+    var saveRecord = m.saveRecord;
+    var deleteRecord = m.deleteRecord;
     var getDB = m.getDB;
-    var deleteERecord = m.deleteRecord;
     var newUrla = m.newUrla;
     var K_DB = m.K_DB;
+    //var K_DB2 = m.K_DB2;
     var P_DB = m.P_DB;
     /** @import-module-begin CSPlatform */
     m = com_bprivy_GetModule_CSPlatform();
@@ -90,7 +92,7 @@ function com_bprivy_CS(g_win)
     // Other Globals
     var g_doc = g_win.document;
     var g_loc = g_doc.location;
-    var g_db;
+    var g_db ={};
     var g_draggedElementID;
     var g_ioItemID = 0;
     /** @globals-end **/
@@ -199,10 +201,10 @@ function com_bprivy_CS(g_win)
 			    eRec.id = e.target.id;
 			    eRec.name = e.target.name;
 			    eRec.type = e.target.type;
-                eRec.recKey = $(dragged_el).data(pn_d_dataType);
+                eRec.fieldType = $(dragged_el).data(pn_d_dataType);
                 eRec.loc = g_doc.location;
                                 
-				saveERecord(eRec);
+				saveRecord(eRec);
 				
 				var p = $(dragged_el).data(pn_d_peerID);
 				if (p) {
@@ -336,7 +338,7 @@ function com_bprivy_CS(g_win)
 	    var id = d.id;
 	    var parent, col, ue, pe, u, p, uo, po;
 	    
-	    if (op) {
+	    if (op) { // replace draggable text with input form
 	        // Save the 'op' values.
 	        col = op.children;
 	        ue = col[eid_userOElement + id];
@@ -352,7 +354,7 @@ function com_bprivy_CS(g_win)
 	           parent.appendChild(ifm);
 	        }
 	    }
-	    else if (ifm) {
+	    else if (ifm) { // replace input-form with draggable text
 	        col = ifm.elements;
 	        ue = col[eid_userIElement + id];
 	        pe = col[eid_passIElement + id];
@@ -361,9 +363,18 @@ function com_bprivy_CS(g_win)
 	        uo = $(ue).data(pn_d_value);
 	        po = $(pe).data(pn_d_value);
 	        // Check if values have changed. If so, save to DB.
-	        if ((uo !== ue) || (po !== pe))
+	        if ((uo !== u) || (po !== p))
 	        {
 	            // save to db
+	            var pRec = constructPRecord();
+	            pRec.loc = g_loc;
+	            pRec.userid = u;
+	            pRec.pass = p;
+	            saveRecord(pRec);
+	            if (uo !== u) {
+	                // delete the original p-record
+	                deleteRecord({loc: g_loc, userid: u});
+	            }
 	        }
 	        // Then save the values and create a new 'op' item.
 	        parent = ifm.parentElement;
@@ -377,7 +388,6 @@ function com_bprivy_CS(g_win)
 	        // Then insert the 'op' item.
 	        $(ifm).remove();
 	    }
-	    
 	}
 	
 	function insertIOItem (user, pass)
@@ -541,28 +551,17 @@ function com_bprivy_CS(g_win)
                 el = null;
             }
         }
-        if (el===null) {
-            // Implies that the record was bad. Remove it
-            // from the DB.
-            deleteERecord(g_loc);
-            console.warning('Deleting ERecord at ' + JSON.stringify(g_loc));
-        }
-        else if (el) {
+
+        if (el) {
             // We found the element. AutoFill it.
             el.value = dcrpt ? decrypt(str) : str;
+            return true;
         }
     }
     
-    /** 
-     * Invoked upon receipt of KDB records from 3DB module.
-     * @param {db}  Holds KDB records relevant to this page. 
-     */
-    function autoFill (db)
+    function autoFill()
     {
-        var kdb, pdb, uer, per, nma, u, p, j;
-        g_db = db;
-        console.info("bp_cs retrieved K-Records\n" + JSON.stringify(g_db));
-
+        var kdb, pdb, uer, per, ua, u, p, j, i, l, uDone, pDone;
         // auto-fill
         // if we don't have a stored username/password, then there is nothing
         // to autofill. 
@@ -570,26 +569,67 @@ function com_bprivy_CS(g_win)
             return;
         }
         else {
-            nma = Object.getOwnPropertyNames(pdb); 
+            ua = Object.getOwnPropertyNames(pdb); 
             // if there is more than one username, do not autofill
-            if (nma && (nma.length !== 1)) {
+            if (ua && (ua.length !== 1)) {
                 return;
             }
-            else if ((kdb = g_db[K_DB])) {
-                uer = kdb[dt_userid];
-                per = kdb[dt_pass];
-                if (uer) {
-                    u = nma[0];
-                    autoFillEl(uer, u);
-                }
-                if (per) {
-                    p = pdb[nma[0]];
-                    autoFillEl(per, p, true);
+            else if (g_db[K_DB]) {
+                // Cycle through K_DB records starting with the
+                // best URL matching node.
+                l = g_db[K_DB].length; uDone=false; pDone=false;
+                for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
+                    kdb = g_db[K_DB].pop();
+                    
+                    uer = kdb[dt_userid];
+                    per = kdb[dt_pass];
+                    if ((!uDone) && uer) {
+                        u = ua[0];
+                        uDone = autoFillEl(uer, u);
+                        if (!uDone && (i===0)) {
+                            // The data in the E-Record was an exact URL match
+                            // yet, it has been shown to be not useful.
+                            // Therefore purge it form the K-DB.
+
+                            // Location gets deleted from e-rec when it is
+                            // inserted into the DB. Therefore we'll need to
+                            // put it back in.
+                            uer.loc = g_loc;
+                            deleteRecord(uer);
+                        }
+                    }
+                    if ((!pDone) && per) {
+                        p = pdb[ua[0]];
+                        pDone = autoFillEl(per, p, true);
+                        if (!pDone && (i===0)) {
+                            // The data in the E-Record was an exact URL match
+                            // yet, it has been shown to be not useful.
+                            // Therefore purge it form the K-DB.
+
+                            // Location gets deleted from e-rec when it is
+                            // inserted into the DB. Therefore we'll need to
+                            // put it back in.
+                            per.loc = g_loc;
+                            deleteRecord(per);
+                        }
+                    }
                 }
             }
         }
     }
      
+    /** 
+     * Invoked upon receipt of DB records from 3DB module.
+     * @param {db}  Holds DB records relevant to this page. 
+     */
+    function callbackGetDB (db)
+    {
+        g_db = db;
+        
+        console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(g_db));
+        autoFill();
+    }
+    
     function togglePanel(e)
     {
         // Only show the panel in the top-level frame.
@@ -620,7 +660,7 @@ function com_bprivy_CS(g_win)
 		{
 			console.log("BP_CS entered on page " + location.href);
 			//createPanel(g_win);
-            getDB(g_loc, autoFill);
+            getDB(g_loc, callbackGetDB);
 			registerMsgListener(clickBP);
             setupDNDWatchers(g_win);
 

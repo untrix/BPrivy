@@ -24,7 +24,9 @@
     var cm_getDB = m.cm_getDB;
     var newUrla = m.newUrla;
     var K_DB = m.K_DB;
+    //var K_DB2 = m.K_DB2;
     var P_DB = m.P_DB;
+    var recKey = m.recKey;
     /** @import-module-begin Common */
     m = com_bprivy_GetModule_Common();
     var bp_throw = m.bp_throw;
@@ -160,7 +162,7 @@
         // Following properties will be added as needed
         // An object containing values keyed by their data types
         // e.g. this["{pdb}"] = {'username1':'password1', 'username2':'password2'};
-        // e.g. this["{kdb}"] = {"dt_userid":{"dt":"E-Record","recKey":"dt_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},"dt_pass":{"dt":"E-Record","recKey":"dt_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
+        // e.g. this["{kdb}"] = {"dt_userid":{"dt":"E-Record","fieldType":"dt_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},"dt_pass":{"dt":"E-Record","fieldType":"dt_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
         // Multiple child-node references indexed by their key segment.
         // e.g. this['yahoo.'] = child-node;
         // e.g. this['google.'] = child-node;
@@ -183,7 +185,7 @@
             if (!db) {
                 this[dbName] = (db = {});
             }
-            db[rec.recKey] = rec;
+            db[recKey(rec)] = rec;
         }
         else {
             var n = this[k];
@@ -267,31 +269,38 @@
      */
     DNode.prototype.findKDB = function (urli)
     {
-        var n , r = this;
+        var n, r = this, stack = [];
         // Walk down the dictionary tree.
         do {
+            // save secondary level knowledge
+            if (r[K_DB]) {stack.push(r[K_DB]);}
             n = r;
             r = n.tryFind(urli);
         } while (r);
     
+        //r = {};
+        
         // In case of KDB records we need a full uri match.
         // Therfore we'll pick up the matched node's value
         // only if all of urli segments were matched - i.e.
         // if there were no remaining unmatched segments.
-        if (urli.count() === 0) {
-            return n[K_DB];
-        }
+        // if (urli.count() === 0) {
+            // r[K_DB] = stack.pop();
+        // }
+        // // Ancestor nodes are also harvested for heuristic
+        // matching.
+        return stack;
     };
     /**
      * Returns P_DB records that best match urli.
      */
     DNode.prototype.findPDB = function(urli) 
     {
-        var n = this, n2, idb;
+        var n = this, n2;
         // Walk down the dictionary tree.
         do {
             // save node if it has the desired data type
-            if (n[P_DB]) {n2 = n; idb = urli.pos();}
+            if (n[P_DB]) {n2 = n; /*idb = urli.pos();*/}
             n = n.tryFind(urli);
         } while (n);
         
@@ -299,10 +308,10 @@
         // below the top-level-domain. Hence we should check urli
         // to determine that.
         if (n2) {
-            urli.seek(idb);
-            if (urli.isBelowTLD()) {
+            //urli.seek(idb);
+            //if (urli.isBelowTLD()) {
                 return n2[P_DB];
-            }
+            //}
         }
     };
     /**
@@ -327,7 +336,7 @@
 
     /**
      * @constructor
-     * Sets up the supplied record for insertion into knowledge-db
+     * Sets up the supplied record for insertion into the db
      */
     function DRecord(rec)
     {
@@ -345,16 +354,21 @@
     function onRequest (rq, sender, funcSendResponse)
     {
         console.info("Mothership Received object of type " + rq.dt);
-        if (rq.dt === dt_eRecord)
+        switch (rq.dt)
         {
-            g_kdb.insert(new DRecord(rq));
-            funcSendResponse({ack: true});
-        }
-        else if (rq.dt === cm_getDB)
-        {
-            var urli = new Iterator(newUrla(rq.loc));
-            var db = getDB(urli);
-            funcSendResponse(db);
+            case dt_eRecord:
+                g_kdb.insert(new DRecord(rq));
+                funcSendResponse({ack: true});
+                break;
+            case dt_pRecord:
+                g_pdb.insert(new DRecord(rq));
+                funcSendResponse({ack: true});
+                break;
+            case cm_getDB:
+                var urli = new Iterator(newUrla(rq.loc));
+                var db = getDB(urli);
+                funcSendResponse(db);
+                break;
         }
     }
     
