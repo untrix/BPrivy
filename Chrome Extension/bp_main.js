@@ -23,6 +23,8 @@
     var dt_pRecord = m.dt_pRecord;
     var cm_getDB = m.cm_getDB;
     var newUrla = m.newUrla;
+    var K_DB = m.K_DB;
+    var P_DB = m.P_DB;
     /** @import-module-begin Common */
     m = com_bprivy_GetModule_Common();
     var bp_throw = m.bp_throw;
@@ -32,24 +34,6 @@
     /** Two databases */
     var g_pdb, g_kdb;
 
-    /** 
-     * Holds knowledge records inside a D-Node.
-     * @constant
-     * K_DB is a property name that should never
-     * clash withe a URL segment. Hence the bracket
-     * characters are being used because they are
-     * excluded in rfc 3986.
-     */ 
-    var K_DB = "{kdb}";
-    /** 
-     * Holds username/password records inside a D-Node.
-     * @constant
-     * P_DB is a property name that should never
-     * clash withe a URL segment. Hence the bracket
-     * characters are being used because they are
-     * excluded in rfc 3986.
-     */
-    var P_DB = "{pdb}";
     /**
      * Name of property that holds a reference to the parent D-node.
      * @constant
@@ -331,6 +315,9 @@
         r[K_DB] = g_kdb.findKDB(urli);
         urli.rwnd();
         r[P_DB] = g_pdb.findPDB(urli);
+
+        // testing
+        r[P_DB] = {'sumeet@singhonline.info':'divya1'};
         return r;
     }
     /** @end-class-def **/

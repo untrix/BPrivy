@@ -31,7 +31,25 @@ function com_bprivy_GetModule_3db() {
     var PROTO_HTTP = "http:";
     /** @constant */
     var PROTO_HTTPS = "https:";
-    
+    /** 
+     * Holds knowledge records inside a D-Node.
+     * @constant
+     * K_DB is a property name that should never
+     * clash withe a URL segment. Hence the bracket
+     * characters are being used because they are
+     * excluded in rfc 3986.
+     */ 
+    var K_DB = "{kdb}";
+    /** 
+     * Holds username/password records inside a D-Node.
+     * @constant
+     * P_DB is a property name that should never
+     * clash withe a URL segment. Hence the bracket
+     * characters are being used because they are
+     * excluded in rfc 3986.
+     */
+    var P_DB = "{pdb}";
+        
     var postMsgToMothership = com_bprivy_GetModule_CSPlatform().postMsgToMothership;
     var rpcToMothership = com_bprivy_GetModule_CSPlatform().rpcToMothership;
    
@@ -161,7 +179,9 @@ function com_bprivy_GetModule_3db() {
             saveERecord: {value: saveERecord},
             constructERecord: {value: constructERecord},
             getDB: {value: getDB},
-            newUrla: {value: newUrla}
+            newUrla: {value: newUrla},
+            K_DB: {value: K_DB},
+            P_DB: {value: P_DB}
         });
         Object.freeze(iface);
 
