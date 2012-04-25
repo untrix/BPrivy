@@ -1,7 +1,7 @@
 {
   "name": "BPrivy",
   "version": "0.5",
-  "description":"BPrivy Password Keychain. Personal Protected and Portable. Keep your encrypted passwords in your wallet/purse, keychain or on your phone, access from any computer!",
+  "description":"BPrivy Personal Password Store. Movable, copyable and merge-able. Take full control of your passwords. Store, move,copy and merge them wherever and whenever you like - in memory cards, in your phone(s), on your computers, on your favorite cloud-drives. Autofill in all major browsers.",
   "icons": {
 	     "128": "icon128.png",
   	     "16": "icon16.png"
@@ -11,7 +11,7 @@
   "content_scripts": [
 	{
 	"matches": ["<all_urls>"],
-	"js": ["jquery.js", "jquery-ui.js", "bp_common.js", "bp_cs_platform_chrome.js", "bp_3db.js", "bp_cs.js"],
+	"js": ["jquery.js", "jquery-ui.js", "bp_common.js", "bp_cs_platform_chrome.js", "bp_3eb.js", "bp_cs.js"],
 	"css": ["bp.css"]
 ///	"all_frames": true
 	}

@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global $ document com_bprivy_GetModule_MainPlatform com_bprivy_GetModule_3db com_bprivy_GetModule_Common */
+/*global $ document com_bprivy_GetModule_MainPlatform com_bprivy_GetModule_3eb com_bprivy_GetModule_Common */
 /*jslint browser:true, devel:true, es5:true, vars:true */
 /*properties console.info, console.log, console.warn */
 
@@ -17,15 +17,15 @@
     var m = com_bprivy_GetModule_MainPlatform();
     var registerMsgListener = m.registerMsgListener;
     var initScaffolding = m.init;
-    /** @import-module-begin 3db */
-    m = com_bprivy_GetModule_3db();
+    /** @import-module-begin 3eb */
+    m = com_bprivy_GetModule_3eb();
     var dt_eRecord = m.dt_eRecord;
     var dt_pRecord = m.dt_pRecord;
     var cm_getDB = m.cm_getDB;
     var newUrla = m.newUrla;
-    var K_DB = m.K_DB;
-    //var K_DB2 = m.K_DB2;
-    var P_DB = m.P_DB;
+    var K_EB = m.K_EB;
+    //var K_EB2 = m.K_EB2;
+    var P_EB = m.P_EB;
     var recKey = m.recKey;
     /** @import-module-begin Common */
     m = com_bprivy_GetModule_Common();
@@ -74,9 +74,9 @@
     {
         switch (dt) {
             case dt_eRecord:
-                return K_DB;
+                return K_EB;
             case dt_pRecord:
-                return P_DB;
+                return P_EB;
             default:
                 return null;
         }
@@ -265,7 +265,7 @@
         return n;
     };
     /**
-     * Returns K_DB records that best match urli.
+     * Returns K_EB records that best match urli.
      */
     DNode.prototype.findKDB = function (urli)
     {
@@ -273,7 +273,7 @@
         // Walk down the dictionary tree.
         do {
             // save secondary level knowledge
-            if (r[K_DB]) {stack.push(r[K_DB]);}
+            if (r[K_EB]) {stack.push(r[K_EB]);}
             n = r;
             r = n.tryFind(urli);
         } while (r);
@@ -285,14 +285,14 @@
         // only if all of urli segments were matched - i.e.
         // if there were no remaining unmatched segments.
         // if (urli.count() === 0) {
-            // r[K_DB] = stack.pop();
+            // r[K_EB] = stack.pop();
         // }
         // // Ancestor nodes are also harvested for heuristic
         // matching.
         return stack;
     };
     /**
-     * Returns P_DB records that best match urli.
+     * Returns P_EB records that best match urli.
      */
     DNode.prototype.findPDB = function(urli) 
     {
@@ -300,7 +300,7 @@
         // Walk down the dictionary tree.
         do {
             // save node if it has the desired data type
-            if (n[P_DB]) {n2 = n; /*idb = urli.pos();*/}
+            if (n[P_EB]) {n2 = n; /*idb = urli.pos();*/}
             n = n.tryFind(urli);
         } while (n);
         
@@ -310,23 +310,23 @@
         if (n2) {
             //urli.seek(idb);
             //if (urli.isBelowTLD()) {
-                return n2[P_DB];
+                return n2[P_EB];
             //}
         }
     };
     /**
-     * Returns K_DB and P_DB records that best match urli.
+     * Returns K_EB and P_EB records that best match urli.
      */
     function getDB(urli) 
     {
         var kdb, pdb, r;
         r = {};
-        r[K_DB] = g_kdb.findKDB(urli);
+        r[K_EB] = g_kdb.findKDB(urli);
         urli.rwnd();
-        r[P_DB] = g_pdb.findPDB(urli);
+        r[P_EB] = g_pdb.findPDB(urli);
 
         // testing
-        r[P_DB] = {'sumeet@singhonline.info':'divya1'};
+        r[P_EB] = {'sumeet@singhonline.info':'divya1'};
         return r;
     }
     /** @end-class-def **/
