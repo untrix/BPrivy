@@ -8,8 +8,14 @@
 #include "variant_list.h"
 #include "DOM/Document.h"
 #include "global/config.h"
+#include <boost/filesystem.hpp>
+#include <APITypes.h>
+#include <iostream>
 
 #include "BPrivyAPI.h"
+
+namespace bfs = boost::filesystem;
+using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn FB::variant BPrivyAPI::echo(const FB::variant& msg)
@@ -63,4 +69,40 @@ std::string BPrivyAPI::get_version()
 void BPrivyAPI::testEvent()
 {
     fire_test();
+}
+
+FB::VariantMap BPrivyAPI::ls2(std::string dirPath)
+{
+	bfs::path path(dirPath);
+	FB::VariantMap m, m2;
+	typedef FB::VariantMap::value_type	VT;
+
+	m2.insert(VT(path.directory_string(), "nested value"));
+	//m.insert(VT(path.directory_string(), "value"));
+	//m.insert(VT("test", "test value"));
+	m.insert(VT("m2", FB::variant(m2)));
+
+	if ( (!bfs::exists(path)) || (!bfs::is_directory(path)) )
+	{
+		cout << path << " is not a directory" << endl;
+		return m;
+	}
+	else 
+	{
+		cout << path << " is a directory" << endl;
+		return m;
+	}
+}
+
+void BPrivyAPI::ls(std::string dirPath, FB::JSObjectPtr p)
+{
+	typedef FB::VariantMap::value_type	VT;
+	FB::VariantMap m, m2, m3;
+	m3.insert(VT("m3-prop", "m3-val"));
+	m2.insert(VT("m3", FB::variant(m3)));
+	m.insert(VT("m2", FB::variant(m2)));
+
+	p->SetProperty("m", FB::variant(m));
+
+	return;
 }
