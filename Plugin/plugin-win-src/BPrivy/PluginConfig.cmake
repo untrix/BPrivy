@@ -7,7 +7,7 @@
 
 set(PLUGIN_NAME "BPrivy")
 set(PLUGIN_PREFIX "BPV")
-set(COMPANY_NAME "Untrix Inventions (untrix.com)")
+set(COMPANY_NAME "Untrix (untrix.com)")
 
 # ActiveX constants:
 set(FBTYPELIB_NAME BPrivyLib)
@@ -32,7 +32,7 @@ set(ACTIVEX_PROGID "Untrix.BPrivy")
 set(MOZILLA_PLUGINID "untrix.com/BPrivy")
 
 # strings
-set(FBSTRING_CompanyName "Untrix Inventions (untrix.com)")
+set(FBSTRING_CompanyName "Untrix (untrix.com)")
 set(FBSTRING_PluginDescription "BPrivy Password Manager")
 set(FBSTRING_PLUGIN_VERSION "1.0.0.0")
 set(FBSTRING_LegalCopyright "Copyright 2012 Sumeet Singh sumeet@untrix.com")
@@ -60,3 +60,4 @@ set(FBMAC_USE_INVALIDATINGCOREANIMATION 0)
 
 # Manually added by Sumeet
 add_boost_library(filesystem)
+add_firebreath_library(log4cplus)

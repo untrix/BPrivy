@@ -11,6 +11,7 @@
 #include <boost/filesystem.hpp>
 #include <APITypes.h>
 #include <iostream>
+#include <DOM/Window.h>
 
 #include "BPrivyAPI.h"
 
@@ -96,6 +97,7 @@ FB::VariantMap BPrivyAPI::ls2(std::string dirPath)
 
 void BPrivyAPI::ls(std::string dirPath, FB::JSObjectPtr p)
 {
+	bfs::path path(dirPath);
 	typedef FB::VariantMap::value_type	VT;
 	FB::VariantMap m, m2, m3;
 	m3.insert(VT("m3-prop", "m3-val"));
@@ -104,5 +106,29 @@ void BPrivyAPI::ls(std::string dirPath, FB::JSObjectPtr p)
 
 	p->SetProperty("m", FB::variant(m));
 
+	if ( (!bfs::exists(path)) || (!bfs::is_directory(path)) )
+	{
+		CONSOLE_LOG(dirPath + " is not a directory");
+		return;
+	}
+	else 
+	{
+		CONSOLE_LOG(dirPath + " is a directory");
+		bfs::directory_iterator it_end;
+		std::vector<bfs::path> dir_vec;
+		std::string json("[");
+		
+		bfs::directory_iterator it(path);
+		for (int i=0; it != it_end; it++)
+		{
+			if (bfs::is_directory(it->status())) {
+				dir_vec.push_back(*it);
+			}
+			else {
+				json += ( + 
+			}
+		}
+		return;
+	}
 	return;
 }

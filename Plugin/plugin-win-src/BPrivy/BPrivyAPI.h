@@ -14,6 +14,12 @@
 #ifndef H_BPrivyAPI
 #define H_BPrivyAPI
 
+#ifdef DEBUG
+#define CONSOLE_LOG(s) m_host->htmlLog(std::string("BPlugin: ") + (s))
+#else
+#define CONSOLE_LOG(s)
+#endif
+
 class BPrivyAPI : public FB::JSAPIAuto
 {
 public:

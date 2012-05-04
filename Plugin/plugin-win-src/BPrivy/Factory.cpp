@@ -40,6 +40,23 @@ public:
     {
         BPrivy::StaticDeinitialize();
     }
+
+	/// Added by Sumeet to enable logging.
+	void getLoggingMethods( FB::Log::LogMethodList& outMethods )
+	{
+		// The next line will enable logging to the console (think: printf).
+		// outMethods.push_back(std::make_pair(FB::Log::LogMethod_Console, std::string()));
+ 
+		// The next line will enable logging to a logfile.
+		outMethods.push_back(std::make_pair(FB::Log::LogMethod_File, "C:/users/sumeet/bprivy/plugin.log"));
+ 
+		// Obviously, if you use both lines, you will get output on both sinks.
+	}
+
+	FB::Log::LogLevel getLogLevel()
+	{
+		return FB::Log::LogLevel_Debug; // Now Debug and above is logged.
+	}
 };
 
 ///////////////////////////////////////////////////////////////////////////////
