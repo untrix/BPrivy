@@ -9,12 +9,10 @@ The following software is required to build the BPrivy plugin:
 	1. Unzip into - say - $Boost_Build_Dir
 	2. cd $Boost_Build_Dir
 	3. .\bootstrap
+	4. .\bjam link=static threading=multi runtime-link=shared
 	4. .\b2 install
 	This will install into C:\Boost
 	5. cd C:\Boost\lib
-	6. Rename (Yes, manually rename !) libboost_system* to boost_system*. Same for libboost_filesystem* and libboost_date_time*. This is needed because CMake's FindBoost built-in function looks for those names. You'll need
-	to do similar renaming for all boost-libs that you intend to use on windows. At the time of this writing only
-	system and date_time are being used by FireBreath and filesystem by BPrivy.
 8. Eventhough FireBreath documentation says that you can use system-boost libs by supplying "-D WITH_SYSTEM_BOOST=1", that doesn't actually work. CMake simply ignores all the command-line variables supplied. Supplying the variables inside a 'cmake initial-cache file' worked, so I've used that technique. The following more intrusive techniques also worked but are not necessary. But I'm keeping them below in case we'll need those for other operating environments.
 
 	Hence these will need to be set inside firebreath1.7\CMakeLists.txt file. At the top somewhere add the line:
