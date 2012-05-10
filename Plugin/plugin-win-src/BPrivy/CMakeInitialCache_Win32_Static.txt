@@ -1,0 +1,6 @@
+#OPTION(WITH_SYSTEM_BOOST "x" ON)
+SET ( WITH_SYSTEM_BOOST 1 CACHE BOOL "Use System Boost" FORCE )
+SET ( WITH_DYNAMIC_MSVC_RUNTIME 0 CACHE BOOL "Use dynamic VC Runtime" FORCE )
+SET ( Boost_USE_STATIC_LIBS 1 CACHE BOOL "Link statically with BOOST libs" FORCE )
+SET ( Boost_ADDITIONAL_VERSIONS "1.49" CACHE STRING "Version of Boost to linnk with" FORCE )
+SET ( Boost_USE_STATIC_RUNTIME 1 CACHE BOOL "Use Boost Libs that were linked with /MT flag" FORCE )

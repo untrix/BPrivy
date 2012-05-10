@@ -8,13 +8,17 @@
 #include "variant_list.h"
 #include "DOM/Document.h"
 #include "global/config.h"
-#include <boost/filesystem.hpp>
 #include <APITypes.h>
 #include <iostream>
 #include <DOM/Window.h>
 
 #include "BPrivyAPI.h"
 #include <sstream>
+#include <process.h>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/interprocess/sync/file_lock.hpp>
+
 
 namespace bfs = boost::filesystem;
 using namespace std;
@@ -74,6 +78,10 @@ void BPrivyAPI::testEvent()
     fire_test();
 }
 
+unsigned int BPrivyAPI::getpid() const
+{
+	return _getpid();
+}
 /*
 FB::VariantMap BPrivyAPI::ls2(std::string dirPath)
 {
@@ -103,6 +111,57 @@ FB::VariantMap BPrivyAPI::ls2(std::string dirPath)
 #define COMMA (",")
 #define OPENB ("{")
 #define CLOSEB ("}")
+#define CATCH_FILESYSTEM_EXCEPTIONS \
+	catch (const bfs::filesystem_error& e)\
+	{\
+		HandleFilesystemException(e, p);\
+	}\
+	catch (const std::system_error& e)\
+	{\
+		HandleSystemException(e, p);\
+	}\
+	catch (const std::exception& e)\
+	{\
+		HandleStdException(e, p);\
+	}\
+	catch (...)\
+	{\
+		HandleUnknownException(p);\
+	}
+
+void HandleFilesystemException (const bfs::filesystem_error& e, FB::JSObjectPtr p)
+{
+	FB::VariantMap m;
+	m.insert(VT("msg", e.code().message()));
+	m.insert(VT("code", e.code().value()));
+	m.insert(VT("gmsg", e.code().default_error_condition().message()));
+	m.insert(VT("gcode", e.code().default_error_condition().value()));
+	m.insert(VT("path", e.path1().string()));
+	p->SetProperty("error", FB::variant(m));
+}
+
+void HandleSystemException(const std::system_error& e, FB::JSObjectPtr p)
+{
+	FB::VariantMap m;
+	m.insert(VT("msg", e.code().message()));
+	m.insert(VT("code", e.code().value()));
+	m.insert(VT("gmsg", e.code().default_error_condition().message()));
+	m.insert(VT("gcode", e.code().default_error_condition().value()));
+	p->SetProperty("error", FB::variant(m));
+}
+
+void HandleStdException(const std::exception& e, FB::JSObjectPtr p)
+{		
+	FB::VariantMap m;
+	m.insert(VT("msg", e.what()));
+	p->SetProperty("error", FB::variant(m));
+}
+
+void HandleUnknownException (FB::JSObjectPtr p)
+{
+
+	p->SetProperty("error", "Unknown");
+}
 
 std::string& JsonFriendly(std::string& s)
 {
@@ -121,8 +180,8 @@ void MakeErrorEntry(const bfs::filesystem_error& e, std::ostringstream& je)
 {
 	if (!e.path1().empty())
 	{
-		std::string p = e.path1().string();
-		je << QUOTE << JsonFriendly(p) << QUOTE << ":{";
+		std::string s(e.path1().string());
+		je << QUOTE << JsonFriendly(s) << QUOTE << ":{";
 		je << "\"name\":" << e.path1().filename();
 		if (e.path1().has_extension())
 		{
@@ -132,11 +191,35 @@ void MakeErrorEntry(const bfs::filesystem_error& e, std::ostringstream& je)
 				je << ",\"st\":" << e.path1().stem();
 			}
 		}
-		je << ",\"msg\":" << QUOTE << JsonFriendly(std::string(e.what())) << QUOTE;
+		je << ",\"gmsg\":" << QUOTE << JsonFriendly(s = e.code().default_error_condition().message()) << QUOTE;
+		je << ",\"gcode\":" << e.code().default_error_condition().value();
+		je << ",\"msg\":" << QUOTE << JsonFriendly(s = e.code().message()) << QUOTE;
 		je << ",\"code\":" << e.code().value();
 		je << CLOSEB;
 	}
 }
+
+void MakeErrorEntry(const bfs::filesystem_error& e, FB::VariantMap& m)
+{
+	if (!e.path1().empty())
+	{
+		m.insert(VT("path", e.path1().string()));
+		m.insert(VT("name", e.path1().filename().string()));
+		if (e.path1().has_extension())
+		{
+			m.insert(VT("ex", e.path1().extension().string()));
+			if (e.path1().has_stem())
+			{
+				m.insert(VT("st", e.path1().stem().string()));
+			}
+		}
+	}
+	m.insert(VT("gmsg", e.code().default_error_condition().message()));
+	m.insert(VT("gcode", e.code().default_error_condition().value()));
+	m.insert(VT("msg", e.code().message()));
+	m.insert(VT("code", e.code().value()));
+}
+
 void fileToJson(const bfs::path& path, std::ostringstream& json, std::ostringstream& je)
 {
 	try 
@@ -159,6 +242,32 @@ void fileToJson(const bfs::path& path, std::ostringstream& json, std::ostringstr
 	catch (...)
 	{
 		json.str(string()); // clear incompelte data
+	}
+}
+
+void fileToVariant(const bfs::path& path, FB::VariantMap& v, FB::VariantMap& v_e)
+{
+	try 
+	{
+		FB::VariantMap m;
+
+		m.insert(VT("sz", file_size(path)));
+		if (path.has_extension()) {
+			m.insert(VT("ex", path.extension().string()));
+			if (path.has_stem()) {
+				m.insert(VT("st", path.stem().string()));
+			}
+		}
+		v.insert(VT(path.filename().string(), m));
+	}
+	catch (const bfs::filesystem_error& e)
+	{
+		v.clear(); // clear incompelte data
+		MakeErrorEntry(e, v_e);
+	}
+	catch (...)
+	{
+		v.clear(); // clear incompelte data
 	}
 }
 
@@ -211,11 +320,22 @@ void otherToJson(const bfs::path& path, std::ostringstream& json, std::ostringst
 	}
 }
 
-bool BPrivyAPI::lsDir(std::string dirPath, FB::JSObjectPtr p)
+bfs::file_status& ResolveSymlinks(bfs::path& p, bfs::file_status& s)
+{
+	while (bfs::is_symlink(s))
+	{
+		p = bfs::read_symlink(p);
+		s = bfs::status(p);
+	}
+
+	return s;
+}
+
+bool BPrivyAPI::ls(std::string& dirPath, FB::JSObjectPtr p)
 {
 	try {
 		bfs::path path(dirPath);
-		bfs::file_status stts = bfs::status(path);
+		bfs::file_status stat = bfs::status(path);
 
 		//FB::VariantMap m, m2, m3;
 		//m3.insert(VT("m3-prop", "m3-val"));
@@ -232,16 +352,28 @@ bool BPrivyAPI::lsDir(std::string dirPath, FB::JSObjectPtr p)
 		jo << OPENB;
 		je << OPENB;
 
-		if (!bfs::exists(stts))
+		if (!bfs::exists(stat))
 		{
 			CONSOLE_LOG(dirPath + " does not exist");
-			p->SetProperty("error", "PathNotExist");
+			FB::VariantMap m;
+			m.insert(VT("gcode", "PathNotExist"));
+			p->SetProperty("error", FB::variant(m));
 		}
-		else if (bfs::is_regular_file(stts))
+		else if (bfs::is_regular_file(ResolveSymlinks(path, stat)))
 		{
-			p->SetProperty("error","PathNotADir");
+			FB::VariantMap v, v_e;
+			fileToVariant(path, v, v_e);
+			if (!v.empty())
+			{
+				p->SetProperty("lsFile", v);
+			}
+			if (!v_e.empty())
+			{
+				p->SetProperty("error", v_e);
+			}
+			rVal = true;
 		}
-		else if (bfs::is_directory(stts))
+		else if (bfs::is_directory(stat))
 		{
 			CONSOLE_LOG(dirPath + " is a directory");
 			const bfs::directory_iterator it_end;
@@ -284,13 +416,20 @@ bool BPrivyAPI::lsDir(std::string dirPath, FB::JSObjectPtr p)
 					je << t_je.str();
 					i_e ++;
 				}
-
 			}
 			rVal = true;
 		}
+		else if (stat.type() == bfs::reparse_file)
+		{
+			FB::VariantMap m;
+			m.insert(VT("gcode", "PathIsReparsePoint"));
+			p->SetProperty("error", FB::variant(m));
+		}
 		else
 		{
-			p->SetProperty("error","PathNotADir");
+			FB::VariantMap m;
+			m.insert(VT("gcode", "PathNotADir"));
+			p->SetProperty("error", FB::variant(m));
 		}
 
 		jf << CLOSEB;
@@ -298,9 +437,10 @@ bool BPrivyAPI::lsDir(std::string dirPath, FB::JSObjectPtr p)
 		jo << CLOSEB;
 		je << CLOSEB;
 
-		j << OPENB;
+		unsigned int i = i_f + i_d + i_o + i_e;
+		if (i > 0) 
 		{
-			unsigned int i = i_f + i_d + i_o + i_e;
+			j << OPENB;
 			if (i_f > 0) {
 				j << "\"f\":" << jf.str();
 				if ((i -= i_f) > 0) {j << COMMA;}
@@ -316,39 +456,38 @@ bool BPrivyAPI::lsDir(std::string dirPath, FB::JSObjectPtr p)
 			if (i_e > 0) {
 				j << "\"e\":" << je.str();
 			}
+			j << CLOSEB;
+			p->SetProperty(std::string("lsDir"), j.str());
 		}
-		j << CLOSEB;
-
-		p->SetProperty(std::string("ls"), j.str());
+		
 		return rVal;
 	} 
-	catch (const bfs::filesystem_error& e)
+	CATCH_FILESYSTEM_EXCEPTIONS
+	return false;
+}
+
+unsigned int BPrivyAPI::createFile(std::string& path, FB::JSObjectPtr p)
+{
+	try
 	{
-		FB::VariantMap m;
-		m.insert(VT("msg", e.what()));
-		m.insert(VT("code", e.code().value()));
-		m.insert(VT("path", e.path1().string()));
-		p->SetProperty("error", FB::variant(m));
-		return false;
+		CONSOLE_LOG("Entered CreateFile");
+		bfs::filebuf buf;
+
+		buf.open(path, ios_base::out);
+
+		if (!buf.is_open())
+		{
+			CONSOLE_LOG("Could Not open file " + path);
+		}
+		else
+		{
+			CONSOLE_LOG("File Opened ! : " + path);
+			boost::interprocess::file_lock flock(path.c_str());
+			CONSOLE_LOG("File Locked !");
+			flock.unlock();
+		}
+		return 0;
 	}
-	catch (const std::system_error& e)
-	{
-		FB::VariantMap m;
-		m.insert(VT("msg", e.what()));
-		m.insert(VT("code", e.code().value()));
-		p->SetProperty("error", FB::variant(m));
-		return false;
-	}
-	catch (const std::exception& e)
-	{
-		FB::VariantMap m;
-		m.insert(VT("msg", e.what()));
-		p->SetProperty("error", FB::variant(m));
-		return false;
-	}
-	catch (...)
-	{
-		p->SetProperty("error", "Unknown");
-		return false;
-	}
+	CATCH_FILESYSTEM_EXCEPTIONS
+	return 0;
 }

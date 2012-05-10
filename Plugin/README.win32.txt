@@ -9,10 +9,11 @@ The following software is required to build the BPrivy plugin:
 	1. Unzip into - say - $Boost_Build_Dir
 	2. cd $Boost_Build_Dir
 	3. .\bootstrap
-	4. .\bjam link=static threading=multi runtime-link=shared
-	4. .\b2 install
-	This will install into C:\Boost
-	5. cd C:\Boost\lib
+	4. .\bjam link=static threading=multi runtime-link=shared runtime-link=static)
+	5. .\b2 install
+	6. .\b2 install-proper
+		This will install into C:\Boost
+	7. cd C:\Boost\lib
 8. Eventhough FireBreath documentation says that you can use system-boost libs by supplying "-D WITH_SYSTEM_BOOST=1", that doesn't actually work. CMake simply ignores all the command-line variables supplied. Supplying the variables inside a 'cmake initial-cache file' worked, so I've used that technique. The following more intrusive techniques also worked but are not necessary. But I'm keeping them below in case we'll need those for other operating environments.
 
 	Hence these will need to be set inside firebreath1.7\CMakeLists.txt file. At the top somewhere add the line:
@@ -23,4 +24,4 @@ The following software is required to build the BPrivy plugin:
 	.\firebreath1.7\prep2010.cmd .\plugin-win-src .\plugin-win-build -C C:\Dev\BPrivy\Plugin\plugin-win-src\BPrivy\CMakeInitialCache.txt
 	This will build plugin-win-build\FireBreath.sln. Some error is printed regarding not being able to process initial cache, but the project gets build with the system-boost libs anyway.
 10. Open FireBreath.sln in VC++ Express 2010. Verify (Right-Click BPrivy then Properties) that the libs in C:\Boost are being linked-  system, date_time and filesystem.
-11.	Build the project called "ALL_BUILD".
+11.	Build the project called "ALL_BUILD". If you get an error saying that the PCH heap limit is exceeded and that you should use supply a higher /Zm value then do as recommended. (e.g. provide 'Additional Option' /Zm170 under C/C++->Command Line of the failed project)

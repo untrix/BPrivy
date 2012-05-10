@@ -39,8 +39,10 @@ public:
     {
         registerMethod("echo",      make_method(this, &BPrivyAPI::echo));
         registerMethod("testEvent", make_method(this, &BPrivyAPI::testEvent));
-		registerMethod("lsDir", make_method(this, &BPrivyAPI::lsDir));
-        
+		registerMethod("ls", make_method(this, &BPrivyAPI::ls));
+		registerMethod("getpid", make_method(this, &BPrivyAPI::getpid));
+        registerMethod("createFile", make_method(this, &BPrivyAPI::createFile));
+
         // Read-write property
         registerProperty("testString",
                          make_property(this,
@@ -83,7 +85,9 @@ public:
 
 	// Method ls
 	//FB::VariantMap ls2(std::string dirPath);
-	bool lsDir(std::string dirPath, FB::JSObjectPtr p);
+	bool ls(std::string& dirPath, FB::JSObjectPtr p);
+	unsigned int getpid() const;
+	unsigned int createFile(std::string& path, FB::JSObjectPtr p);
 
 private:
     BPrivyWeakPtr m_plugin;
