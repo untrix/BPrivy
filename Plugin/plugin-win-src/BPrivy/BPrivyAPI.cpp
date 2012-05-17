@@ -1,43 +1,36 @@
-/**********************************************************\
-
-  Auto-generated BPrivyAPI.cpp
-
-\**********************************************************/
-
+//FireBreath Includes
 #include "JSObject.h"
 #include "variant_list.h"
 #include "DOM/Document.h"
 #include "global/config.h"
 #include <APITypes.h>
-#include <iostream>
 #include <DOM/Window.h>
 
+//BPrivy Includes
 #include "BPrivyAPI.h"
-#include <sstream>
-#include <process.h>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/interprocess/sync/file_lock.hpp>
+#include "ErrorHandling.h"
+#include "Utils.h"
+#include <sstream>  // For stringstream
+#include <process.h>// For getpid
+#include <stdlib.h> // For malloc
+#include <malloc.h> // For malloc
 
-
-namespace bfs = boost::filesystem;
+using namespace bp;
 using namespace std;
+
 typedef FB::VariantMap::value_type	VT;
 
-///////////////////////////////////////////////////////////////////////////////
-/// @fn FB::variant BPrivyAPI::echo(const FB::variant& msg)
-///
-/// @brief  Echos whatever is passed from Javascript.
-///         Go ahead and change it. See what happens!
-///////////////////////////////////////////////////////////////////////////////
-FB::variant BPrivyAPI::echo(const FB::variant& msg)
-{
-    static int n(0);
-    fire_echo("So far, you clicked this many times: ", n++);
-
-    // return "foobar";
-    return msg;
-}
+/*
+#include <boost/filesystem/fstream.hpp>
+#include <boost/interprocess/sync/file_lock.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/sharable_lock.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
+#include <boost/interprocess/creation_tags.hpp>
+#include <time.h>
+namespace bpt = boost::GENERIC_time;
+namespace bip = boost::interprocess;
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn BPrivyPtr BPrivyAPI::getPlugin()
@@ -80,145 +73,13 @@ void BPrivyAPI::testEvent()
 
 unsigned int BPrivyAPI::getpid() const
 {
+#ifdef WIN32
 	return _getpid();
-}
-/*
-FB::VariantMap BPrivyAPI::ls2(std::string dirPath)
-{
-	bfs::path path(dirPath);
-	FB::VariantMap m, m2;
-	typedef FB::VariantMap::value_type	VT;
-
-	m2.insert(VT(path.directory_string(), "nested value"));
-	//m.insert(VT(path.directory_string(), "value"));
-	//m.insert(VT("test", "test value"));
-	m.insert(VT("m2", FB::variant(m2)));
-
-	if ( (!bfs::exists(path)) || (!bfs::is_directory(path)) )
-	{
-		cout << path << " is not a directory" << endl;
-		return m;
-	}
-	else 
-	{
-		cout << path << " is a directory" << endl;
-		return m;
-	}
-}
-*/
-
-#define QUOTE ("\"")
-#define COMMA (",")
-#define OPENB ("{")
-#define CLOSEB ("}")
-#define CATCH_FILESYSTEM_EXCEPTIONS \
-	catch (const bfs::filesystem_error& e)\
-	{\
-		HandleFilesystemException(e, p);\
-	}\
-	catch (const std::system_error& e)\
-	{\
-		HandleSystemException(e, p);\
-	}\
-	catch (const std::exception& e)\
-	{\
-		HandleStdException(e, p);\
-	}\
-	catch (...)\
-	{\
-		HandleUnknownException(p);\
-	}
-
-void HandleFilesystemException (const bfs::filesystem_error& e, FB::JSObjectPtr p)
-{
-	FB::VariantMap m;
-	m.insert(VT("msg", e.code().message()));
-	m.insert(VT("code", e.code().value()));
-	m.insert(VT("gmsg", e.code().default_error_condition().message()));
-	m.insert(VT("gcode", e.code().default_error_condition().value()));
-	m.insert(VT("path", e.path1().string()));
-	p->SetProperty("error", FB::variant(m));
+#else
+	return getpid();
+#endif
 }
 
-void HandleSystemException(const std::system_error& e, FB::JSObjectPtr p)
-{
-	FB::VariantMap m;
-	m.insert(VT("msg", e.code().message()));
-	m.insert(VT("code", e.code().value()));
-	m.insert(VT("gmsg", e.code().default_error_condition().message()));
-	m.insert(VT("gcode", e.code().default_error_condition().value()));
-	p->SetProperty("error", FB::variant(m));
-}
-
-void HandleStdException(const std::exception& e, FB::JSObjectPtr p)
-{		
-	FB::VariantMap m;
-	m.insert(VT("msg", e.what()));
-	p->SetProperty("error", FB::variant(m));
-}
-
-void HandleUnknownException (FB::JSObjectPtr p)
-{
-
-	p->SetProperty("error", "Unknown");
-}
-
-std::string& JsonFriendly(std::string& s)
-{
-	for (string::iterator it=s.begin(); it != s.end(); it++)
-	{
-		if ((*it) == '"')
-		{ *it = '\'';}
-		else if ((*it) == '\\')
-		{ *it = '/'; }
-	}
-
-	return s;
-}
-
-void MakeErrorEntry(const bfs::filesystem_error& e, std::ostringstream& je)
-{
-	if (!e.path1().empty())
-	{
-		std::string s(e.path1().string());
-		je << QUOTE << JsonFriendly(s) << QUOTE << ":{";
-		je << "\"name\":" << e.path1().filename();
-		if (e.path1().has_extension())
-		{
-			je << ",\"ex\":" << e.path1().extension();
-			if (e.path1().has_stem())
-			{
-				je << ",\"st\":" << e.path1().stem();
-			}
-		}
-		je << ",\"gmsg\":" << QUOTE << JsonFriendly(s = e.code().default_error_condition().message()) << QUOTE;
-		je << ",\"gcode\":" << e.code().default_error_condition().value();
-		je << ",\"msg\":" << QUOTE << JsonFriendly(s = e.code().message()) << QUOTE;
-		je << ",\"code\":" << e.code().value();
-		je << CLOSEB;
-	}
-}
-
-void MakeErrorEntry(const bfs::filesystem_error& e, FB::VariantMap& m)
-{
-	if (!e.path1().empty())
-	{
-		m.insert(VT("path", e.path1().string()));
-		m.insert(VT("name", e.path1().filename().string()));
-		if (e.path1().has_extension())
-		{
-			m.insert(VT("ex", e.path1().extension().string()));
-			if (e.path1().has_stem())
-			{
-				m.insert(VT("st", e.path1().stem().string()));
-			}
-		}
-	}
-	m.insert(VT("gmsg", e.code().default_error_condition().message()));
-	m.insert(VT("gcode", e.code().default_error_condition().value()));
-	m.insert(VT("msg", e.code().message()));
-	m.insert(VT("code", e.code().value()));
-}
 
 void fileToJson(const bfs::path& path, std::ostringstream& json, std::ostringstream& je)
 {
@@ -251,11 +112,11 @@ void fileToVariant(const bfs::path& path, FB::VariantMap& v, FB::VariantMap& v_e
 	{
 		FB::VariantMap m;
 
-		m.insert(VT("sz", file_size(path)));
+		m.insert(VT(PROP_FILESIZE, file_size(path)));
 		if (path.has_extension()) {
-			m.insert(VT("ex", path.extension().string()));
+			m.insert(VT(PROP_FILEEXT, path.extension().string()));
 			if (path.has_stem()) {
-				m.insert(VT("st", path.stem().string()));
+				m.insert(VT(PROP_FILESTEM, path.stem().string()));
 			}
 		}
 		v.insert(VT(path.filename().string(), m));
@@ -331,9 +192,10 @@ bfs::file_status& ResolveSymlinks(bfs::path& p, bfs::file_status& s)
 	return s;
 }
 
-bool BPrivyAPI::ls(std::string& dirPath, FB::JSObjectPtr p)
+bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 {
-	try {
+	try 
+	{
 		bfs::path path(dirPath);
 		bfs::file_status stat = bfs::status(path);
 
@@ -354,10 +216,7 @@ bool BPrivyAPI::ls(std::string& dirPath, FB::JSObjectPtr p)
 
 		if (!bfs::exists(stat))
 		{
-			CONSOLE_LOG(dirPath + " does not exist");
-			FB::VariantMap m;
-			m.insert(VT("gcode", "PathNotExist"));
-			p->SetProperty("error", FB::variant(m));
+			throw BPError(ACODE_BAD_PATH_ARGUMENT);
 		}
 		else if (bfs::is_regular_file(ResolveSymlinks(path, stat)))
 		{
@@ -365,11 +224,11 @@ bool BPrivyAPI::ls(std::string& dirPath, FB::JSObjectPtr p)
 			fileToVariant(path, v, v_e);
 			if (!v.empty())
 			{
-				p->SetProperty("lsFile", v);
+				p->SetProperty(PROP_FILESTAT, v);
 			}
 			if (!v_e.empty())
 			{
-				p->SetProperty("error", v_e);
+				p->SetProperty(PROP_ERROR, v_e);
 			}
 			rVal = true;
 		}
@@ -421,15 +280,11 @@ bool BPrivyAPI::ls(std::string& dirPath, FB::JSObjectPtr p)
 		}
 		else if (stat.type() == bfs::reparse_file)
 		{
-			FB::VariantMap m;
-			m.insert(VT("gcode", "PathIsReparsePoint"));
-			p->SetProperty("error", FB::variant(m));
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_REPARSE_POINT);
 		}
 		else
 		{
-			FB::VariantMap m;
-			m.insert(VT("gcode", "PathNotADir"));
-			p->SetProperty("error", FB::variant(m));
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
 		}
 
 		jf << CLOSEB;
@@ -457,37 +312,221 @@ bool BPrivyAPI::ls(std::string& dirPath, FB::JSObjectPtr p)
 				j << "\"e\":" << je.str();
 			}
 			j << CLOSEB;
-			p->SetProperty(std::string("lsDir"), j.str());
+			p->SetProperty(PROP_LSDIR, j.str());
 		}
 		
 		return rVal;
 	} 
-	CATCH_FILESYSTEM_EXCEPTIONS
+	CATCH_FILESYSTEM_EXCEPTIONS(p)
 	return false;
 }
 
-unsigned int BPrivyAPI::createFile(std::string& path, FB::JSObjectPtr p)
+bool BPrivyAPI::createDir(const std::string& s_path, FB::JSObjectPtr p)
 {
 	try
 	{
-		CONSOLE_LOG("Entered CreateFile");
-		bfs::filebuf buf;
+		CONSOLE_LOG("In createDir");
 
-		buf.open(path, ios_base::out);
+		bfs::path path(s_path);
 
-		if (!buf.is_open())
+		bfs::create_directory(path);
+		bfs::permissions(path, bfs::others_read | bfs::others_write);
+
+		return true;
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(p)
+	return false;
+}
+
+bool BPrivyAPI::rm(const std::string& s_path, FB::JSObjectPtr p)
+{
+	try
+	{
+		CONSOLE_LOG("In rmDir");
+
+		bfs::path path(s_path);
+		bfs::file_status stat = bfs::symlink_status(path);
+
+		if (!bfs::exists(stat))
 		{
-			CONSOLE_LOG("Could Not open file " + path);
+			throw BPError(ACODE_BAD_PATH_ARGUMENT);
+		}
+		else if (bfs::is_directory(stat))
+		{
+			bfs::remove_all(path);
+			return true;
+		}
+		else if (bfs::is_regular_file(stat))
+		{
+			bfs::remove(path);
+			return true;
+		}
+		else if (stat.type() == bfs::reparse_file)
+		{
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_REPARSE_POINT);
+		}
+		else if (bfs::is_symlink(stat))
+		{
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_IS_SYMLINK);
 		}
 		else
 		{
-			CONSOLE_LOG("File Opened ! : " + path);
-			boost::interprocess::file_lock flock(path.c_str());
-			CONSOLE_LOG("File Locked !");
-			flock.unlock();
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
 		}
-		return 0;
 	}
-	CATCH_FILESYSTEM_EXCEPTIONS
-	return 0;
+	CATCH_FILESYSTEM_EXCEPTIONS(p)
+	return false;
 }
+
+bool
+BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr p, const boost::optional<bool> o_clob)
+{
+	try
+	{
+		CONSOLE_LOG("In rename");
+
+		bfs::path n_path(new_p);
+		bfs::file_status n_stat = bfs::symlink_status(n_path);
+
+		bool clob = o_clob.get_value_or(false);
+		bool nexists = bfs::exists(n_stat);
+		if ((!clob) && nexists)
+		{
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WOULD_CLOBBER);
+		}
+
+		bfs::path o_path(old_p);
+		bfs::file_status o_stat = bfs::symlink_status(o_path);
+		if (!bfs::exists(o_stat))
+		{
+			throw BPError(ACODE_BAD_PATH_ARGUMENT);
+		}
+		if (bfs::is_directory(o_stat))
+		{
+			// Don't allow clobbering of directories.
+			if (nexists) {
+				throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WOULD_CLOBBER);
+			}
+			
+			bfs::rename(o_path, n_path);
+			return true;
+		}
+		else if (bfs::is_regular_file(o_stat))
+		{
+			if ((nexists) && (!bfs::is_regular_file(n_stat))) {
+				throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
+			}
+			return renameFile(o_path, n_path, p, nexists);
+		}
+		else
+		{
+			throw BPError(BPCODE_WRONG_FILETYPE);
+		}
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(p)
+	return false;	
+}
+
+
+//bool BPrivyAPI::writeFile(const std::string& pth, const std::string& data, FB::JSObjectPtr out)
+//{
+//	try
+//	{
+//		if (data.empty()) { return true; }
+//
+//		bfs::path filePath(pth);
+//		filePath.make_preferred();
+//
+//		//bfs::filebuf buf;
+//		//buf.open(pth, ios_base::app);
+//
+//		//if (!exists(pth))
+//		//{
+//		//	// Create the file. A new file will only get created if openmode
+//		//	// is out or trunc.
+//		//	if (!buf.open(pth, ios_base::out))
+//		//	{
+//		//		CONSOLE_LOG("File " + pth + " could not be created.");
+//		//		return false;
+//		//	}
+//		//	perms(pth, bfs::all_all);
+//		//	buf.pubsync();
+//		//	buf.close();
+//		//	CONSOLE_LOG("File " + pth + " created.");
+//		//}
+//		
+//		bfs::ofstream fs(filePath, ios_base::app);
+//
+//		if (!fs.is_open())
+//		{
+//			CONSOLE_LOG("Could Not open or create file " + filePath.string());
+//			return false;
+//		}
+//
+//		//bfs::path lckPath(filePath.string() + ".lck");
+//		{
+//			//bfs::filebuf lckb;
+//			//if (!bfs::exists(lckPath)
+//			//{
+//			//	// create the lock file
+//			//	lckb.open(lckPath, ios_base::trunc);
+//			//}
+//
+//			//if (!lckb.is_open())
+//			//{
+//			//	CONSOLE_LOG("Could Not open or create lock file " + filePath.string());
+//			//	return false;
+//			//}
+//		}
+//		
+//		{
+//			CONSOLE_LOG("File Opened ! : " + filePath.string());
+//			//bdt::ptime t(second_clock::universal_time + 5);
+//			//string lkf(filePath.string() + ".lck");
+//			std::string mutex_name = filePath.generic_string();
+//			const char* mutex_name_c = mutex_name.c_str();
+//			bip::named_mutex flk(bip::open_or_create, mutex_name_c);
+//			//flk.timed_lock(bpt::from_time_t(time(&t) + 5));
+//			bip::scoped_lock<bip::named_mutex> slk(flk);
+//			//buf.sputn(data.c_str());
+//			//buf.pubsync();
+//			fs.write(data.c_str(), data.length());
+//			fs.flush();
+//			if (fs.bad())
+//			{
+//				CONSOLE_LOG("Couldn't write to file : " + fs.rdstate());
+//			}
+//			//flk.unlock();
+//			//buf.close();
+//			fs.close();
+//			return true;
+//		}
+//	}
+//	CATCH_FILESYSTEM_EXCEPTIONS(out)
+//	return false;
+//}
+
+/*
+FB::VariantMap BPrivyAPI::ls2(std::string dirPath)
+{
+	bfs::path path(dirPath);
+	FB::VariantMap m, m2;
+	typedef FB::VariantMap::value_type	VT;
+
+	m2.insert(VT(path.directory_string(), "nested value"));
+	//m.insert(VT(path.directory_string(), "value"));
+	//m.insert(VT("test", "test value"));
+	m.insert(VT("m2", FB::variant(m2)));
+
+	if ( (!bfs::exists(path)) || (!bfs::is_directory(path)) )
+	{
+		cout << path << " is not a directory" << endl;
+		return m;
+	}
+	else 
+	{
+		cout << path << " is a directory" << endl;
+		return m;
+	}
+}
+*/

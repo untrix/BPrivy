@@ -1,24 +1,16 @@
-/**********************************************************\
-
-  Auto-generated BPrivyAPI.h
-
-\**********************************************************/
-
 #include <string>
 #include <sstream>
 #include <boost/weak_ptr.hpp>
 #include "JSAPIAuto.h"
 #include "BrowserHost.h"
 #include "BPrivy.h"
+#include <boost/filesystem.hpp>
+
 
 #ifndef H_BPrivyAPI
 #define H_BPrivyAPI
 
-#ifdef DEBUG
-#define CONSOLE_LOG(s) m_host->htmlLog(std::string("BPlugin: ") + (s))
-#else
-#define CONSOLE_LOG(s)
-#endif
+namespace bfs = boost::filesystem;
 
 class BPrivyAPI : public FB::JSAPIAuto
 {
@@ -37,11 +29,14 @@ public:
     BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host) :
         m_plugin(plugin), m_host(host)
     {
-        registerMethod("echo",      make_method(this, &BPrivyAPI::echo));
         registerMethod("testEvent", make_method(this, &BPrivyAPI::testEvent));
 		registerMethod("ls", make_method(this, &BPrivyAPI::ls));
 		registerMethod("getpid", make_method(this, &BPrivyAPI::getpid));
-        registerMethod("createFile", make_method(this, &BPrivyAPI::createFile));
+        registerMethod("appendFile", make_method(this, &BPrivyAPI::appendFile));
+		registerMethod("readFile", make_method(this, &BPrivyAPI::readFile));
+		registerMethod("createDir", make_method(this, &BPrivyAPI::createDir));
+		registerMethod("rm", make_method(this, &BPrivyAPI::rm));
+		registerMethod("rename", make_method(this, &BPrivyAPI::rename));
 
         // Read-write property
         registerProperty("testString",
@@ -73,9 +68,6 @@ public:
     // Read-only property ${PROPERTY.ident}
     std::string get_version();
 
-    // Method echo
-    FB::variant echo(const FB::variant& msg);
-    
     // Event helpers
     FB_JSAPI_EVENT(test, 0, ());
     FB_JSAPI_EVENT(echo, 2, (const FB::variant&, const int));
@@ -83,11 +75,22 @@ public:
     // Method test-event
     void testEvent();
 
-	// Method ls
+	// API Methods
 	//FB::VariantMap ls2(std::string dirPath);
-	bool ls(std::string& dirPath, FB::JSObjectPtr p);
 	unsigned int getpid() const;
-	unsigned int createFile(std::string& path, FB::JSObjectPtr p);
+	bool ls(const std::string& dirPath, FB::JSObjectPtr out);
+	bool appendFile(const std::string& path, const std::string& data, FB::JSObjectPtr out);
+	bool readFile(const std::string& path, FB::JSObjectPtr out, boost::optional<unsigned long long> pos);
+	bool createDir(const std::string& path, FB::JSObjectPtr);
+	bool rm(const std::string& path, FB::JSObjectPtr out);
+	// Note: rename will not clobber directories. For files, it will iff 'fclobber' was true.
+	// If the renaming is for files, then it will obtain write locks on both files and ensure that no one is
+	// reading or writing to either. Also, no locking is performed when renaming directories.
+	bool rename(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
+
+private:
+	// Platform specific rename operation.
+	bool renameFile(bfs::path& o_path, bfs::path& n_path, FB::JSObjectPtr& out, bool nexists);
 
 private:
     BPrivyWeakPtr m_plugin;
@@ -97,4 +100,3 @@ private:
 };
 
 #endif // H_BPrivyAPI
-

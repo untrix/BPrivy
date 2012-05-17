@@ -9,7 +9,7 @@ The following software is required to build the BPrivy plugin:
 	1. Unzip into - say - $Boost_Build_Dir
 	2. cd $Boost_Build_Dir
 	3. .\bootstrap
-	4. .\bjam link=static threading=multi runtime-link=shared runtime-link=static)
+	4. .\bjam link=static threading=multi runtime-link=shared runtime-link=static
 	5. .\b2 install
 	6. .\b2 install-proper
 		This will install into C:\Boost
@@ -21,7 +21,9 @@ The following software is required to build the BPrivy plugin:
 	This overrides a similar line (but with value OFF) inside firebreath1.7\cmake\options.cmake. We could've instead changed that option line to 'ON' and that would've worked as well, but modifyin the CMakeLists.txt appears more robust since that file is guaranteed to be present in any CMake based build system but options.cmake may get removed tomorrow. Doing this will force CMake to look for system boost files. Now, normally it requires the variable BOOST_DIR and a bunch of other variables supplied on the command line - but for some reason it is ignoring all those in reality. Probably due to the way FireBreath sets it up. Right now just turning the option to 'ON' is working so we'll leave it at that.
 	We can also achieve the override by first building the project once (next step) and then going and changing the WITH_SYSTEM-BOOST option in plugin-win-build/CMakeCache.txt file to 'ON' instead of 'OFF'. But that would require creating the project first with the internal boost libraries that come with FireBreath.
 9. After all the above is done then run the firebreath\prep2010.cmd in the Windows PowerShell ISE in order to make the build directory:
-	.\firebreath1.7\prep2010.cmd .\plugin-win-src .\plugin-win-build -C C:\Dev\BPrivy\Plugin\plugin-win-src\BPrivy\CMakeInitialCache.txt
+	.\firebreath1.7\prep2010.cmd .\plugin-win-src .\plugin-win-build-static -C C:\Dev\BPrivy\Plugin\plugin-win-src\BPrivy\CMakeInitialCache_Win32_Static.txt
+	.\firebreath1.7\prep2010.cmd .\plugin-win-src .\plugin-win-build-dynamic -C C:\Dev\BPrivy\Plugin\plugin-win-src\BPrivy\CMakeInitialCache_Win32_Dynamic.txt
 	This will build plugin-win-build\FireBreath.sln. Some error is printed regarding not being able to process initial cache, but the project gets build with the system-boost libs anyway.
 10. Open FireBreath.sln in VC++ Express 2010. Verify (Right-Click BPrivy then Properties) that the libs in C:\Boost are being linked-  system, date_time and filesystem.
 11.	Build the project called "ALL_BUILD". If you get an error saying that the PCH heap limit is exceeded and that you should use supply a higher /Zm value then do as recommended. (e.g. provide 'Additional Option' /Zm170 under C/C++->Command Line of the failed project)
+12. Windows Platform Support - XP and above (WINVER, _WIN32_WINNT, NTDDI_VERSION >= 0x0501)
