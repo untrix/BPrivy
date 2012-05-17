@@ -44,11 +44,10 @@ namespace bp
 	const std::string ACODE_UNMAPPED			("Unmapped");
 	const std::string ACODE_CANT_PROCEED		("CantProceed");
 	const std::string ACODE_AUTORETRY			("AutoRetry");
-	const std::string ACODE_RESOURCE_UNAVAILABLE		("UserToResolve");
+	const std::string ACODE_RESOURCE_UNAVAILABLE("UserToResolve");
 	const std::string ACODE_INVALID_PATHNAME	("InvalidPathname");
 	const std::string BPCODE_PATH_EXISTS		("PathAlreadyExists");
-	const std::string ACODE_BAD_PATH_ARGUMENT			("PathNotFound");
-	const std::string BPCODE_PATH2_NOT_FOUND	("Path2NotFound");
+	const std::string ACODE_BAD_PATH_ARGUMENT	("BadPathArgument");
 	const std::string ACODE_RESOURCE_LOCKED		("ResourceLocked");
 	const std::string ACODE_ACCESS_DENIED		("AccessDenied");
 	const std::string BPCODE_WRONG_FILETYPE		("WrongFileType");
@@ -325,8 +324,8 @@ namespace bp
 	{
 		FB::VariantMap m;
 		ParseSystemException(e, m);
-		m.insert(VT(PROP_PATH, e.path1().string()));
-		m.insert(VT(PROP_PATH2, e.path2().string()));
+		if (!e.path1().empty()) {m.insert(VT(PROP_PATH, e.path1().string()));}
+		if (!e.path2().empty()) {m.insert(VT(PROP_PATH2, e.path2().string()));}
 		p->SetProperty(PROP_ERROR, FB::variant(m));
 	}
 

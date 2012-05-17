@@ -18,7 +18,7 @@ namespace bp
 	{
 		m_P = malloc(siz);
 		if (!m_P) {
-			throw std::runtime_error(BPCODE_NO_MEM);
+			throw BPError(ACODE_RESOURCE_UNAVAILABLE, BPCODE_NO_MEM);
 		}
 		else {
 			m_Siz = siz;

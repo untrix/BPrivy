@@ -57,8 +57,10 @@ const std::string SCodeToSCode(std::uint32_t err)
 	case ERROR_LOCK_FAILED: return "ERROR_LOCK_FAILED"; //Unable to lock a region of a file
 	case ERROR_BUSY: return "ERROR_BUSY"; //The requested resource is in use.
 	case ERROR_DELETE_PENDING: return "ERROR_DELETE_PENDING"; //The file cannot be opened because it is in the process of being deleted
+
 	// User Error: Bad Path Supplied For Read
-	case ERROR_BAD_NETPATH: return "ERROR_BAD_NETPATH";//The network path was not found
+	case ERROR_FILE_NOT_FOUND:
+	case ERROR_PATH_NOT_FOUND:	case ERROR_BAD_NETPATH: return "ERROR_BAD_NETPATH";//The network path was not found
 	case ERROR_REM_NOT_LIST: return "ERROR_REM_NOT_LIST"; //Windows cannot find the network path
 	case ERROR_BAD_PATHNAME: return "ERROR_BAD_PATHNAME"; //The specified path is invalid
 	case ERROR_NETNAME_DELETED: return "ERROR_NETNAME_DELETED"; //The specified network name is no longer available
@@ -152,6 +154,8 @@ const std::string& SCodeToACode(std::uint32_t err)
 		break;
 
 	// User Error: Bad Path Supplied For Read
+	case ERROR_FILE_NOT_FOUND:
+	case ERROR_PATH_NOT_FOUND:
 	case ERROR_BAD_NETPATH://The network path was not found
 	case ERROR_REM_NOT_LIST: //Windows cannot find the network path
 	case ERROR_BAD_PATHNAME: //The specified path is invalid
@@ -279,15 +283,15 @@ public:
 
 	void PrepareForAppend(const msize32_t siz) // throws
 	{
-		CHECK((!m_Locked))
+		CHECK((!m_Locked));
 
 		LONG end2 = 0;
-		DWORD end = SetFilePointer(m_Handle, 0, &end2, FILE_END);
-		THROW_IF(end == INVALID_SET_FILE_POINTER);
-		BOOL st = LockFile(m_Handle, end, end2, siz, 0);
+		DWORD end1 = SetFilePointer(m_Handle, 0, &end2, FILE_END);
+		THROW_IF(end1 == INVALID_SET_FILE_POINTER);
+		BOOL st = LockFile(m_Handle, end1, end2, siz, 0);
 		THROW_IF (!st)
 
-		m_LkPos1 = end;
+		m_LkPos1 = end1;
 		m_LkPos2 = end2;
 		m_LkSiz = siz;
 		m_Locked = true;
@@ -321,7 +325,7 @@ public:
 		m_Locked = true;
 	}
 
-	void PrepareForRename()
+	void LockForDelete()
 	{
 		CHECK((!m_Locked));
 
@@ -391,7 +395,8 @@ bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::
 		// example 'Appending One File to Another File' in MSDN-help.
 		HANDLEGuard h( CreateFile(path.c_str(), 
 									FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile
-									FILE_SHARE_READ, 
+									//FILE_SHARE_READ,
+									FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, // Experimenting
 									NULL, 
 									OPEN_ALWAYS, 
 									FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 
@@ -439,7 +444,8 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 
 		HANDLEGuard h( CreateFile(path.c_str(), 
 									FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
-									FILE_SHARE_WRITE | FILE_SHARE_READ,
+									//FILE_SHARE_WRITE | FILE_SHARE_READ,
+									FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, // Experimenting
 									NULL, 
 									OPEN_EXISTING, 
 									FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 
@@ -452,10 +458,9 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 
 		msize32_t siz = ((fsiz.QuadPart-pos) > bp::MAX_READ_BYTES) ? bp::MAX_READ_BYTES : static_cast<msize32_t>(fsiz.QuadPart);
 
-		MemGuard buf(siz); // Allocates memory
-
 		h.PrepareForRead(pos, siz); // throws
 
+		MemGuard buf((siz+1)*sizeof(char)); // Allocates memory
 		DWORD nread=0;
 		rval = ReadFile(h.m_Handle, buf.m_P, siz, &nread, NULL);
 		THROW_IF (rval==0); // throws
@@ -473,43 +478,132 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 	return false;
 }
 
-bool BPrivyAPI::renameFile(bfs::path& o_path, bfs::path& n_path, FB::JSObjectPtr& out, bool nexists)
+HANDLE OpenFileForLocking(bfs::path& pth)
+{
+	return CreateFile(pth.c_str(),
+				GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
+				//FILE_SHARE_DELETE,
+				FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, // Experimenting
+				NULL, 
+				OPEN_EXISTING, 
+				FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 
+				NULL);
+}
+
+bool BPrivyAPI::renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists)
+{
+	CONSOLE_LOG("In renameFile");
+
+	// Ensure that no-one else has this file open for anything. Hence we'll need to lock it.
+	HANDLEGuard h1( OpenFileForLocking(o_path), o_path );
+	h1.LockForDelete();
+
+	if (nexists)
+	{
+		// Ensure that no-one else has this file open for anything. Hence we'll need to lock it.
+		HANDLEGuard h2( OpenFileForLocking(n_path), n_path );
+		h2.LockForDelete();
+	}
+
+	BOOL rval = MoveFileEx(o_path.c_str(), n_path.c_str(), MOVEFILE_REPLACE_EXISTING);
+	THROW_IF3(!rval, o_path, n_path);
+	return true;
+}
+
+bool BPrivyAPI::removeFile(bfs::path& pth)
+{
+	CONSOLE_LOG("In removeFile");
+
+	// Ensure that no-one else has this file open for anything. Hence we'll need to lock it.
+	HANDLEGuard h( OpenFileForLocking(pth), pth );
+	h.LockForDelete();
+
+	BOOL rval = DeleteFile(pth.c_str());
+	THROW_IF2((!rval), pth);
+	return true;
+}
+
+#ifdef DEBUG
+// API used for testing purposes
+unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr out)
 {
 	try
 	{
-		CONSOLE_LOG("In renameFile");
+		CONSOLE_LOG("In writeLock");
 
-		// Ensure that no-one else has this file open for anything. Hence we'll need to lock it.
-		HANDLEGuard h1( CreateFile(o_path.c_str(),
-									GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
-									FILE_SHARE_DELETE,
+		bfs::path path(pth);
+		path.make_preferred();
+		string path_s(path.string());
+
+		HANDLE h= CreateFile(path.c_str(),
+									FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile
+									FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 
 									NULL, 
 									OPEN_EXISTING, 
 									FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 
-									NULL), o_path );
-		h1.PrepareForRename();
+									NULL);
+		THROW_IF(h==INVALID_HANDLE_VALUE);
 
-		if (nexists)
+		// Copied from PrepareForAppend
 		{
-			// Ensure that no-one else has this file open for anything. Hence we'll need to lock it.
-			HANDLEGuard h2( CreateFile(n_path.c_str(),
-										GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
-										FILE_SHARE_DELETE,
-										NULL, 
-										OPEN_EXISTING, 
-										FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 
-										NULL), n_path );
-			h2.PrepareForRename();
+			LONG end2 = 0;
+			DWORD end1 = SetFilePointer(h, 0, &end2, FILE_END);
+			THROW_IF(end1 == INVALID_SET_FILE_POINTER);
+			BOOL st = LockFile(h, end1, end2, 100, 0);
+			THROW_IF (!st);
 		}
-
-		BOOL rval = MoveFileEx(o_path.c_str(), n_path.c_str(), MOVEFILE_REPLACE_EXISTING);
-		THROW_IF3(!rval, o_path, n_path);
-		return true;
+		return (unsigned long long) h; // now the file is locked and we're returning without closing or unlocking it.
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(out);
-	return false;
+	return 0;
 }
 
+unsigned long long BPrivyAPI::readLock(const std::string& pth, FB::JSObjectPtr out)
+{
+	try
+	{
+		CONSOLE_LOG("In readLock");
+
+		const fsize64_t pos = 0;
+
+		bfs::path path(pth);
+		path.make_preferred();
+		string path_s(path.string());
+
+		HANDLE h= CreateFile(path.c_str(), 
+									FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
+									//FILE_SHARE_WRITE | FILE_SHARE_READ,
+									FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, // Experimenting
+									NULL, 
+									OPEN_EXISTING, 
+									FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 
+									NULL);
+		THROW_IF(h==INVALID_HANDLE_VALUE);
+		
+		LARGE_INTEGER fsiz;
+		BOOL rval = GetFileSizeEx(h, &fsiz);
+		THROW_IF (rval == 0)
+
+		msize32_t siz = ((fsiz.QuadPart-pos) > bp::MAX_READ_BYTES) ? bp::MAX_READ_BYTES : static_cast<msize32_t>(fsiz.QuadPart);
+
+		// Copied from PrepareForRead(pos, siz); // throws
+		{
+			OVERLAPPED ov;
+			ov.Internal = 0;
+			ov.InternalHigh = 0;
+			ov.Offset = 0;
+			ov.OffsetHigh = 0;
+			ov.hEvent = 0;
+			rval = LockFileEx(h, LOCKFILE_FAIL_IMMEDIATELY, 0, siz, 0, &ov);
+			THROW_IF (rval == 0)
+		}
+		return (unsigned long long) h;
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(out)
+	
+	return 0;
+}
+#endif // DEBUG
 //void SetLastErrorMsg(FB::JSObjectPtr out)
 //{
 //	DWORD err = GetLastError();

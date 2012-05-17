@@ -358,8 +358,9 @@ bool BPrivyAPI::rm(const std::string& s_path, FB::JSObjectPtr p)
 		}
 		else if (bfs::is_regular_file(stat))
 		{
-			bfs::remove(path);
-			return true;
+			//bfs::remove(path);
+			//return true;
+			return removeFile(path);
 		}
 		else if (stat.type() == bfs::reparse_file)
 		{
@@ -416,7 +417,7 @@ BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObje
 			if ((nexists) && (!bfs::is_regular_file(n_stat))) {
 				throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
 			}
-			return renameFile(o_path, n_path, p, nexists);
+			return renameFile(o_path, n_path, nexists);
 		}
 		else
 		{
