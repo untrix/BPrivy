@@ -428,6 +428,51 @@ BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObje
 	return false;	
 }
 
+bool
+BPrivyAPI::copy(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr p, const boost::optional<bool> o_clob)
+{
+	try
+	{
+		CONSOLE_LOG("In copy");
+
+		bfs::path n_path(new_p);
+		bfs::file_status n_stat = bfs::symlink_status(n_path);
+
+		bfs::path o_path(old_p);
+		bfs::file_status o_stat = bfs::symlink_status(o_path);
+		if (!bfs::exists(o_stat))
+		{
+			throw BPError(ACODE_BAD_PATH_ARGUMENT);
+		}
+
+		bool clob = o_clob.get_value_or(false);
+		bool nexists = bfs::exists(n_stat);
+		if ((!clob) && nexists)
+		{
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WOULD_CLOBBER);
+		}
+
+		if (bfs::is_directory(o_stat) | bfs::is_directory(n_stat))
+		{
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
+		}
+
+		if (bfs::is_regular_file(o_stat))
+		{
+			if ((nexists) && (!bfs::is_regular_file(n_stat))) {
+				throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
+			}
+			return copyFile(o_path, n_path, nexists);
+		}
+		else
+		{
+			throw BPError(BPCODE_WRONG_FILETYPE);
+		}
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(p)
+	return false;	
+}
+
 
 //bool BPrivyAPI::writeFile(const std::string& pth, const std::string& data, FB::JSObjectPtr out)
 //{

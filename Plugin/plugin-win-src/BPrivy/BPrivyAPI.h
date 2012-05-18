@@ -37,6 +37,7 @@ public:
 		registerMethod("createDir", make_method(this, &BPrivyAPI::createDir));
 		registerMethod("rm", make_method(this, &BPrivyAPI::rm));
 		registerMethod("rename", make_method(this, &BPrivyAPI::rename));
+		registerMethod("copy", make_method(this, &BPrivyAPI::copy));
 #ifdef DEBUG
 		registerMethod("appendLock", make_method(this, &BPrivyAPI::appendLock));
 		registerMethod("readLock", make_method(this, &BPrivyAPI::readLock));
@@ -91,6 +92,8 @@ public:
 	// If the renaming is for files, then it will obtain write locks on both files and ensure that no one is
 	// reading or writing to either. Also, no locking is performed when renaming directories.
 	bool rename(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
+	// Copies files only.
+	bool copy(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
 #ifdef DEBUG
 	// Locks the file for write and returns without unlocking or closing it. This is to be used for lock testing only.
 	unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr out);
@@ -99,6 +102,7 @@ public:
 private:
 	// Platform specific rename operation.
 	bool renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
+	bool copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
 	bool removeFile(bfs::path&);
 
 private:

@@ -27,7 +27,7 @@ typedef FB::VariantMap::value_type VT;
 #define THROW_IF(cond) if (cond) {ThrowLastSystemError();}
 #define THROW_IF2(cond, path) if (cond) {ThrowLastSystemError(path);}
 #define THROW_IF3(cond, path1, path2) if (cond) {ThrowLastSystemError(path1, path2);}
-
+#define FILE_SHARE_PROMISCUOUS (FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE)
 
 namespace bp {
 
@@ -325,7 +325,7 @@ public:
 		m_Locked = true;
 	}
 
-	void LockForDelete()
+	void LockForDeleteOrRename()
 	{
 		CHECK((!m_Locked));
 
@@ -335,6 +335,19 @@ public:
 		fsiz.QuadPart += 1; // we'll lock beyond the file's end in case someone was appending to it.
 
 		rval = LockFile(m_Handle, 0, 0, fsiz.LowPart, fsiz.HighPart);
+		THROW_IF2 ((rval==0), m_Path);
+	}
+
+	void LockForCopyOut()
+	{
+		CHECK((!m_Locked));
+
+		LARGE_INTEGER fsiz;
+		BOOL rval = GetFileSizeEx(m_Handle, &fsiz);
+		THROW_IF (rval == 0);
+
+		// Lock 10 bytes beyond the file's end to ensure that noone's writing into it.
+		rval = LockFile(m_Handle, fsiz.LowPart, fsiz.HighPart, 10, 0);
 		THROW_IF2 ((rval==0), m_Path);
 	}
 
@@ -379,14 +392,14 @@ bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::
 		string path_s(path.string());
 
 		// Open file in exclusive mode for appending.
-		// If file doesn't exist then create it as a normal file. We could've
-		// created it as a HIDDEN file, but that won't really work for Mac or
-		// Linux, therefore we'll create a normal file.
-		// In Windows, the file is opened in shared-read mode because we do not
+		// If file doesn't exist then create it as a normal file. We'll create
+		// it as a HIDDEN file. That may not work for Mac or
+		// Linux, but at least will work on Windows.
+		// In Windows, the file is opened in shared mode because we do not
 		// gain anything by exclusively locking it. Especially since this feature
-		// won't work across NFS shares. The only thing that will probably work
+		// won't work across all NFS shares. The only thing that will probably work
 		// across different file systems is advisory file-locking. In Windows
-		// we'll use LockFile, while in GENERIC we'll use fcntl. Both provide
+		// we'll use LockFile, while in POSIX we'll use fcntl. Both provide
 		// ability to lock regions of the file including regions beyond the file's
 		// current size. We'll use that technique to exclusive lock the region beyond
 		// the file's current size where we intend to write <data> to. This will
@@ -395,11 +408,12 @@ bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::
 		// example 'Appending One File to Another File' in MSDN-help.
 		HANDLEGuard h( CreateFile(path.c_str(), 
 									FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile
-									//FILE_SHARE_READ,
-									FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, // Experimenting
+									// // Allow other readers but no appenders (we never write inside a file), deleters or renamers
+									FILE_SHARE_READ,
+									//FILE_SHARE_PROMISCUOUS, // // Disabling ShareMode in order to test efficacy of locking
 									NULL, 
 									OPEN_ALWAYS, 
-									FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 
+									FILE_ATTRIBUTE_HIDDEN | FILE_FLAG_WRITE_THROUGH, 
 									NULL) );
 		
 		// OPEN_ALWAYS
@@ -444,11 +458,12 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 
 		HANDLEGuard h( CreateFile(path.c_str(), 
 									FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
-									//FILE_SHARE_WRITE | FILE_SHARE_READ,
-									FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, // Experimenting
+									// Allow other readers as well as appenders (we never write inside a file), but no deleters or renamers
+									FILE_SHARE_WRITE | FILE_SHARE_READ,
+									//FILE_SHARE_PROMISCUOUS, // Disabling ShareMode in order to test efficacy of locking
 									NULL, 
 									OPEN_EXISTING, 
-									FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 
+									FILE_FLAG_SEQUENTIAL_SCAN, 
 									NULL) );
 		
 		
@@ -478,34 +493,78 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 	return false;
 }
 
-HANDLE OpenFileForLocking(bfs::path& pth)
+HANDLE OpenFileForDeleteOrRenameLocking(bfs::path& pth)
 {
 	return CreateFile(pth.c_str(),
 				GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
-				//FILE_SHARE_DELETE,
-				FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, // Experimenting
+				// DELETE sharing is needed for allowing deletes and renames later.
+				FILE_SHARE_DELETE,
 				NULL, 
 				OPEN_EXISTING, 
-				FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 
+				FILE_ATTRIBUTE_NORMAL, 
 				NULL);
 }
+
 
 bool BPrivyAPI::renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists)
 {
 	CONSOLE_LOG("In renameFile");
 
 	// Ensure that no-one else has this file open for anything. Hence we'll need to lock it.
-	HANDLEGuard h1( OpenFileForLocking(o_path), o_path );
-	h1.LockForDelete();
+	HANDLEGuard h1( OpenFileForDeleteOrRenameLocking(o_path), o_path );
+	h1.LockForDeleteOrRename();
 
 	if (nexists)
 	{
 		// Ensure that no-one else has this file open for anything. Hence we'll need to lock it.
-		HANDLEGuard h2( OpenFileForLocking(n_path), n_path );
-		h2.LockForDelete();
+		HANDLEGuard h2( OpenFileForDeleteOrRenameLocking(n_path), n_path );
+		h2.LockForDeleteOrRename();
 	}
 
 	BOOL rval = MoveFileEx(o_path.c_str(), n_path.c_str(), MOVEFILE_REPLACE_EXISTING);
+	THROW_IF3(!rval, o_path, n_path);
+	return true;
+}
+
+HANDLE OpenFileForCopyOutLocking(bfs::path& pth)
+{
+	return CreateFile(pth.c_str(),
+				GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
+				// READ sharing is needed for allowing copy-out later.
+				FILE_SHARE_PROMISCUOUS,
+				NULL, 
+				OPEN_EXISTING, 
+				FILE_ATTRIBUTE_NORMAL, 
+				NULL);
+}
+
+HANDLE OpenFileForCopyInLocking(bfs::path& pth)
+{
+	return CreateFile(pth.c_str(),
+				GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
+				FILE_SHARE_PROMISCUOUS,
+				NULL, 
+				OPEN_EXISTING, 
+				FILE_ATTRIBUTE_NORMAL, 
+				NULL);
+}
+
+bool BPrivyAPI::copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists)
+{
+	CONSOLE_LOG("In copyFile");
+
+	// Ensure that no-one else has this file open for anything. Hence we'll need to lock it.
+	HANDLEGuard h1( OpenFileForCopyOutLocking(o_path), o_path );
+	h1.LockForCopyOut();
+
+	if (nexists)
+	{
+		// Ensure that no-one else has this file open for anything. Hence we'll need to lock it.
+		HANDLEGuard h2( OpenFileForCopyInLocking(n_path), n_path );
+		h2.LockForDeleteOrRename();
+	}
+
+	BOOL rval = CopyFile(o_path.c_str(), n_path.c_str(), FALSE);
 	THROW_IF3(!rval, o_path, n_path);
 	return true;
 }
@@ -515,8 +574,8 @@ bool BPrivyAPI::removeFile(bfs::path& pth)
 	CONSOLE_LOG("In removeFile");
 
 	// Ensure that no-one else has this file open for anything. Hence we'll need to lock it.
-	HANDLEGuard h( OpenFileForLocking(pth), pth );
-	h.LockForDelete();
+	HANDLEGuard h( OpenFileForDeleteOrRenameLocking(pth), pth );
+	h.LockForDeleteOrRename();
 
 	BOOL rval = DeleteFile(pth.c_str());
 	THROW_IF2((!rval), pth);
@@ -537,7 +596,7 @@ unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr
 
 		HANDLE h= CreateFile(path.c_str(),
 									FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile
-									FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 
+									FILE_SHARE_PROMISCUOUS, 
 									NULL, 
 									OPEN_EXISTING, 
 									FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 
@@ -573,7 +632,7 @@ unsigned long long BPrivyAPI::readLock(const std::string& pth, FB::JSObjectPtr o
 		HANDLE h= CreateFile(path.c_str(), 
 									FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
 									//FILE_SHARE_WRITE | FILE_SHARE_READ,
-									FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, // Experimenting
+									FILE_SHARE_PROMISCUOUS, // Experimenting
 									NULL, 
 									OPEN_EXISTING, 
 									FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 

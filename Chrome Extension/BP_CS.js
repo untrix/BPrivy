@@ -5,7 +5,7 @@
  * @mail sumeet@untrix.com
  */
 /* JSLint directives */
-/*global $, console, window, com_bprivy_GetModule_3eb, com_bprivy_GetModule_CSPlatform, com_bprivy_GetModule_Common */
+/*global $, console, window, com_bprivy_GetModule_3db, com_bprivy_GetModule_CSPlatform, com_bprivy_GetModule_Common */
 /*jslint browser : true, devel : true, es5 : true */
 /*properties console.info, console.log, console.warn */
 /*properties 
@@ -22,8 +22,8 @@
  */
 function com_bprivy_CS(g_win) 
 {
-    /** @import-module-begin 3eb */
-    var m = com_bprivy_GetModule_3eb();
+    /** @import-module-begin 3db */
+    var m = com_bprivy_GetModule_3db();
     var dt_userid = m.dt_userid;   // Represents data-type userid
     var dt_pass = m.dt_pass;        // Represents data-type password
     var constructERecord = m.constructERecord;
@@ -32,9 +32,9 @@ function com_bprivy_CS(g_win)
     var deleteRecord = m.deleteRecord;
     var getDB = m.getDB;
     var newUrla = m.newUrla;
-    var K_EB = m.K_EB;
-    //var K_EB2 = m.K_EB2;
-    var P_EB = m.P_EB;
+    var K_DICT = m.K_DICT;
+    //var K_DICT2 = m.K_DICT2;
+    var P_DICT = m.P_DICT;
     /** @import-module-begin CSPlatform */
     m = com_bprivy_GetModule_CSPlatform();
     var registerMsgListener = m.registerMsgListener;
@@ -470,7 +470,7 @@ function com_bprivy_CS(g_win)
 	function insertIOItems()
     {
         var pdb, i, nma;
-        if (!(pdb = g_db[P_EB])) {
+        if (!(pdb = g_db[P_DICT])) {
             return;
         }
         else {
@@ -565,7 +565,7 @@ function com_bprivy_CS(g_win)
         // auto-fill
         // if we don't have a stored username/password, then there is nothing
         // to autofill. 
-        if (!(pdb = g_db[P_EB])) {
+        if (!(pdb = g_db[P_DICT])) {
             return;
         }
         else {
@@ -574,12 +574,12 @@ function com_bprivy_CS(g_win)
             if (ua && (ua.length !== 1)) {
                 return;
             }
-            else if (g_db[K_EB]) {
-                // Cycle through K_EB records starting with the
+            else if (g_db[K_DICT]) {
+                // Cycle through K_DICT records starting with the
                 // best URL matching node.
-                l = g_db[K_EB].length; uDone=false; pDone=false;
+                l = g_db[K_DICT].length; uDone=false; pDone=false;
                 for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
-                    kdb = g_db[K_EB].pop();
+                    kdb = g_db[K_DICT].pop();
                     
                     uer = kdb[dt_userid];
                     per = kdb[dt_pass];
