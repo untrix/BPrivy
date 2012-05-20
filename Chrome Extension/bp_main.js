@@ -34,7 +34,7 @@
 
     /** @globals-begin */
     /** Two databases */
-    var g_pdb, g_kdb;
+    var g_pd, g_kd;
 
     /**
      * Name of property that holds a reference to the parent D-node.
@@ -159,19 +159,49 @@
     /** @constructor */
     function DNode ()
     {
-        // Following properties will be added as needed
-        // An object containing values keyed by their data types
-        // e.g. this["{pdb}"] = {'username1':'password1', 'username2':'password2'};
-        // e.g. this["{kdb}"] = {"dt_userid":{"dt":"E-Record","fieldType":"dt_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},"dt_pass":{"dt":"E-Record","fieldType":"dt_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
-        // Multiple child-node references indexed by their key segment.
+        // Following properties will be added as needed 
+        // Payload objects. Theoretically a given node could contain payload from
+        // multiple 'DB's - i.e.  K or P - however, here we've chosen to store
+        // payload of only one DB per dictionary. Hence there is a separate dictionary
+        // per DB. Right now there are two - g_kdb and g_pdb. The payload's property
+        // value is constructed such that it won't clash with the properties for
+        // the child-node pointers, which are URL-segments. Hence the key for the
+        // payload is constructed such that it will never conflict with any URL
+        // segment. At this writing the values chosen are {kdict} and {pdict}. Hence
+        // a payload object of a DNode in the g_kdb dictionary will look like:
+        // this["{kdict}"] = {"dt_userid":{"dt":"E-Record","fieldType":"dt_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},"dt_pass":{"dt":"E-Record","fieldType":"dt_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
+        // The payload itself is an object with multiple properties. Each of the
+        // properties is a 'record' (i.e. e-rec in k-dict and p-rec in p-dict).
+        // The property-name is the record-key and is carried within each record
+        // as the property named 'key'. Giving a generic name to the key makes it
+        // possible to write generic dictionary code regardless of the dictionary
+        // or record type. For each dictionary, the record keys are chosen differently.
+        // For e.g. in the case of k-dict, the record keys are from a fixed set : 'dt_userid',
+        // 'dt_password', 'dt_email' etc. etc. because that makes sense for that domain. However,
+        // for the p-dict the record keys can be anything because they are the username.
+        // If we wanted to store - say credit card numbers, then that would be a
+        // completely separate dictionary with the card-number+type as the key but
+        // no URL. Also, please note that for g-dict and p-dict, in the bigger
+        // picture, URL is also part of the key. Now, if we were storing bookmarks,
+        // then there would be no payload at all - only the URL key. We would need
+        // to put markers in the URL-trie though, in order to mark which D-Nodes
+        // represented an actual bookmark v/s which were merely on the path to an
+        // actual bookmark. Because of the semantic and syntactic difference
+        // between different data-types (or call it data-domains) I decided to create a
+        // separate trie per data-domain. Hence there is a separate trie/dictionary
+        // for 'knowledge' records, a separate one for 'passwords' and for 'bookmarks'
+        // as well in the future.
+        // A g_pdb payload will look like:
+        // this["{pdict}"] = {'username1':'password1', 'username2':'password2'};
+        // References to child-nodes for walking down the url-trie. The key of the child node
         // e.g. this['yahoo.'] = child-node;
         // e.g. this['google.'] = child-node;
         // e.g. this['/path1'] = child-node;
         // e.g. this['www'] = child-node;
         // e.g. this['www:8080'] = child-node;
     }
-    g_kdb = new DNode();
-    g_pdb = new DNode();
+    g_kd = new DNode();
+    g_pd = new DNode();
     
 
     /** Helper function to DNode.prototype.insert */
@@ -179,7 +209,8 @@
     {
         var rec = drec.rec;
         var k = drec.urli.incr();
-        if (!k) {
+        if (!k) 
+        {
             var dbName = getDbName(rec.dt);
             var db = this[dbName];
             if (!db) {
@@ -187,7 +218,8 @@
             }
             db[recKey(rec)] = rec;
         }
-        else {
+        else 
+        {   // continue walking down the trie
             var n = this[k];
             if (!n) {
                 this[k] = (n = new DNode());
@@ -321,9 +353,9 @@
     {
         var kdb, pdb, r;
         r = {};
-        r[K_DICT] = g_kdb.findKDB(urli);
+        r[K_DICT] = g_kd.findKDB(urli);
         urli.rwnd();
-        r[P_DICT] = g_pdb.findPDB(urli);
+        r[P_DICT] = g_pd.findPDB(urli);
 
         // testing
         r[P_DICT] = {'sumeet@singhonline.info':'divya1'};
@@ -357,11 +389,11 @@
         switch (rq.dt)
         {
             case dt_eRecord:
-                g_kdb.insert(new DRecord(rq));
+                g_kd.insert(new DRecord(rq));
                 funcSendResponse({ack: true});
                 break;
             case dt_pRecord:
-                g_pdb.insert(new DRecord(rq));
+                g_pd.insert(new DRecord(rq));
                 funcSendResponse({ack: true});
                 break;
             case cm_getDB:

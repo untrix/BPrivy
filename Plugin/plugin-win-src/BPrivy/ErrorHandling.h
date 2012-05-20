@@ -72,6 +72,7 @@ namespace bp
 	extern const std::string BPCODE_NO_MEM;//Could not allocate memory
 	extern const std::string BPCODE_ASSERT_FAILED;//Logic Error
 	extern const std::string BPCODE_PATH_EXISTS;
+	extern const std::string BPCODE_PATH_NOT_EXIST;
 	extern const std::string BPCODE_WRONG_FILETYPE;
 	extern const std::string BPCODE_REPARSE_POINT;
 	extern const std::string BPCODE_IS_SYMLINK;
@@ -114,10 +115,13 @@ namespace bp
 
 	struct BPError
 	{
-		BPError(const string& bc) : acode(bc) {}
+		BPError(const string& ac) : acode(ac) {}
 		BPError(const string& ac, const string& pc) : acode(ac), gcode(pc) {}
+		BPError(const string& ac, const string& gc, const string& pth)
+			: acode(ac), gcode(gc), path(pth) {}
 		string acode;
 		string gcode;
+		string path;
 	};
 
 	void MakeErrorEntry(const boost::filesystem::filesystem_error& e, std::ostringstream& je);

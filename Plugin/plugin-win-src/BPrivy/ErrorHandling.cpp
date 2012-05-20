@@ -55,6 +55,7 @@ namespace bp
 	const std::string BPCODE_IS_SYMLINK			("PathIsSymlink");
 	// Action would've resulted in clobbering
 	const std::string BPCODE_WOULD_CLOBBER		("WouldClobber");
+	const std::string BPCODE_PATH_NOT_EXIST		("PathNotExist");
 
 	const std::string PCodeToPCode(int ev)
 	{
@@ -348,12 +349,15 @@ namespace bp
 		p->SetProperty(PROP_ERROR, "Unknown");
 	}
 
-	void HandleBPError(const BPError& s, FB::JSObjectPtr& p)
+	void HandleBPError(const BPError& e, FB::JSObjectPtr& p)
 	{
 		FB::VariantMap m;
-		m.insert(VT(PROP_A_CODE, s.acode));
-		if (!s.gcode.empty()) {
-			m.insert(VT(PROP_GENERIC_CODE, s.gcode));
+		m.insert(VT(PROP_A_CODE, e.acode));
+		if (!e.gcode.empty()) {
+			m.insert(VT(PROP_GENERIC_CODE, e.gcode));
+		}
+		if (!e.path.empty()) {
+			m.insert(VT(PROP_PATH, e.path));
 		}
 		p->SetProperty(PROP_ERROR, FB::variant(m));
 	}

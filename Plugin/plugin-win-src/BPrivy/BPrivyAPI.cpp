@@ -216,7 +216,7 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 
 		if (!bfs::exists(stat))
 		{
-			throw BPError(ACODE_BAD_PATH_ARGUMENT);
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_PATH_NOT_EXIST);
 		}
 		else if (bfs::is_regular_file(ResolveSymlinks(path, stat)))
 		{
@@ -349,7 +349,7 @@ bool BPrivyAPI::rm(const std::string& s_path, FB::JSObjectPtr p)
 
 		if (!bfs::exists(stat))
 		{
-			throw BPError(ACODE_BAD_PATH_ARGUMENT);
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_PATH_NOT_EXIST);
 		}
 		else if (bfs::is_directory(stat))
 		{
@@ -400,7 +400,7 @@ BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObje
 		bfs::file_status o_stat = bfs::symlink_status(o_path);
 		if (!bfs::exists(o_stat))
 		{
-			throw BPError(ACODE_BAD_PATH_ARGUMENT);
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_PATH_NOT_EXIST, o_path.string());
 		}
 		if (bfs::is_directory(o_stat))
 		{
@@ -442,7 +442,7 @@ BPrivyAPI::copy(const std::string& old_p, const std::string& new_p, FB::JSObject
 		bfs::file_status o_stat = bfs::symlink_status(o_path);
 		if (!bfs::exists(o_stat))
 		{
-			throw BPError(ACODE_BAD_PATH_ARGUMENT);
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_PATH_NOT_EXIST, o_path.string());
 		}
 
 		bool clob = o_clob.get_value_or(false);
