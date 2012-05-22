@@ -5,7 +5,7 @@
  * @mail sumeet@untrix.com
  */
 /* JSLint directives */
-/*global $, console, window, com_bprivy_GetModule_3db, com_bprivy_GetModule_CSPlatform, com_bprivy_GetModule_Common */
+/*global $, console, window, com_bprivy_GetModule_Connector, com_bprivy_GetModule_CSPlatform, com_bprivy_GetModule_Common */
 /*jslint browser : true, devel : true, es5 : true */
 /*properties console.info, console.log, console.warn */
 /*properties 
@@ -22,19 +22,19 @@
  */
 function com_bprivy_CS(g_win) 
 {
-    /** @import-module-begin 3db */
-    var m = com_bprivy_GetModule_3db();
-    var dt_userid = m.dt_userid;   // Represents data-type userid
-    var dt_pass = m.dt_pass;        // Represents data-type password
+    /** @import-module-begin Connector */
+    var m = com_bprivy_GetModule_Connector();
+    var ft_userid = m.ft_userid;   // Represents data-type userid
+    var ft_pass = m.ft_pass;        // Represents data-type password
     var constructERecord = m.constructERecord;
     var constructPRecord = m.constructPRecord;
     var saveRecord = m.saveRecord;
     var deleteRecord = m.deleteRecord;
     var getDB = m.getDB;
     var newUrla = m.newUrla;
-    var K_DICT = m.K_DICT;
-    //var K_DICT2 = m.K_DICT2;
-    var P_DICT = m.P_DICT;
+    var tag_eRecs = m.tag_eRecs;
+    var tag_pRecs = m.tag_pRecs;
+    var copyConsDupes = m.copyConsDupes; // Get Latest Dupe Val
     /** @import-module-begin CSPlatform */
     m = com_bprivy_GetModule_CSPlatform();
     var registerMsgListener = m.registerMsgListener;
@@ -51,9 +51,7 @@ function com_bprivy_CS(g_win)
 	// These are all merely nouns/strings and do not share a common
 	// semantic. They are grouped according to semantics.
     // Element ID values. These could clash with other HTML elements
-
     // Therefore they need to be crafted to be globally unique within the DOM.
-
 	var eid_panel = "com-bprivy-panel"; // Used by panel elements
 	var eid_panelTitle ="com-bprivy-panelTitle"; // Used by panel elements
 	var eid_panelList ="com-bprivy-panelList"; // Used by panel elements
@@ -102,9 +100,10 @@ function com_bprivy_CS(g_win)
     /** Placeholder password encryptor */
     function encrypt(str) {return str;}
 
-    /** Intelligently returns true if the element is a userid/username input field */
+    /** Intelligently returns true if the input element is a userid/username input field */
     function isUserid(el)
      {
+         if (el.tagName.toLowerCase() !== 'input') {return false;}
          if (el.type)
             {return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");}
          else
@@ -114,6 +113,7 @@ function com_bprivy_CS(g_win)
     /** Intelligently returns true if the element is a password field */
     function isPassword (el)
      {
+         if (el.tagName.toLowerCase() !== 'input') {return false;}
         return (el.type === "password");
      }
 
@@ -172,7 +172,7 @@ function com_bprivy_CS(g_win)
         var p_el = findPeerElement(el);
         if (p_el)
         {
-            if (data.type() === dt_pass) {
+            if (data.type() === ft_pass) {
                 p_el.value = decrypt(data);
             }
             else {
@@ -240,7 +240,7 @@ function com_bprivy_CS(g_win)
 			e.dataTransfer.effectAllowed = "copyLink";
 			//e.dataTransfer.dropEffect = "copy";
 			var data = $(e.target).data(pn_d_value);
-			if ($(e.target).data(pn_d_dataType) === dt_pass) {
+			if ($(e.target).data(pn_d_dataType) === ft_pass) {
 			    data = decrypt(data);
 			}
 			
@@ -268,7 +268,7 @@ function com_bprivy_CS(g_win)
 		g_doc.getElementById(eid).addEventListener('dragend', handleDragEnd, false);
 	}
 	
-	function createOpItem(id, u, p)
+	function createOpItem(id, u, pDupes)
 	{
 	    var opid = eid_opElement + id;
 	    var ueid = eid_userOElement + id;
@@ -286,7 +286,7 @@ function com_bprivy_CS(g_win)
              name: ueid
              }
             ).addClass(css_output + " " + css_userOut).text(u);
-        j_opu.data(pn_d_dataType, dt_userid).data(pn_d_value, u);
+        j_opu.data(pn_d_dataType, ft_userid).data(pn_d_value, u);
 
         var j_opp = $(g_doc.createElement('span')).attr(
             {
@@ -295,13 +295,14 @@ function com_bprivy_CS(g_win)
                 name: peid
             }
             ).addClass(css_output + " " + css_passOut).text("*****");
-        j_opp.data(pn_d_dataType, dt_pass).data(pn_d_value, p);
+        j_opp.data(pn_d_dataType, ft_pass).data(pn_d_value, pDupes);
         
         j_div.append(j_opu).append(j_opp);
 
         return j_div[0];
 	}
 	
+	/** Creates input fields for the IO Widget **/
 	function createInItem(id, u, p)
 	{
 	    var ifid = eid_inForm + id;
@@ -329,27 +330,30 @@ function com_bprivy_CS(g_win)
         return j_inf[0];
 	}
 	
+	/** Toggles the IO Widget **/
 	function toggleIO(e)
 	{
         var d = e.target.dataset;
         console.info("tb clicked" + JSON.stringify(d));
-	    var op = g_doc.getElementById(d.opid);
-	    var ifm = g_doc.getElementById(d.ifid);
-	    var id = d.id;
-	    var parent, col, ue, pe, u, p, uo, po;
+	    var op = g_doc.getElementById(d.opid),
+	        ifm = g_doc.getElementById(d.ifid),
+	        id = d.id,
+	        parent, col, ue, pe, uo, pDupes;
 	    
 	    if (op) { // replace draggable text with input form
 	        // Save the 'op' values.
 	        col = op.children;
 	        ue = col[eid_userOElement + id];
 	        pe = col[eid_passOElement + id];
-	        u = $(ue).data(pn_d_value);
-	        p = $(pe).data(pn_d_value);
+	        uo = $(ue).data(pn_d_value);
+	        pDupes = $(pe).data(pn_d_value);
 	        // remove the 'op' item.
 	        // Create an 'ifm' item and save the values hidden away somewhere.
 	        parent = op.parentElement;
-            ifm = createInItem(id, u, p);
+            ifm = createInItem(id, uo, pDupes);
 	        if (ifm) {
+	            $(ue).removeData(); // removes the jquery .data() cache
+	            $(pe).removeData();
 	           parent.removeChild(op);
 	           parent.appendChild(ifm);
 	        }
@@ -361,7 +365,7 @@ function com_bprivy_CS(g_win)
 	        u = ue.value;
 	        p = encrypt(pe.value);
 	        uo = $(ue).data(pn_d_value);
-	        po = $(pe).data(pn_d_value);
+	        pDupes = $(pe).data(pn_d_value);
 	        // Check if values have changed. If so, save to DB.
 	        if ((uo !== u) || (po !== p))
 	        {
@@ -390,62 +394,16 @@ function com_bprivy_CS(g_win)
 	    }
 	}
 	
-	function insertIOItem (user, pass)
+	/** Creates an IO Widget with a Toggle Button and Output Fields **/
+	function insertIOItem (user, pDupes)
 	{
 	    var jq = $('#' + eid_panelList);
 	    var id = (++g_ioItemID);
-		// var userid = eid_userOElement + id;
-		// var passid = eid_passOElement + id;
-		// var userid2 = eid_userIElement + id;
-		// var passid2 = eid_passIElement + id;
 		var opid = eid_opElement + id;
 		var ifid = eid_inForm + id;
 		
 		var j_li = $(g_doc.createElement("li")).attr({value: id}).addClass(css_container);
-		// var j_div = $(g_doc.createElement("div")).attr(
-		    // {
-		        // id: opid
-		    // }
-		// ).addClass('css_container');
-// 
-		// var j_opu = $("<span></span>").attr(
-			// {draggable: true,
-			 // id: userid,
-			 // name: userid
-			 // }
-			// ).addClass(css_output + " " + css_userOut).text(user);
-		// j_opu.data(pn_d_dataType, dt_userid).data(pn_d_value, user);
-// 
-		// var j_opp = $("<span></span>").attr(
-			// {
-				// draggable: true,
-				// id: passid,
-				// name: userid
-			// }
-			// ).addClass(css_output + " " + css_passOut).text("*****");
-        // j_opp.data(pn_d_dataType, dt_pass).data(pn_d_value, pass);
-		
-		// var j_inf = $(document.createElement('form')).attr({id: ifid}).hide();
-        // var j_inu = $(document.createElement('input')).attr(
-        // {
-            // type: 'text',
-            // id: userid2,
-            // name: userid2
-        // }).addClass(css_userIn);
-        // var j_inp = $(document.createElement('input')).attr(
-        // {
-            // type: 'password',
-            // id: userid2,
-            // name: userid2
-        // }).addClass(css_userIn);
-        // var j_inb = $(g_doc.createElement('input')).attr(
-            // {
-                // type: 'button'
-            // }
-        // ).addClass(css_inButton);
-        //j_inf.append(j_inu).append(j_inp).append(j_inb);
-        
-        var tb = g_doc.createElement('input');
+        var tb = g_doc.createElement('input'); // Toggle Button
         tb.addEventListener('click', toggleIO, false);
         var j_tb = $(tb).attr(
             {
@@ -457,9 +415,7 @@ function com_bprivy_CS(g_win)
         );
 
         j_li.append(j_tb);
-        j_li.append(createOpItem(id, user, pass));
-        //j_li.append(j_div.append(j_opu).append(j_opp));
-        //j_li.append(j_inf);
+        j_li.append(createOpItem(id, user, pDupes)); // Output Fields
         jq.append(j_li);
 
 		// Prevent mousedown to bubble up in order to prevent panel dragging by
@@ -469,16 +425,16 @@ function com_bprivy_CS(g_win)
 	
 	function insertIOItems()
     {
-        var pdb, i, nma;
-        if (!(pdb = g_db[P_DICT])) {
+        var pRecs, i, nma;
+        if (!(pRecs = g_db[tag_pRecs])) {
             return;
         }
         else {
-            nma = Object.getOwnPropertyNames(pdb);
+            nma = Object.getOwnPropertyNames(pRecs);
         }
         
         for (i=0; i<nma.length; i++) {
-            insertIOItem(nma[i], pdb[nma[i]]);
+            insertIOItem(nma[i], pRecs[nma[i]]);
         }
     } 
     
@@ -519,7 +475,8 @@ function com_bprivy_CS(g_win)
     }
 
     /**
-     * Autofills element described by 'ed' with string 'str'.
+     * Autofills element described by 'er' with string 'str'.
+     * if dcrpt is true, then decrypts the data before autofilling.
      */
     function autoFillEl (er, str, dcrpt) {
         var nl, el, doc = g_doc, i, ell = [];
@@ -561,28 +518,28 @@ function com_bprivy_CS(g_win)
     
     function autoFill()
     {
-        var kdb, pdb, uer, per, ua, u, p, j, i, l, uDone, pDone;
+        var eRecs, pRecs, uer, per, ua, u, p, j, i, l, uDone, pDone;
         // auto-fill
         // if we don't have a stored username/password, then there is nothing
         // to autofill. 
-        if (!(pdb = g_db[P_DICT])) {
+        if (!(pRecs = g_db[tag_pRecs])) {
             return;
         }
         else {
-            ua = Object.getOwnPropertyNames(pdb); 
+            ua = Object.getOwnPropertyNames(pRecs); 
             // if there is more than one username, do not autofill
             if (ua && (ua.length !== 1)) {
                 return;
             }
-            else if (g_db[K_DICT]) {
-                // Cycle through K_DICT records starting with the
+            else if (g_db[tag_eRecs]) {
+                // Cycle through tag_eRecs records starting with the
                 // best URL matching node.
-                l = g_db[K_DICT].length; uDone=false; pDone=false;
+                l = g_db[tag_eRecs].length; uDone=false; pDone=false;
                 for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
-                    kdb = g_db[K_DICT].pop();
+                    eRecs = g_db[tag_eRecs].pop();
                     
-                    uer = kdb[dt_userid];
-                    per = kdb[dt_pass];
+                    uer = eRecs[ft_userid];
+                    per = eRecs[ft_pass];
                     if ((!uDone) && uer) {
                         u = ua[0];
                         uDone = autoFillEl(uer, u);
@@ -599,7 +556,7 @@ function com_bprivy_CS(g_win)
                         }
                     }
                     if ((!pDone) && per) {
-                        p = pdb[ua[0]];
+                        p = pRecs[ua[0]];
                         pDone = autoFillEl(per, p, true);
                         if (!pDone && (i===0)) {
                             // The data in the E-Record was an exact URL match
@@ -619,7 +576,7 @@ function com_bprivy_CS(g_win)
     }
      
     /** 
-     * Invoked upon receipt of DB records from 3DB module.
+     * Invoked upon receipt of DB records from Connector or FileStore module.
      * @param {db}  Holds DB records relevant to this page. 
      */
     function callbackGetDB (db)

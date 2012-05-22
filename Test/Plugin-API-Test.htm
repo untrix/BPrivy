@@ -1,0 +1,30 @@
+<!--
+    Auto-generated test-site
+-->
+<html>
+<head>
+<title>test page for BPrivy Plugin's Filesystem API</title>
+
+    <script type="text/javascript">
+	var o={}, p, ls;
+        function bp()
+        {
+            return document.getElementById('com-untrix-bpplugin');
+        }
+
+        function pluginLoaded() {
+			p = bp();
+			ls = p.ls;
+			console.log("BP Plugin loaded. PID = " + p.getpid());
+        }
+                
+    </script>
+</head>
+<body>
+<embed type="application/x-bprivy" style="visibility:hidden" 
+       width="0" height="0" 
+    id="com-untrix-bpplugin" onload="pluginLoaded" >
+</embed>
+    
+</body>
+</html>

@@ -1,4 +1,5 @@
 plugin-win-build*
+*.dll
+firebreath*
 boost*
-npBPrivy.dll
-firebreath
+

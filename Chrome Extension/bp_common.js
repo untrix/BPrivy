@@ -12,8 +12,29 @@
 function com_bprivy_GetModule_Common () {
     /** @globals-begin */      
     var CSS_HIDDEN = "com-bprivy-hidden";
+    /** @constant */
+    var dt_eRecord = "E-Rec";  // Represents a E-Record (html-element record)
+    /** 
+     * Tagname for dt_eRecords in the in-memory and file stores.
+     * @constant
+     * tag_eRecs is a property name that should never clash withe a URL segment. Hence the bracket
+     * characters are being used because they are excluded in rfc 3986.
+     */ 
+    var tag_eRecs = "{E-REC}";
+    /** @constant */
+    var dt_pRecord = "P-Rec";  // Represents a P-Record (password record)
+    /** 
+     * Tagname for dt_pRecords in the in-memory and file stores.
+     * @constant
+     * tag_pRecs is a property name that should never clash withe a URL segment. Hence the bracket
+     * characters are being used because they are excluded in rfc 3986.
+     */
+    var tag_pRecs = "{P-REC}";
+    var uid_aliases = ['username', 'userid','user','signon','loginid', 'logonid'];
+    var pass_aliases = ['password', 'passphrase', 'credentials'];
+    var url_aliases = ['url', 'location', 'href', 'src'];
+    
     /** @globals-end **/
-   
     function bp_throw (str) {
         throw str;
     }
@@ -23,14 +44,55 @@ function com_bprivy_GetModule_Common () {
         return JSON.stringify(o, null, 2);
     }
 
+    // interface HTMLAnchorElement : HTMLElement {
+  // stringifier attribute DOMString href;
+           // attribute DOMString target;
+           // attribute DOMString rel;
+  // readonly attribute DOMTokenList relList;
+           // attribute DOMString media;
+           // attribute DOMString hreflang;
+           // attribute DOMString type;
+// 
+           // attribute DOMString text;
+// 
+  // // URL decomposition IDL attributes
+           // attribute DOMString protocol;
+           // attribute DOMString host;
+           // attribute DOMString hostname;
+           // attribute DOMString port;
+           // attribute DOMString pathname;
+           // attribute DOMString search;
+           // attribute DOMString hash;
+    // Parses URL into components as in the Location object.
+    parseURL(url)
+    {
+        // Create an HTMLElement and make the browser parse the URL for us!
+        el = document.createElement('a');
+        el.href = url;
+        var loc = {};
+        loc.protocol = el.protocol;
+        loc.host = el.host;
+        loc.hostname = el.hostname;
+        loc.port = el.port;
+        loc.pathname = el.pathname;
+        loc.search = el.search;
+        loc.hash = el.hash;
+        return loc;
+    }
+    
     var iface = {};
     Object.defineProperties(iface, 
     {
-        CSS_HIDDEN: {value: CSS_HIDDEN, writable: false, enumerable: false, configurable: false},
-        bp_throw: {value: bp_throw, writable: false, enumerable: false, configurable: false},
-        toJson: {value: toJson, writable: false, enumerable: false, configurable: false}
+        CSS_HIDDEN: {value: CSS_HIDDEN},
+        dt_eRecord: {value: dt_eRecord},
+        dt_pRecord: {value: dt_pRecord},
+        tag_eRecs: {value: tag_eRecs},
+        tag_pRecs: {value: tag_pRecs},
+        bp_throw: {value: bp_throw},
+        toJson: {value: toJson},
+        parseURL: {value: parseURL}
     });
-    Object.preventExtensions(iface);
+    Object.freeze(iface);
 
     return iface;
     

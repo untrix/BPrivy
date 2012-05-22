@@ -12,50 +12,33 @@
 "use strict";
 
 /**
- * @ModuleBegin 3db
+ * @ModuleBegin Connector
  */
 
-function com_bprivy_GetModule_3db() {
+function com_bprivy_GetModule_Connector() {
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
     /** @constant */
-    var dt_userid = "dt_userid";   // Represents data-type userid
+    var ft_userid = "ft_userid";   // Represents field-type userid
     /** @constant */
-    var dt_pass = "dt_pass";       // Represents data-type password
+    var ft_pass = "ft_pass";       // Represents field-type password
     /** @constant */
-    var dt_eRecord = "E-Rec";  // Represents a E-Record (html-element record)
-    /** @constant */
-    var dt_pRecord = "P-Rec";  // Represents a P-Record (password record)
-    /** @constant */
-   var cm_getDB = "cm_getDB"; // Represents a getDB command
+    var cm_getRecs = "cm_getRecs";     // Represents a getDB command
     /** @constant */
     var PROTO_HTTP = "http:";
     /** @constant */
     var PROTO_HTTPS = "https:";
-    /** 
-     * Holds knowledge records inside a D-Node.
-     * @constant
-     * K_DICT is a property name that should never
-     * clash withe a URL segment. Hence the bracket
-     * characters are being used because they are
-     * excluded in rfc 3986.
-     */ 
-    var K_DICT = "{kdict}";
 
-    //var K_DICT2 = "{keb2}";
-    /** 
-     * Holds username/password records inside a D-Node.
-     * @constant
-     * P_DICT is a property name that should never
-     * clash withe a URL segment. Hence the bracket
-     * characters are being used because they are
-     * excluded in rfc 3986.
-     */
-    var P_DICT = "{pdict}";
-
-        
-    var postMsgToMothership = com_bprivy_GetModule_CSPlatform().postMsgToMothership;
-    var rpcToMothership = com_bprivy_GetModule_CSPlatform().rpcToMothership;
+    /** @import-module-begin CSPlatform **/
+    var m = com_bprivy_GetModule_CSPlatform();
+    var postMsgToMothership = m.postMsgToMothership;
+    var rpcToMothership = m.rpcToMothership;
+    /** @import-module-begin Common **/
+    var dt_eRecord = m.dt_eRecord;
+    var dt_pRecord = m.dt_pRecord;
+    var tag_eRecs = m.tag_eRecs;
+    var tag_pRecs = m.tag_pRecs;
+    /** @import-module-end **/    m = null;
    
     function ERecord() 
     {
@@ -65,6 +48,7 @@ function com_bprivy_GetModule_3db() {
         {
             //Record Type. Determines which dictionary this record belongs to.
             dt: {value: dt_eRecord, writable: false, enumerable: true, configurable: false},
+            date: {value: Date.now(), writable: false, enumerable: true, configurable: false},
             loc: descriptor, // URL that this record pertains to. Determines where the record will sit within the URL-trie.
             fieldType: descriptor2,
             tagName: descriptor2,
@@ -87,6 +71,7 @@ function com_bprivy_GetModule_3db() {
         Object.defineProperties(this,
             {
                 dt: {value: dt_pRecord, writable: false, enumerable: true, configurable: false},
+                date: {value: Date.now(), writable: false, enumerable: true, configurable: false},
                 loc: {writable: true, enumerable: true, configurable: true},
                 userid: {writable: true, enumerable: true, configurable: false},
                 pass: {writable: true, enumerable: true, configurable: false}
@@ -100,7 +85,8 @@ function com_bprivy_GetModule_3db() {
     }
     /** 
      * Dissects document.location into URL segment array suitable for
-     * insertion into a DNode.
+     * insertion into a DNode. Discards URL-scheme, query and fragment
+     * values as those are deemed irrelevant for our purpose.
      */
     function newUrla (l)
     {
@@ -177,7 +163,7 @@ function com_bprivy_GetModule_3db() {
         return urla;
     }
 
-    /** ModuleInterfaceGetter 3db */
+    /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
         var saveRecord = function (eRec)
@@ -190,9 +176,9 @@ function com_bprivy_GetModule_3db() {
             console.warning('Deleting Record ' + JSON.stringify(erec));
         };
         
-        var getDB = function(loc, callback)
+        var getRecs = function(loc, callback)
         {
-            return rpcToMothership({dt:cm_getDB, loc: loc}, callback);
+            return rpcToMothership({dt:cm_getRecs, loc: loc}, callback);
         };
 
         var recKey = function(rec)
@@ -209,19 +195,17 @@ function com_bprivy_GetModule_3db() {
         var iface = {};
         Object.defineProperties(iface, 
         {
-            dt_userid: {value: dt_userid},
-            dt_pass: {value: dt_pass},
-            dt_eRecord: {value: dt_eRecord},
-            dt_pRecord: {value: dt_pRecord},
-            cm_getDB: {value: cm_getDB},
-            K_DICT: {value: K_DICT},
-            //K_DICT2: {value: K_DICT2},
-            P_DICT: {value: P_DICT},
+            ft_userid: {value: ft_userid},
+            ft_pass: {value: ft_pass},
+            cm_getRecs: {value: cm_getRecs},
+            tag_eRecs: {value: tag_eRecs},
+            //tag_eRecs2: {value: tag_eRecs2},
+            tag_pRecs: {value: tag_pRecs},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
             constructERecord: {value: constructERecord},
             constructPRecord: {value: constructPRecord},
-            getDB: {value: getDB},
+            getRecs: {value: getRecs},
             newUrla: {value: newUrla},
             recKey: {value: recKey}
         });
@@ -230,7 +214,7 @@ function com_bprivy_GetModule_3db() {
         return iface;
     }
     
-    var bp_3db = getModuleInterface();
+    var bp_Connector = getModuleInterface();
 
-return bp_3db;}
+return bp_Connector;}
 /** @ModuleEnd */

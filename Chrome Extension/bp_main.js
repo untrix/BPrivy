@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global $ document com_bprivy_GetModule_MainPlatform com_bprivy_GetModule_3db com_bprivy_GetModule_Common */
+/*global $ document com_bprivy_GetModule_MainPlatform com_bprivy_GetModule_Connector com_bprivy_GetModule_Common */
 /*jslint browser:true, devel:true, es5:true, vars:true */
 /*properties console.info, console.log, console.warn */
 
@@ -17,16 +17,16 @@
     var m = com_bprivy_GetModule_MainPlatform();
     var registerMsgListener = m.registerMsgListener;
     var initScaffolding = m.init;
-    /** @import-module-begin 3db */
-    m = com_bprivy_GetModule_3db();
+    /** @import-module-begin Connector */
+    m = com_bprivy_GetModule_Connector();
     var dt_eRecord = m.dt_eRecord;
     var dt_pRecord = m.dt_pRecord;
-    var cm_getDB = m.cm_getDB;
+    var cm_getRecs = m.cm_getRecs;
     var newUrla = m.newUrla;
-    var K_DICT = m.K_DICT;
-    //var K_DICT2 = m.K_DICT2;
-    var P_DICT = m.P_DICT;
     var recKey = m.recKey;
+    var tag_eRecs = m.tag_eRecs;
+    var tag_pRecs = m.tag_pRecs;
+    var constructDupeVals = m.constructDupeVals;
     /** @import-module-begin Common */
     m = com_bprivy_GetModule_Common();
     var bp_throw = m.bp_throw;
@@ -67,16 +67,16 @@
     /** @globals-end **/
     
     /** 
-     * Gets the name of the DB where the supplied data-type belongs.
+     * Gets the tag name under which the data-type's records are stored.
      * If nothing suitable, or if dt is null or undefined, returns null.
      */
-    function getDbName(dt) 
+    function getRecTag(dt) 
     {
         switch (dt) {
             case dt_eRecord:
-                return K_DICT;
+                return tag_eRecs;
             case dt_pRecord:
-                return P_DICT;
+                return tag_pRecs;
             default:
                 return null;
         }
@@ -161,23 +161,23 @@
     {
         // Following properties will be added as needed 
         // Payload objects. Theoretically a given node could contain payload from
-        // multiple 'DB's - i.e.  K or P - however, here we've chosen to store
-        // payload of only one DB per dictionary. Hence there is a separate dictionary
-        // per DB. Right now there are two - g_kdb and g_pdb. The payload's property
+        // multiple record-types - i.e.  K or P - however, here we've chosen to store
+        // payload of only one type per dictionary/trie. Hence there is a separate trie
+        // per Rec type. Right now there are two - g_kd and g_pd. The payload's property
         // value is constructed such that it won't clash with the properties for
         // the child-node pointers, which are URL-segments. Hence the key for the
         // payload is constructed such that it will never conflict with any URL
-        // segment. At this writing the values chosen are {kdict} and {pdict}. Hence
+        // segment. At this writing the values chosen are {erec} and {pdict}. Hence
         // a payload object of a DNode in the g_kdb dictionary will look like:
-        // this["{kdict}"] = {"dt_userid":{"dt":"E-Record","fieldType":"dt_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},"dt_pass":{"dt":"E-Record","fieldType":"dt_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
+        // this["{erec}"] = {"ft_userid":{"dt":"E-Record","fieldType":"ft_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},"ft_pass":{"dt":"E-Record","fieldType":"ft_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
         // The payload itself is an object with multiple properties. Each of the
         // properties is a 'record' (i.e. e-rec in k-dict and p-rec in p-dict).
         // The property-name is the record-key and is carried within each record
         // as the property named 'key'. Giving a generic name to the key makes it
         // possible to write generic dictionary code regardless of the dictionary
         // or record type. For each dictionary, the record keys are chosen differently.
-        // For e.g. in the case of k-dict, the record keys are from a fixed set : 'dt_userid',
-        // 'dt_password', 'dt_email' etc. etc. because that makes sense for that domain. However,
+        // For e.g. in the case of k-dict, the record keys are from a fixed set : 'ft_userid',
+        // 'ft_password', 'dt_email' etc. etc. because that makes sense for that domain. However,
         // for the p-dict the record keys can be anything because they are the username.
         // If we wanted to store - say credit card numbers, then that would be a
         // completely separate dictionary with the card-number+type as the key but
@@ -203,20 +203,35 @@
     g_kd = new DNode();
     g_pd = new DNode();
     
+    /** Class DupeRecs Record Collection
+     *  Manages duplicate records according to record-type rules.
+     */
+    //function DupeRecs
 
     /** Helper function to DNode.prototype.insert */
     DNode.prototype.tryInsert = function (drec)
     {
-        var rec = drec.rec;
-        var k = drec.urli.incr();
+        var rec = drec.rec,
+            k = drec.urli.incr(),
+            r, t, ki;
         if (!k) 
         {
-            var dbName = getDbName(rec.dt);
-            var db = this[dbName];
-            if (!db) {
-                this[dbName] = (db = {});
+            var recTag = getRecTag(rec.dt);
+            var recs = this[recTag];
+            if (!recs) {
+                this[recTag] = (recs = {});
             }
-            db[recKey(rec)] = rec;
+            r = recs[ki=recKey(rec)];
+            if (r) {
+                r.insertVal(rec);
+            }
+            else {
+                recs[ki] = constructDupeVals(rec);
+                //if (rec.date > r.date) {
+                //    recs[ki].curr = rec;
+                //}
+                //recs[ki].all.push(rec);
+            }
         }
         else 
         {   // continue walking down the trie
@@ -241,12 +256,12 @@
     {
         var k = urli.get(), n;
         if (!k) {
-            return null;
+            return null; // exact URL match found!
         }
         else {
             n = this[k];
             if (!n) {
-                return null;
+                return undefined; // exact URL match does not exist
             }
             else {
                 urli.incr();
@@ -297,15 +312,15 @@
         return n;
     };
     /**
-     * Returns K_DICT records that best match urli.
+     * Returns dt_eRecord records that best match urli.
      */
-    DNode.prototype.findKDB = function (urli)
+    DNode.prototype.findERecs = function (urli)
     {
         var n, r = this, stack = [];
         // Walk down the dictionary tree.
         do {
             // save secondary level knowledge
-            if (r[K_DICT]) {stack.push(r[K_DICT]);}
+            if (r[tag_eRecs]) {stack.push(r[tag_eRecs]);}
             n = r;
             r = n.tryFind(urli);
         } while (r);
@@ -316,49 +331,54 @@
         // Therfore we'll pick up the matched node's value
         // only if all of urli segments were matched - i.e.
         // if there were no remaining unmatched segments.
+        // Note: Commenting out the below since I decided to
+        // harvest ancestor nodes as well for heuristic matching (it is likely
+        // that a website will reuse code for logins).
         // if (urli.count() === 0) {
-            // r[K_DICT] = stack.pop();
+            // r[dt_eRecord] = stack.pop();
         // }
-        // // Ancestor nodes are also harvested for heuristic
+        // Ancestor nodes are also harvested for heuristic
         // matching.
         return stack;
     };
     /**
-     * Returns P_DICT records that best match urli.
+     * Returns dt_pRecord records that best match urli.
      */
-    DNode.prototype.findPDB = function(urli) 
+    DNode.prototype.findPRecs = function(urli) 
     {
         var n = this, n2;
         // Walk down the dictionary tree.
         do {
             // save node if it has the desired data type
-            if (n[P_DICT]) {n2 = n; /*idb = urli.pos();*/}
+            if (n[tag_pRecs]) {n2 = n; /*idb = urli.pos();*/}
             n = n.tryFind(urli);
         } while (n);
         
         // in the case of PDB, the data is only useful if it is
         // below the top-level-domain. Hence we should check urli
         // to determine that.
+        // Update: Since p-records are collected from actual websites,
+        // the URLs should be correct. Therefore, am not verifying TLD anymore.
         if (n2) {
             //urli.seek(idb);
             //if (urli.isBelowTLD()) {
-                return n2[P_DICT];
+                return n2[tag_pRecs];
             //}
         }
     };
     /**
-     * Returns K_DICT and P_DICT records that best match urli.
+     * Returns dt_eRecord and dt_pRecord records that best match urli.
      */
-    function getDB(urli) 
+    function getRecs(urli) 
     {
         var kdb, pdb, r;
         r = {};
-        r[K_DICT] = g_kd.findKDB(urli);
+        r[tag_eRecs] = g_kd.findERecs(urli);
         urli.rwnd();
-        r[P_DICT] = g_pd.findPDB(urli);
+        r[tag_pRecs] = g_pd.findPRecs(urli);
 
         // testing
-        r[P_DICT] = {'sumeet@singhonline.info':'divya1'};
+        r[tag_pRecs] = {'sumeet@singhonline.info':'divya1'};
         return r;
     }
     /** @end-class-def **/
@@ -396,9 +416,9 @@
                 g_pd.insert(new DRecord(rq));
                 funcSendResponse({ack: true});
                 break;
-            case cm_getDB:
+            case cm_getRecs:
                 var urli = new Iterator(newUrla(rq.loc));
-                var db = getDB(urli);
+                var db = getRecs(urli);
                 funcSendResponse(db);
                 break;
         }
