@@ -28,7 +28,26 @@ function com_bprivy_GetModule_Connector() {
     var PROTO_HTTP = "http:";
     /** @constant */
     var PROTO_HTTPS = "https:";
-
+    var DNODE_TAG = {};
+    Object.defineProperties(DNODE_TAG,
+        {
+            DATA: {value:"{dt}", writable:false, configurable:false},
+            TLD: {value:"{t}", writable:false, configurable:false},
+            HOST: {value:"{h}", writable:false, configurable:false},
+            DOMAIN: {value:"{d}", writable:false, configurable:false},
+            PORT: {value:"{o}", writable:false, configurable:false},
+            PATH: {value:"{p}", writable:false, configurable:false},
+            getRecTag: {value: function (dt) {
+                // tag is a property name that should never clash withe a URL
+                // segment. Hence the bracket
+                // characters are being used because they are excluded in rfc
+                // 3986.
+                if(dt) {
+                    return DNODE_TAG.DATA + dt;
+                }
+            }, writable:false, configurable:false}
+        }
+    );
     /** @import-module-begin CSPlatform **/
     var m = com_bprivy_GetModule_CSPlatform();
     var postMsgToMothership = m.postMsgToMothership;
@@ -36,10 +55,8 @@ function com_bprivy_GetModule_Connector() {
     /** @import-module-begin Common **/
     var dt_eRecord = m.dt_eRecord;
     var dt_pRecord = m.dt_pRecord;
-    var tag_eRecs = m.tag_eRecs;
-    var tag_pRecs = m.tag_pRecs;
     /** @import-module-end **/    m = null;
-   
+        
     function ERecord() 
     {
         var descriptor = {writable: true, enumerable: true, configurable: true};
@@ -49,6 +66,7 @@ function com_bprivy_GetModule_Connector() {
             //Record Type. Determines which dictionary this record belongs to.
             dt: {value: dt_eRecord, writable: false, enumerable: true, configurable: false},
             date: {value: Date.now(), writable: false, enumerable: true, configurable: false},
+            
             loc: descriptor, // URL that this record pertains to. Determines where the record will sit within the URL-trie.
             fieldType: descriptor2,
             tagName: descriptor2,
@@ -62,11 +80,11 @@ function com_bprivy_GetModule_Connector() {
     {
         return JSON.stringify(this, null, 2);
     };
-    function constructERecord() {
+    function newERecord() {
         return new ERecord();    
     }
 
-    function PRecord() 
+    function PRecord()
     {
         Object.defineProperties(this,
             {
@@ -79,10 +97,53 @@ function com_bprivy_GetModule_Connector() {
         );
         Object.preventExtensions(this);
     }
-    function constructPRecord()
+    function newPRecord()
     {
         return new PRecord();
     }
+    
+    /**
+     * @begin-class-def Actions
+     * Represents Actions on a given item/key. Figures out the latest value etc.
+     * Inserted records should be Action Records with timestamps in them. If no timestamp
+     * is found, the current timestamp will be inserted.
+     */
+    /** Constructor.
+     * Acts as default constructor with no argument.
+     * With an argument, it expects an Object object created by JSON.parse.
+     * In that case it behaves as a Move Constructor. That is, it adopts the
+     * properties of the parameter and deletes them from the argument.
+     */
+    function Actions(jo)
+    {
+        Object.defineProperties(this,
+            {
+                curr: {value: undefined},
+                arecs: {value: []}
+            }
+        );
+        Object.seal(this);
+        if (jo) {
+            this.arecs = jo.arecs;
+            this.curr = jo.curr;
+            delete jo.arecs; delete jo.curr;
+        }
+    }
+    /** Method. Insert a record into the Action Records collection */
+    Actions.prototype.insert = function(arec)
+    {
+        if (!arec.date) { arec.date = Date.now();}
+        var n = this.arecs.push(arec);
+        if ((!this.curr) || (this.curr.date < arec.date)) {
+            this.curr = this.arecs[n-1];
+        }
+    };
+    
+    function newActions(jo) {
+        return new Actions(jo);
+    }
+    /** @end-class-defn **/
+
     /** 
      * Dissects document.location into URL segment array suitable for
      * insertion into a DNode. Discards URL-scheme, query and fragment
@@ -139,30 +200,30 @@ function com_bprivy_GetModule_Connector() {
             for (i=0; i<ha.length; i++) {
                 if (i===0) {
                     // Top-Level Domain. Doesn't account for TLDs like 'co.in' though.
-                    urla.push('{t}' + ha[i].toLowerCase());
+                    urla.push(DNODE_TAG.TLD + ha[i].toLowerCase());
                 }
                 else if (i === (ha.length-1)) {
                     // Host name
-                    urla.push('{h}' + ha[i].toLowerCase());
+                    urla.push(DNODE_TAG.HOST + ha[i].toLowerCase());
                 }
                 else {
                     // Second level domain
-                    urla.push('{d}' + ha[i].toLowerCase());
+                    urla.push(DNODE_TAG.DOMAIN + ha[i].toLowerCase());
                 }
             }
         }
-        if (pn) {urla.push('{o}' + pn);}
-        if (pa) {
+        if (pn) {urla.push(DNODE_TAG.PORT + pn);} // Port Number
+        if (pa) { // Path
             for (i=0; i<pa.length; i++) {
                 if (pa[i] !== '') {
-                    urla.push('{p}' + pa[i]);
+                    urla.push(DNODE_TAG.PATH + pa[i]);
                 }
             }
         }
         
         return urla;
     }
-
+    
     /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
@@ -198,13 +259,12 @@ function com_bprivy_GetModule_Connector() {
             ft_userid: {value: ft_userid},
             ft_pass: {value: ft_pass},
             cm_getRecs: {value: cm_getRecs},
-            tag_eRecs: {value: tag_eRecs},
-            //tag_eRecs2: {value: tag_eRecs2},
-            tag_pRecs: {value: tag_pRecs},
+            DNODE_TAG: {value: DNODE_TAG},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
-            constructERecord: {value: constructERecord},
-            constructPRecord: {value: constructPRecord},
+            newERecord: {value: newERecord},
+            newPRecord: {value: newPRecord},
+            newActions: {value: newActions},
             getRecs: {value: getRecs},
             newUrla: {value: newUrla},
             recKey: {value: recKey}

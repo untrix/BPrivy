@@ -26,15 +26,15 @@ function com_bprivy_CS(g_win)
     var m = com_bprivy_GetModule_Connector();
     var ft_userid = m.ft_userid;   // Represents data-type userid
     var ft_pass = m.ft_pass;        // Represents data-type password
-    var constructERecord = m.constructERecord;
-    var constructPRecord = m.constructPRecord;
+    var dt_eRecord = m.dt_eRecord;
+    var dt_pRecord = m.dt_pRecord;
+    var newERecord = m.newERecord;
+    var newPRecord = m.newPRecord;
     var saveRecord = m.saveRecord;
     var deleteRecord = m.deleteRecord;
     var getDB = m.getDB;
-    var newUrla = m.newUrla;
-    var tag_eRecs = m.tag_eRecs;
-    var tag_pRecs = m.tag_pRecs;
-    var copyConsDupes = m.copyConsDupes; // Get Latest Dupe Val
+    var tag_eRecs = m.DNODE_TAG.getRecTag(dt_eRecord);
+    var tag_pRecs = m.DNODE_TAG.getRecTag(dt_pRecord);
     /** @import-module-begin CSPlatform */
     m = com_bprivy_GetModule_CSPlatform();
     var registerMsgListener = m.registerMsgListener;
@@ -42,6 +42,7 @@ function com_bprivy_CS(g_win)
     /** @import-module-begin Common */
     m = com_bprivy_GetModule_Common();
     var css_hidden = m.css_hidden;
+    var newDNode = m.newDNode;
     /** @import-module-end */    m = null;
     
     /** @globals-begin */
@@ -93,6 +94,7 @@ function com_bprivy_CS(g_win)
     var g_db ={};
     var g_draggedElementID;
     var g_ioItemID = 0;
+    var settings = {ShowPanelForMultipleLogins: true}; // User Setting
     /** @globals-end **/
     
     /** Placeholder password decryptor */
@@ -186,7 +188,7 @@ function com_bprivy_CS(g_win)
 		function inputHandler(e)
 		{
 		    console.info("inputHandler invoked");
-            var eRec = constructERecord(), dragged_el;
+            var eRec = newERecord(), dragged_el;
             if (g_draggedElementID) {
                 dragged_el = g_doc.getElementById(g_draggedElementID);
                 console.info("DraggedElementID is " + g_draggedElementID);
@@ -268,7 +270,7 @@ function com_bprivy_CS(g_win)
 		g_doc.getElementById(eid).addEventListener('dragend', handleDragEnd, false);
 	}
 	
-	function createOpItem(id, u, pDupes)
+	function createOpItem(id, u, p)
 	{
 	    var opid = eid_opElement + id;
 	    var ueid = eid_userOElement + id;
@@ -295,7 +297,7 @@ function com_bprivy_CS(g_win)
                 name: peid
             }
             ).addClass(css_output + " " + css_passOut).text("*****");
-        j_opp.data(pn_d_dataType, ft_pass).data(pn_d_value, pDupes);
+        j_opp.data(pn_d_dataType, ft_pass).data(pn_d_value, p);
         
         j_div.append(j_opu).append(j_opp);
 
@@ -338,7 +340,7 @@ function com_bprivy_CS(g_win)
 	    var op = g_doc.getElementById(d.opid),
 	        ifm = g_doc.getElementById(d.ifid),
 	        id = d.id,
-	        parent, col, ue, pe, uo, pDupes;
+	        parent, col, ue, pe, uo, po;
 	    
 	    if (op) { // replace draggable text with input form
 	        // Save the 'op' values.
@@ -346,11 +348,11 @@ function com_bprivy_CS(g_win)
 	        ue = col[eid_userOElement + id];
 	        pe = col[eid_passOElement + id];
 	        uo = $(ue).data(pn_d_value);
-	        pDupes = $(pe).data(pn_d_value);
+	        po = $(pe).data(pn_d_value);
 	        // remove the 'op' item.
 	        // Create an 'ifm' item and save the values hidden away somewhere.
 	        parent = op.parentElement;
-            ifm = createInItem(id, uo, pDupes);
+            ifm = createInItem(id, uo, po);
 	        if (ifm) {
 	            $(ue).removeData(); // removes the jquery .data() cache
 	            $(pe).removeData();
@@ -362,40 +364,40 @@ function com_bprivy_CS(g_win)
 	        col = ifm.elements;
 	        ue = col[eid_userIElement + id];
 	        pe = col[eid_passIElement + id];
-	        u = ue.value;
-	        p = encrypt(pe.value);
+	        var u = ue.value;
+	        var p = encrypt(pe.value);
 	        uo = $(ue).data(pn_d_value);
-	        pDupes = $(pe).data(pn_d_value);
+	        po = $(pe).data(pn_d_value);
 	        // Check if values have changed. If so, save to DB.
 	        if ((uo !== u) || (po !== p))
 	        {
 	            // save to db
-	            var pRec = constructPRecord();
+	            var pRec = newPRecord();
 	            pRec.loc = g_loc;
 	            pRec.userid = u;
 	            pRec.pass = p;
+	            g_db[tag_pRecs][u].insert(pRec);
 	            saveRecord(pRec);
 	            if (uo !== u) {
-	                // delete the original p-record
-	                deleteRecord({loc: g_loc, userid: u});
+	                // delete the original p-record.
+	                g_db[tag_pRecs][u].remove(uo);//TODO: Implement this. Should update g_db.
+	                deleteRecord({loc: g_loc, userid: uo});
 	            }
 	        }
 	        // Then save the values and create a new 'op' item.
 	        parent = ifm.parentElement;
 	        op = createOpItem(id, u, p);
 	        if (op) {
-	            parent.removeChild(ifm);
-	            parent.appendChild(op);
+	            //parent.removeChild(ifm);
+	            parent.appendChild(op);// Insert the 'op' item.
 	        }
 	        
-	        // Then remove the 'ifm' item.
-	        // Then insert the 'op' item.
-	        $(ifm).remove();
+	        $(ifm).remove(); // Then remove the 'ifm' item.
 	    }
 	}
 	
 	/** Creates an IO Widget with a Toggle Button and Output Fields **/
-	function insertIOItem (user, pDupes)
+	function insertIOItem (user, pActions)
 	{
 	    var jq = $('#' + eid_panelList);
 	    var id = (++g_ioItemID);
@@ -415,7 +417,7 @@ function com_bprivy_CS(g_win)
         );
 
         j_li.append(j_tb);
-        j_li.append(createOpItem(id, user, pDupes)); // Output Fields
+        j_li.append(createOpItem(id, user, pActions.curr.pass)); // Output Fields
         jq.append(j_li);
 
 		// Prevent mousedown to bubble up in order to prevent panel dragging by
@@ -556,7 +558,7 @@ function com_bprivy_CS(g_win)
                         }
                     }
                     if ((!pDone) && per) {
-                        p = pRecs[ua[0]];
+                        p = pRecs[ua[0]].curr.pass;
                         pDone = autoFillEl(per, p, true);
                         if (!pDone && (i===0)) {
                             // The data in the E-Record was an exact URL match
@@ -575,19 +577,12 @@ function com_bprivy_CS(g_win)
         }
     }
      
-    /** 
-     * Invoked upon receipt of DB records from Connector or FileStore module.
-     * @param {db}  Holds DB records relevant to this page. 
-     */
-    function callbackGetDB (db)
+    function showPanel()
     {
-        g_db = db;
-        
-        console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(g_db));
-        autoFill();
+        createPanel(g_doc).show();
     }
     
-    function togglePanel(e)
+    function togglePanel(e/*unused*/)
     {
         // Only show the panel in the top-level frame.
         if(canHavePanel(g_win)) 
@@ -598,11 +593,24 @@ function com_bprivy_CS(g_win)
                 g_draggedElementID = null;
                 $(el).remove();
             }
-            else
-            {
-                createPanel(g_doc).show();
+            else {
+                showPanel();
             }
         }        
+    }
+    
+    /** 
+     * Invoked upon receipt of DB records from Connector or FileStore module.
+     * @param {db}  Holds DB records relevant to this page. 
+     */
+    function callbackGetDB (db)
+    {
+        g_db = newDNode(db);
+        
+        console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(g_db));
+        if ((!autoFill()) && settings.ShowPanelIfMultipleLogins) {
+            showPanel();
+        }
     }
     
 	function clickBP (request, sender, sendResponse)
@@ -631,7 +639,6 @@ function com_bprivy_CS(g_win)
 	}
 	
 	return main;
-
 }
 /** @ModuleEnd */
 

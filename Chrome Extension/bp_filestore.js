@@ -23,7 +23,7 @@ function com_untrix_GetModule_FileStore(g_doc)
     var m.parseURL = m.parseURL;
     /** @import-module-begin connector **/
     m = com_bprivy_GetModule_Connector; 
-    var constructPRecord = m.constructPRecord;
+    var newPRecord = m.newPRecord;
     /** @import-module-end **/    m = null;
 
     /** @constant ID of BP-Plugin HtmlEmbedElement*/
@@ -128,7 +128,7 @@ function com_untrix_GetModule_FileStore(g_doc)
                         for (i=1; i<recs.length; i++)
                         {
                             crec = recs[i];
-                            prec = constructPRecord();
+                            prec = newPRecord();
                             prec.userid = crec[pProps.userid];
                             prec.pass = crec[pProps.pass];
                             prec.loc = parseURL(pProps.url);

@@ -24,9 +24,10 @@
     var cm_getRecs = m.cm_getRecs;
     var newUrla = m.newUrla;
     var recKey = m.recKey;
-    var tag_eRecs = m.tag_eRecs;
-    var tag_pRecs = m.tag_pRecs;
-    var constructDupeVals = m.constructDupeVals;
+    var newActions = m.newActions; // Actions constructor
+    var getRecTag = m.DNODE_TAG.getRecTag;
+    var tag_eRecs = getRecTag(dt_eRecord);
+    var tag_pRecs = getRecTag(dt_pRecord);
     /** @import-module-begin Common */
     m = com_bprivy_GetModule_Common();
     var bp_throw = m.bp_throw;
@@ -36,14 +37,6 @@
     /** Two databases */
     var g_pd, g_kd;
 
-    /**
-     * Name of property that holds a reference to the parent D-node.
-     * @constant
-     * Name of the property is selected such that it will never clash
-     * with a legitimate URL segment. This is necessary because a
-     * D-node has dynamically created property names from URL segments.
-     */
-    var P_PARENT = "{p}";
     /** 
      * @constant 
      * @enumerator return value of comparison function 
@@ -66,21 +59,6 @@
     var D_DIFF = Number(2);
     /** @globals-end **/
     
-    /** 
-     * Gets the tag name under which the data-type's records are stored.
-     * If nothing suitable, or if dt is null or undefined, returns null.
-     */
-    function getRecTag(dt) 
-    {
-        switch (dt) {
-            case dt_eRecord:
-                return tag_eRecs;
-            case dt_pRecord:
-                return tag_pRecs;
-            default:
-                return null;
-        }
-    }
 
     /** @begin-class-def Iterator */
     /**
@@ -153,55 +131,63 @@
         else {return D_SUPER;}
     }
     /** @end-class-defn **/
-    
-    
+      
     /** @begin-class-def DNode */
+
+    // Following properties will be added as needed
+    // Payload objects. Theoretically a given node could contain payload from
+    // multiple record-types - i.e.  K or P - however, here we've chosen to store
+    // payload of only one type per dictionary/trie. Hence there is a separate
+    // trie
+    // per Rec type. Right now there are two - g_kd and g_pd. The payload's
+    // property
+    // value is constructed such that it won't clash with the properties for
+    // the child-node pointers, which are URL-segments. Hence the key for the
+    // payload is constructed such that it will never conflict with any URL
+    // segment. At this writing the values chosen are {erec} and {pdict}. Hence
+    // a payload object of a DNode in the g_kdb dictionary will look like:
+    // this["{erec}"] =
+    // {"ft_userid":{"dt":"E-Record","fieldType":"ft_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},"ft_pass":{"dt":"E-Record","fieldType":"ft_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
+    // The payload itself is an object with multiple properties. Each of the
+    // properties is a 'record' (i.e. e-rec in k-dict and p-rec in p-dict).
+    // The property-name is the record-key and is carried within each record
+    // as the property named 'key'. Giving a generic name to the key makes it
+    // possible to write generic dictionary code regardless of the dictionary
+    // or record type. For each dictionary, the record keys are chosen
+    // differently.
+    // For e.g. in the case of k-dict, the record keys are from a fixed set :
+    // 'ft_userid',
+    // 'ft_password', 'dt_email' etc. etc. because that makes sense for that
+    // domain. However,
+    // for the p-dict the record keys can be anything because they are the
+    // username.
+    // If we wanted to store - say credit card numbers, then that would be a
+    // completely separate dictionary with the card-number+type as the key but
+    // no URL. Also, please note that for g-dict and p-dict, in the bigger
+    // picture, URL is also part of the key. Now, if we were storing bookmarks,
+    // then there would be no payload at all - only the URL key. We would need
+    // to put markers in the URL-trie though, in order to mark which D-Nodes
+    // represented an actual bookmark v/s which were merely on the path to an
+    // actual bookmark. Because of the semantic and syntactic difference
+    // between different data-types (or call it data-domains) I decided to create
+    // a
+    // separate trie per data-domain. Hence there is a separate trie/dictionary
+    // for 'knowledge' records, a separate one for 'passwords' and for
+    // 'bookmarks'
+    // as well in the future.
+    // A g_pdb payload will look like:
+    // this["{pdict}"] = {'username1':'password1', 'username2':'password2'};
+    // References to child-nodes for walking down the url-trie. The key of the
+    // child node
+    // e.g. this['yahoo.'] = child-node;
+    // e.g. this['google.'] = child-node;
+    // e.g. this['/path1'] = child-node;
+    // e.g. this['www'] = child-node;
+    // e.g. this['www:8080'] = child-node;
+
     /** @constructor */
-    function DNode ()
-    {
-        // Following properties will be added as needed 
-        // Payload objects. Theoretically a given node could contain payload from
-        // multiple record-types - i.e.  K or P - however, here we've chosen to store
-        // payload of only one type per dictionary/trie. Hence there is a separate trie
-        // per Rec type. Right now there are two - g_kd and g_pd. The payload's property
-        // value is constructed such that it won't clash with the properties for
-        // the child-node pointers, which are URL-segments. Hence the key for the
-        // payload is constructed such that it will never conflict with any URL
-        // segment. At this writing the values chosen are {erec} and {pdict}. Hence
-        // a payload object of a DNode in the g_kdb dictionary will look like:
-        // this["{erec}"] = {"ft_userid":{"dt":"E-Record","fieldType":"ft_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},"ft_pass":{"dt":"E-Record","fieldType":"ft_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
-        // The payload itself is an object with multiple properties. Each of the
-        // properties is a 'record' (i.e. e-rec in k-dict and p-rec in p-dict).
-        // The property-name is the record-key and is carried within each record
-        // as the property named 'key'. Giving a generic name to the key makes it
-        // possible to write generic dictionary code regardless of the dictionary
-        // or record type. For each dictionary, the record keys are chosen differently.
-        // For e.g. in the case of k-dict, the record keys are from a fixed set : 'ft_userid',
-        // 'ft_password', 'dt_email' etc. etc. because that makes sense for that domain. However,
-        // for the p-dict the record keys can be anything because they are the username.
-        // If we wanted to store - say credit card numbers, then that would be a
-        // completely separate dictionary with the card-number+type as the key but
-        // no URL. Also, please note that for g-dict and p-dict, in the bigger
-        // picture, URL is also part of the key. Now, if we were storing bookmarks,
-        // then there would be no payload at all - only the URL key. We would need
-        // to put markers in the URL-trie though, in order to mark which D-Nodes
-        // represented an actual bookmark v/s which were merely on the path to an
-        // actual bookmark. Because of the semantic and syntactic difference
-        // between different data-types (or call it data-domains) I decided to create a
-        // separate trie per data-domain. Hence there is a separate trie/dictionary
-        // for 'knowledge' records, a separate one for 'passwords' and for 'bookmarks'
-        // as well in the future.
-        // A g_pdb payload will look like:
-        // this["{pdict}"] = {'username1':'password1', 'username2':'password2'};
-        // References to child-nodes for walking down the url-trie. The key of the child node
-        // e.g. this['yahoo.'] = child-node;
-        // e.g. this['google.'] = child-node;
-        // e.g. this['/path1'] = child-node;
-        // e.g. this['www'] = child-node;
-        // e.g. this['www:8080'] = child-node;
-    }
-    g_kd = new DNode();
-    g_pd = new DNode();
+    function DNode (){}
+    function newDNode () {return new DNode();}
     
     /** Class DupeRecs Record Collection
      *  Manages duplicate records according to record-type rules.
@@ -223,21 +209,17 @@
             }
             r = recs[ki=recKey(rec)];
             if (r) {
-                r.insertVal(rec);
+                r.insert(rec);
             }
             else {
-                recs[ki] = constructDupeVals(rec);
-                //if (rec.date > r.date) {
-                //    recs[ki].curr = rec;
-                //}
-                //recs[ki].all.push(rec);
+                (recs[ki] = newActions()).insert(rec);
             }
         }
         else 
         {   // continue walking down the trie
             var n = this[k];
             if (!n) {
-                this[k] = (n = new DNode());
+                this[k] = (n = newDNode());
             }
             
             return n; // Non-recursive
@@ -366,25 +348,7 @@
             //}
         }
     };
-    /**
-     * Returns dt_eRecord and dt_pRecord records that best match urli.
-     */
-    function getRecs(urli) 
-    {
-        var kdb, pdb, r;
-        r = {};
-        r[tag_eRecs] = g_kd.findERecs(urli);
-        urli.rwnd();
-        r[tag_pRecs] = g_pd.findPRecs(urli);
-
-        // testing
-        r[tag_pRecs] = {'sumeet@singhonline.info':'divya1'};
-        return r;
-    }
     /** @end-class-def **/
-
-
-
 
     /**
      * @constructor
@@ -402,19 +366,40 @@
         Object.freeze(rec);
         Object.freeze(this);
     }
+    /** @end-class-def **/
 
-    function onRequest (rq, sender, funcSendResponse)
+    g_kd = newDNode();
+    g_pd = newDNode();
+    
+    /**
+     * Returns dt_eRecord and dt_pRecord records that best match urli.
+     */
+    function getRecs(urli)
+    {
+        var kdb, pdb, r;
+        r = {};
+        r[tag_eRecs] = g_kd.findERecs(urli);
+        urli.rwnd();
+        r[tag_pRecs] = g_pd.findPRecs(urli);
+
+        return r;
+    }
+
+    function onRequest(rq, sender, funcSendResponse)
     {
         console.info("Mothership Received object of type " + rq.dt);
-        switch (rq.dt)
-        {
+        switch (rq.dt) {
             case dt_eRecord:
                 g_kd.insert(new DRecord(rq));
-                funcSendResponse({ack: true});
+                funcSendResponse({
+                    ack : true
+                });
                 break;
             case dt_pRecord:
                 g_pd.insert(new DRecord(rq));
-                funcSendResponse({ack: true});
+                funcSendResponse({
+                    ack : true
+                });
                 break;
             case cm_getRecs:
                 var urli = new Iterator(newUrla(rq.loc));
@@ -423,7 +408,8 @@
                 break;
         }
     }
-    
+
     initScaffolding(doc);
-    registerMsgListener(onRequest);
+    registerMsgListener(onRequest); 
+
 })(document);
