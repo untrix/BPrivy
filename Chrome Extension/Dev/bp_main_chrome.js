@@ -10,12 +10,13 @@
 /*jslint browser : true, devel : true, es5 : true */
 /*properties console.info, console.log, console.warn */
 
-"use strict";
 /**
  * @ModuleBegin GoogleChrome
  */
-function com_bprivy_GetModule_MainPlatform()
+var  MOD_MAIN_PLAT = (function() 
 {
+    "use strict"; //TODO: Remove this from prod. build
+    
     var g = {contextMenuID: null};
 
     function bpClick(tab)
@@ -61,4 +62,4 @@ function com_bprivy_GetModule_MainPlatform()
     
     Object.seal(module);
     return module;
-}
+})();

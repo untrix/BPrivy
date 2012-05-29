@@ -5,11 +5,12 @@
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 /* Global declaration for JSLint */
-/*global document */
+/*global document IMPORT */
 
-/** @remove Only used in debug builds */
-"use strict"; // TODO: @remove Only used in debug builds
-function com_bprivy_GetModule_Common () {
+var MOD_COMMON = (function() 
+{
+    "use strict"; // TODO: @remove Only used in debug builds
+    
     /** @globals-begin */      
     var CSS_HIDDEN = "com-bprivy-hidden";
     /** 
@@ -42,32 +43,31 @@ function com_bprivy_GetModule_Common () {
      * characters are being used because they are excluded in rfc 3986.
      */
     //var tag_pRecs = "{P-REC}";
-    var uid_aliases = ['username', 'userid','user','signon','loginid', 'logonid'];
+    var uid_aliases = ['username', 'userid','user', 'id', 'signon','loginid', 'logonid'];
     var pass_aliases = ['password', 'passphrase', 'credentials'];
-    var url_aliases = ['url', 'location', 'href', 'src'];
-      
+    var url_aliases = ['url', 'location', 'href', 'src', 'formSubmitURL'];
+    /** @constant */
+    var PROTO_HTTP = "http:";
+    /** @constant */
+    var PROTO_HTTPS = "https:";
+    /** Global url regexpression used for all invocations of parseURL. Remember that lastIndex prop. and flags are shared ! */
+    var g_url_regexp = /^(?:([A-Za-z]+):)(\/\/)?([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
     /** @globals-end **/
-    function bp_throw (str) {
-        throw str;
-    }
-    
+   
+   
     function toJson(o)
     {
         return JSON.stringify(o, null, 2);
     }
     
-  
-  // interface HTMLAnchorElement : HTMLElement {
-  // stringifier attribute DOMString href;
-           // attribute DOMString target;
-           // attribute DOMString rel;
-  // readonly attribute DOMTokenList relList;
-           // attribute DOMString media;
-           // attribute DOMString hreflang;
-           // attribute DOMString type;
-// 
-           // attribute DOMString text;
-// 
+    function isValidLocation(loc) // TODO: Incorporate this into a URL class.
+    {
+        return (loc && 
+                (typeof loc.protocol=== "string") && (loc.protocol.length > 0) &&
+                (typeof loc.hostname === "string") && (loc.hostname.length > 0) &&
+                (typeof loc.pathname === "string") && (loc.pathname.length > 0));
+    }
+
   // // URL decomposition IDL attributes
            // attribute DOMString protocol;
            // attribute DOMString host;
@@ -77,9 +77,35 @@ function com_bprivy_GetModule_Common () {
            // attribute DOMString search;
            // attribute DOMString hash;
     // Parses URL into components as in the Location object.
-    function parseURL(url)
+    function parseURL(url) // TODO: Incorporate this into URL class
     {
-        // Create an HTMLElement and make the browser parse the URL for us!
+        var segs = g_url_regexp.exec(url);
+
+        if (segs) 
+        {
+            var loc = {};
+            //['url', 'scheme', 'slash', 'host', 'port', 'path', 'query', 'hash']
+            if (segs[1]) { loc.protocol = segs[1] + ":";} // ':' is appended in order to stay consistent with Google Chrome
+            if (segs[3]) { loc.hostname = segs[3];}
+            if (segs[4]) { loc.port = segs[4];}
+            if (segs[5]) { loc.pathname = segs[5];}
+            if (segs[6]) { loc.search = segs[6];}
+            if (segs[7]) { loc.hash = segs[7];}
+            
+            if (loc.protocol && loc.hostname) {
+                // Browsers tack-on a '/' in case it is missing so we need to be consistent for URL-comparison purposes.
+                if (!loc.pathname) {loc.pathname = "/";}
+                return loc;
+            }
+            else {return;} // Without protocol, hostname and pathname we deem this string a non-URL for our purposes.
+        }
+    }
+    
+    function parseURL2(url)
+    {
+        // Create an HTMLElement and make the browser parse the URL for us! Unfortunately
+        // it creates its own scheme and hostname if one is missing. Not good ! Hence use
+        // the regexp based implementation above until I can sort this out.
         var el = document.createElement('a');
         el.href = url;
         var loc = {};
@@ -93,20 +119,32 @@ function com_bprivy_GetModule_Common () {
         return loc;
     }
     
+    function stripQuotes(s)
+    {
+        var a = s.match(/^[\s\"\']*([^\s\"\']*)[\s\"\']*$/);
+        if (a) {return a[1];}
+    }
+       
     var iface = {};
     Object.defineProperties(iface, 
     {
         CSS_HIDDEN: {value: CSS_HIDDEN},
         dt_eRecord: {value: dt_eRecord},
         dt_pRecord: {value: dt_pRecord},
-        bp_throw: {value: bp_throw},
+        PROTO_HTTP: {value: PROTO_HTTP},
+        PROTO_HTTPS: {value: PROTO_HTTPS},
+        uid_aliases: {value: uid_aliases},
+        pass_aliases: {value: pass_aliases},
+        url_aliases: {value: url_aliases},
         toJson: {value: toJson},
-        parseURL: {value: parseURL}
+        parseURL: {value: parseURL},
+        isValidLocation: {value: isValidLocation},
+        stripQuotes: {value: stripQuotes}
     });
     Object.freeze(iface);
 
     return iface;
-    
+        
     // Function.prototype.defineMethod = function (name, value)
     // {
         // this.prototype[name] = value;
@@ -129,4 +167,4 @@ function com_bprivy_GetModule_Common () {
     // };
     
     //Object.defineProperty(Object.prototype, "bp_common_clone", {value: bp_common_clone, writable: false, enumerable: false, configurable: false});
-}
+})();

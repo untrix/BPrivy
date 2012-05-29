@@ -67,7 +67,8 @@ namespace bp
 	// Unmapped System Code
 	extern const std::string ACODE_UNMAPPED;
 
-	// Second level codes for providing more information.
+	// Second level codes for providing more information. These manifest as generic-code ('gcd')
+	// in the error object ('err') returned to javascript.
 	extern const std::string BPCODE_NEW_FILE_CREATED;// Informational. New File was created.
 	extern const std::string BPCODE_NO_MEM;//Could not allocate memory
 	extern const std::string BPCODE_ASSERT_FAILED;//Logic Error
@@ -144,5 +145,6 @@ namespace bp
 #define ASSERT(b) CHECK(b)
 
 } // end namespace bp
-
+// Didn't have time to put everything into namespace bp
+void ThrowLastSystemError(const boost::filesystem::path& pth);
 #endif // H_BP_ErrorHandling

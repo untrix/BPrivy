@@ -329,7 +329,8 @@ bool BPrivyAPI::createDir(const std::string& s_path, FB::JSObjectPtr p)
 
 		bfs::path path(s_path);
 
-		bfs::create_directory(path);
+		if (!bfs::create_directory(path)) {ThrowLastSystemError(path);}
+
 		bfs::permissions(path, bfs::others_read | bfs::others_write);
 
 		return true;

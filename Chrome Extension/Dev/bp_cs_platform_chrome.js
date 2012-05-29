@@ -10,12 +10,13 @@
 /*jslint browser : true, devel : true, es5 : true */
 /*properties console.info, console.log, console.warn */
 
-"use strict";
 /**
- * @ModuleBegin GoogleChrome
+ * @ModuleBegin GoogleChrome Platform
  */
-function com_bprivy_GetModule_CSPlatform()
+var MOD_CS_PLAT = (function() 
 {
+    "use strict"; //TODO: Remove this from prod. build
+    
     var module =
     {
         postMsgToMothership: function (o)
@@ -38,8 +39,13 @@ function com_bprivy_GetModule_CSPlatform()
         registerMsgListener: function(foo)
         {
             chrome.extension.onRequest.addListener(foo);
+        },
+        
+        getURL: function(path)
+        {
+            return chrome.extension.getURL(path);
         }
     };
     
     return module;
-}
+})();

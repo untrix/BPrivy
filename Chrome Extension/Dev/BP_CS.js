@@ -5,7 +5,7 @@
  * @mail sumeet@untrix.com
  */
 /* JSLint directives */
-/*global $, console, window, com_bprivy_GetModule_Connector, com_bprivy_GetModule_CSPlatform, com_bprivy_GetModule_Common */
+/*global $, console, window, MOD_CONNECT, MOD_CS_PLAT, MOD_COMMON, IMPORT */
 /*jslint browser : true, devel : true, es5 : true */
 /*properties console.info, console.log, console.warn */
 /*properties 
@@ -22,27 +22,29 @@
  */
 function com_bprivy_CS(g_win) 
 {
-    /** @import-module-begin Connector */
-    var m = com_bprivy_GetModule_Connector();
-    var ft_userid = m.ft_userid;   // Represents data-type userid
-    var ft_pass = m.ft_pass;        // Represents data-type password
-    var dt_eRecord = m.dt_eRecord;
-    var dt_pRecord = m.dt_pRecord;
-    var newERecord = m.newERecord;
-    var newPRecord = m.newPRecord;
-    var saveRecord = m.saveRecord;
-    var deleteRecord = m.deleteRecord;
-    var getDB = m.getDB;
-    var tag_eRecs = m.DNODE_TAG.getRecTag(dt_eRecord);
-    var tag_pRecs = m.DNODE_TAG.getRecTag(dt_pRecord);
-    /** @import-module-begin CSPlatform */
-    m = com_bprivy_GetModule_CSPlatform();
-    var registerMsgListener = m.registerMsgListener;
-    var getURL = m.getURL;
+    "use strict"; // TODO: @remove Only used in debug builds
+    
+    var m;
     /** @import-module-begin Common */
-    m = com_bprivy_GetModule_Common();
-    var css_hidden = m.css_hidden;
-    var newDNode = m.newDNode;
+    m = MOD_COMMON;
+    var CSS_HIDDEN = IMPORT(m.CSS_HIDDEN);
+    var dt_eRecord = IMPORT(m.dt_eRecord);
+    var dt_pRecord = IMPORT(m.dt_pRecord);
+    /** @import-module-begin Connector */
+    m = MOD_CONNECT;
+    var ft_userid = IMPORT(m.ft_userid);   // Represents data-type userid
+    var ft_pass = IMPORT(m.ft_pass);        // Represents data-type password
+    var newERecord = IMPORT(m.newERecord);
+    var newPRecord = IMPORT(m.newPRecord);
+    var saveRecord = IMPORT(m.saveRecord);
+    var deleteRecord = IMPORT(m.deleteRecord);
+    var getRecs = IMPORT(m.getRecs);
+    var tag_eRecs = IMPORT(m.DNODE_TAG.getDataTag(dt_eRecord));
+    var tag_pRecs = IMPORT(m.DNODE_TAG.getDataTag(dt_pRecord));
+    /** @import-module-begin CSPlatform */
+    m = MOD_CS_PLAT;
+    var registerMsgListener = IMPORT(m.registerMsgListener);
+    var getURL = IMPORT(m.getURL);
     /** @import-module-end */    m = null;
     
     /** @globals-begin */
@@ -376,11 +378,13 @@ function com_bprivy_CS(g_win)
 	            pRec.loc = g_loc;
 	            pRec.userid = u;
 	            pRec.pass = p;
-	            g_db[tag_pRecs][u].insert(pRec);
+                // Can't update locally because we only have one DNode locally and
+                // that may not be the right one to insert the record into.
 	            saveRecord(pRec);
 	            if (uo !== u) {
-	                // delete the original p-record.
-	                g_db[tag_pRecs][u].remove(uo);//TODO: Implement this. Should update g_db.
+	                // delete the original p-record. Goes to the mothership.
+	                // Can't update locally because we only have one DNode locally and
+	                // that may not be the right one to insert the record into.
 	                deleteRecord({loc: g_loc, userid: uo});
 	            }
 	        }
@@ -427,16 +431,16 @@ function com_bprivy_CS(g_win)
 	
 	function insertIOItems()
     {
-        var pRecs, i, nma;
-        if (!(pRecs = g_db[tag_pRecs])) {
+        var pRecsMap, i, nma;
+        if (!(pRecsMap = g_db[tag_pRecs])) {
             return;
         }
         else {
-            nma = Object.getOwnPropertyNames(pRecs);
+            nma = Object.getOwnPropertyNames(pRecsMap);
         }
         
         for (i=0; i<nma.length; i++) {
-            insertIOItem(nma[i], pRecs[nma[i]]);
+            insertIOItem(nma[i], pRecsMap[nma[i]]);
         }
     } 
     
@@ -520,28 +524,28 @@ function com_bprivy_CS(g_win)
     
     function autoFill()
     {
-        var eRecs, pRecs, uer, per, ua, u, p, j, i, l, uDone, pDone;
+        var eRecsMap, pRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone;
         // auto-fill
         // if we don't have a stored username/password, then there is nothing
-        // to autofill. 
-        if (!(pRecs = g_db[tag_pRecs])) {
+        // to autofill.
+        if (!(pRecsMap = g_db.pRecsMap)) {
             return;
         }
         else {
-            ua = Object.getOwnPropertyNames(pRecs); 
+            ua = Object.getOwnPropertyNames(pRecsMap); 
             // if there is more than one username, do not autofill
             if (ua && (ua.length !== 1)) {
                 return;
             }
-            else if (g_db[tag_eRecs]) {
+            else if (g_db.eMapArray) {
                 // Cycle through tag_eRecs records starting with the
                 // best URL matching node.
-                l = g_db[tag_eRecs].length; uDone=false; pDone=false;
+                l = g_db.eMapArray.length; uDone=false; pDone=false;
                 for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
-                    eRecs = g_db[tag_eRecs].pop();
+                    eRecsMap = g_db.eMapArray.pop();
                     
-                    uer = eRecs[ft_userid];
-                    per = eRecs[ft_pass];
+                    uer = eRecsMap[ft_userid].curr;
+                    per = eRecsMap[ft_pass].curr;
                     if ((!uDone) && uer) {
                         u = ua[0];
                         uDone = autoFillEl(uer, u);
@@ -558,7 +562,7 @@ function com_bprivy_CS(g_win)
                         }
                     }
                     if ((!pDone) && per) {
-                        p = pRecs[ua[0]].curr.pass;
+                        p = pRecsMap[ua[0]].curr.pass;
                         pDone = autoFillEl(per, p, true);
                         if (!pDone && (i===0)) {
                             // The data in the E-Record was an exact URL match
@@ -605,7 +609,7 @@ function com_bprivy_CS(g_win)
      */
     function callbackGetDB (db)
     {
-        g_db = newDNode(db);
+        g_db = db;
         
         console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(g_db));
         if ((!autoFill()) && settings.ShowPanelIfMultipleLogins) {
@@ -625,7 +629,7 @@ function com_bprivy_CS(g_win)
 		{
 			console.log("BP_CS entered on page " + location.href);
 			//createPanel(g_win);
-            getDB(g_loc, callbackGetDB);
+            getRecs(g_loc, callbackGetDB);
 			registerMsgListener(clickBP);
             setupDNDWatchers(g_win);
 
@@ -633,7 +637,7 @@ function com_bprivy_CS(g_win)
 			// experimentation
 /*			var el = g_doc.createElement('com-bprivy-data');
 			el.setAttribute('id', 'com.facebook.www1/login.asp?b=a&x=y#abc');
-			$(el).prop("hidden", true).addClass(css_hidden);
+			$(el).prop("hidden", true).addClass(CSS_HIDDEN);
 			$(el).appendTo(g_doc.body);*/
 		}
 	}
@@ -711,7 +715,7 @@ com_bprivy_CS(window)();
                                                          // accesskey: 'p',
                                                          // hidden: 'hidden',
                                                          // 'for': eid_panel,
-                                                         // 'class': css_hidden
+                                                         // 'class': CSS_HIDDEN
                                                      // }).appendTo(doc.body);
 //                                                      
         // l_btn.addEventListener("click", function (e){console.info("click"); j_panel.toggle();});

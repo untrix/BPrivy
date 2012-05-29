@@ -16,28 +16,28 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Chrome Extension</name>
+			<name>Dev</name>
 			<type>2</type>
-			<location>C:/Dev/BPrivy/Chrome Extension</location>
+			<location>C:/Dev/BPrivy/Chrome Extension/Dev</location>
 		</link>
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1337816973985</id>
-			<name>Chrome Extension</name>
-			<type>22</type>
+			<id>1337977074772</id>
+			<name>Dev</name>
+			<type>29</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-jquery*.js</arguments>
+				<arguments>1.0-name-matches-false-false-bp*</arguments>
 			</matcher>
 		</filter>
 		<filter>
-			<id>1337816973987</id>
-			<name>Chrome Extension</name>
-			<type>6</type>
+			<id>1337977074775</id>
+			<name>Dev</name>
+			<type>5</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-mobile.html</arguments>
+				<arguments>1.0-name-matches-false-false-manifest*</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>

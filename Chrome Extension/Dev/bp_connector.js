@@ -6,16 +6,30 @@
  */
 
 /* Global declaration for JSLint */
-/*global document com_bprivy_GetModule_CSPlatform*/
+/*global document MOD_CS_PLAT MOD_COMMON IMPORT*/
 /*jslint browser:true, devel:true */
+//*members */
 /** @remove Only used in debug builds */
-"use strict";
 
 /**
  * @ModuleBegin Connector
  */
 
-function com_bprivy_GetModule_Connector() {
+var MOD_CONNECT = (function ()
+{
+    "use strict"; // TODO: @remove Only used in debug builds
+    
+    /** @import-module-begin CSPlatform **/
+    var m = MOD_CS_PLAT;
+    var postMsgToMothership = IMPORT(m.postMsgToMothership);
+    var rpcToMothership = IMPORT(m.rpcToMothership);
+    /** @import-module-begin Common **/
+    m = MOD_COMMON; 
+    var dt_eRecord = IMPORT(m.dt_eRecord);
+    var dt_pRecord = IMPORT(m.dt_pRecord);
+    var isValidLocation = IMPORT(m.isValidLocation);
+    /** @import-module-end **/    m = null;
+    
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
     /** @constant */
@@ -24,10 +38,6 @@ function com_bprivy_GetModule_Connector() {
     var ft_pass = "ft_pass";       // Represents field-type password
     /** @constant */
     var cm_getRecs = "cm_getRecs";     // Represents a getDB command
-    /** @constant */
-    var PROTO_HTTP = "http:";
-    /** @constant */
-    var PROTO_HTTPS = "https:";
     var DNODE_TAG = {};
     Object.defineProperties(DNODE_TAG,
         {
@@ -37,7 +47,7 @@ function com_bprivy_GetModule_Connector() {
             DOMAIN: {value:"{d}", writable:false, configurable:false},
             PORT: {value:"{o}", writable:false, configurable:false},
             PATH: {value:"{p}", writable:false, configurable:false},
-            getRecTag: {value: function (dt) {
+            getDataTag: {value: function (dt) {
                 // tag is a property name that should never clash withe a URL
                 // segment. Hence the bracket
                 // characters are being used because they are excluded in rfc
@@ -48,33 +58,42 @@ function com_bprivy_GetModule_Connector() {
             }, writable:false, configurable:false}
         }
     );
-    /** @import-module-begin CSPlatform **/
-    var m = com_bprivy_GetModule_CSPlatform();
-    var postMsgToMothership = m.postMsgToMothership;
-    var rpcToMothership = m.rpcToMothership;
-    /** @import-module-begin Common **/
-    var dt_eRecord = m.dt_eRecord;
-    var dt_pRecord = m.dt_pRecord;
-    /** @import-module-end **/    m = null;
-        
-    function ERecord() 
+    
+    /** Pseudo Inheritance */
+    function inheritARec(that, type, loc, date)
     {
-        var descriptor = {writable: true, enumerable: true, configurable: true};
+        Object.defineProperties(that,
+        {
+            //Record Type. Determines which dictionary this record belongs to.
+            dt: {value: type, writable: false, enumerable: true, configurable: false},
+            date: {value: date?date:Date.now(), writable: false, enumerable: true, configurable: false},
+            // URL that this record pertains to. Determines where the record will sit within the URL-trie.
+            loc: {writable: true, enumerable: true, configurable: false}
+        });
+    }
+    
+    function isValidARec(that)
+    {
+        if (that  && 
+                (typeof that.dt === "string") &&
+                (typeof that.date === "number") &&
+                isValidLocation(that.loc))
+            { return true;}
+        else {return false;}
+    }
+    function ERecord()
+    {
+        inheritARec(this, dt_eRecord);
         var descriptor2 = {writable: true, enumerable: true, configurable: false};
         Object.defineProperties(this, 
         {
-            //Record Type. Determines which dictionary this record belongs to.
-            dt: {value: dt_eRecord, writable: false, enumerable: true, configurable: false},
-            date: {value: Date.now(), writable: false, enumerable: true, configurable: false},
-            
-            loc: descriptor, // URL that this record pertains to. Determines where the record will sit within the URL-trie.
             fieldType: descriptor2,
             tagName: descriptor2,
             id: descriptor2,
             name: descriptor2,
             type: descriptor2
         });
-        Object.preventExtensions(this);
+        Object.seal(this);
     }
     ERecord.prototype.toJson = function ()
     {
@@ -86,17 +105,22 @@ function com_bprivy_GetModule_Connector() {
 
     function PRecord()
     {
+        inheritARec(this, dt_pRecord);
         Object.defineProperties(this,
             {
-                dt: {value: dt_pRecord, writable: false, enumerable: true, configurable: false},
-                date: {value: Date.now(), writable: false, enumerable: true, configurable: false},
-                loc: {writable: true, enumerable: true, configurable: true},
                 userid: {writable: true, enumerable: true, configurable: false},
                 pass: {writable: true, enumerable: true, configurable: false}
             }
         );
-        Object.preventExtensions(this);
+        Object.seal(this);
     }
+    PRecord.prototype.isValid = function()
+    {
+        return (isValidARec(this) && 
+                (typeof this.userid === "string") &&
+                (typeof this.pass === "string"));
+    };
+    
     function newPRecord()
     {
         return new PRecord();
@@ -110,28 +134,35 @@ function com_bprivy_GetModule_Connector() {
      */
     /** Constructor.
      * Acts as default constructor with no argument.
-     * With an argument, it expects an Object object created by JSON.parse.
+     * For an argument, it expects an Action Record or an Object object created from a
+     * JSON serialized Action Record.
      * In that case it behaves as a Move Constructor. That is, it adopts the
-     * properties of the parameter and deletes them from the argument.
+     * properties of the argument and deletes them from the argument.
      */
     function Actions(jo)
     {
-        Object.defineProperties(this,
-            {
-                curr: {value: undefined},
-                arecs: {value: []}
-            }
-        );
-        Object.seal(this);
-        if (jo) {
-            this.arecs = jo.arecs;
-            this.curr = jo.curr;
-            delete jo.arecs; delete jo.curr;
+        if (jo)
+        {
+            Object.defineProperties(this,
+                {
+                    curr: {value: jo.curr, writable: true},
+                    arecs: {value: jo.arecs}
+                }
+            );
         }
+        else {
+            Object.defineProperties(this,
+                {
+                    curr: {value: undefined, writable: true},
+                    arecs: {value: []}
+                }
+            );
+        }
+        Object.seal(this);
     }
     /** Method. Insert a record into the Action Records collection */
     Actions.prototype.insert = function(arec)
-    {
+    {//TODO: Check for exact duplicate records. That is, records with matching timestamp and values.
         if (!arec.date) { arec.date = Date.now();}
         var n = this.arecs.push(arec);
         if ((!this.curr) || (this.curr.date < arec.date)) {
@@ -144,86 +175,6 @@ function com_bprivy_GetModule_Connector() {
     }
     /** @end-class-defn **/
 
-    /** 
-     * Dissects document.location into URL segment array suitable for
-     * insertion into a DNode. Discards URL-scheme, query and fragment
-     * values as those are deemed irrelevant for our purpose.
-     */
-    function newUrla (l)
-    {
-        var ha, pa, qa, pr, pn, urla = [], i, s;
-
-        // Split hostname into an array of strings.
-        ha = l.hostname.split('.');
-        ha.reverse();
-        
-        // Split pathname into path segments.
-        // First remove leading slashes
-        s = l.pathname.replace(/^\/+/,'');
-        // Now split into an array of strings.
-        pa = s.split('/');
-
-        qa = l.search.split('&');
-        if (l.protocol) {
-            pr = l.protocol.toLowerCase();
-        }
-        
-        if (l.port) {
-            i = Number(l.port);
-            switch(pr) {
-                case PROTO_HTTP:
-                    if(i !== 80) {pn = i;}
-                break;
-                case PROTO_HTTPS:
-                    if(i !== 443) {pn = i;}
-                break;
-                default:
-                    pn = i;
-            }
-        }
-        
-        // Construct the url segment array
-                // if (pr) {
-            // switch(pr) {
-               // case PROTO_HTTP:
-                    // urla.push('{s}http');
-                    // break;
-                // case PROTO_HTTPS:
-                    // urla.push('{s}https');
-                    // break;
-                // default:
-                    // urla.push('{s}' + pr);           
-            // }
-        // }
-
-        if (ha) {
-            for (i=0; i<ha.length; i++) {
-                if (i===0) {
-                    // Top-Level Domain. Doesn't account for TLDs like 'co.in' though.
-                    urla.push(DNODE_TAG.TLD + ha[i].toLowerCase());
-                }
-                else if (i === (ha.length-1)) {
-                    // Host name
-                    urla.push(DNODE_TAG.HOST + ha[i].toLowerCase());
-                }
-                else {
-                    // Second level domain
-                    urla.push(DNODE_TAG.DOMAIN + ha[i].toLowerCase());
-                }
-            }
-        }
-        if (pn) {urla.push(DNODE_TAG.PORT + pn);} // Port Number
-        if (pa) { // Path
-            for (i=0; i<pa.length; i++) {
-                if (pa[i] !== '') {
-                    urla.push(DNODE_TAG.PATH + pa[i]);
-                }
-            }
-        }
-        
-        return urla;
-    }
-    
     /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
@@ -266,7 +217,6 @@ function com_bprivy_GetModule_Connector() {
             newPRecord: {value: newPRecord},
             newActions: {value: newActions},
             getRecs: {value: getRecs},
-            newUrla: {value: newUrla},
             recKey: {value: recKey}
         });
         Object.freeze(iface);
@@ -276,5 +226,5 @@ function com_bprivy_GetModule_Connector() {
     
     var bp_Connector = getModuleInterface();
 
-return bp_Connector;}
+return bp_Connector;})();
 /** @ModuleEnd */

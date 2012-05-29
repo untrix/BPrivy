@@ -20,36 +20,40 @@ namespace bs = boost::system;
 typedef FB::VariantMap::value_type	VT;
 namespace bp
 {
-	const std::string PROP_SYSTEM_MESSAGE		("smg");
-	const std::string PROP_GENERIC_MESSAGE		("gmg");
-	const std::string PROP_SYSTEM_CODE			("scd");
-	const std::string PROP_GENERIC_CODE			("gcd");
-	const std::string PROP_A_CODE				("acd");
+	// Error properties (names) returned to javascript. These represent an interface
+	// with javascript and therefore are unchangeable.
 	const std::string PROP_ERROR				("err");
+	const std::string PROP_SYSTEM_MESSAGE		("smsg");
+	const std::string PROP_GENERIC_MESSAGE		("gmsg");
+	const std::string PROP_SYSTEM_CODE			("scode");
+	const std::string PROP_GENERIC_CODE			("gcode");
+	const std::string PROP_A_CODE				("acode");
+	const std::string PROP_PATH					("path");
+	const std::string PROP_PATH2				("path2");
+
 	const std::string PROP_INFO					("inf");
 	const std::string PROP_LSDIR				("lsd");
 	const std::string PROP_FILESTAT				("lsf");
 	const std::string PROP_READFILE				("rdf");
-	const std::string PROP_PATH					("pth");
-	const std::string PROP_PATH2				("pth2");
 	const std::string PROP_FILENAME				("fnm");
 	const std::string PROP_FILEEXT				("ext");
 	const std::string PROP_FILESTEM				("stm");
 	const std::string PROP_FILESIZE				("siz");
 	const std::string PROP_DATA					("dat");
 
-	const std::string BPCODE_NEW_FILE_CREATED	("NewFileCreated");
-	const std::string BPCODE_NO_MEM				("NoMem");
-	const std::string BPCODE_ASSERT_FAILED		("AssertFailed");
 	const std::string ACODE_UNMAPPED			("Unmapped");
 	const std::string ACODE_CANT_PROCEED		("CantProceed");
 	const std::string ACODE_AUTORETRY			("AutoRetry");
-	const std::string ACODE_RESOURCE_UNAVAILABLE("UserToResolve");
+	const std::string ACODE_RESOURCE_UNAVAILABLE("ResourceUnavailable");
 	const std::string ACODE_INVALID_PATHNAME	("InvalidPathname");
-	const std::string BPCODE_PATH_EXISTS		("PathAlreadyExists");
 	const std::string ACODE_BAD_PATH_ARGUMENT	("BadPathArgument");
 	const std::string ACODE_RESOURCE_LOCKED		("ResourceLocked");
 	const std::string ACODE_ACCESS_DENIED		("AccessDenied");
+
+	const std::string BPCODE_NEW_FILE_CREATED	("NewFileCreated");
+	const std::string BPCODE_NO_MEM				("NoMem");
+	const std::string BPCODE_ASSERT_FAILED		("AssertFailed");
+	const std::string BPCODE_PATH_EXISTS		("PathAlreadyExists");
 	const std::string BPCODE_WRONG_FILETYPE		("WrongFileType");
 	const std::string BPCODE_REPARSE_POINT		("PathIsReparsePoint");
 	const std::string BPCODE_IS_SYMLINK			("PathIsSymlink");
