@@ -23,7 +23,7 @@
     m = MOD_CONNECT;
     var cm_getRecs = IMPORT(m.cm_getRecs);
     var cm_loadDB = IMPORT(m.cm_loadDB);
-    var cm_createDB = IMPORT(m.createDB);
+    var cm_createDB = IMPORT(m.cm_createDB);
     /** @import-module-begin COMMON */
     m = MOD_COMMON;
     var dt_eRecord = IMPORT(m.dt_eRecord);

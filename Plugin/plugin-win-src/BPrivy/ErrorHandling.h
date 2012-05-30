@@ -69,6 +69,7 @@ namespace bp
 
 	// Second level codes for providing more information. These manifest as generic-code ('gcd')
 	// in the error object ('err') returned to javascript.
+	extern const std::string BPCODE_UNAUTHORIZED_CLIENT;// Unauthorized client trying to access the API.
 	extern const std::string BPCODE_NEW_FILE_CREATED;// Informational. New File was created.
 	extern const std::string BPCODE_NO_MEM;//Could not allocate memory
 	extern const std::string BPCODE_ASSERT_FAILED;//Logic Error
@@ -117,7 +118,7 @@ namespace bp
 	struct BPError
 	{
 		BPError(const string& ac) : acode(ac) {}
-		BPError(const string& ac, const string& pc) : acode(ac), gcode(pc) {}
+		BPError(const string& ac, const string& gc) : acode(ac), gcode(gc) {}
 		BPError(const string& ac, const string& gc, const string& pth)
 			: acode(ac), gcode(gc), path(pth) {}
 		string acode;

@@ -38,6 +38,8 @@ var MOD_CONNECT = (function ()
     var ft_pass = "ft_pass";       // Represents field-type password
     /** @constant */
     var cm_getRecs = "cm_getRecs";     // Represents a getDB command
+    var cm_loadDB = "cm_loadDB";
+    var cm_createDB = "cm_createDB";
     var DNODE_TAG = {};
     Object.defineProperties(DNODE_TAG,
         {
@@ -185,7 +187,7 @@ var MOD_CONNECT = (function ()
         
         var deleteRecord = function (erec)
         {
-            console.warning('Deleting Record ' + JSON.stringify(erec));
+            console.log('Deleting Record ' + JSON.stringify(erec));
         };
         
         var getRecs = function(loc, callback)
@@ -210,6 +212,8 @@ var MOD_CONNECT = (function ()
             ft_userid: {value: ft_userid},
             ft_pass: {value: ft_pass},
             cm_getRecs: {value: cm_getRecs},
+            cm_loadDB: {value: cm_loadDB},
+            cm_createDB: {value: cm_createDB},
             DNODE_TAG: {value: DNODE_TAG},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
@@ -224,7 +228,7 @@ var MOD_CONNECT = (function ()
         return iface;
     }
     
-    var bp_Connector = getModuleInterface();
+    return getModuleInterface();
 
-return bp_Connector;})();
+})();
 /** @ModuleEnd */

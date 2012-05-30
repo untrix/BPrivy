@@ -192,6 +192,12 @@ bfs::file_status& ResolveSymlinks(bfs::path& p, bfs::file_status& s)
 	return s;
 }
 
+void securityCheck(const bfs::path& path)
+{
+	static const std::string ext[] = {".3ab", ".3ad", ".3ao", ".3ac", ".3am"};
+
+}
+
 bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 {
 	try 
@@ -328,6 +334,7 @@ bool BPrivyAPI::createDir(const std::string& s_path, FB::JSObjectPtr p)
 		CONSOLE_LOG("In createDir");
 
 		bfs::path path(s_path);
+		securityCheck(path);
 
 		if (!bfs::create_directory(path)) {ThrowLastSystemError(path);}
 
@@ -346,6 +353,8 @@ bool BPrivyAPI::rm(const std::string& s_path, FB::JSObjectPtr p)
 		CONSOLE_LOG("In rmDir");
 
 		bfs::path path(s_path);
+		securityCheck(path);
+
 		bfs::file_status stat = bfs::symlink_status(path);
 
 		if (!bfs::exists(stat))
@@ -388,6 +397,9 @@ BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObje
 		CONSOLE_LOG("In rename");
 
 		bfs::path n_path(new_p);
+		bfs::path o_path(old_p);
+		securityCheck(n_path, o_path);
+
 		bfs::file_status n_stat = bfs::symlink_status(n_path);
 
 		bool clob = o_clob.get_value_or(false);
@@ -397,7 +409,7 @@ BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObje
 			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WOULD_CLOBBER);
 		}
 
-		bfs::path o_path(old_p);
+
 		bfs::file_status o_stat = bfs::symlink_status(o_path);
 		if (!bfs::exists(o_stat))
 		{
@@ -437,10 +449,12 @@ BPrivyAPI::copy(const std::string& old_p, const std::string& new_p, FB::JSObject
 		CONSOLE_LOG("In copy");
 
 		bfs::path n_path(new_p);
-		bfs::file_status n_stat = bfs::symlink_status(n_path);
-
 		bfs::path o_path(old_p);
+		securityCheck(old_p, new_p);
+
+		bfs::file_status n_stat = bfs::symlink_status(n_path);
 		bfs::file_status o_stat = bfs::symlink_status(o_path);
+
 		if (!bfs::exists(o_stat))
 		{
 			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_PATH_NOT_EXIST, o_path.string());

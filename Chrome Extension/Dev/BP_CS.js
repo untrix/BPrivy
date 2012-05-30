@@ -64,22 +64,25 @@ function com_bprivy_CS(g_win)
     var eid_userIElement = "com-bprivy-useridI-"; // ID Prefix used by panel elements
     var eid_passIElement = "com-bprivy-passI-"; // ID Prefix Used by panel elements
 	var eid_inForm = "com-bprivy-iform-";
-	var eid_xButton = "com-bprivy-x"; // ID of the panel close button
+	var eid_tButton = "com-bprivy-tB-"; // ID prefix for IO toggle button
+	var eid_xButton = "com-bprivy-xB"; // ID of the panel close button
 
 	// CSS Class Names. Visible as value of 'class' attribute in HTML
 	// and used as keys in CSS selectors. These need to be globally
 	// unique as well. We need these here in order to ensure they're
 	// globally unique and also as a single location to map to CSS files.
 	var css_panel = "com-bprivy-panel";
-	var css_output ="com-bprivy-out";
+	var css_field ="com-bprivy-field";
 	var css_userOut = "com-bprivy-user-out";
 	var css_userIn = "com-bprivy-user-in";
 	var css_passOut = "com-bprivy-pass-out";
 	var css_passIn = "com-bprivy-pass-in";
 	var css_bButton = "com-bprivy-tb";
-	var css_container = "com-bprivy-li";
-    var css_container2 = "com-bprivy-ul";
-	var css_xButton = "com-bprivy-x";
+	var css_li = "com-bprivy-li";
+    var css_ul = "com-bprivy-ul";
+    var css_io_fields = "com-bprivy-io-fields";
+	var css_xButton = "com-bprivy-xB";
+	var css_tButton = "com-bprivy-tB";
 	
 	// These are 'data' attribute names. If implemented as jQuery data
 	// these won't manifest as HTML content attributes, hence won't
@@ -282,14 +285,14 @@ function com_bprivy_CS(g_win)
             {
                 id: opid
             }
-        ).addClass(css_container);
+        ).addClass(css_io_fields);
 
         var j_opu = $(g_doc.createElement('span')).attr(
             {draggable: true,
              id: ueid,
              name: ueid
              }
-            ).addClass(css_output + " " + css_userOut).text(u);
+            ).addClass(css_field + " " + css_userOut).text(u);
         j_opu.data(pn_d_dataType, ft_userid).data(pn_d_value, u);
 
         var j_opp = $(g_doc.createElement('span')).attr(
@@ -298,13 +301,15 @@ function com_bprivy_CS(g_win)
                 id: peid,
                 name: peid
             }
-            ).addClass(css_output + " " + css_passOut).text("*****");
+            ).addClass(css_field + " " + css_passOut).text("*****");
         j_opp.data(pn_d_dataType, ft_pass).data(pn_d_value, p);
         
         j_div.append(j_opu).append(j_opp);
 
         return j_div[0];
 	}
+	
+	function isValidInput(s) {if (s) {return true;} else {return false;}}
 	
 	/** Creates input fields for the IO Widget **/
 	function createInItem(id, u, p)
@@ -313,21 +318,21 @@ function com_bprivy_CS(g_win)
 	    var ueid = eid_userIElement + id;
 	    var peid = eid_passIElement + id;
 
-        var j_inf = $(g_doc.createElement('form')).attr({id: ifid, 'class': css_container});
+        var j_inf = $(g_doc.createElement('form')).attr({id: ifid, 'class': css_io_fields});
         var j_inu = $(g_doc.createElement('input')).attr(
         {
             type: 'text',
             id: ueid,
             name: ueid,
             value: u
-        }).addClass(css_userIn).data(pn_d_value, u);
+        }).addClass(css_field + " " + css_userIn).data(pn_d_value, u);
         var j_inp = $(g_doc.createElement('input')).attr(
         {
             type: 'password',
             id: peid,
             name: peid,
             value: decrypt(p)
-        }).addClass(css_userIn).data(pn_d_value, p);
+        }).addClass(css_field + " " + css_passIn).data(pn_d_value, p);
 
         j_inf.append(j_inu).append(j_inp);
         
@@ -360,6 +365,7 @@ function com_bprivy_CS(g_win)
 	            $(pe).removeData();
 	           parent.removeChild(op);
 	           parent.appendChild(ifm);
+	           $(e.target).val('s');
 	        }
 	    }
 	    else if (ifm) { // replace input-form with draggable text
@@ -368,6 +374,9 @@ function com_bprivy_CS(g_win)
 	        pe = col[eid_passIElement + id];
 	        var u = ue.value;
 	        var p = encrypt(pe.value);
+	       
+	        if (!isValidInput(ue.value) || !isValidInput(pe.value)) {return false;}
+	        
 	        uo = $(ue).data(pn_d_value);
 	        po = $(pe).data(pn_d_value);
 	        // Check if values have changed. If so, save to DB.
@@ -394,6 +403,7 @@ function com_bprivy_CS(g_win)
 	        if (op) {
 	            //parent.removeChild(ifm);
 	            parent.appendChild(op);// Insert the 'op' item.
+	            $(e.target).val('e');
 	        }
 	        
 	        $(ifm).remove(); // Then remove the 'ifm' item.
@@ -401,14 +411,15 @@ function com_bprivy_CS(g_win)
 	}
 	
 	/** Creates an IO Widget with a Toggle Button and Output Fields **/
-	function insertIOItem (user, pActions)
+	function insertIOItem (user, pass, bInp)
 	{
 	    var jq = $('#' + eid_panelList);
 	    var id = (++g_ioItemID);
 		var opid = eid_opElement + id;
 		var ifid = eid_inForm + id;
+		var tbid = eid_tButton + id;
 		
-		var j_li = $(g_doc.createElement("li")).attr({value: id}).addClass(css_container);
+		var j_li = $(g_doc.createElement("li")).attr({value: id}).addClass(css_li);
         var tb = g_doc.createElement('input'); // Toggle Button
         tb.addEventListener('click', toggleIO, false);
         var j_tb = $(tb).attr(
@@ -416,12 +427,21 @@ function com_bprivy_CS(g_win)
                 'data-opid': opid,
                 'data-ifid': ifid,
                 'data-id': id,
-                type: 'button'
+                'data-tbid': tbid,
+                type: 'button',
+                id: tbid
             }
-        );
+        ).addClass(css_tButton);
 
         j_li.append(j_tb);
-        j_li.append(createOpItem(id, user, pActions.curr.pass)); // Output Fields
+        if (!bInp) {
+            j_tb.val('e'); // e = edit
+            j_li.append(createOpItem(id, user, pass)); 
+        } // Output Fields
+        else {
+            j_tb.val('s'); // s = save
+            j_li.append(createInItem(id, user, pass));
+        }
         jq.append(j_li);
 
 		// Prevent mousedown to bubble up in order to prevent panel dragging by
@@ -432,31 +452,37 @@ function com_bprivy_CS(g_win)
 	function insertIOItems()
     {
         var pRecsMap, i, nma;
-        if (!(pRecsMap = g_db[tag_pRecs])) {
-            return;
-        }
-        else {
+        if ((pRecsMap = g_db[tag_pRecs])) 
+        {
             nma = Object.getOwnPropertyNames(pRecsMap);
-        }
         
-        for (i=0; i<nma.length; i++) {
-            insertIOItem(nma[i], pRecsMap[nma[i]]);
+            for (i=0; i<nma.length; i++) {
+                insertIOItem(nma[i], pRecsMap[nma[i]].curr.pass);
+            }
         }
-    } 
+        // Finally, create one Input Item for new entry.
+        insertIOItem("","", true);
+    }
+    
+    function insertSettingsPanel()
+    {
+        var ml = '<input type="file" accept=".3db" class="com-bprivy-dbPath" placeholder="Insert DB Path Here" ></input>';
+    }
     
     // CREATE THE CONTROL-PANEL
     function createPanel(doc)
     {
         var html =  '<div id="com-bprivy-panel" class="com-bprivy-panel" style="display:none">' +
                         '<ul id="com-bprivy-panelList" class="com-bprivy-ul">' +
-                            '<div id="com-bprivy-panelTitle">BPrivy' +
-                                '<input type="button" id="com-bprivy-x" accesskey="q" class="com-bprivy-x"></input>' +
+                            '<div id="com-bprivy-panelTitle"><div id="com-bprivy-TitleText">BPrivy</div>' +
+                                '<input type="button" id="com-bprivy-xB" accesskey="q" class="com-bprivy-xB" value="x"></input>' +
                             '</div>' +
                         '</ul>' +
                     '</div>';
         doc.body.insertAdjacentHTML('beforeend', html);
         makeDataDraggable(eid_panelList);
         doc.getElementById(eid_xButton).addEventListener('click', togglePanel);
+        insertSettingsPanel();
         insertIOItems();
         
         var j_panel = $('#' + eid_panel);

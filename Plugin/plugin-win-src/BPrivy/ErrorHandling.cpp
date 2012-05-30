@@ -50,6 +50,7 @@ namespace bp
 	const std::string ACODE_RESOURCE_LOCKED		("ResourceLocked");
 	const std::string ACODE_ACCESS_DENIED		("AccessDenied");
 
+	const std::string BPCODE_UNAUTHORIZED_CLIENT ("UnauthorizedClient");
 	const std::string BPCODE_NEW_FILE_CREATED	("NewFileCreated");
 	const std::string BPCODE_NO_MEM				("NoMem");
 	const std::string BPCODE_ASSERT_FAILED		("AssertFailed");

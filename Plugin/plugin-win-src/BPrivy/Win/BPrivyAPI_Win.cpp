@@ -388,6 +388,7 @@ bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::
 		CONSOLE_LOG("In appendFile");
 
 		bfs::path path(pth);
+		securityCheck(path);
 		path.make_preferred();
 		string path_s(path.string());
 
@@ -453,6 +454,7 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 		const fsize64_t pos = o_pos.get_value_or(0);
 
 		bfs::path path(pth);
+		securityCheck(path);
 		path.make_preferred();
 		string path_s(path.string());
 
@@ -593,6 +595,7 @@ unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr
 		bfs::path path(pth);
 		path.make_preferred();
 		string path_s(path.string());
+		securityCheck(path);
 
 		HANDLE h= CreateFile(path.c_str(),
 									FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile

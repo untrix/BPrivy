@@ -546,7 +546,7 @@ var MOD_FILESTORE = (function()
      */
     var dir_p = "p";
     /** File/Dirname extenstions */
-    var ext_Root = ".3db";
+    var ext_Root = ".3ab";
     var ext_Dict = ".3ad";
     var ext_Open = ".3ao";
     var ext_Closed=".3ac";
