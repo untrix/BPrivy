@@ -369,6 +369,8 @@ private:
 
 bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::JSObjectPtr out)
 {
+	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
+
 	// NOTE: FireBreath plugin is compiled with the /D_UNICODE flag. This means that
 	// the unicode character set is used for all strings, both wchar_t and char_t. This
 	// implies that char_t strings are encoded in UTF8 (since that is the unicode encoding
@@ -388,7 +390,7 @@ bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::
 		CONSOLE_LOG("In appendFile");
 
 		bfs::path path(pth);
-		securityCheck(path);
+		securityCheck(path, allowedExt);
 		path.make_preferred();
 		string path_s(path.string());
 
@@ -447,6 +449,8 @@ bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::
 
 bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boost::optional<unsigned long long> o_pos)
 {
+	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
+
 	try
 	{
 		CONSOLE_LOG("In readFile");
@@ -454,7 +458,7 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 		const fsize64_t pos = o_pos.get_value_or(0);
 
 		bfs::path path(pth);
-		securityCheck(path);
+		securityCheck(path, allowedExt);
 		path.make_preferred();
 		string path_s(path.string());
 
@@ -588,6 +592,8 @@ bool BPrivyAPI::removeFile(bfs::path& pth)
 // API used for testing purposes
 unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr out)
 {
+	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
+
 	try
 	{
 		CONSOLE_LOG("In writeLock");
@@ -595,7 +601,7 @@ unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr
 		bfs::path path(pth);
 		path.make_preferred();
 		string path_s(path.string());
-		securityCheck(path);
+		securityCheck(path, allowedExt);
 
 		HANDLE h= CreateFile(path.c_str(),
 									FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile
@@ -622,6 +628,8 @@ unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr
 
 unsigned long long BPrivyAPI::readLock(const std::string& pth, FB::JSObjectPtr out)
 {
+	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
+
 	try
 	{
 		CONSOLE_LOG("In readLock");
@@ -629,6 +637,8 @@ unsigned long long BPrivyAPI::readLock(const std::string& pth, FB::JSObjectPtr o
 		const fsize64_t pos = 0;
 
 		bfs::path path(pth);
+		securityCheck(path, allowedExt);
+
 		path.make_preferred();
 		string path_s(path.string());
 

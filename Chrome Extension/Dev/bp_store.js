@@ -535,22 +535,23 @@ var MOD_FILESTORE = (function()
     var eid_bp = "com-untrix-bpplugin";
     // Points to the bp-plugin
     var g_bp = document.getElementById(eid_bp);  
-    /**
-     * Name of knowledge-dict directory on filesystem. Should be case insensitive
-     * since not all filesystems will honor case.
-     */
-    var dir_k = "k";
-    /**
-     * Name of passwords-dict directory on filesystem. Should be case insensitive
-     * since not all filesystems will honor case.
-     */
-    var dir_p = "p";
     /** File/Dirname extenstions */
     var ext_Root = ".3ab";
     var ext_Dict = ".3ad";
     var ext_Open = ".3ao";
     var ext_Closed=".3ac";
     var ext_MMap = ".3am";
+    var ext_Temp = ".3at";
+    /**
+     * Name of knowledge-dict directory on filesystem. Should be case insensitive
+     * since not all filesystems will honor case.
+     */
+    var dir_k = "k" + ext_Dict;
+    /**
+     * Name of passwords-dict directory on filesystem. Should be case insensitive
+     * since not all filesystems will honor case.
+     */
+    var dir_p = "p" + ext_Dict;
     
     function savePRec(rec)
     {

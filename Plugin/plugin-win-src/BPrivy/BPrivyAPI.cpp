@@ -40,6 +40,48 @@ namespace bip = boost::interprocess;
 ///         will throw a FB::script_error that will be translated into a
 ///         javascript exception in the page.
 ///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+/// @fn BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr host)
+///
+/// @brief  Constructor for your JSAPI object.
+///         You should register your methods, properties, and events
+///         that should be accessible to Javascript from here.
+///
+/// @see FB::JSAPIAuto::registerMethod
+/// @see FB::JSAPIAuto::registerProperty
+/// @see FB::JSAPIAuto::registerEvent
+////////////////////////////////////////////////////////////////////////////
+BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host) :
+    m_plugin(plugin), m_host(host)
+{
+	CONSOLE_LOG("In BPrivyAPI::constructor");
+
+	registerMethod("testEvent", make_method(this, &BPrivyAPI::testEvent));
+	registerMethod("ls", make_method(this, &BPrivyAPI::ls));
+	registerMethod("getpid", make_method(this, &BPrivyAPI::getpid));
+	registerMethod("appendFile", make_method(this, &BPrivyAPI::appendFile));
+	registerMethod("readFile", make_method(this, &BPrivyAPI::readFile));
+	registerMethod("createDir", make_method(this, &BPrivyAPI::createDir));
+	registerMethod("rm", make_method(this, &BPrivyAPI::rm));
+	registerMethod("rename", make_method(this, &BPrivyAPI::rename));
+	registerMethod("copy", make_method(this, &BPrivyAPI::copy));
+#ifdef DEBUG
+	registerMethod("appendLock", make_method(this, &BPrivyAPI::appendLock));
+	registerMethod("readLock", make_method(this, &BPrivyAPI::readLock));
+#endif
+
+	// Read-write property
+	registerProperty("testString",
+						make_property(this,
+									&BPrivyAPI::get_testString,
+									&BPrivyAPI::set_testString));
+        
+	// Read-only property
+	registerProperty("version",
+						make_property(this,
+									&BPrivyAPI::get_version));
+}
+		
 BPrivyPtr BPrivyAPI::getPlugin()
 {
     BPrivyPtr plugin(m_plugin.lock());
@@ -192,10 +234,98 @@ bfs::file_status& ResolveSymlinks(bfs::path& p, bfs::file_status& s)
 	return s;
 }
 
-void securityCheck(const bfs::path& path)
+void BPrivyAPI::securityCheck(const bfs::path& path, const std::string allowedExt[])
 {
-	static const std::string ext[] = {".3ab", ".3ad", ".3ao", ".3ac", ".3am"};
+	// We require path to be absolute. Also, filename must have an extension.
+	if ((!path.is_absolute()) || (! path.has_extension())) {
+		throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
+	}
 
+	// Extension must be one of those supplied
+	bool good_ext = false;
+	for (int i=0; !allowedExt[i].empty(); i++)
+	{
+		if (path.extension() == allowedExt[i]) {
+			good_ext = true;
+			break;
+		}
+	}
+	if (!good_ext)
+		{throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);}
+
+	bool  isUnder3ab = false;
+	// The path should lie inside or at a .3ab directory
+	if (path.extension() != ".3ab")
+	{
+		for (bfs::path::const_iterator it = path.begin(); it != path.end(); it++)
+		{
+			if (it->extension() == ".3ab") {
+				isUnder3ab = true;
+				break;
+			}
+		}
+	}
+	else {
+		isUnder3ab = true;
+	}
+	if (!isUnder3ab) {
+		throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
+	}
+}
+
+//void BPrivyAPI::AAAInit(FB::JSObjectPtr io)
+//{
+//	// Following scenarios are possible:
+//	// 1. DB is being freshly created.
+//	// 2. An existing DB is opened.
+//	//	  Plugin needs to verify caller is not malicious and return a random-token
+//	//	  for future calls.
+//	// 3. We were invoked a second time during the lifetime of the plugin instance.
+//	//    Throw an exception in this case.
+//
+//	//FB::variant val = io->GetProperty(PROP_TOKEN);
+//	//std::string token = val.cast<std::string>();
+//
+////	if (token.empty() && m_aclToken.empty())
+//	{
+//		FB::DOM::WindowPtr pWin = m_host->getDOMWindow();
+//		std::string loc = pWin->getLocation();
+//		CONSOLE_LOG("In AAAInit, loc = " + loc);
+//		//m_aclToken = RandomPassword(32);
+//
+//		//io->SetProperty(PROP_TOKEN, m_aclToken);
+//	}
+//	//else
+//	//{
+//	//	//throw BPError(ACODE_ACCESS_DENIED, BP_PROTOCOL_VIOLATION);
+//	//}
+//}
+//
+
+//bool BPrivyAPI::createDB(const std::string& s_path,  FB::JSObjectPtr io)
+//{
+//	try
+//	{
+//		securityCheck(s_path, io);
+//		// Check that password exists and is at least 10 characters long
+//		FB::variant val = io->GetProperty(PROP_PASS);
+//		std::string pass = val.cast<std::string>();
+//		if (pass.size() < 10) {
+//			throw BPError(ACODE_ACCESS_DENIED, BPCODE_WRONG_PASS, "Supplied password is too short.");
+//		}
+//	}
+//	CATCH_FILESYSTEM_EXCEPTIONS(io)
+//}
+//
+//bool BPrivyAPI::openDB(const std::string& s_path,  FB::JSObjectPtr io)
+//{
+//	AAAInit(io);
+//}
+
+void BPrivyAPI::securityCheck(const bfs::path& path, const bfs::path& path2, const std::string allowedExt[])
+{
+	securityCheck(path, allowedExt);
+	securityCheck(path2, allowedExt);
 }
 
 bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
@@ -329,12 +459,14 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 
 bool BPrivyAPI::createDir(const std::string& s_path, FB::JSObjectPtr p)
 {
+	static const std::string allowedExt[] = {".3ad", ""};
+
 	try
 	{
 		CONSOLE_LOG("In createDir");
 
 		bfs::path path(s_path);
-		securityCheck(path);
+		securityCheck(path, allowedExt);
 
 		if (!bfs::create_directory(path)) {ThrowLastSystemError(path);}
 
@@ -348,12 +480,14 @@ bool BPrivyAPI::createDir(const std::string& s_path, FB::JSObjectPtr p)
 
 bool BPrivyAPI::rm(const std::string& s_path, FB::JSObjectPtr p)
 {
+	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
+
 	try
 	{
 		CONSOLE_LOG("In rmDir");
 
 		bfs::path path(s_path);
-		securityCheck(path);
+		securityCheck(path, allowedExt);
 
 		bfs::file_status stat = bfs::symlink_status(path);
 
@@ -392,13 +526,15 @@ bool BPrivyAPI::rm(const std::string& s_path, FB::JSObjectPtr p)
 bool
 BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr p, const boost::optional<bool> o_clob)
 {
+	static const std::string allowedExt[] = {".3ao", ".3ac", ".3at", ""};
+
 	try
 	{
 		CONSOLE_LOG("In rename");
 
 		bfs::path n_path(new_p);
 		bfs::path o_path(old_p);
-		securityCheck(n_path, o_path);
+		securityCheck(n_path, o_path, allowedExt);
 
 		bfs::file_status n_stat = bfs::symlink_status(n_path);
 
@@ -413,7 +549,7 @@ BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObje
 		bfs::file_status o_stat = bfs::symlink_status(o_path);
 		if (!bfs::exists(o_stat))
 		{
-			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_PATH_NOT_EXIST, o_path.string());
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_PATH_NOT_EXIST, o_path);
 		}
 		if (bfs::is_directory(o_stat))
 		{
@@ -444,20 +580,22 @@ BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObje
 bool
 BPrivyAPI::copy(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr p, const boost::optional<bool> o_clob)
 {
+	static const std::string allowedExt[] = {".3ao", ".3ac", ".3at", ""};
+
 	try
 	{
 		CONSOLE_LOG("In copy");
 
 		bfs::path n_path(new_p);
 		bfs::path o_path(old_p);
-		securityCheck(old_p, new_p);
+		securityCheck(old_p, new_p, allowedExt);
 
 		bfs::file_status n_stat = bfs::symlink_status(n_path);
 		bfs::file_status o_stat = bfs::symlink_status(o_path);
 
 		if (!bfs::exists(o_stat))
 		{
-			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_PATH_NOT_EXIST, o_path.string());
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_PATH_NOT_EXIST, o_path);
 		}
 
 		bool clob = o_clob.get_value_or(false);

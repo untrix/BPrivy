@@ -10,6 +10,8 @@
 #include "BPrivyAPI.h"
 
 #include "BPrivy.h"
+#include <DOM/Window.h>
+#include "Utils.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn BPrivy::StaticInitialize()
@@ -89,8 +91,22 @@ void BPrivy::shutdown()
 ///////////////////////////////////////////////////////////////////////////////
 FB::JSAPIPtr BPrivy::createJSAPI()
 {
-    // m_host is the BrowserHost
-    return boost::make_shared<BPrivyAPI>(FB::ptr_cast<BPrivy>(shared_from_this()), m_host);
+	FB::DOM::WindowPtr pWin = m_host->getDOMWindow();
+	std::string loc = pWin->getLocation();
+	std::string allowed("chrome-extension://");
+	if (loc.compare(0, allowed.size(), allowed) != 0)
+	{
+		CONSOLE_LOG("In BPrivy::createJSAPI, loc = " + loc);
+		IF_DEBUG(pWin->alert, std::string(
+			"Possibly malicious website [") + loc + "] is trying to access your passwords."
+			" Please email security.bprivy@untrix.com if possible");
+		return boost::shared_ptr<BPrivyAPI>((BPrivyAPI*)NULL);
+	}
+	else
+	{
+		// m_host is the BrowserHost
+		return boost::make_shared<BPrivyAPI>(FB::ptr_cast<BPrivy>(shared_from_this()), m_host);
+	}
 }
 
 bool BPrivy::onMouseDown(FB::MouseDownEvent *evt, FB::PluginWindow *)

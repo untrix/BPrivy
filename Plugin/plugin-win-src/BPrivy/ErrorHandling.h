@@ -70,6 +70,7 @@ namespace bp
 	// Second level codes for providing more information. These manifest as generic-code ('gcd')
 	// in the error object ('err') returned to javascript.
 	extern const std::string BPCODE_UNAUTHORIZED_CLIENT;// Unauthorized client trying to access the API.
+	extern const std::string BPCODE_WRONG_PASS; // Password too short or wrong.
 	extern const std::string BPCODE_NEW_FILE_CREATED;// Informational. New File was created.
 	extern const std::string BPCODE_NO_MEM;//Could not allocate memory
 	extern const std::string BPCODE_ASSERT_FAILED;//Logic Error
@@ -119,11 +120,14 @@ namespace bp
 	{
 		BPError(const string& ac) : acode(ac) {}
 		BPError(const string& ac, const string& gc) : acode(ac), gcode(gc) {}
-		BPError(const string& ac, const string& gc, const string& pth)
-			: acode(ac), gcode(gc), path(pth) {}
+		BPError(const string& ac, const string& gc, const string& gmsg)
+			: acode(ac), gcode(gc), gmsg(gmsg) {}
+		BPError(const string& ac, const string& gc, const bfs::path& pth)
+			: acode(ac), gcode(gc), path(pth.string()) {}
 		string acode;
 		string gcode;
 		string path;
+		string gmsg;
 	};
 
 	void MakeErrorEntry(const boost::filesystem::filesystem_error& e, std::ostringstream& je);

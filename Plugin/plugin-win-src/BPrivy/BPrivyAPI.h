@@ -15,47 +15,20 @@ namespace bfs = boost::filesystem;
 class BPrivyAPI : public FB::JSAPIAuto
 {
 public:
-    ////////////////////////////////////////////////////////////////////////////
-    /// @fn BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr host)
-    ///
-    /// @brief  Constructor for your JSAPI object.
-    ///         You should register your methods, properties, and events
-    ///         that should be accessible to Javascript from here.
-    ///
-    /// @see FB::JSAPIAuto::registerMethod
-    /// @see FB::JSAPIAuto::registerProperty
-    /// @see FB::JSAPIAuto::registerEvent
-    ////////////////////////////////////////////////////////////////////////////
-    BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host) :
-        m_plugin(plugin), m_host(host)
-    {
-        registerMethod("testEvent", make_method(this, &BPrivyAPI::testEvent));
-		registerMethod("ls", make_method(this, &BPrivyAPI::ls));
-		registerMethod("getpid", make_method(this, &BPrivyAPI::getpid));
-        registerMethod("appendFile", make_method(this, &BPrivyAPI::appendFile));
-		registerMethod("readFile", make_method(this, &BPrivyAPI::readFile));
-		registerMethod("createDir", make_method(this, &BPrivyAPI::createDir));
-		registerMethod("rm", make_method(this, &BPrivyAPI::rm));
-		registerMethod("rename", make_method(this, &BPrivyAPI::rename));
-		registerMethod("copy", make_method(this, &BPrivyAPI::copy));
-#ifdef DEBUG
-		registerMethod("appendLock", make_method(this, &BPrivyAPI::appendLock));
-		registerMethod("readLock", make_method(this, &BPrivyAPI::readLock));
-#endif
+	////////////////////////////////////////////////////////////////////////////
+	/// @fn BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr host)
+	///
+	/// @brief  Constructor for your JSAPI object.
+	///         You should register your methods, properties, and events
+	///         that should be accessible to Javascript from here.
+	///
+	/// @see FB::JSAPIAuto::registerMethod
+	/// @see FB::JSAPIAuto::registerProperty
+	/// @see FB::JSAPIAuto::registerEvent
+	////////////////////////////////////////////////////////////////////////////
+	BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host);
 
-        // Read-write property
-        registerProperty("testString",
-                         make_property(this,
-                                       &BPrivyAPI::get_testString,
-                                       &BPrivyAPI::set_testString));
-        
-        // Read-only property
-        registerProperty("version",
-                         make_property(this,
-                                       &BPrivyAPI::get_version));
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////
     /// @fn BPrivyAPI::~BPrivyAPI()
     ///
     /// @brief  Destructor.  Remember that this object will not be released until
@@ -106,6 +79,12 @@ private:
 	bool removeFile(bfs::path&);
 
 private:
+	void BPrivyAPI::AAAInit(FB::JSObjectPtr io);
+	void securityCheck(const bfs::path& path, const std::string allowedExt[] );
+	void securityCheck(const bfs::path& path, const bfs::path& path2, const std::string allowedExt[] );
+	bfs::path m_dbPath;
+	std::string m_aclToken;
+
     BPrivyWeakPtr m_plugin;
     FB::BrowserHostPtr m_host;
 

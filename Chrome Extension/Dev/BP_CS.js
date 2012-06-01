@@ -98,6 +98,7 @@ function com_bprivy_CS(g_win)
     var g_loc = g_doc.location;
     var g_db ={};
     var g_draggedElementID;
+    var g_draggedElement;
     var g_ioItemID = 0;
     var settings = {ShowPanelForMultipleLogins: true}; // User Setting
     /** @globals-end **/
@@ -195,7 +196,8 @@ function com_bprivy_CS(g_win)
 		    console.info("inputHandler invoked");
             var eRec = newERecord(), dragged_el;
             if (g_draggedElementID) {
-                dragged_el = g_doc.getElementById(g_draggedElementID);
+                //dragged_el = g_doc.getElementById(g_draggedElementID);
+                dragged_el = g_draggedElement;
                 console.info("DraggedElementID is " + g_draggedElementID);
             }
             else {
@@ -238,7 +240,7 @@ function com_bprivy_CS(g_win)
 		return el;
 	}
 	
-	function makeDataDraggable(eid)
+	function makeDataDraggable(doc, eid)
 	{
 		function handleDragStart (e)
 		{
@@ -260,34 +262,36 @@ function com_bprivy_CS(g_win)
 			//console.info("DataTransfer.items = "+ e.dataTransfer.items.toString());
 			//console.info("tranfer data = " + e.dataTransfer.getData("text/plain"));
 			g_draggedElementID = e.target.id;
+			g_draggedElement = e.target;
 			return true;
 		}
 
-		g_doc.getElementById(eid).addEventListener('dragstart', handleDragStart, false);
+		doc.getElementById(eid).addEventListener('dragstart', handleDragStart, false);
 
 		function handleDragEnd(e)
 		{
 			console.info("DragEnd received");
 			g_draggedElementID = null;
+			g_draggedElement = null;
 			return true;
 		}
 
-		g_doc.getElementById(eid).addEventListener('dragend', handleDragEnd, false);
+		doc.getElementById(eid).addEventListener('dragend', handleDragEnd, false);
 	}
 	
-	function createOpItem(id, u, p)
+	function createOpItem(doc, id, u, p)
 	{
 	    var opid = eid_opElement + id;
 	    var ueid = eid_userOElement + id;
 	    var peid = eid_passOElement + id;
 	    
-        var j_div = $(g_doc.createElement("div")).attr(
+        var j_div = $(doc.createElement("div")).attr(
             {
                 id: opid
             }
         ).addClass(css_io_fields);
 
-        var j_opu = $(g_doc.createElement('span')).attr(
+        var j_opu = $(doc.createElement('span')).attr(
             {draggable: true,
              id: ueid,
              name: ueid
@@ -295,7 +299,7 @@ function com_bprivy_CS(g_win)
             ).addClass(css_field + " " + css_userOut).text(u);
         j_opu.data(pn_d_dataType, ft_userid).data(pn_d_value, u);
 
-        var j_opp = $(g_doc.createElement('span')).attr(
+        var j_opp = $(doc.createElement('span')).attr(
             {
                 draggable: true,
                 id: peid,
@@ -312,21 +316,21 @@ function com_bprivy_CS(g_win)
 	function isValidInput(s) {if (s) {return true;} else {return false;}}
 	
 	/** Creates input fields for the IO Widget **/
-	function createInItem(id, u, p)
+	function createInItem(doc, id, u, p)
 	{
 	    var ifid = eid_inForm + id;
 	    var ueid = eid_userIElement + id;
 	    var peid = eid_passIElement + id;
 
-        var j_inf = $(g_doc.createElement('form')).attr({id: ifid, 'class': css_io_fields});
-        var j_inu = $(g_doc.createElement('input')).attr(
+        var j_inf = $(doc.createElement('form')).attr({id: ifid, 'class': css_io_fields});
+        var j_inu = $(doc.createElement('input')).attr(
         {
             type: 'text',
             id: ueid,
             name: ueid,
             value: u
         }).addClass(css_field + " " + css_userIn).data(pn_d_value, u);
-        var j_inp = $(g_doc.createElement('input')).attr(
+        var j_inp = $(doc.createElement('input')).attr(
         {
             type: 'password',
             id: peid,
@@ -342,10 +346,11 @@ function com_bprivy_CS(g_win)
 	/** Toggles the IO Widget **/
 	function toggleIO(e)
 	{
+	    var doc = e.target.ownerDocument; // TODO: Experimenting, was g_doc
         var d = e.target.dataset;
         console.info("tb clicked" + JSON.stringify(d));
-	    var op = g_doc.getElementById(d.opid),
-	        ifm = g_doc.getElementById(d.ifid),
+	    var op = doc.getElementById(d.opid),
+	        ifm = doc.getElementById(d.ifid),
 	        id = d.id,
 	        parent, col, ue, pe, uo, po;
 	    
@@ -359,7 +364,7 @@ function com_bprivy_CS(g_win)
 	        // remove the 'op' item.
 	        // Create an 'ifm' item and save the values hidden away somewhere.
 	        parent = op.parentElement;
-            ifm = createInItem(id, uo, po);
+            ifm = createInItem(doc, id, uo, po);
 	        if (ifm) {
 	            $(ue).removeData(); // removes the jquery .data() cache
 	            $(pe).removeData();
@@ -399,7 +404,7 @@ function com_bprivy_CS(g_win)
 	        }
 	        // Then save the values and create a new 'op' item.
 	        parent = ifm.parentElement;
-	        op = createOpItem(id, u, p);
+	        op = createOpItem(doc, id, u, p);
 	        if (op) {
 	            //parent.removeChild(ifm);
 	            parent.appendChild(op);// Insert the 'op' item.
@@ -411,7 +416,7 @@ function com_bprivy_CS(g_win)
 	}
 	
 	/** Creates an IO Widget with a Toggle Button and Output Fields **/
-	function insertIOItem (user, pass, bInp)
+	function insertIOItem (doc, user, pass, bInp)
 	{
 	    var jq = $('#' + eid_panelList);
 	    var id = (++g_ioItemID);
@@ -419,8 +424,8 @@ function com_bprivy_CS(g_win)
 		var ifid = eid_inForm + id;
 		var tbid = eid_tButton + id;
 		
-		var j_li = $(g_doc.createElement("li")).attr({value: id}).addClass(css_li);
-        var tb = g_doc.createElement('input'); // Toggle Button
+		var j_li = $(doc.createElement("li")).attr({value: id}).addClass(css_li);
+        var tb = doc.createElement('input'); // Toggle Button
         tb.addEventListener('click', toggleIO, false);
         var j_tb = $(tb).attr(
             {
@@ -436,11 +441,11 @@ function com_bprivy_CS(g_win)
         j_li.append(j_tb);
         if (!bInp) {
             j_tb.val('e'); // e = edit
-            j_li.append(createOpItem(id, user, pass)); 
+            j_li.append(createOpItem(doc, id, user, pass)); 
         } // Output Fields
         else {
             j_tb.val('s'); // s = save
-            j_li.append(createInItem(id, user, pass));
+            j_li.append(createInItem(doc, id, user, pass));
         }
         jq.append(j_li);
 
@@ -449,7 +454,7 @@ function com_bprivy_CS(g_win)
 		j_li[0].addEventListener('mousedown', stopPropagation, false);
 	}
 	
-	function insertIOItems()
+	function insertIOItems(doc)
     {
         var pRecsMap, i, nma;
         if ((pRecsMap = g_db[tag_pRecs])) 
@@ -457,14 +462,14 @@ function com_bprivy_CS(g_win)
             nma = Object.getOwnPropertyNames(pRecsMap);
         
             for (i=0; i<nma.length; i++) {
-                insertIOItem(nma[i], pRecsMap[nma[i]].curr.pass);
+                insertIOItem(doc, nma[i], pRecsMap[nma[i]].curr.pass);
             }
         }
         // Finally, create one Input Item for new entry.
-        insertIOItem("","", true);
+        insertIOItem(doc, "","", true);
     }
     
-    function insertSettingsPanel()
+    function insertSettingsPanel(doc)
     {
         var ml = '<input type="file" accept=".3db" class="com-bprivy-dbPath" placeholder="Insert DB Path Here" ></input>';
     }
@@ -479,11 +484,15 @@ function com_bprivy_CS(g_win)
                             '</div>' +
                         '</ul>' +
                     '</div>';
+        var iframe = '<iframe id="com-bprivy-iframe" srcdoc=\'' + 
+                     html + '\'></iframe>'; 
         doc.body.insertAdjacentHTML('beforeend', html);
-        makeDataDraggable(eid_panelList);
+        //doc.body.insertAdjacentHTML('beforeend', iframe);
+        //var doc2 = doc.getElementById("com-bprivy-iframe").contentDocument;
+        makeDataDraggable(doc, eid_panelList);
         doc.getElementById(eid_xButton).addEventListener('click', togglePanel);
-        insertSettingsPanel();
-        insertIOItems();
+        insertSettingsPanel(doc);
+        insertIOItems(doc);
         
         var j_panel = $('#' + eid_panel);
         // Make sure that postion:fixed is supplied at element level otherwise draggable() overrides it
@@ -621,6 +630,7 @@ function com_bprivy_CS(g_win)
             if (el)
             {
                 g_draggedElementID = null;
+                g_draggedElement = null;
                 $(el).remove();
             }
             else {

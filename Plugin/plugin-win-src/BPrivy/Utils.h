@@ -6,8 +6,10 @@
 
 #ifdef DEBUG
 #define CONSOLE_LOG(s) m_host->htmlLog(std::string("BPlugin: ") + (s))
+#define IF_DEBUG(f, a) f(a)
 #else
 #define CONSOLE_LOG(s)
+#define IF_DEBUG(f, a)
 #endif
 
 namespace bp
@@ -30,6 +32,7 @@ namespace bp
 	};
 
 	std::string& JsonFriendly(std::string&& s);
+	//std::string RandomPassword(int length);
 
 } // end namespace bp
 #endif // H_BP_Utils
