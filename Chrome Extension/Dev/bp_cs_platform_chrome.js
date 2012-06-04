@@ -13,7 +13,7 @@
 /**
  * @ModuleBegin GoogleChrome Platform
  */
-var MOD_CS_PLAT = (function() 
+var BP_MOD_CS_PLAT = (function() 
 {
     "use strict"; //TODO: Remove this from prod. build
     

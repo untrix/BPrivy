@@ -6,8 +6,8 @@
  */
 
 /* JSLint directives */
-/*global $ document MOD_MAIN_PLAT MOD_CONNECT MOD_COMMON IMPORT localStorage
-  MOD_MEMSTORE MOD_FILESTORE */
+/*global $ document BP_MOD_MAIN_PLAT BP_MOD_CONNECT BP_MOD_COMMON IMPORT localStorage
+  BP_MOD_MEMSTORE BP_MOD_FILESTORE */
 /*jslint browser:true, devel:true, es5:true, vars:true */
 /*properties console.info, console.log, console.warn */
 
@@ -16,21 +16,21 @@
     "use strict"; // TODO: @remove Only used in debug builds
     
     /** @import-module-begin MainPlatform */
-    var m = MOD_MAIN_PLAT;
+    var m = BP_MOD_MAIN_PLAT;
     var registerMsgListener = IMPORT(m.registerMsgListener);
     var initScaffolding = IMPORT(m.init);
     /** @import-module-begin Connector */
-    m = MOD_CONNECT;
+    m = BP_MOD_CONNECT;
     var cm_getRecs = IMPORT(m.cm_getRecs);
     var cm_loadDB = IMPORT(m.cm_loadDB);
     var cm_createDB = IMPORT(m.cm_createDB);
     /** @import-module-begin COMMON */
-    m = MOD_COMMON;
+    m = BP_MOD_COMMON;
     var dt_eRecord = IMPORT(m.dt_eRecord);
     var dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin MemStore */
-    var MEM_STORE = IMPORT(MOD_MEMSTORE);
-    var FILE_STORE = IMPORT(MOD_FILESTORE);
+    var MEM_STORE = IMPORT(BP_MOD_MEMSTORE);
+    var FILE_STORE = IMPORT(BP_MOD_FILESTORE);
     /** @import-module-end **/    m = null;
 
     function onRequest(rq, sender, funcSendResponse)

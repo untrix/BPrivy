@@ -1,4 +1,12 @@
-
+#com-bprivy-panel-iframe {
+                display: block;
+                padding: 0px;
+                margin: 0px;
+                border: none;
+                z-index: 9007199254740992;
+                width: 300px;
+                opacity: 0;
+}
 #com-bprivy-panel	{
                 display: block;
 				padding: 2px;

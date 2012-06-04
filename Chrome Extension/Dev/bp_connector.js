@@ -6,7 +6,7 @@
  */
 
 /* Global declaration for JSLint */
-/*global document MOD_CS_PLAT MOD_COMMON IMPORT*/
+/*global document BP_MOD_CS_PLAT BP_MOD_COMMON IMPORT*/
 /*jslint browser:true, devel:true */
 //*members */
 /** @remove Only used in debug builds */
@@ -15,16 +15,16 @@
  * @ModuleBegin Connector
  */
 
-var MOD_CONNECT = (function ()
+var BP_MOD_CONNECT = (function ()
 {
     "use strict"; // TODO: @remove Only used in debug builds
     
     /** @import-module-begin CSPlatform **/
-    var m = MOD_CS_PLAT;
+    var m = BP_MOD_CS_PLAT;
     var postMsgToMothership = IMPORT(m.postMsgToMothership);
     var rpcToMothership = IMPORT(m.rpcToMothership);
     /** @import-module-begin Common **/
-    m = MOD_COMMON; 
+    m = BP_MOD_COMMON; 
     var dt_eRecord = IMPORT(m.dt_eRecord);
     var dt_pRecord = IMPORT(m.dt_pRecord);
     var isValidLocation = IMPORT(m.isValidLocation);

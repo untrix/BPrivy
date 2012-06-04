@@ -7,7 +7,7 @@
 /* Global declaration for JSLint */
 /*global document IMPORT */
 
-var MOD_COMMON = (function() 
+var BP_MOD_COMMON = (function() 
 {
     "use strict"; // TODO: @remove Only used in debug builds
     

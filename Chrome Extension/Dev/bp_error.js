@@ -17,7 +17,7 @@ function IMPORT(sym)
     }
 }
 
-var MOD_ERROR = (function()
+var BP_MOD_ERROR = (function()
 {
    /** @begin-class-def BPError 
     // Error properties (names) returned to javascript. These represent an interface

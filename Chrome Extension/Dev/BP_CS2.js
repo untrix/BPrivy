@@ -14,6 +14,9 @@
  * ev.stopPropagation, document.getElementById
  */
 
+/** @remove Only used in debug builds */
+"use strict";
+
 /**
  * @module CS
  */
@@ -474,39 +477,9 @@ function com_bprivy_CS(g_win)
     // CREATE THE CONTROL-PANEL
     function createPanel(doc)
     {
-        var html =  '<div id="com-bprivy-panel" class="com-bprivy-panel" style="display:none">' +
-                        '<ul id="com-bprivy-panelList" class="com-bprivy-ul">' +
-                            '<div id="com-bprivy-panelTitle"><div id="com-bprivy-TitleText">BPrivy</div>' +
-                                '<input type="button" id="com-bprivy-xB" accesskey="q" class="com-bprivy-xB" value="x"></input>' +
-                            '</div>' +
-                        '</ul>' +
-                    '</div>';
-        var iframe = '<iframe id="com-bprivy-panel-iframe" src="bp_panel.html"></iframe>'; 
-        doc.body.insertAdjacentHTML('beforeend', html);
-        //doc.body.insertAdjacentHTML('beforeend', iframe);
-        //var doc2 = doc.getElementById("com-bprivy-iframe").contentDocument;
-        makeDataDraggable(doc, eid_panelList);
-        doc.getElementById(eid_xButton).addEventListener('click', togglePanel);
-        insertSettingsPanel(doc);
-        insertIOItems(doc);
-        
-        var j_panel = $('#' + eid_panel);
-        // Make sure that postion:fixed is supplied at element level otherwise draggable() overrides it
-        // by setting position:relative. Also we can use right:0px here because draggable() does not like it.
-        // Hence we need to calculate the left value :(         
-        var panelW = j_panel.outerWidth();
-        var winW = doc.body.clientWidth ? doc.body.clientWidth : $(doc.body).innerWidth();
-        
-        var left = (winW-panelW);
-        left = (left>0)? left: 0;
-        
-        console.info("WinW = " + winW + " panelW = " + panelW);
-
-        j_panel.css({position: 'fixed', top: '0px', 'left': left + "px"});
-
-        // Make it draggable after all above mentioned style properties have been applied to the element.
-        // Otherwise draggable() will override those properties.
-        j_panel.draggable();
+        var url = getURL("bp_panel.html");
+        var iframe = $(doc.createElement('iframe')).attr({id: eid_frame, src: url});
+        $(doc.body).append(iframe);
         
         return j_panel;
     }
@@ -526,7 +499,7 @@ function com_bprivy_CS(g_win)
         {
             nl = doc.getElementsByName(er.name);
 
-            for (i=0; i<nl.length; i++) 
+            for (i=0; i<nl.length; i++)
             {
                 if (nl.item(i).tagName !== er.tagName) {
                         continue;
@@ -664,13 +637,6 @@ function com_bprivy_CS(g_win)
             getRecs(g_loc, callbackGetDB);
 			registerMsgListener(clickBP);
             setupDNDWatchers(g_win);
-
-			
-			// experimentation
-/*			var el = g_doc.createElement('com-bprivy-data');
-			el.setAttribute('id', 'com.facebook.www1/login.asp?b=a&x=y#abc');
-			$(el).prop("hidden", true).addClass(CSS_HIDDEN);
-			$(el).appendTo(g_doc.body);*/
 		}
 	}
 	
@@ -679,136 +645,3 @@ function com_bprivy_CS(g_win)
 /** @ModuleEnd */
 
 com_bprivy_CS(window)();
-
-/*
-    function createPanelTitle ()
-    {
-        var j_div = $(g_doc.createElement("div")).attr({
-                    id: eid_panelTitle
-                }).text("BPrivy");
-        var j_xBtn = $(g_doc.createElement("button")).attr(
-                    {    
-                        type: "button",
-                        id: eid_xButton,
-                        accesskey: "q",
-                        'for': eid_panel
-                    }).addClass(css_class_xButton);
-        // Make it closable via. the x button
-        j_xBtn[0].addEventListener("click", togglePanel);
-        j_div.append(j_xBtn);
-        return j_div;
-    }
-    
-    function createPanel(doc)
-    {
-        var panelW, winW, left;
-
-        var tmp_el = doc.createElement("div");
-        var j_panel = $(tmp_el).attr('id', eid_panel).addClass(css_class_panel);
-        
-        var j_ul = $("<ul></ul>").attr("id", eid_panelList).addClass(css_class_container2);
-        
-        j_ul.append(createPanelTitle());
-        insertIOItem(j_ul, "1", "username1", "password1");
-        insertIOItem(j_ul, "2", "user2@facebook.com", "passw2");
-        // Attache dragStart and End listener to container in order to make its items draggable.
-        makeDataDraggable(eid_panelList);
-
-        j_panel.append(j_ul);
-        
-        if (doc.body) {
-            j_panel.hide().appendTo('body');
-        }
-        
-        // Make sure that postion:fixed is supplied at element level otherwise draggable() overrides it
-        // by setting position:relative. Also we can use right:0px here because draggable() does not like it.
-        // Hence we need to calculate the left value :(         
-        panelW = j_panel.outerWidth();
-        winW = doc.body.clientWidth ? doc.body.clientWidth :
-                $(doc.body).innerWidth();
-        
-        left = (winW-panelW);
-        left = (left>0)? left: 0;
-        
-        console.info("WinW = " + winW + " panelW = " + panelW);
-
-        j_panel.css({position: 'fixed', top: '0px', 'left': left + "px"});
-
-        // Make it draggable after all above mentioned style properties have been applied to the element.
-        // Otherwise draggable() will override those properties.
-        j_panel.draggable();
-        
-
-        
-      // var l_btn = doc.createElement("button");
-        // var j_btn = $(l_btn).attr({
-                                                         // type: 'button',
-                                                         // id: eid_Button,
-                                                         // accesskey: 'p',
-                                                         // hidden: 'hidden',
-                                                         // 'for': eid_panel,
-                                                         // 'class': CSS_HIDDEN
-                                                     // }).appendTo(doc.body);
-//                                                      
-        // l_btn.addEventListener("click", function (e){console.info("click"); j_panel.toggle();});
-        // console.log('accesskey and label are ' + l_btn.accessKey + " and " + l_btn.accessKeyLabel);
-        return j_panel;
-    }
- 
- 
- function Fill(request, sender, sendResponse)
- {
- console.log("Received BPClick event");
- var el = g_doc.activeElement;
- var response = [];
- if ((el instanceof HTMLInputElement))
- {
- if (IsUserID(el))
- {
- el.value = "Username";
-			// {
- response[0] = {"username": "LoginID"};
- }
- else if (el.type === "password")
- el.style = "background: red; color: blue";
- response[0] = {"username": "Password"};
- }
- }
- sendResponse(response);
- }
-
-		// "dropHandler": function(e)
-		// {
-			// console.info("DropHandler invoked");
-			// var data = e.dataTransfer.getData(n.bpContentType); 
-			// if (data)
-				// console.info("Data from element " + data + " dropped at element " + e.target.id);
-			// }
-		// },
-		
-		// "dragoverHandler": function (e)
-		// {
-			// console.log("dragoverHandler invoked");
-			// var items = e.dataTransfer.items;
-			// var found = false;
-			// if (items)
-			// {
-				// for (var i = 0; i < items.length; i++)
-				// {
-					// if (items[i].type === n.bpContentType)
-						// found = true;
-					// console.log(items[i].kind + ":" + items[i].type);
-				// }
-			// }
-// 
-			// if (found)
-			// {
-				// console.info("found x-bp-content data hovering over element " + e.target.id + "/" + e.target.name); 
-				// e.dataTransfer.dropEffect = "copy";
-				// e.preventDefault();
-				// return false;
-			// }	
-		// },
-		
-
- */

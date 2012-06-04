@@ -5,25 +5,25 @@
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 /* JSLint directives */
-/*global $, console, window, MOD_CONNECT, MOD_CS_PLAT, IMPORT, MOD_COMMON, MOD_ERROR */
+/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR */
 //*members */
 
-var MOD_MEMSTORE = (function() 
+var BP_MOD_MEMSTORE = (function() 
 {
     "use strict"; //TODO: Remove this from prod. build
     
     var m;
     /** @import-module-begin Error */
-    m = IMPORT(MOD_ERROR);
+    m = IMPORT(BP_MOD_ERROR);
     var BPError = IMPORT(m.BPError);
     /** @import-module-begin Common */
-    m = MOD_COMMON;
+    m = BP_MOD_COMMON;
     var PROTO_HTTP = IMPORT(m.PROTO_HTTP);
     var PROTO_HTTPS = IMPORT(m.PROTO_HTTPS);
     var dt_eRecord = IMPORT(m.dt_eRecord);
     var dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin Connector */
-    m = MOD_CONNECT;
+    m = BP_MOD_CONNECT;
     var cm_getRecs = IMPORT(m.cm_getRecs);
     var recKey = IMPORT(m.recKey);
     var newActions = IMPORT(m.newActions); // Actions constructor
@@ -507,15 +507,15 @@ var MOD_MEMSTORE = (function()
 /**
  * @ModuleBegin FileStore
  */
-var MOD_FILESTORE = (function() 
+var BP_MOD_FILESTORE = (function() 
 {
     "use strict"; //TODO: Remove this from prod. build
     
     /** @import-module-begin Error */
-    var m = IMPORT(MOD_ERROR);
+    var m = IMPORT(BP_MOD_ERROR);
     var BPError = IMPORT(m.BPError);
     /** @import-module-begin common **/
-    m = MOD_COMMON;
+    m = BP_MOD_COMMON;
     var dt_eRecord = IMPORT(m.dt_eRecord);
     var dt_pRecord = IMPORT(m.dt_pRecord);
     var toJson = IMPORT(m.toJson);
@@ -525,10 +525,10 @@ var MOD_FILESTORE = (function()
     var parseURL = IMPORT(m.parseURL);
     var stripQuotes = IMPORT(m.stripQuotes);
     /** @import-module-begin connector **/
-    m = MOD_CONNECT; 
+    m = BP_MOD_CONNECT; 
     var newPRecord = IMPORT(m.newPRecord);
     /** @import-module-begin MemStore **/
-    var MEM_STORE = MOD_MEMSTORE;
+    var MEM_STORE = BP_MOD_MEMSTORE;
     /** @import-module-end **/    m = null;
 
     /** @constant ID of BP-Plugin HtmlEmbedElement*/
