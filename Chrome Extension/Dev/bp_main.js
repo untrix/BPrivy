@@ -6,10 +6,10 @@
  */
 
 /* JSLint directives */
-/*global $ document BP_MOD_MAIN_PLAT BP_MOD_CONNECT BP_MOD_COMMON IMPORT localStorage
-  BP_MOD_MEMSTORE BP_MOD_FILESTORE */
+/*global $, document, BP_MOD_MAIN_PLAT, BP_MOD_CONNECT, BP_MOD_COMMON, IMPORT, localStorage,
+  BP_MOD_MEMSTORE, BP_MOD_FILESTORE */
 /*jslint browser:true, devel:true, es5:true, vars:true */
-/*properties console.info, console.log, console.warn */
+
 
 (function Main(doc)
 {

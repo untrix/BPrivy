@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 /* Global declaration for JSLint */
-/*global document IMPORT */
+/*global document, IMPORT */
 
 var BP_MOD_COMMON = (function() 
 {
@@ -125,6 +125,24 @@ var BP_MOD_COMMON = (function()
         if (a) {return a[1];}
     }
        
+    /** Placeholder password decryptor */
+    function decrypt(str) {return str;}
+    /** Placeholder password encryptor */
+    function encrypt(str) {return str;}
+
+    function preventDefault (ev)
+    {
+        console.log("pd invoked");
+        ev.preventDefault();
+        return false;
+    }
+    
+    function stopPropagation(ev)
+    {
+        //console.info("stopPropagation invoked");
+        ev.stopPropagation();
+    }
+    
     var iface = {};
     Object.defineProperties(iface, 
     {
@@ -139,7 +157,11 @@ var BP_MOD_COMMON = (function()
         toJson: {value: toJson},
         parseURL: {value: parseURL},
         isValidLocation: {value: isValidLocation},
-        stripQuotes: {value: stripQuotes}
+        stripQuotes: {value: stripQuotes},
+        encrypt: {value: encrypt},
+        decrypt: {value: decrypt},
+        stopPropagation: {value: stopPropagation},
+        preventDefault: {value: preventDefault}
     });
     Object.freeze(iface);
 

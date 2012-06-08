@@ -44,6 +44,11 @@ var BP_MOD_CS_PLAT = (function()
         getURL: function(path)
         {
             return chrome.extension.getURL(path);
+        },
+        
+        addEventListener: function(el, ev, fn)
+        {
+            el.addEventListener(ev, fn);
         }
     };
     

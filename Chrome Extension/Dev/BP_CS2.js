@@ -55,6 +55,7 @@ function com_bprivy_CS(g_win)
 	// semantic. They are grouped according to semantics.
     // Element ID values. These could clash with other HTML elements
     // Therefore they need to be crafted to be globally unique within the DOM.
+    var eid_frame = "com-bprivy-panel-iframe";
 	var eid_panel = "com-bprivy-panel"; // Used by panel elements
 	var eid_panelTitle ="com-bprivy-panelTitle"; // Used by panel elements
 	var eid_panelList ="com-bprivy-panelList"; // Used by panel elements
@@ -481,7 +482,7 @@ function com_bprivy_CS(g_win)
         var iframe = $(doc.createElement('iframe')).attr({id: eid_frame, src: url});
         $(doc.body).append(iframe);
         
-        return j_panel;
+        return $('#'+eid_frame);
     }
 
     /**
@@ -541,12 +542,12 @@ function com_bprivy_CS(g_win)
             if (ua && (ua.length !== 1)) {
                 return;
             }
-            else if (g_db.eMapArray) {
+            else if (g_db.eRecsMapArray) {
                 // Cycle through tag_eRecs records starting with the
                 // best URL matching node.
-                l = g_db.eMapArray.length; uDone=false; pDone=false;
+                l = g_db.eRecsMapArray.length; uDone=false; pDone=false;
                 for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
-                    eRecsMap = g_db.eMapArray.pop();
+                    eRecsMap = g_db.eRecsMapArray.pop();
                     
                     uer = eRecsMap[ft_userid].curr;
                     per = eRecsMap[ft_pass].curr;

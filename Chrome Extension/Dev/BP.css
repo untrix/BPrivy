@@ -1,13 +1,30 @@
-#com-bprivy-panel-iframe {
+/*#com-bprivy-panel-iframe {
                 display: block;
                 padding: 0px;
                 margin: 0px;
                 border: none;
                 z-index: 9007199254740992;
-                width: 300px;
+                width: 293px;
                 opacity: 0;
+}*/
+
+/* This is the css-shield. Blocks cascading of CSS rules from the environment */
+#com-bprivy-panel, #com-bprivy-panel * {
+                min-width: 0px;
+                min-height: 0px;
+                margin: 0px;
+                padding: 0px;
+                border: none;
+                width: auto;
+                height: auto;
+                border-radius: 2px;
+                background: none;
+                direction: ltr;
+                list-style: none;
 }
-#com-bprivy-panel	{
+
+div#com-bprivy-panel	{
+                width: 279px;
                 display: block;
 				padding: 2px;
 				color: black;
@@ -16,38 +33,35 @@
 				opacity: 1;
 				border: thin solid gray;
 				z-index: 9007199254740992;
-				width: auto; 
-				height: auto;
 				cursor: default;
 				font-size: 13px;
 				font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
 				/*opacity: 0.5*/
 			}
 
-.com-bprivy-ul {
+#com-bprivy-panel #com-bprivy-panelList {
                 display: block;
                 /*width: 295px;*/
                 /*background-color: white;*/
                 color: black;
                 border-style: none;
-                margin: 0px;
+                /*margin: 0px;
                 padding: 0px;
-                height: auto;
-                list-style-type: none;
+                height: auto;*/
                 /*opacity: 0.5;*/
             }
 
-#com-bprivy-panelTitle {
+#com-bprivy-panel #com-bprivy-panelTitle {
 				display: block;
-                border-style: none;
+                /*border-style: none;
                 width: auto;
 				margin: 0px;
-				padding: 0px;
+				padding: 0px;*/
 				text-align: center;
 				vertical-align: middle; 
 			}
 
-#com-bprivy-TitleText {
+#com-bprivy-panel #com-bprivy-TitleText {
                 /*width: 250px;*/
                 margin: 1px;
                 padding: 2px;
@@ -68,101 +82,97 @@
 }
 
 
-.com-bprivy-li {
+#com-bprivy-panelList .com-bprivy-li {
                 border-radius: 2px;
                 border-collapse:collapse;
-                margin: 0px;
+                /*margin: 0px;
                 padding: 0px;
-                border: none;
-                list-style-type: none;
+                border: none;*/
                 display: block;
                 vertical-align: middle;
             }
 
-#com-bprivy-xB {
-                display: inline-block;
-                margin: 1px;
+#com-bprivy-panel #com-bprivy-xB {
+                display: inline;
                 float: right;
-                height: 22px;
-                width: 22px;
-                padding: 1px;
+                /*margin: 1px;
+                height: auto;
+                width: auto;
+                padding: 1px;*/
                 vertical-align: middle;
                 text-align: center;
+                opacity: 0%;
+                background: none;
                 
-                min-width: 0px;
-                min-height: 0px;
+                /*min-width: 0px;
+                min-height: 0px;*/
                 cursor: default;
             }
 
-.com-bprivy-tB {
-                display: inline-block;
-                float: left;
+#com-bprivy-panelList .com-bprivy-tB {
+                display: inline;
+                /*float: left;
                 margin: 1px;
-                height: 25px;
-                width: 25px;
-                padding: 1px;
+                height: auto;
+                width: auto;
+                padding: 1px;*/
                 vertical-align: middle;
                 text-align: center;
+                background: none;
+                opacity: 0%;
                 
-                min-width: 0px;
-                min-height: 0px;
+                /*min-width: 0px;
+                min-height: 0px;*/
                 cursor: default;
             }
 
-.com-bprivy-io-fields {
-                display: inline-block;
-                margin: 0px;
-                padding: 0px;
+#com-bprivy-panelList .com-bprivy-io-fieldset {
+                display: inline;
+                /*margin: 0px;
+                padding: 0px;*/
                 border: none;
 }
-.com-bprivy-field {
+
+#com-bprivy-panelList .com-bprivy-field {
                 display: inline-block;
                 /*border: thin solid gray;
                 border-radius: 2px;
                  cursor: pointer;*/
                 /*vertical-align: middle;
                  height: 1.3em;*/
-                background-color: white;
  		 		width: 125px;
  		 		margin: 1px;
  		 		padding: 1px;
  		 		height: 16px;
  		 		overflow: hidden;
+ 		 		text-align: justify;
 }
 
-.com-bprivy-user-in {
-                text-align: justify;
+#com-bprivy-panelList .com-bprivy-user-in {
                 border: 2px inset;
+                background-color: white;
 } 
 
-.com-bprivy-user-out{
-                text-align:justify;
+#com-bprivy-panelList .com-bprivy-user-out{
                 border: 2px outset;
+                background-color: light-gray;
                 /*color: #0080ff;*/
 				/*float:left;*/
  		 	}
 
-.com-bprivy-pass-in {
+#com-bprivy-panelList .com-bprivy-pass-in {
                 /*border-top: thin solid black;*/
-                text-align: center;
                 border: 2px inset;
+                background-color: white;
 }
-.com-bprivy-pass-out{
+#com-bprivy-panelList .com-bprivy-pass-out {
 				/*float: right;*/
 				/*border-top: thin solid black;*/
-				text-align: center;
                 border: 2px outset;
+                background-color: light-gray;
                 /*color: green;*/
 			}
 			
-.com-bprivy-hidden {
+#com-bprivy-panel .com-bprivy-hidden {
                 display:none;
             }
-                /*position: absolute; top: 0px; right: 0px;
-                
-                color: white;
-                border: thin outset black;
-                vertical-align: middle;
-                text-align: center;
-                width: auto;
-                height: auto;*/

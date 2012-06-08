@@ -2,13 +2,15 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
+
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR */
-//*members */
+/*jslint browser:true, devel:true */
+///*members */
 
-var BP_MOD_MEMSTORE = (function() 
+var BP_MOD_MEMSTORE = (function () 
 {
     "use strict"; //TODO: Remove this from prod. build
     
@@ -472,7 +474,7 @@ var BP_MOD_MEMSTORE = (function()
             urli = new Iterator(newUrla(loc));
 
         r = {};
-        r.eMapArray = g_kd.findERecsMapArray(urli);
+        r.eRecsMapArray = g_kd.findERecsMapArray(urli);
         urli.rwnd();
         r.pRecsMap = g_pd.findPRecsMap(urli);
 

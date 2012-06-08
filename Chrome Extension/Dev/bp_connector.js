@@ -9,7 +9,7 @@
 /*global document BP_MOD_CS_PLAT BP_MOD_COMMON IMPORT*/
 /*jslint browser:true, devel:true */
 //*members */
-/** @remove Only used in debug builds */
+
 
 /**
  * @ModuleBegin Connector
@@ -43,12 +43,12 @@ var BP_MOD_CONNECT = (function ()
     var DNODE_TAG = {};
     Object.defineProperties(DNODE_TAG,
         {
-            DATA: {value:"{dt}", writable:false, configurable:false},
-            TLD: {value:"{t}", writable:false, configurable:false},
-            HOST: {value:"{h}", writable:false, configurable:false},
-            DOMAIN: {value:"{d}", writable:false, configurable:false},
-            PORT: {value:"{o}", writable:false, configurable:false},
-            PATH: {value:"{p}", writable:false, configurable:false},
+            DATA: {value:"{dt}", writable:false, configurable:false, enumerable: true},
+            TLD: {value:"{t}", writable:false, configurable:false, enumerable: true},
+            HOST: {value:"{h}", writable:false, configurable:false, enumerable: true},
+            DOMAIN: {value:"{d}", writable:false, configurable:false, enumerable: true},
+            PORT: {value:"{o}", writable:false, configurable:false, enumerable: true},
+            PATH: {value:"{p}", writable:false, configurable:false, enumerable: true},
             getDataTag: {value: function (dt) {
                 // tag is a property name that should never clash withe a URL
                 // segment. Hence the bracket
@@ -147,16 +147,16 @@ var BP_MOD_CONNECT = (function ()
         {
             Object.defineProperties(this,
                 {
-                    curr: {value: jo.curr, writable: true},
-                    arecs: {value: jo.arecs}
+                    curr: {value: jo.curr, writable: true, enumerable: true},
+                    arecs: {value: jo.arecs, enumerable: true}
                 }
             );
         }
         else {
             Object.defineProperties(this,
                 {
-                    curr: {value: undefined, writable: true},
-                    arecs: {value: []}
+                    curr: {writable: true, enumerable: true},
+                    arecs: {value: [], enumerable: true}
                 }
             );
         }
@@ -165,7 +165,7 @@ var BP_MOD_CONNECT = (function ()
     /** Method. Insert a record into the Action Records collection */
     Actions.prototype.insert = function(arec)
     {//TODO: Check for exact duplicate records. That is, records with matching timestamp and values.
-        if (!arec.date) { arec.date = Date.now();}
+        //if (!arec.date) { arec.date = Date.now();} // TODO: Remove auto-population of date in PRecord constructor.
         var n = this.arecs.push(arec);
         if ((!this.curr) || (this.curr.date < arec.date)) {
             this.curr = this.arecs[n-1];

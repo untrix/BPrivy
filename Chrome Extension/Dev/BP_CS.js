@@ -6,32 +6,36 @@
  */
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT */
-/*jslint browser : true, devel : true, es5 : true */
-/*properties console.info, console.log, console.warn */
-/*properties 
+/*jslint browser:true, devel:true, es5:true, maxlen:120, passfail:false, plusplus:true, regexp:true,
+  undef:false, vars:true, white:true */
+/* members el.type,
  * el.type, win.top, win.self,
  * frame.hidden, frame.style, style.visibility, style.display, ev.preventDefault,
  * ev.stopPropagation, document.getElementById
  */
 
+
 /**
  * @module CS
  */
-function com_bprivy_CS(g_win) 
+var BP_MOD_PANEL = (function (g_win)
 {
     "use strict"; // TODO: @remove Only used in debug builds
-    
+
     var m;
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
     var CSS_HIDDEN = IMPORT(m.CSS_HIDDEN);
     var dt_eRecord = IMPORT(m.dt_eRecord);
     var dt_pRecord = IMPORT(m.dt_pRecord);
+    var encrypt = IMPORT(m.encrypt);
+    var decrypt = IMPORT(m.decrypt);
+    var stopPropagation = IMPORT(m.stopPropagation);
+    var preventDefault = IMPORT(m.preventDefault);
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
     var ft_userid = IMPORT(m.ft_userid);   // Represents data-type userid
     var ft_pass = IMPORT(m.ft_pass);        // Represents data-type password
-    var newERecord = IMPORT(m.newERecord);
     var newPRecord = IMPORT(m.newPRecord);
     var saveRecord = IMPORT(m.saveRecord);
     var deleteRecord = IMPORT(m.deleteRecord);
@@ -40,8 +44,8 @@ function com_bprivy_CS(g_win)
     var tag_pRecs = IMPORT(m.DNODE_TAG.getDataTag(dt_pRecord));
     /** @import-module-begin CSPlatform */
     m = BP_MOD_CS_PLAT;
-    var registerMsgListener = IMPORT(m.registerMsgListener);
     var getURL = IMPORT(m.getURL);
+    var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     /** @import-module-end */    m = null;
     
     /** @globals-begin */
@@ -55,6 +59,7 @@ function com_bprivy_CS(g_win)
 	var eid_panel = "com-bprivy-panel"; // Used by panel elements
 	var eid_panelTitle ="com-bprivy-panelTitle"; // Used by panel elements
 	var eid_panelList ="com-bprivy-panelList"; // Used by panel elements
+	var eid_ioItem = "com-bprivy-ioItem";
     var eid_opElement = 'com-bprivy-op-'; // ID prefix of an output line of panel
     var eid_userOElement = "com-bprivy-useridO-"; // ID Prefix used by panel elements
 	var eid_passOElement = "com-bprivy-passO-"; // ID Prefix Used by panel elements
@@ -68,18 +73,14 @@ function com_bprivy_CS(g_win)
 	// and used as keys in CSS selectors. These need to be globally
 	// unique as well. We need these here in order to ensure they're
 	// globally unique and also as a single location to map to CSS files.
-	var css_class_panel = "com-bprivy-panel";
-	var css_class_field ="com-bprivy-field";
-	var css_class_userOut = "com-bprivy-user-out";
-	var css_class_userIn = "com-bprivy-user-in";
-	var css_class_passOut = "com-bprivy-pass-out";
-	var css_class_passIn = "com-bprivy-pass-in";
-	var css_class_bButton = "com-bprivy-tb";
-	var css_class_li = "com-bprivy-li";
-    var css_class_ul = "com-bprivy-ul";
-    var css_class_ioFields = "com-bprivy-io-fields";
-	var css_class_xButton = "com-bprivy-xB";
-	var css_class_tButton = "com-bprivy-tB";
+    var css_class_li = "com-bprivy-li "; // Space at the end allows concatenation
+    var css_class_ioFields = "com-bprivy-io-fieldset ";// Space at the end allows concatenation
+	var css_class_field ="com-bprivy-field ";// Space at the end allows concatenation
+	var css_class_userIn = "com-bprivy-user-in ";// Space at the end allows concatenation
+    var css_class_userOut = "com-bprivy-user-out ";// Space at the end allows concatenation
+    var css_class_passIn = "com-bprivy-pass-in ";// Space at the end allows concatenation
+	var css_class_passOut = "com-bprivy-pass-out ";// Space at the end allows concatenation
+	var css_class_tButton = "com-bprivy-tB ";
 	
 	// These are 'data' attribute names. If implemented as jQuery data
 	// these won't manifest as HTML content attributes, hence won't
@@ -89,146 +90,25 @@ function com_bprivy_CS(g_win)
 	var pn_d_value = "bpValue";
 	var pn_d_dataType = "bpDataType";
 	var pn_d_peerID = 'bpPeerID';
+	var pn_d_panelID = 'bpPanelID';
+	var pn_d_ctx = 'bpPanelCtx';
+    var MT_TEXT_PLAIN = 'text/plain';
+    var MT_BP_PREFIX = 'application/x-bprivy-';
+    var MT_BP_DT = MT_BP_PREFIX + 'dt';
+    var MT_BP_PASS = MT_BP_PREFIX + ft_pass;
+    var MT_BP_USERID = MT_BP_PREFIX + ft_userid;
 
     // Other Globals
     var g_doc = g_win.document;
     var g_loc = g_doc.location;
-    var g_db ={};
-    var g_draggedElementID;
-    var g_draggedElement;
     var g_ioItemID = 0;
-    var settings = {ShowPanelForMultipleLogins: true}; // User Setting
+    var u_cir_s = '\u24E2';
+    var u_cir_S = '\u24C8';
+    var u_cir_e = '\u24D4';
+    var u_cir_E = '\u24BA';
+    var u_cir_X = '\u24CD';
     /** @globals-end **/
     
-    /** Placeholder password decryptor */
-    function decrypt(str) {return str;}
-    /** Placeholder password encryptor */
-    function encrypt(str) {return str;}
-
-    /** Intelligently returns true if the input element is a userid/username input field */
-    function isUserid(el)
-     {
-         if (el.tagName.toLowerCase() !== 'input') {return false;}
-         if (el.type)
-            {return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");}
-         else
-             {return true;} // text type by default
-     }
-    
-    /** Intelligently returns true if the element is a password field */
-    function isPassword (el)
-     {
-         if (el.tagName.toLowerCase() !== 'input') {return false;}
-        return (el.type === "password");
-     }
-
-    /** Returns true if the BPrivy control panel should be created in the supplied browsing context */
-	function canHavePanel(win) {
-		return (win.top === win.self);
-	}
-	
-	function isDocVisible(document) {
-        /*properties is */
-		return ((document.webkitVisibilityState && (document.webkitVisibilityState === 'visible')) || ($(document.body).is(":visible")));
-	}
-
-	function isFrameVisible(frame)
-	{
-		var retval = true;
-		console.info("Entered IsFrameVisible");
-		if (frame.hidden) {
-			retval = false;
-		}
-		else if (!frame.style) {
-			retval = true;
-		}
-		else// frame.style exists
-		{
-			if(frame.style.visibility && frame.style.visibility === 'hidden') {
-				retval = false;
-			}
-			else if(frame.style.display && frame.style.display === 'none') {
-				retval = false;
-			}
-		}
-
-		console.info("Exiting IsFrameVisible");
-		return retval;
-	}
-
-	function preventDefault (ev)
-	{
-		console.log("pd invoked");
-		ev.preventDefault();
-		return false;
-	}
-	
-	function stopPropagation(ev)
-	{
-		//console.info("stopPropagation invoked");
-		ev.stopPropagation();
-	}
-	
-	function findPeerElement(el)
-	{}
-	
-	function autoFillPeer(el, data)
-	{
-        var p_el = findPeerElement(el);
-        if (p_el)
-        {
-            if (data.type() === ft_pass) {
-                p_el.value = decrypt(data);
-            }
-            else {
-                p_el.value = data;
-            }
-        }
-	}
-	
-	function setupDNDWatchers(win)
-	{
-		function inputHandler(e)
-		{
-		    console.info("inputHandler invoked");
-            var eRec = newERecord(), dragged_el;
-            if (g_draggedElementID) {
-                //dragged_el = g_doc.getElementById(g_draggedElementID);
-                dragged_el = g_draggedElement;
-                console.info("DraggedElementID is " + g_draggedElementID);
-            }
-            else {
-                console.info("DraggedElementID is null");
-            }
-            
-			if ( dragged_el && ($(dragged_el).data(pn_d_value) === e.target.value))
-			{
-			    eRec.tagName = e.target.tagName;
-			    eRec.id = e.target.id;
-			    eRec.name = e.target.name;
-			    eRec.type = e.target.type;
-                eRec.fieldType = $(dragged_el).data(pn_d_dataType);
-                eRec.loc = g_doc.location;
-                                
-				saveRecord(eRec);
-				
-				var p = $(dragged_el).data(pn_d_peerID);
-				if (p) {
-				    autoFillPeer(e.target, $(p).data(pn_d_value));
-				}
-				//console.info("Linking elements " + g_draggedElementID + "/" + name + " and " + e.target.id + "/" + e.target.name);
-			}
-		}
-		
-		$(g_doc.getElementsByTagName('input')).each(function(i, el) {
-			if (isUserid(el) || isPassword(el))
-			{
-				el.addEventListener("input", inputHandler, false);
-				console.log("Added event listener for element " + el.id + "/" + el.name);
-			}
-		});
-	}
-	
 	function createImageElement(imgPath)
 	{
 		var el = g_doc.createElement("img");
@@ -251,15 +131,16 @@ function com_bprivy_CS(g_win)
 			}
 			
 			//console.info("setting data to " + data + " and bpcontent to " + e.target.id);
-			e.dataTransfer.setData('text/plain', data);
+			e.dataTransfer.setData(MT_TEXT_PLAIN, data);
 			//e.dataTransfer.setData(n.bpContentType, e.target.id);
 			//e.dataTransfer.addElement(e.target);
 			//e.dataTransfer.setDragImage(createImageElement("icon16.png"), 0, 0);
 			//e.stopPropagation();
 			//console.info("DataTransfer.items = "+ e.dataTransfer.items.toString());
 			//console.info("tranfer data = " + e.dataTransfer.getData("text/plain"));
-			g_draggedElementID = e.target.id;
-			g_draggedElement = e.target;
+			// g_dnd.draggedElementID = e.target.id;
+			// g_dnd.draggedElement = e.target;
+			e.stopPropagation(); // We don't want the enclosing web-page to interefere
 			return true;
 		}
 
@@ -268,15 +149,61 @@ function com_bprivy_CS(g_win)
 		function handleDragEnd(e)
 		{
 			console.info("DragEnd received");
-			g_draggedElementID = null;
-			g_draggedElement = null;
+			// g_dnd.draggedElementID = null;
+			// g_dnd.draggedElement = null;
+            e.stopPropagation(); // We don't want the enclosing web-page to interefere
 			return true;
 		}
 
 		doc.getElementById(eid).addEventListener('dragend', handleDragEnd, false);
 	}
 	
-	function createOpItem(doc, id, u, p)
+    function makeDataDraggable2(ctx, j_panelList) // ctx = {doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}
+    {
+        var dnd = ctx.dnd;
+        function handleDragStart (e)
+        {
+            console.info("DragStartHandler entered");
+            e.dataTransfer.effectAllowed = "copy";
+            var data = $(e.target).data(pn_d_value);
+            if ($(e.target).data(pn_d_dataType) === ft_pass) {
+                data = decrypt(data);
+            }
+            
+            e.dataTransfer.items.add('', MT_BP_PREFIX + $(e.target).data(pn_d_dataType)); // Keep this on top for quick matching later
+            e.dataTransfer.items.add($(e.target).data(pn_d_dataType), MT_BP_DT); // Keep this second for quick matching later
+            e.dataTransfer.items.add(data, MT_TEXT_PLAIN); // Keep this last
+            e.dataTransfer.setDragImage(createImageElement("icon16.png"), 0, 0);
+            e.dataTransfer.addElement(e.target);
+            //dnd.draggedElementID = e.target.id;
+            //dnd.draggedElement = e.target;
+            e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
+            //return true;
+        }
+
+        function handleDrag(e)
+        {
+            console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
+            e.stopImmediatePropagation();
+        }
+        
+        addEventListener(j_panelList[0], 'dragstart', handleDragStart);
+        addEventListener(j_panelList[0], 'drag', handleDrag);
+
+        function handleDragEnd(e)
+        {
+            console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //dnd.draggedElementID = null;
+            //dnd.draggedElement = null;
+            e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
+            //return true;
+        }
+
+        addEventListener(j_panelList[0], 'dragend', handleDragEnd);
+    }
+    
+    function createOpItem(doc, id, u, p)
 	{
 	    var opid = eid_opElement + id;
 	    var ueid = eid_userOElement + id;
@@ -285,6 +212,7 @@ function com_bprivy_CS(g_win)
         var j_div = $(doc.createElement("div")).attr(
             {
                 id: opid
+                //style: BP_MOD_CSS.style_ioFields
             }
         ).addClass(css_class_ioFields);
 
@@ -292,8 +220,9 @@ function com_bprivy_CS(g_win)
             {draggable: true,
              id: ueid,
              name: ueid
+             //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_userOut
              }
-            ).addClass(css_class_field + " " + css_class_userOut).text(u);
+            ).addClass(css_class_field+css_class_userOut).text(u);
         j_opu.data(pn_d_dataType, ft_userid).data(pn_d_value, u);
 
         var j_opp = $(doc.createElement('span')).attr(
@@ -301,8 +230,9 @@ function com_bprivy_CS(g_win)
                 draggable: true,
                 id: peid,
                 name: peid
+                //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_passOut
             }
-            ).addClass(css_class_field + " " + css_class_passOut).text("*****");
+            ).addClass(css_class_field + css_class_passOut).text("*****");
         j_opp.data(pn_d_dataType, ft_pass).data(pn_d_value, p);
         
         j_div.append(j_opu).append(j_opp);
@@ -319,21 +249,23 @@ function com_bprivy_CS(g_win)
 	    var ueid = eid_userIElement + id;
 	    var peid = eid_passIElement + id;
 
-        var j_inf = $(doc.createElement('form')).attr({id: ifid, 'class': css_class_ioFields});
+        var j_inf = $(doc.createElement('div')).attr({id: ifid, 'class': css_class_ioFields});
         var j_inu = $(doc.createElement('input')).attr(
         {
             type: 'text',
             id: ueid,
             name: ueid,
             value: u
-        }).addClass(css_class_field + " " + css_class_userIn).data(pn_d_value, u);
+            //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_userIn
+        }).addClass(css_class_field+css_class_userIn).data(pn_d_value, u);
         var j_inp = $(doc.createElement('input')).attr(
         {
             type: 'password',
             id: peid,
             name: peid,
             value: decrypt(p)
-        }).addClass(css_class_field + " " + css_class_passIn).data(pn_d_value, p);
+            //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_passIn
+        }).addClass(css_class_field+css_class_passIn).data(pn_d_value, p);
 
         j_inf.append(j_inu).append(j_inp);
         
@@ -367,11 +299,11 @@ function com_bprivy_CS(g_win)
 	            $(pe).removeData();
 	           parent.removeChild(op);
 	           parent.appendChild(ifm);
-	           $(e.target).val('s');
+	           $(e.target).val(u_cir_S); // unicode circled s = save
 	        }
 	    }
 	    else if (ifm) { // replace input-form with draggable text
-	        col = ifm.elements;
+	        col = ifm.children;
 	        ue = col[eid_userIElement + id];
 	        pe = col[eid_passIElement + id];
 	        var u = ue.value;
@@ -405,11 +337,15 @@ function com_bprivy_CS(g_win)
 	        if (op) {
 	            //parent.removeChild(ifm);
 	            parent.appendChild(op);// Insert the 'op' item.
-	            $(e.target).val('e');
+	            $(e.target).val(u_cir_E); // unicode circled e = edit
 	        }
 	        
 	        $(ifm).remove(); // Then remove the 'ifm' item.
 	    }
+
+        e.stopPropagation(); // We don't want the enclosing web-page to interefere
+        e.preventDefault(); // Causes event to get cancelled if cancellable
+        return false; // Causes the event to be cancelled (except mouseover event).
 	}
 	
 	/** Creates an IO Widget with a Toggle Button and Output Fields **/
@@ -417,11 +353,12 @@ function com_bprivy_CS(g_win)
 	{
 	    var jq = $('#' + eid_panelList);
 	    var id = (++g_ioItemID);
+	    var liid = eid_ioItem + id;
 		var opid = eid_opElement + id;
 		var ifid = eid_inForm + id;
 		var tbid = eid_tButton + id;
 		
-		var j_li = $(doc.createElement("li")).attr({id: id}).addClass(css_class_li);
+		var j_li = $(doc.createElement("div")).attr({id: liid, class: css_class_li});
         var tb = doc.createElement('input'); // Toggle Button
         tb.addEventListener('click', toggleIO, false);
         var j_tb = $(tb).attr(
@@ -432,16 +369,17 @@ function com_bprivy_CS(g_win)
                 'data-tbid': tbid,
                 type: 'button',
                 id: tbid
+                //style: BP_MOD_CSS.style_tButton
             }
         ).addClass(css_class_tButton);
 
         j_li.append(j_tb);
         if (!bInp) {
-            j_tb.val('e'); // e = edit
+            j_tb.val(u_cir_E); // Unicode circled e = edit
             j_li.append(createOpItem(doc, id, user, pass)); 
         } // Output Fields
         else {
-            j_tb.val('s'); // s = save
+            j_tb.val(u_cir_S); // unicode circled s = save
             j_li.append(createInItem(doc, id, user, pass));
         }
         jq.append(j_li);
@@ -451,46 +389,128 @@ function com_bprivy_CS(g_win)
 		j_li[0].addEventListener('mousedown', stopPropagation, false);
 	}
 	
-	function insertIOItems(doc)
+    /** Creates an IO Widget with a Toggle Button and Output Fields **/
+    function insertIOItem2 (doc, j_panel, user, pass, bInp)
     {
-        var pRecsMap, i, nma;
-        if ((pRecsMap = g_db[tag_pRecs])) 
-        {
-            nma = Object.getOwnPropertyNames(pRecsMap);
+        var jq = $('#' + eid_panelList, j_panel);
+        var id = (++g_ioItemID);
+        var liid = eid_ioItem + id;
+        var opid = eid_opElement + id;
+        var ifid = eid_inForm + id;
+        var tbid = eid_tButton + id;
         
-            for (i=0; i<nma.length; i++) {
-                insertIOItem(doc, nma[i], pRecsMap[nma[i]].curr.pass);
+        var j_li = $(doc.createElement("div")).attr({id: liid, class: css_class_li});
+        var j_tb = $('<input type="button">').attr(
+            {
+                'data-opid': opid,
+                'data-ifid': ifid,
+                'data-id': id,
+                'data-tbid': tbid,
+                id: tbid
+                //style: BP_MOD_CSS.style_tButton
+            }
+        ).addClass(css_class_tButton);
+        addEventListener(j_tb[0], 'click', toggleIO);
+
+        j_li.append(j_tb);
+        if (!bInp) {
+            j_tb.val(u_cir_E); // Unicode circled e = edit
+            j_li.append(createOpItem(doc, id, user, pass)); 
+        } // Output Fields
+        else {
+            j_tb.val(u_cir_S); // unicode circled s = save
+            j_li.append(createInItem(doc, id, user, pass));
+        }
+        jq.append(j_li);
+
+        // Prevent mousedown to bubble up in order to prevent panel dragging by
+        // jquery-ui.
+        addEventListener(j_li[0], 'mousedown', stopPropagation);
+    }
+    
+    function insertIOItems(doc)
+    {
+        var pRecsMap, i, userids;
+        if ((pRecsMap = g_db.pRecsMap)) 
+        {
+            userids = Object.getOwnPropertyNames(pRecsMap);
+        
+            for (i=0; i<userids.length; i++) {
+                //var curr = pRecsMap[userids[i]].curr;
+                insertIOItem(doc, userids[i], pRecsMap[userids[i]].curr.pass);
             }
         }
         // Finally, create one Input Item for new entry.
         insertIOItem(doc, "","", true);
     }
     
-    function insertSettingsPanel(doc)
+    function insertIOItems2(ctx, j_panel)
+    {
+        var doc = ctx.doc, db = ctx.db;
+        var pRecsMap, i, userids;
+        if ((pRecsMap = db.pRecsMap)) 
+        {
+            userids = Object.getOwnPropertyNames(pRecsMap);
+        
+            for (i=0; i<userids.length; i++) {
+                //var curr = pRecsMap[userids[i]].curr;
+                insertIOItem2(doc, j_panel, userids[i], pRecsMap[userids[i]].curr.pass);
+            }
+        }
+        // Finally, create one Input Item for new entry.
+        insertIOItem2(doc, j_panel, "","", true);
+    }
+    
+    function insertSettingsPanel(j_panel)
     {
         var ml = '<input type="file" accept=".3db" class="com-bprivy-dbPath" placeholder="Insert DB Path Here" ></input>';
     }
     
-    // CREATE THE CONTROL-PANEL
-    function createPanel(doc)
+    // Delete the control panel. Invoked when the x button is clicked.
+    function deletePanel(el)
     {
-        var html =  '<div id="com-bprivy-panel" class="com-bprivy-panel" style="display:none">' +
-                        '<ul id="com-bprivy-panelList" class="com-bprivy-ul">' +
-                            '<div id="com-bprivy-panelTitle"><div id="com-bprivy-TitleText">BPrivy</div>' +
-                                '<input type="button" id="com-bprivy-xB" accesskey="q" class="com-bprivy-xB" value="x"></input>' +
-                            '</div>' +
-                        '</ul>' +
-                    '</div>';
-        var iframe = '<iframe id="com-bprivy-panel-iframe" src="bp_panel.html"></iframe>'; 
-        doc.body.insertAdjacentHTML('beforeend', html);
-        //doc.body.insertAdjacentHTML('beforeend', iframe);
-        //var doc2 = doc.getElementById("com-bprivy-iframe").contentDocument;
-        makeDataDraggable(doc, eid_panelList);
-        doc.getElementById(eid_xButton).addEventListener('click', togglePanel);
-        insertSettingsPanel(doc);
-        insertIOItems(doc);
-        
-        var j_panel = $('#' + eid_panel);
+        if (el)
+        {   
+            $(el).data(pn_d_ctx).db.clear(); //g_db.clear(); // clear the data.
+            // Need to do this using jquery so that it will remove $.data of all descendants
+            $(el).remove();
+        }        
+    }
+    
+    function deletePanelHandler(e)
+    {
+        if (e)
+        {
+            var id_panel = $(e.target).data(pn_d_panelID);
+            var el = g_doc.getElementById(id_panel);
+            deletePanel(el);
+            e.stopPropagation(); // We don't want the enclosing web-page to interefere
+            e.preventDefault(); // Causes event to get cancelled if cancellable
+            return false; // Causes the event to be cancelled (except mouseover event).
+        }
+    }
+    
+    // CREATE THE CONTROL-PANEL
+    function createPanel(ctx) // ctx = {doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}
+    {
+        var doc = ctx.doc, id_panel = ctx.id_panel, dnd = ctx.dnd, db = ctx.db;
+        var j_panel = $(doc.createElement('div')).attr({id: id_panel}).data(pn_d_ctx, ctx);
+        var html =      '<div id="com-bprivy-panelTitle"><div id="com-bprivy-TitleText">BPrivy</div>' +
+                            '<input type="button" id="com-bprivy-xB" accesskey="q" value="\u24CD"></input>' +
+                        '</div>' +
+                        '<div id="com-bprivy-panelList"></div>';
+        j_panel[0].insertAdjacentHTML('beforeend', html);
+        //doc.body.insertAdjacentHTML('beforeend', html);
+        //makeDataDraggable(doc, eid_panelList);
+        //doc.getElementById(eid_xButton).addEventListener('click', deletePanel);
+        //insertIOItems(doc);
+        makeDataDraggable2(ctx, $('#'+eid_panelList,j_panel));
+        var j_xButton = $('#'+eid_xButton, j_panel).data(pn_d_panelID, id_panel);
+        addEventListener(j_xButton[0], 'click', deletePanelHandler);
+        insertSettingsPanel(j_panel);
+        insertIOItems2(ctx, j_panel);
+
+        doc.body.appendChild(j_panel[0]);        
         // Make sure that postion:fixed is supplied at element level otherwise draggable() overrides it
         // by setting position:relative. Also we can use right:0px here because draggable() does not like it.
         // Hence we need to calculate the left value :(         
@@ -507,9 +527,107 @@ function com_bprivy_CS(g_win)
         // Make it draggable after all above mentioned style properties have been applied to the element.
         // Otherwise draggable() will override those properties.
         j_panel.draggable();
-        
+
         return j_panel;
     }
+
+    //Assemble the interface    
+    var iface = {};
+    Object.defineProperties(iface, 
+    {
+        createPanel: {value: createPanel},
+        deletePanel: {value: deletePanel},
+        eid_panel: {value: eid_panel},
+        pn_d_value: {value: pn_d_value},
+        pn_d_dataType: {value: pn_d_dataType},
+        pn_d_peerID: {value: pn_d_peerID},
+        MT_BP_DT: {value: MT_BP_DT},
+        MT_TEXT_PLAIN: {value: MT_TEXT_PLAIN},
+        MT_BP_PREFIX: {value: MT_BP_PREFIX}
+    });
+    Object.freeze(iface);
+
+    return iface;
+
+})(window);
+/** @ModuleEnd */
+
+(function(g_win)
+{
+    /** @export-module-begin */
+    var g_dnd = {};
+    var g_db = {
+        ingest: function(db) {
+            if (db) {
+                this.pRecsMap = db.pRecsMap; 
+                this.eRecsMapArray = db.eRecsMapArray;
+                delete this.numUserids;
+                if (this.pRecsMap) {
+                    this.numUserids = Object.keys(this.pRecsMap).length;
+                }
+                else {
+                    this.numUserids = 0;
+                }
+                Object.defineProperty(this, "numUserids", {writable: false, configurable:true, enumerable:true});
+            }
+        },
+        clear: function() {
+            var keys = Object.keys(this);
+            for (name in keys) {
+                delete this[name];
+            }
+        }
+    };
+    /** Returns true if the BPrivy control panel should be created in the supplied browsing context */
+    function isTopLevel(win) {
+        return (win.top === win.self);
+    }
+    var BP_MOD_CS = {};
+    Object.defineProperties(BP_MOD_CS, 
+    {
+        g_dnd: {value: g_dnd, enumerable:true},
+        g_db: {value: g_db, enumerable:true}
+    });
+    Object.freeze(BP_MOD_CS);
+    /** @export-module-end **/
+   
+    var m;
+    /** @import-module-begin Common */
+    m = BP_MOD_COMMON;
+    var encrypt = IMPORT(m.encrypt);
+    var decrypt = IMPORT(m.decrypt);
+    var stopPropagation = IMPORT(m.stopPropagation);
+    var preventDefault = IMPORT(m.preventDefault);    
+    /** @import-module-begin CSPlatform */
+    m = BP_MOD_CS_PLAT;
+    var registerMsgListener = IMPORT(m.registerMsgListener);
+    var addEventListener = IMPORT(m.addEventListener); // Compatibility function
+    /** @import-module-begin Connector */
+    m = BP_MOD_CONNECT;
+    var getRecs = IMPORT(m.getRecs);
+    var deleteRecord = IMPORT(m.deleteRecord);
+    var saveRecord = IMPORT(m.saveRecord);
+    var newERecord = IMPORT(m.newERecord);
+    var ft_userid = IMPORT(m.ft_userid);   // Represents data-type userid
+    var ft_pass = IMPORT(m.ft_pass);        // Represents data-type password
+    /** @import-module-begin Panel */
+    m = BP_MOD_PANEL;
+    var createPanel = IMPORT(m.createPanel);
+    var deletePanel = IMPORT(m.deletePanel);
+    // Since there is only one panel, we're using eid_panel as the global panel id.
+    var gid_panel = IMPORT(m.eid_panel);
+    var pn_d_value = IMPORT(m.pn_d_value);
+    var pn_d_dataType = IMPORT(m.pn_d_dataType);
+    var pn_d_peerID = IMPORT(m.pn_d_peerID);
+    var MT_BP_DT = IMPORT(m.MT_BP_DT);
+    var MT_TEXT_PLAIN = IMPORT(m.MT_TEXT_PLAIN);
+    var MT_BP_PREFIX = IMPORT(m.MT_BP_PREFIX);
+    /** @import-module-end **/ m = null;
+    /** @globals-begin */
+    var g_loc = IMPORT(g_win.location);
+    var g_doc = IMPORT(g_win.document);
+    var settings = {AutoFill:true, ShowPanelIfNoFill: true}; // User Settings
+    /** @globals-end **/
 
     /**
      * Autofills element described by 'er' with string 'str'.
@@ -553,6 +671,7 @@ function com_bprivy_CS(g_win)
         }
     }
     
+
     function autoFill()
     {
         var eRecsMap, pRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone;
@@ -562,21 +681,23 @@ function com_bprivy_CS(g_win)
         if (!(pRecsMap = g_db.pRecsMap)) {
             return;
         }
-        else {
-            ua = Object.getOwnPropertyNames(pRecsMap); 
+        else 
+        {
+            ua = Object.keys(pRecsMap); 
             // if there is more than one username, do not autofill
             if (ua && (ua.length !== 1)) {
                 return;
             }
-            else if (g_db.eMapArray) {
+            else if (g_db.eRecsMapArray) 
+            {
                 // Cycle through tag_eRecs records starting with the
                 // best URL matching node.
-                l = g_db.eMapArray.length; uDone=false; pDone=false;
+                l = g_db.eRecsMapArray.length; uDone=false; pDone=false;
                 for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
-                    eRecsMap = g_db.eMapArray.pop();
+                    eRecsMap = g_db.eRecsMapArray.pop();
                     
-                    uer = eRecsMap[ft_userid].curr;
-                    per = eRecsMap[ft_pass].curr;
+                    if (eRecsMap[ft_userid]) { uer = eRecsMap[ft_userid].curr;}
+                    if (eRecsMap[ft_pass]) {per = eRecsMap[ft_pass].curr;}
                     if ((!uDone) && uer) {
                         u = ua[0];
                         uDone = autoFillEl(uer, u);
@@ -584,12 +705,16 @@ function com_bprivy_CS(g_win)
                             // The data in the E-Record was an exact URL match
                             // yet, it has been shown to be not useful.
                             // Therefore purge it form the K-DB.
-
+                          
                             // Location gets deleted from e-rec when it is
                             // inserted into the DB. Therefore we'll need to
                             // put it back in.
-                            uer.loc = g_loc;
-                            deleteRecord(uer);
+                            uer.loc = g_loc; // TODO: This may not be required anymore.
+
+                            // TODO: Can't assume that i===0 implies full url match.
+                            // Need to construct a URLA from uer.loc and compare it with
+                            // g_loc. Commenting out for the time being.
+                            //deleteRecord(uer); // TODO: implement deleteRecord
                         }
                     }
                     if ((!pDone) && per) {
@@ -603,212 +728,292 @@ function com_bprivy_CS(g_win)
                             // Location gets deleted from e-rec when it is
                             // inserted into the DB. Therefore we'll need to
                             // put it back in.
-                            per.loc = g_loc;
-                            deleteRecord(per);
+                            per.loc = g_loc; // TODO: This may not be required anymore.
+
+                            // TODO: Can't assume that i===0 implies full url match.
+                            // Need to construct a URLA from uer.loc and compare it with
+                            // g_loc. Commenting out for the time being.
+                            //deleteRecord(per); // TODO: implement deleteRecord
                         }
                     }
                 }
-            }
+            }  
+        }
+        
+        if (uDone && pDone) {
+            return true;
         }
     }
-     
-    function showPanel()
-    {
-        createPanel(g_doc).show();
-    }
-    
-    function togglePanel(e/*unused*/)
-    {
-        // Only show the panel in the top-level frame.
-        if(canHavePanel(g_win)) 
-        {
-            var el = g_doc.getElementById(eid_panel);
-            if (el)
-            {
-                g_draggedElementID = null;
-                g_draggedElement = null;
-                $(el).remove();
-            }
-            else {
-                showPanel();
-            }
-        }        
-    }
-    
+       
     /** 
-     * Invoked upon receipt of DB records from Connector or FileStore module.
+     * Invoked upon receipt of DB records from the MemStore module.
      * @param {db}  Holds DB records relevant to this page. 
      */
     function callbackGetDB (db)
-    {
-        g_db = db;
+    {        
+        console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(db));
+
+        g_db.ingest(db);
         
+        if (settings.AutoFill) {
+            if (!autoFill() && g_db.numUserids && settings.ShowPanelIfNoFill)
+            {
+                createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
+            }
+        }
+    }
+    
+    /** 
+     * Invoked upon receipt of DB records from the MemStore module.
+     * @param {db}  Holds DB records relevant to this page. 
+     */
+    function asyncShowPanel (db)
+    {
         console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(g_db));
-        if ((!autoFill()) && settings.ShowPanelIfMultipleLogins) {
-            showPanel();
+        g_db.ingest(db);
+        // TODO: Since this is async, maybe we should check if the panel exists.
+        createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
+    }
+    
+   
+    function clickBP (request, sender, sendResponse)
+    {
+        if(isTopLevel(g_win)) 
+        {
+            var el = g_doc.getElementById(gid_panel);
+            if (el)
+            {
+                // Need to do this using jquery so that it cleans up all related $.data attrs
+                $(el).remove();
+            }
+            else {
+                // Post a message to MemStore to retrieve the set of recs afresh.
+                getRecs(g_win.location, asyncShowPanel);
+            }
+        }
+        
+        sendResponse({});
+    }
+
+    function findPeerElement(el)
+    {}
+    
+    function autoFillPeer(el, data)
+    {
+        var p_el = findPeerElement(el);
+        if (p_el)
+        {
+            if (data.type() === ft_pass) {
+                p_el.value = decrypt(data);
+            }
+            else {
+                p_el.value = data;
+            }
         }
     }
     
-	function clickBP (request, sender, sendResponse)
-	{
-		togglePanel(request);
-		sendResponse({});
-	}
-	
-	function main()
-	{
-		if(canHavePanel(g_win)) 
-		{
-			console.log("BP_CS entered on page " + location.href);
-			//createPanel(g_win);
-            getRecs(g_loc, callbackGetDB);
-			registerMsgListener(clickBP);
+    /** Intelligently returns true if the input element is a userid/username input field */
+    function isUserid(el)
+     {
+         var tagName = el.tagName.toLowerCase();
+         if (tagName === 'textarea') {return true;}
+         else if (tagName !== 'input') {return false;}
+         else {
+             if (el.type)
+                {return (el.type==="text" || el.type==="email" || el.type==="tel" || el.type==="url" || el.type==="number");}
+             else
+                 {return true;} // text type by default
+         }
+     }
+    
+    /** Intelligently returns true if the element is a password field */
+    function isPassword (el)
+     {
+         if (el.tagName.toLowerCase() !== 'input') {return false;}
+        return (el.type === "password");
+     }
+
+    function isFieldType (ft, el)
+    {
+        switch (ft)
+        {
+            case ft_userid: return isUserid(el);
+            case ft_pass: return isPassword(el);
+            default: return;
+        }
+    }
+    
+    function matchDTwField(e)
+    {
+        var dtMatched = false, isBPDrag = false;
+        for (var items = e.dataTransfer.items, pn=MT_BP_PREFIX + $(e.target).data(pn_d_dataType),  n=items.length-1; n>=0; n--)
+        {
+            if (items[n] && items[n].type === pn) {
+                dtMatched = true; isBPDrag = true;
+                console.info("Matched BP Drag w/ Field !");
+                break;
+            }
+            else if ((!isBPDrag) && items[n] && items[n].type === MT_BP_DT) {
+                isBPDrag = true;
+                console.info("Matched BP Drag !");
+            }
+        }
+        
+        return {dtMatched: dtMatched, isBPDrag: isBPDrag};        
+    }
+    
+    function dragoverHandler(e)
+    {
+        console.info("dragoverHandler(type = " + e.type + ") invoked ! effectAllowed/dropEffect = " + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+
+        var r = matchDTwField(e);
+        if (r.isBPDrag)
+        {
+            if (r.dtMatched) {
+                e.dataTransfer.dropEffect= 'copy';
+            }
+            else {
+                e.dataTransfer.dropEffect = 'none'; // Prevent drop here.
+            }
+            
+            console.info("dropEffect set to " + e.dataTransfer.dropEffect);
+            e.preventDefault(); // cancel the event signalling that we've handled it.
+            e.stopImmediatePropagation();
+        }
+        //return true; // return true to signal that we're not cancelling the event (some code out there)
+    }
+    
+    function dropHandler(e)
+    {
+        console.info("dropHandler invoked ! effectAllowed/dropEffect = " + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+ 
+        var data, r = matchDTwField(e);
+        
+        if (r.isBPDrag) {
+            // Cancel event to tell browser that we've handled it and to prevent it from
+            // overriding us with a default action.                        
+            e.preventDefault();
+            
+            if (!r.dtMatched) {
+                // This is our drag-event, but Data-type and field-type don't match.
+                // Abort the drop.
+                // prevent browser from dropping the password into a visible field.
+                // or prevent browser from dropping userid into a password field.
+                e.dataTransfer.dropEffect = 'none';                    
+            }                     
+            else {
+                // Tell browser to set vlaue of 'current drag operation' to 'copy'
+                e.dataTransfer.dropEffect = 'copy';
+
+                // Save an ERecord.
+                var eRec = newERecord();
+                eRec.tagName = e.target.tagName;
+                eRec.id = e.target.id;
+                eRec.name = e.target.name;
+                eRec.type = e.target.type;
+                eRec.fieldType = e.dataTransfer.getData(MT_BP_DT);
+                //could this lead to a security issue? should we use g_doc instead?
+                eRec.loc = e.target.ownerDocument.location;
+                saveRecord(eRec);
+
+                data = e.dataTransfer.getData(MT_TEXT_PLAIN);
+                if (data) {
+                    e.target.value = data;
+                }
+            }
+        }
+        console.info("dropEffect set to " + e.dataTransfer.dropEffect);
+    }
+
+    function setupDNDWatchers(win)
+    {
+        function inputHandler(e)
+        {
+            console.info("inputHandler invoked");
+            var eRec = newERecord(), dragged_el;
+            if (g_dnd.draggedElementID) {
+                //dragged_el = g_doc.getElementById(g_dnd.draggedElementID);
+                dragged_el = g_dnd.draggedElement;
+                console.info("DraggedElementID is " + g_dnd.draggedElementID);
+            }
+            else {
+                console.info("DraggedElementID is null");
+            }
+            
+            if ( dragged_el && ($(dragged_el).data(pn_d_value) === e.target.value))
+            {
+                eRec.tagName = e.target.tagName;
+                eRec.id = e.target.id;
+                eRec.name = e.target.name;
+                eRec.type = e.target.type;
+                eRec.fieldType = $(dragged_el).data(pn_d_dataType);
+                eRec.loc = g_doc.location;
+                                
+                saveRecord(eRec);
+                
+                var p = $(dragged_el).data(pn_d_peerID);
+                if (p) {
+                    autoFillPeer(e.target, $(p).data(pn_d_value));
+                }
+                console.info("Linking elements " + g_dnd.draggedElementID + "/" + name + " and " + e.target.id + "/" + e.target.name);
+            }
+        }
+        
+        $(g_doc.getElementsByTagName('input')).each(function(i, el) {
+            if (isUserid(el) || isPassword(el))
+            {
+                //addEventListener(el, "input", inputHandler);
+                addEventListener(el, "dragenter", dragenterHandler);
+                addEventListener(el, "dragover", dragenterHandler);
+                addEventListener(el, "drop", dropHandler);
+                if (isUserid(el)) {$(el).data(pn_d_dataType, ft_userid);}
+                else {$(el).data(pn_d_dataType, ft_pass);}
+                console.log("Added event listener for element " + el.id + "/" + el.name);
+            }
+        });
+    }
+    
+    function main()
+    {
+        if(isTopLevel(g_win)) 
+        {
+            console.log("BP_CS entered on page " + location.href);
+            getRecs(g_win.location, callbackGetDB);
+            registerMsgListener(clickBP);
             setupDNDWatchers(g_win);
-
-			
-			// experimentation
-/*			var el = g_doc.createElement('com-bprivy-data');
-			el.setAttribute('id', 'com.facebook.www1/login.asp?b=a&x=y#abc');
-			$(el).prop("hidden", true).addClass(CSS_HIDDEN);
-			$(el).appendTo(g_doc.body);*/
-		}
-	}
-	
-	return main;
-}
-/** @ModuleEnd */
-
-com_bprivy_CS(window)();
-
-/*
-    function createPanelTitle ()
-    {
-        var j_div = $(g_doc.createElement("div")).attr({
-                    id: eid_panelTitle
-                }).text("BPrivy");
-        var j_xBtn = $(g_doc.createElement("button")).attr(
-                    {    
-                        type: "button",
-                        id: eid_xButton,
-                        accesskey: "q",
-                        'for': eid_panel
-                    }).addClass(css_class_xButton);
-        // Make it closable via. the x button
-        j_xBtn[0].addEventListener("click", togglePanel);
-        j_div.append(j_xBtn);
-        return j_div;
+        }
     }
     
-    function createPanel(doc)
-    {
-        var panelW, winW, left;
-
-        var tmp_el = doc.createElement("div");
-        var j_panel = $(tmp_el).attr('id', eid_panel).addClass(css_class_panel);
-        
-        var j_ul = $("<ul></ul>").attr("id", eid_panelList).addClass(css_class_container2);
-        
-        j_ul.append(createPanelTitle());
-        insertIOItem(j_ul, "1", "username1", "password1");
-        insertIOItem(j_ul, "2", "user2@facebook.com", "passw2");
-        // Attache dragStart and End listener to container in order to make its items draggable.
-        makeDataDraggable(eid_panelList);
-
-        j_panel.append(j_ul);
-        
-        if (doc.body) {
-            j_panel.hide().appendTo('body');
-        }
-        
-        // Make sure that postion:fixed is supplied at element level otherwise draggable() overrides it
-        // by setting position:relative. Also we can use right:0px here because draggable() does not like it.
-        // Hence we need to calculate the left value :(         
-        panelW = j_panel.outerWidth();
-        winW = doc.body.clientWidth ? doc.body.clientWidth :
-                $(doc.body).innerWidth();
-        
-        left = (winW-panelW);
-        left = (left>0)? left: 0;
-        
-        console.info("WinW = " + winW + " panelW = " + panelW);
-
-        j_panel.css({position: 'fixed', top: '0px', 'left': left + "px"});
-
-        // Make it draggable after all above mentioned style properties have been applied to the element.
-        // Otherwise draggable() will override those properties.
-        j_panel.draggable();
-        
-
-        
-      // var l_btn = doc.createElement("button");
-        // var j_btn = $(l_btn).attr({
-                                                         // type: 'button',
-                                                         // id: eid_Button,
-                                                         // accesskey: 'p',
-                                                         // hidden: 'hidden',
-                                                         // 'for': eid_panel,
-                                                         // 'class': CSS_HIDDEN
-                                                     // }).appendTo(doc.body);
-//                                                      
-        // l_btn.addEventListener("click", function (e){console.info("click"); j_panel.toggle();});
-        // console.log('accesskey and label are ' + l_btn.accessKey + " and " + l_btn.accessKeyLabel);
-        return j_panel;
+    return main();
+    
+    // Following are not being used.
+    function isDocVisible(document) {
+        /*properties is */
+        return ((document.webkitVisibilityState && (document.webkitVisibilityState === 'visible')) || ($(document.body).is(":visible")));
     }
- 
- 
- function Fill(request, sender, sendResponse)
- {
- console.log("Received BPClick event");
- var el = g_doc.activeElement;
- var response = [];
- if ((el instanceof HTMLInputElement))
- {
- if (IsUserID(el))
- {
- el.value = "Username";
-			// {
- response[0] = {"username": "LoginID"};
- }
- else if (el.type === "password")
- el.style = "background: red; color: blue";
- response[0] = {"username": "Password"};
- }
- }
- sendResponse(response);
- }
 
-		// "dropHandler": function(e)
-		// {
-			// console.info("DropHandler invoked");
-			// var data = e.dataTransfer.getData(n.bpContentType); 
-			// if (data)
-				// console.info("Data from element " + data + " dropped at element " + e.target.id);
-			// }
-		// },
-		
-		// "dragoverHandler": function (e)
-		// {
-			// console.log("dragoverHandler invoked");
-			// var items = e.dataTransfer.items;
-			// var found = false;
-			// if (items)
-			// {
-				// for (var i = 0; i < items.length; i++)
-				// {
-					// if (items[i].type === n.bpContentType)
-						// found = true;
-					// console.log(items[i].kind + ":" + items[i].type);
-				// }
-			// }
-// 
-			// if (found)
-			// {
-				// console.info("found x-bp-content data hovering over element " + e.target.id + "/" + e.target.name); 
-				// e.dataTransfer.dropEffect = "copy";
-				// e.preventDefault();
-				// return false;
-			// }	
-		// },
-		
+    function isFrameVisible(frame)
+    {
+        var retval = true;
+        console.info("Entered IsFrameVisible");
+        if (frame.hidden) {
+            retval = false;
+        }
+        else if (!frame.style) {
+            retval = true;
+        }
+        else// frame.style exists
+        {
+            if(frame.style.visibility && frame.style.visibility === 'hidden') {
+                retval = false;
+            }
+            else if(frame.style.display && frame.style.display === 'none') {
+                retval = false;
+            }
+        }
 
- */
+        console.info("Exiting IsFrameVisible");
+        return retval;
+    }
+
+})(window);
