@@ -7,8 +7,8 @@
 
 /* JSLint directives */
 /*global chrome  */
-/*jslint browser : true, devel : true, es5 : true */
-/*properties console.info, console.log, console.warn */
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
+  undef:false, vars:true, white:true, continue: true, nomen:true */
 
 /**
  * @ModuleBegin GoogleChrome
@@ -26,7 +26,7 @@ var  BP_MOD_MAIN_PLAT = (function()
     
     function bpMenuClick(info, tab)
     {
-        if (info.menuItemId == g.ContextMenuID)
+        if (info.menuItemId === g.ContextMenuID)
         {
             console.info("BPMenuItem was clicked on page " + info.pageUrl);
             bpClick(tab);
@@ -62,4 +62,4 @@ var  BP_MOD_MAIN_PLAT = (function()
     
     Object.seal(module);
     return module;
-})();
+}());

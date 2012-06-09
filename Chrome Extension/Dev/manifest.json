@@ -12,6 +12,7 @@
 	{
 	"matches": ["<all_urls>"],
 	"js": ["json2.js", "jquery.js", "jquery-ui.js", "bp_error.js", "bp_common.js", "bp_cs_platform_chrome.js", "bp_connector.js", "bp_css.js", "bp_cs.js"],
+//    "js": ["json2.js", "jquery.js", "jquery-ui.js", "bp_error.js", "bp_common.js", "bp_cs_platform_chrome.js", "bp_connector.js", "bp_panel.js", "bp_cs2.js"],
 	"css": ["bp.css"]
 ///	"all_frames": true
 	}

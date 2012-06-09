@@ -4,11 +4,12 @@
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
  */
-/*jslint browser : true, devel : true, es5 : true */
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
+  undef:false, vars:true, white:true, continue: true, nomen:true */
 
 var BP_MOD_CSS = (function ()
 {
-    "use_ strict"; // TODO: remove from prod. version
+    "use strict"; // TODO: remove from prod. version
     var iface = {
         style_li :  'border-radius: 2px;border-collapse:collapse;margin: 0px;padding: 0px;' +
                   'border: none;list-style-type: none;display: block;vertical-align: middle;',
@@ -27,4 +28,4 @@ var BP_MOD_CSS = (function ()
     };
     
     return iface;
-})();
+}());

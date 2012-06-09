@@ -7,8 +7,8 @@
 
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR */
-/*jslint browser:true, devel:true */
-///*members */
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
+  undef:false, vars:true, white:true, continue: true, nomen:true */
 
 var BP_MOD_MEMSTORE = (function () 
 {
@@ -185,7 +185,7 @@ var BP_MOD_MEMSTORE = (function ()
     };
     Iterator.prototype.get = function(i) 
     {
-        return this._a[i? i : this._i];
+        return this._a[i || this._i];
     };
     Iterator.prototype.rwnd = function()
     {
@@ -241,7 +241,8 @@ var BP_MOD_MEMSTORE = (function ()
     // segment. At this writing the values chosen are {erec} and {pdict}. Hence
     // a payload object of a DNode in the g_kdb dictionary will look like:
     // this["{dt}e-rec"] =
-    // {"ft_userid":{"dt":"E-Record","fieldType":"ft_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},"ft_pass":{"dt":"E-Record","fieldType":"ft_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
+    // {"ft_userid":{"dt":"E-Record","fieldType":"ft_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},
+    //  "ft_pass":{"dt":"E-Record","fieldType":"ft_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
     // The payload itself is an object with multiple properties. Each of the
     // properties is a 'record' (i.e. e-rec in k-dict and p-rec in p-dict).
     // The property-name is the record-key and is carried within each record
@@ -504,7 +505,7 @@ var BP_MOD_MEMSTORE = (function ()
     Object.freeze(iface);
 
     return iface;
-})();
+}());
 
 /**
  * @ModuleBegin FileStore
@@ -675,8 +676,8 @@ var BP_MOD_FILESTORE = (function()
             pidx: {writable:true, enumerable:false, configurable:false}
         });
         // Load and Initialize.
-        var line;
-        if (!(line = this.fstrm.getDataLine()))
+        var line = this.fstrm.getDataLine();
+        if (!line)
         {throw new BPError(err);}// line is undefined || null || !empty
         
         // Parse the first data-line for property names
@@ -738,15 +739,16 @@ var BP_MOD_FILESTORE = (function()
         var line = this.fstrm.getDataLine();
         if (line)
         {
-            var vals=[], array, idx;
-            while ((array=regex.exec(line)))
+            var vals=[], idx,
+            array = regex.exec(line);
+            while (array)
             {
-                vals.push(array[1]?array[1]:(array[2]?array[2]:array[3]));
+                vals.push(array[1] || (array[2] || array[3]));
                 idx = regex.lastIndex;
             }
             // Catch the last field. It has no comma at the end.
             array = lastex.exec(line.slice(idx));
-            vals.push(array[1]?array[1]:(array[2]?array[2]:array[3]));
+            vals.push(array[1] || (array[2] || array[3]));
             
             if (vals.length === this.props.length) {return vals;}
             else {return null;}
@@ -820,4 +822,4 @@ var BP_MOD_FILESTORE = (function()
 
     return iface;
 
-})();
+}());

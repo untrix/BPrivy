@@ -6,9 +6,9 @@
  */
 
 /* Global declaration for JSLint */
-/*global document BP_MOD_CS_PLAT BP_MOD_COMMON IMPORT*/
-/*jslint browser:true, devel:true */
-//*members */
+/*global BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT */
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
+  undef:false, vars:true, white:true, continue: true, nomen:true */
 
 
 /**
@@ -68,7 +68,7 @@ var BP_MOD_CONNECT = (function ()
         {
             //Record Type. Determines which dictionary this record belongs to.
             dt: {value: type, writable: false, enumerable: true, configurable: false},
-            date: {value: date?date:Date.now(), writable: false, enumerable: true, configurable: false},
+            date: {value: date || Date.now(), writable: false, enumerable: true, configurable: false},
             // URL that this record pertains to. Determines where the record will sit within the URL-trie.
             loc: {writable: true, enumerable: true, configurable: false}
         });
@@ -230,5 +230,5 @@ var BP_MOD_CONNECT = (function ()
     
     return getModuleInterface();
 
-})();
+}());
 /** @ModuleEnd */

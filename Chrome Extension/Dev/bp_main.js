@@ -8,8 +8,8 @@
 /* JSLint directives */
 /*global $, document, BP_MOD_MAIN_PLAT, BP_MOD_CONNECT, BP_MOD_COMMON, IMPORT, localStorage,
   BP_MOD_MEMSTORE, BP_MOD_FILESTORE */
-/*jslint browser:true, devel:true, es5:true, vars:true */
-
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
+  undef:false, vars:true, white:true, continue: true, nomen:true */
 
 (function Main(doc)
 {
@@ -84,4 +84,4 @@
         console.log(JSON.stringify(e));
     }
 
-})(document);
+}(document));

@@ -6,9 +6,9 @@
  */
 
 /* JSLint directives */
-/*global $, console, chrome, window */
-/*jslint browser : true, devel : true, es5 : true */
-/*properties console.info, console.log, console.warn */
+/*global chrome */
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
+  undef:false, vars:true, white:true, continue: true, nomen:true */
 
 /**
  * @ModuleBegin GoogleChrome Platform
@@ -53,4 +53,4 @@ var BP_MOD_CS_PLAT = (function()
     };
     
     return module;
-})();
+}());

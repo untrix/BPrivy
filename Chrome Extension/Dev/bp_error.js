@@ -6,9 +6,12 @@
  */
 /* Global declaration for JSLint */
 /*global document */
-
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
+  undef:false, vars:true, white:true, continue: true, nomen:true */
+ 
 function IMPORT(sym)
 {
+    'use strict';
     if(sym===undefined || sym===null) {
         throw new ReferenceError("Linker:Symbol Not Found");
     }
@@ -19,6 +22,7 @@ function IMPORT(sym)
 
 var BP_MOD_ERROR = (function()
 {
+    'use strict';
    /** @begin-class-def BPError 
     // Error properties (names) returned to javascript. These represent an interface
     // with javascript and therefore are unchangeable.
@@ -136,4 +140,4 @@ var BP_MOD_ERROR = (function()
     
     return {BPError: BPError};
     /** @end-class-def BPError **/
-})();
+}());

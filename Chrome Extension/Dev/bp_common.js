@@ -6,7 +6,9 @@
  */
 /* Global declaration for JSLint */
 /*global document, IMPORT */
-
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
+  undef:false, vars:true, white:true, continue: true, nomen:true */
+ 
 var BP_MOD_COMMON = (function() 
 {
     "use strict"; // TODO: @remove Only used in debug builds
@@ -189,4 +191,4 @@ var BP_MOD_COMMON = (function()
     // };
     
     //Object.defineProperty(Object.prototype, "bp_common_clone", {value: bp_common_clone, writable: false, enumerable: false, configurable: false});
-})();
+}());
