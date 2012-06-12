@@ -258,7 +258,7 @@ var BP_MOD_PANEL = (function (g_win)
 	            $(pe).removeData();
 	           parent.removeChild(op);
 	           parent.appendChild(ifm);
-	           $(e.target).val(u_cir_S); // unicode circled s = save
+	           $(e.target).text(u_cir_S); // unicode circled s = save
 	        }
 	    }
 	    else if (ifm) { // replace input-form with draggable text
@@ -296,7 +296,7 @@ var BP_MOD_PANEL = (function (g_win)
 	        if (op) {
 	            //parent.removeChild(ifm);
 	            parent.appendChild(op);// Insert the 'op' item.
-	            $(e.target).val(u_cir_E); // unicode circled e = edit
+	            $(e.target).text(u_cir_E); // unicode circled e = edit
 	        }
 	        
 	        $(ifm).remove(); // Then remove the 'ifm' item.
@@ -305,47 +305,6 @@ var BP_MOD_PANEL = (function (g_win)
         e.stopPropagation(); // We don't want the enclosing web-page to interefere
         e.preventDefault(); // Causes event to get cancelled if cancellable
         return false; // Causes the event to be cancelled (except mouseover event).
-	}
-	
-	/** Creates an IO Widget with a Toggle Button and Output Fields **/
-	function insertIOItem (doc, user, pass, bInp)
-	{
-	    var jq = $('#' + eid_panelList);
-	    var id = (++g_ioItemID);
-	    var liid = eid_ioItem + id;
-		var opid = eid_opElement + id;
-		var ifid = eid_inForm + id;
-		var tbid = eid_tButton + id;
-		
-		var j_li = $(doc.createElement("div")).attr({id: liid, class: css_class_li});
-        var tb = doc.createElement('input'); // Toggle Button
-        tb.addEventListener('click', toggleIO, false);
-        var j_tb = $(tb).attr(
-            {
-                'data-opid': opid,
-                'data-ifid': ifid,
-                'data-id': id,
-                'data-tbid': tbid,
-                type: 'button',
-                id: tbid
-                //style: BP_MOD_CSS.style_tButton
-            }
-        ).addClass(css_class_tButton);
-
-        j_li.append(j_tb);
-        if (!bInp) {
-            j_tb.val(u_cir_E); // Unicode circled e = edit
-            j_li.append(createOpItem(doc, id, user, pass)); 
-        } // Output Fields
-        else {
-            j_tb.val(u_cir_S); // unicode circled s = save
-            j_li.append(createInItem(doc, id, user, pass));
-        }
-        jq.append(j_li);
-
-		// Prevent mousedown to bubble up in order to prevent panel dragging by
-		// jquery-ui.
-		j_li[0].addEventListener('mousedown', stopPropagation, false);
 	}
 	
     /** Creates an IO Widget with a Toggle Button and Output Fields **/
@@ -359,7 +318,7 @@ var BP_MOD_PANEL = (function (g_win)
         var tbid = eid_tButton + id;
         
         var j_li = $(doc.createElement("div")).attr({id: liid, class: css_class_li});
-        var j_tb = $('<input type="button">').attr(
+        var j_tb = $('<button type="button">').attr(
             {
                 'data-opid': opid,
                 'data-ifid': ifid,
@@ -373,11 +332,11 @@ var BP_MOD_PANEL = (function (g_win)
 
         j_li.append(j_tb);
         if (!bInp) {
-            j_tb.val(u_cir_E); // Unicode circled e = edit
+            j_tb.text(u_cir_E); // Unicode circled e = edit
             j_li.append(createOpItem(doc, id, user, pass)); 
         } // Output Fields
         else {
-            j_tb.val(u_cir_S); // unicode circled s = save
+            j_tb.text(u_cir_S); // unicode circled s = save
             j_li.append(createInItem(doc, id, user, pass));
         }
         jq.append(j_li);
@@ -440,7 +399,7 @@ var BP_MOD_PANEL = (function (g_win)
         var doc = ctx.doc, id_panel = ctx.id_panel, dnd = ctx.dnd, db = ctx.db;
         var j_panel = $(doc.createElement('div')).attr({id: id_panel, style:"display:none"});
         var html =      '<div id="com-bprivy-panelTitle"><div id="com-bprivy-TitleText">BPrivy</div>' +
-                            '<input type="button" id="com-bprivy-xB" accesskey="q" value="\u24CD"></input>' +
+                            '<button type="button" id="com-bprivy-xB" accesskey="q">\u24CD</button>' +
                         '</div>' +
                         '<div id="com-bprivy-panelList"></div>';
         j_panel[0].insertAdjacentHTML('beforeend', html);

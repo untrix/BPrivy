@@ -18,26 +18,53 @@
 		<link>
 			<name>Dev</name>
 			<type>2</type>
-			<location>C:/Dev/BPrivy/Chrome Extension/Dev</location>
+			<locationURI>PARENT-2-PROJECT_LOC/Chrome%20Extension/Dev</locationURI>
 		</link>
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1337977074772</id>
+			<id>1339532128751</id>
 			<name>Dev</name>
-			<type>29</type>
+			<type>21</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-bp*</arguments>
+				<arguments>1.0-name-matches-false-false-bp*.js</arguments>
 			</matcher>
 		</filter>
 		<filter>
-			<id>1337977074775</id>
+			<id>1339532128753</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-manifest*</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1339532128756</id>
+			<name>Dev</name>
+			<type>9</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-build</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1339532128759</id>
+			<name>Dev</name>
+			<type>5</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-bp*.html</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1339532128761</id>
+			<name>Dev</name>
+			<type>5</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-bp*.less</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>

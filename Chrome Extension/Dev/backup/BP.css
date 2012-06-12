@@ -1,0 +1,123 @@
+
+/* This is the css-shield. Blocks cascading of CSS rules from the environment */
+#com-bprivy-panel, #com-bprivy-panel * {
+                min-width: 0px;
+                min-height: 0px;
+                margin: 0px;
+                padding: 0px;
+                border: none;
+                width: auto;
+                height: auto;
+                border-radius: 2px;
+                background: none;
+                color: black;
+                direction: ltr;
+                list-style: none;
+}
+
+
+div#com-bprivy-panel	{
+                display: block;
+                width: 293px;
+                background-color: #c8c8c8;
+                font-size: 13px;
+                border: thin solid black;
+                opacity: 1;
+                z-index: 9007199254740992;
+                border-radius: 2px;
+				padding: 2px;
+				color: black;
+				cursor: default;
+				font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
+			}
+
+#com-bprivy-panel #com-bprivy-panelList {
+                display: block;
+                color: black;
+                border-style: none;
+            }
+
+#com-bprivy-panel #com-bprivy-panelTitle {
+				display: block;
+				text-align: center;
+				vertical-align: middle;
+			}
+
+#com-bprivy-panel #com-bprivy-TitleText {
+                display: inline-block;
+                text-align: center;
+                vertical-align: middle;
+                height: 16px;
+                margin: 1px;
+                padding: 2px;
+                border: 2px;
+                background-color: none;
+                color: black;
+                -moz-user-select: none;
+                -khtml-user-select: none;
+                -webkit-user-select: none;
+                user-select: none;
+                font-weight: bold;
+}
+
+
+#com-bprivy-panelList .com-bprivy-li {
+                display: block;
+                border-collapse:collapse;
+                vertical-align: middle;
+            }
+
+#com-bprivy-panel #com-bprivy-xB {
+                display: inline-block;
+                float: right;
+                vertical-align: middle;
+                text-align: center;
+                background: none;
+                cursor: default;
+            }
+
+#com-bprivy-panelList .com-bprivy-tB {
+                display: inline-block;
+                vertical-align: middle;
+                text-align: center;
+                background: none;
+                cursor: default;
+            }
+
+#com-bprivy-panelList .com-bprivy-io-fieldset {
+                display: inline-block;
+                border: none;
+}
+
+#com-bprivy-panel #com-bprivy-panelList .com-bprivy-field {
+                display: inline-block;
+ 		 		width: 125px;
+                height: 16px;
+                overflow: hidden;
+ 		 		margin: 1px;
+ 		 		padding: 1px;
+ 		 		text-align: justify;
+}
+
+#com-bprivy-panelList .com-bprivy-user-in {
+                border: 2px inset;
+                background-color: white;
+}
+
+#com-bprivy-panelList .com-bprivy-pass-in {
+                border: 2px inset;
+                background-color: white;
+}
+
+#com-bprivy-panelList .com-bprivy-user-out{
+                border: 1px solid;
+                background-color: light-gray;
+ 		 	}
+
+#com-bprivy-panelList .com-bprivy-pass-out {
+                border: 1px solid;
+                background-color: light-gray;
+			}
+#com-bprivy-panel .com-bprivy-hidden {
+                display:none;
+            }

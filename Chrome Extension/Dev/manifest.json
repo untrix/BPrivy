@@ -3,23 +3,22 @@
   "version": "0.5",
   "description":"Pluggable and Detachable Password Store. Stay in full control of your passwords. Store, move,copy and merge them wherever and whenever you like - in memory cards, in your smart-phone(s)/tablets, on your computers, on your favorite cloud-drives. Autofill in all major browsers.",
   "icons": {
-	     "128": "icon128.png",
-  	     "16": "icon16.png"
+	     "128": "icons/icon128.png",
+  	     "16": "icons/icon16.png"
 	   },
   "permissions": ["contextMenus", "tabs", "webRequest", "<all_urls>"],
   "background_page": "bp_Main.html",
   "content_scripts": [
 	{
 	"matches": ["<all_urls>"],
-	"js": ["json2.js", "jquery.js", "jquery-ui.js", "bp_error.js", "bp_common.js", "bp_cs_platform_chrome.js", "bp_connector.js", "bp_css.js", "bp_cs.js"],
-//    "js": ["json2.js", "jquery.js", "jquery-ui.js", "bp_error.js", "bp_common.js", "bp_cs_platform_chrome.js", "bp_connector.js", "bp_panel.js", "bp_cs2.js"],
-	"css": ["bp.css"]
+	"js": ["tp/json2.js", "tp/jquery.js", "tp/jquery-ui.js", "bp_error.js", "bp_common.js", "bp_cs_platform_chrome.js", "bp_connector.js", "bp_cs.js"],
+	"css": ["build/bp.css"]
 ///	"all_frames": true
 	}
   ],
   "browser_action": {
-	"default_icon": "icon16.png"
+	"default_icon": "icons/icon16.png"
   },
-  "options_page": "bp_editor.html",
+  "options_page": "bp.html",
   "offline_enabled": true
 }
