@@ -214,7 +214,8 @@ var BP_MOD_PANEL = (function (g_win)
             type: 'text',
             id: ueid,
             name: ueid,
-            value: u
+            value: u || undefined,
+            placeholder: 'Username'
             //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_userIn
         }).addClass(css_class_field+css_class_userIn).data(pn_d_value, u);
         var j_inp = $(doc.createElement('input')).attr(
@@ -222,7 +223,8 @@ var BP_MOD_PANEL = (function (g_win)
             type: 'password',
             id: peid,
             name: peid,
-            value: decrypt(p)
+            value: p? decrypt(p): undefined,
+            placeholder: 'Password'
             //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_passIn
         }).addClass(css_class_field+css_class_passIn).data(pn_d_value, p);
 

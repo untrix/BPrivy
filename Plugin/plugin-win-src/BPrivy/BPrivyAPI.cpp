@@ -333,7 +333,10 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 	try 
 	{
 		bfs::path path(dirPath);
-		bfs::file_status stat = bfs::status(path);
+		bfs::file_status stat;
+		if (!dirPath.empty()) {
+			stat = bfs::status(path);
+		}
 
 		//FB::VariantMap m, m2, m3;
 		//m3.insert(VT("m3-prop", "m3-val"));
@@ -350,7 +353,12 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 		jo << OPENB;
 		je << OPENB;
 
-		if (!bfs::exists(stat))
+		if (dirPath.empty())
+		{
+			i_d = lsDrives(jd);
+			rVal = true;
+		}
+		else if (!bfs::exists(stat))
 		{
 			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_PATH_NOT_EXIST);
 		}

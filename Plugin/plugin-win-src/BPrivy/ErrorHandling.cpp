@@ -293,10 +293,10 @@ namespace bp
 		ParseSystemException(e, m);
 	}
 
-	void SetInfoMsg(const string& s_code, FB::JSObjectPtr& js)
+	void SetInfoMsg(const string& g_code, FB::JSObjectPtr& js)
 	{
 		FB::VariantMap m;
-		m.insert(VT(PROP_GENERIC_CODE, s_code));
+		m.insert(VT(PROP_GENERIC_CODE, g_code));
 		js->SetProperty(PROP_INFO, m);
 	}
 

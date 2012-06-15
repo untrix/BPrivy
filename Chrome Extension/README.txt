@@ -3,7 +3,8 @@ Setting Up BPrivy Dev Environment.
 Apart from cloning the git repository, do the following:
 1. Create a directory called Dev
 2. Clone the BPrivy git repository into Dev/BPrivy.
-3. Create a directory called Dev/Thirdparty and downlaod the following:
+3. Create a directory called Dev/Thirdparty and downlaod the following. All these should be acknowledged on the website
+	and product description.
 	a. nodejs from nodejs.org. Install it per instructions from nodejs.org.
 	b. install twitter/recess by executing "npm install recess -g" in the command prompt.
 	c. boost_1_49_0 (see BPrivy/Plugin/README)
@@ -15,13 +16,16 @@ Apart from cloning the git repository, do the following:
 	i. python 2.7.3 or later.
 	j. latest bootstrap from twitter/github. The version in use is already copied to Dev/BPrivy so you
 	   only need this if you want to upgrade it (which is a good thing to do from time to time).
+	   i. bootstrap bundles icons called 'halflings' from Glyphicons. These do not need to be separately
+		  downloaded, but it is a good idea to acknowledge their use via. bootstrap toolkit. Include a link
+		  to the license page: http://creativecommons.org/licenses/by/3.0/
 	k. json2.js from Douglas Crockford. It is a JSON object polyfill.
 	All these may also be copied from the bprivy dev-environment CD/DVD (but it is a good idea to
 	upgrade bootstrap in the least).
 4. Thirdparty software used in the product (besides those for the plugin):
 	a. LESS (less.org) for generating CSS files.
 	b. twitter/bootstrap libs for styling.
-	c. jquery and jquery-UI
+	c. jquery, jquery-UI, json2 (polyfill by Douglas Crockford)
 	d. firebreath, boost and VC++ for plugin development on Windows.
 	e. For build-env (plugin): python, cmake, VC++ (Windows).
 	f. Build-env HTML/CSS/Javascript parts: Aptana, JSLint (included in aptana), nodejs, recess (less compiler from twitter).

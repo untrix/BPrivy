@@ -1,45 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="utf-8">
-    <title>BPrivy: Pluggable Passwords</title>
+    <title>BPrivy: Password Wallet</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="BPrivy: Pluggable Passwords">
     <meta name="author" content="sumeet@untrix.com">
     <!-- Stylesheets -->
     <link href="tp/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style type="text/css">
-      body {
-        padding-top: 60px;
-        padding-bottom: 40px;
-      }
-      .sidebar-nav {
-        padding: 9px 0;
-      }
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+        .sidebar-nav {
+            padding: 9px 0;
+        }
     </style>
     <link href="tp/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
     <!-- Icons -->
     <link rel="shortcut icon" href="icons/icon16.png">
     <link rel="apple-touch-icon" sizes="128x128" href="icons/icon128.png">
-</head>
-<body>
+  </head>
+  <body onload="load()">
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span2">
           <!--Sidebar content-->
-          Sidebar
+          <h3> BPrivy </h3>
+          <ul class="nav nav-list" id="nav-list">
+            <li>
+              <a data-nav id="nav-settings" href="#settings-pane"><i class="icon-cog"></i> Settings</a>
+            </li>
+            <li>
+              <a data-nav href="#editor-pane"><i class="icon-edit"></i> Edit Passwords </a>
+            </li>
+            <li><a data-nav href="#help-pane"><i class="icon-flag"></i> Help</a></li>
+            <li class="divider"></li>
+            <li>
+              <a href="mailto:bprivy@untrix.com"><i class="icon-envelope"></i> Contact</a>
+            </li>
+          </ul>
         </div>
         <div class="span10">
-          <!--Body content-->
-          <div class="hero-unit">
-          Main Body
+          <div class="tab-content">
+            <!--Body content-->
+            <div class="tab-pane" id="settings-pane">
+              <h3>Settings</h3>
+              <form class="well form-inline">
+                <!--<legend>
+                    <span rel="tooltip" title="Import a comma separated password file exported from another password manager such as Mozilla Firefox">
+                      Import CSV File
+                    </span>
+                </legend>
+                <div class="control-group controls">-->
+                  <label class="control-label" for="csvPath" title="Import a comma separated password file exported from another password manager">Import CSV File</label>
+                  <input id="csvPath" type="text" title="Type the file name" required class="input-xlarge" data-provide="typeahead">
+                  <button id="csvPathSubmit" type="reset" class="btn btn-primary" title="Click to import selected file">Import</button>
+                <!-- </div> -->
+              </form>
+            </div>
+            <div class="tab-pane" id="editor-pane">
+              <h3>Edit Passwords</h3>
+            </div>
+            <div class="tab-pane" id="help-pane">
+              <!-- Help Content Goes Here -->
+              <h6> Sorry, no help content yet</h6>
+            </div>
           </div>
         </div>
       </div>
     </div>
+    <embed type="application/x-bprivy" style="visibility:hidden" width="0" height="0" id="com-untrix-bpplugin" onload="pluginLoaded">
     <!-- Javascript -->
     <script src="tp/json2.js"></script>
     <script src="tp/jquery.js"></script>
     <script src="tp/bootstrap/js/bootstrap.js"></script>
-</body>
+    <script type="text/javascript">
+      function load() {
+        $("#nav-list a[data-nav]").click(function (e)
+        {
+          e.preventDefault();
+          $(this).tab('show');
+        });
+        $("#nav-settings").tab('show');
+        $('#settings-pane *').tooltip();
+        $("#csvPathSubmit").click(function (e)
+        {
+          var path = $("#csvPath").val();
+          console.log("Import CSV File:"+path);
+        });
+      }
+    </script>
+    <!-- Plugin embedded for FS browsing -->
+    <script type="text/javascript">
+        var o = {}, p, ls;
+        function bp()
+        {
+            return document.getElementById('com-untrix-bpplugin');
+        }
+        function pluginLoaded()
+        {
+            p = bp();
+            ls = p.ls;
+            console.log("BP Plugin loaded. PID = " + p.getpid());
+            if (ls("", o) && (o = JSON.parse(o.lsd)) && o.d) {
+              o = Object.keys(o.d);
+              $("#csvPath").typeahead({source: o});
+            }
+        }
+    </script>
+  </body>
 </html>

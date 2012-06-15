@@ -588,6 +588,27 @@ bool BPrivyAPI::removeFile(bfs::path& pth)
 	return true;
 }
 
+
+unsigned BPrivyAPI::lsDrives(std::ostringstream& json)
+{
+	DWORD drives = GetLogicalDrives();
+	DWORD mask = 1;
+	char drive[3]; drive[1] = ':'; drive[2] = 0;
+	unsigned n; char i;
+	for (i=0, n=0; i < 26; i++, mask <<= 1)
+	{
+		if (drives & mask)
+		{
+			if ((n++)>0) {json << COMMA;}
+			drive[0] = (char)('A' + i);
+			json << QUOTE << drive << QUOTE << ":null";
+		}
+	}
+
+	return n;
+}
+
+
 #ifdef DEBUG
 // API used for testing purposes
 unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr out)

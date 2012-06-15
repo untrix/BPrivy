@@ -82,6 +82,7 @@ private:
 	void BPrivyAPI::AAAInit(FB::JSObjectPtr io);
 	void securityCheck(const bfs::path& path, const std::string allowedExt[] );
 	void securityCheck(const bfs::path& path, const bfs::path& path2, const std::string allowedExt[] );
+	unsigned BPrivyAPI::lsDrives(std::ostringstream& jd);
 	bfs::path m_dbPath;
 	std::string m_aclToken;
 
