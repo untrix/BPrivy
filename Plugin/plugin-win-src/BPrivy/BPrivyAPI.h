@@ -56,6 +56,12 @@ public:
 	// API Methods
 	//FB::VariantMap ls2(std::string dirPath);
 	unsigned int getpid() const;
+	/**
+	 *	Lists the directory or filename indicated by the path argument. Results and errors are stored
+	 *	in the out parameter and converted to a JS object eventually. Returns true or false.
+	 *	If the path argument was an empty string, then it lists all browsable drives in the system
+	 *  instead.
+	 */
 	bool ls(const std::string& dirPath, FB::JSObjectPtr out);
 	bool appendFile(const std::string& path, const std::string& data, FB::JSObjectPtr out);
 	bool readFile(const std::string& path, FB::JSObjectPtr out, boost::optional<unsigned long long> pos);

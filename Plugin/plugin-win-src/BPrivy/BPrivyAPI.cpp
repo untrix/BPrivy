@@ -328,6 +328,90 @@ void BPrivyAPI::securityCheck(const bfs::path& path, const bfs::path& path2, con
 	securityCheck(path2, allowedExt);
 }
 
+/*
+o: {//Object returned by the plugin
+    path: // sanitizes and echo's back path parameter
+    path2: // The second path-parameter if any.
+    err: {
+        acode: "Actionable (BP) Code",
+        gcode: "BP Code (More Specific than A-Code)",
+        scode: "System Specific Code",
+        gmsg: "Generic/BP Message",
+        smsg: "System Message",
+        path: "Path 1",
+        path2: "Path 2"
+    },
+}
+o: {
+    path: // sanitizes and echo's back path parameter
+    lsd: { //Output of list-dir
+        d: { //Listing of directories
+            dir1.ex1: {
+                ex: ex1, //filename extension if applicable
+                st: dir1 //filename stem if applicable
+            },
+            dir2: {},
+            ...
+        },
+        f: {//Listing of regular files
+            file1.ex1: {
+                sz: 55,  //file size - mandatory
+                ex: ex1, //filename extension if applicable 
+                st:      //filename stem if applicable
+            },
+            file2: {sz: 60}, // No extension or stem here
+            ...
+        },
+        o: {//entries that are neither normal files nor directories. e.g. Windows Reparse Points that are not symlinks
+            "Documents and Settings": {}
+        },
+        e: {//Those directory entries where errors were encountered
+            Drive:/absolutepath: {
+                //Can have all properties of the err object shown above
+                acode: ...,
+                scode: ...,
+                smsg: ...,
+                name: stem.ext, // Filename
+                ex: ext, // file extension
+                st: filestem, // file stem
+            },
+            C:/hiberfil.sys: {
+                acode: "ResourceLocked"
+                ex: ".sys"
+                name: "hiberfil.sys"
+                scode: "ERROR_SHARING_VIOLATION"
+                smsg: "The process cannot access the file because it is being used by another process"
+                st: "hiberfil"
+            },
+            C:/pagefile.sys: {
+                acode: "ResourceLocked"
+                ex: ".sys"
+                name: "pagefile.sys"
+                scode: "ERROR_SHARING_VIOLATION"
+                smsg: "The process cannot access the file because it is being used by another process"
+                st: "pagefile"
+            },
+            ...
+        },
+    },
+}
+o: {
+    // No path property since empty string that was supplied.
+    lsd: {// Output of list-drives. For this mode the path argument should be an empty string.
+        "C:": null,
+        "D:": null,
+        "Q:": null
+    }        
+}
+o: {
+    path: // sanitizes and echo's back path parameter
+    lsf: {//Output of list-file. one file only
+        filename.ext: {
+            // Same as file entry in directory listing
+        }
+    }
+}
+ */
 bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 {
 	try 
@@ -336,6 +420,8 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 		bfs::file_status stat;
 		if (!dirPath.empty()) {
 			stat = bfs::status(path);
+			path.make_preferred();
+			p->SetProperty(PROP_PATH, path.string());
 		}
 
 		//FB::VariantMap m, m2, m3;

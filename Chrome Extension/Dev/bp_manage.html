@@ -22,7 +22,7 @@
     <link rel="shortcut icon" href="icons/icon16.png">
     <link rel="apple-touch-icon" sizes="128x128" href="icons/icon128.png">
   </head>
-  <body onload="load()">
+  <body>
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span2">
@@ -55,8 +55,12 @@
                 </legend>
                 <div class="control-group controls">-->
                   <label class="control-label" for="csvPath" title="Import a comma separated password file exported from another password manager">Import CSV File</label>
-                  <input id="csvPath" type="text" title="Type the file name" required class="input-xlarge" data-provide="typeahead">
-                  <button id="csvPathSubmit" type="reset" class="btn btn-primary" title="Click to import selected file">Import</button>
+                  <select data-path-select id="csvPathSelect" title="Browse and select the file">
+                    <option value="">Browse Files</option>
+                  </select>
+                  <input data-path id="csvPath" type="text" title="Type the file name" required class="input-xlarge" data-provide="typeahead" placeholder="File Path">
+                  <button data-path-submit id="csvPathSubmit" type="submit" class="btn btn-primary" title="Click to import selected file">Import</button>
+                  <button data-path-reset id="csvPathReset" type="reset" class="btn" title="Click to start over">Over</button>
                 <!-- </div> -->
               </form>
             </div>
@@ -71,44 +75,34 @@
         </div>
       </div>
     </div>
-    <embed type="application/x-bprivy" style="visibility:hidden" width="0" height="0" id="com-untrix-bpplugin" onload="pluginLoaded">
+    <embed type="application/x-bprivy" style="visibility: none" width="0" height="0" id="com-untrix-bpplugin">
     <!-- Javascript -->
     <script src="tp/json2.js"></script>
     <script src="tp/jquery.js"></script>
-    <script src="tp/bootstrap/js/bootstrap.js"></script>
+    <script src="tp/bootstrap/js/bootstrap.min.js"></script>
+    <script src="bp_error.js"></script>
+    <script src="bp_cs_platform_chrome.js"></script>
+    <script src="bp_manage.js"></script>
     <script type="text/javascript">
-      function load() {
-        $("#nav-list a[data-nav]").click(function (e)
+      var BP_PLUGIN;
+      $(document).ready(function (e)
         {
-          e.preventDefault();
-          $(this).tab('show');
+          bpPluginLoaded();
+          BP_MOD_MANAGE.onload();
         });
-        $("#nav-settings").tab('show');
-        $('#settings-pane *').tooltip();
-        $("#csvPathSubmit").click(function (e)
+
+      function bpPluginLoaded ()
+      {
+        BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
+        console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+        var o={};
+        if (BP_PLUGIN.ls("", o) && (o = JSON.parse(o.lsd)) && o.d)
         {
-          var path = $("#csvPath").val();
-          console.log("Import CSV File:"+path);
-        });
-      }
-    </script>
-    <!-- Plugin embedded for FS browsing -->
-    <script type="text/javascript">
-        var o = {}, p, ls;
-        function bp()
-        {
-            return document.getElementById('com-untrix-bpplugin');
+          o = Object.keys(o.d);
+          //$("#csvPath").typeahead({source: o});
+          BP_MOD_MANAGE.fillOptions("csvPathSelect", "");
         }
-        function pluginLoaded()
-        {
-            p = bp();
-            ls = p.ls;
-            console.log("BP Plugin loaded. PID = " + p.getpid());
-            if (ls("", o) && (o = JSON.parse(o.lsd)) && o.d) {
-              o = Object.keys(o.d);
-              $("#csvPath").typeahead({source: o});
-            }
-        }
+      }        
     </script>
   </body>
 </html>

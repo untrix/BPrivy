@@ -19,6 +19,8 @@ var BP_MOD_CS_PLAT = (function()
     
     var module =
     {
+        DIR_SEP: "\\", // TODO: This needs to be dynamically determined based on OS
+                       // Right now this will only work for Windows, but so is the plugin.
         postMsgToMothership: function (o)
         {
             function rcvAck (rsp) 
@@ -49,6 +51,15 @@ var BP_MOD_CS_PLAT = (function()
         addEventListener: function(el, ev, fn)
         {
             el.addEventListener(ev, fn);
+        },
+        
+        addEventListeners: function(select, ev, fn)
+        {
+            var j = $(select), i = j.length;
+            for (--i; i>=0; --i) {
+                var el = j[i];
+                if (el) {module.addEventListener(el, ev, fn);}               
+            }
         }
     };
     

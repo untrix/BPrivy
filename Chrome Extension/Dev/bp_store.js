@@ -811,7 +811,7 @@ var BP_MOD_FILESTORE = (function()
         }
     }
     
-        //Assemble the interface    
+    //Assemble the interface    
     var iface = {};
     Object.defineProperties(iface, 
     {

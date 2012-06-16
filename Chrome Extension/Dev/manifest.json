@@ -19,6 +19,6 @@
   "browser_action": {
 	"default_icon": "icons/icon16.png"
   },
-  "options_page": "bp.html",
+  "options_page": "bp_manage.html",
   "offline_enabled": true
 }
