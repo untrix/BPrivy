@@ -393,7 +393,7 @@ bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::
 		bfs::path path(pth);
 		securityCheck(path, allowedExt);
 		path.make_preferred();
-		string path_s(path.string());
+		//string path_s(path.string());
 
 		// Open file in exclusive mode for appending.
 		// If file doesn't exist then create it as a normal file. We'll create
@@ -461,7 +461,7 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 		bfs::path path(pth);
 		securityCheck(path, allowedExt);
 		path.make_preferred();
-		string path_s(path.string());
+		//string path_s(path.string());
 
 		HANDLEGuard h( CreateFile(path.c_str(), 
 									FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
@@ -685,7 +685,7 @@ unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr
 
 		bfs::path path(pth);
 		path.make_preferred();
-		string path_s(path.string());
+		//string path_s(path.string());
 		securityCheck(path, allowedExt);
 
 		HANDLE h= CreateFile(path.c_str(),
@@ -725,7 +725,7 @@ unsigned long long BPrivyAPI::readLock(const std::string& pth, FB::JSObjectPtr o
 		securityCheck(path, allowedExt);
 
 		path.make_preferred();
-		string path_s(path.string());
+		//string path_s(path.string());
 
 		HANDLE h= CreateFile(path.c_str(), 
 									FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
