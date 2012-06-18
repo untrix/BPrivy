@@ -30,6 +30,9 @@ namespace bp
 	const std::string PROP_A_CODE				("acode");
 	const std::string PROP_PATH					("path");
 	const std::string PROP_PATH2				("path2");
+	const std::string PROP_HIDE					("hide");
+	const std::string PROP_FILE_FILTER			("filter");
+	const std::string PROP_DIALOG_TITLE			("dtitle");
 
 	const std::string PROP_INFO					("inf");
 	const std::string PROP_LSDIR				("lsd");

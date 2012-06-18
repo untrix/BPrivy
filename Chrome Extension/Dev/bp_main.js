@@ -77,11 +77,11 @@
         {
             FILE_STORE.loadDB(dbDir, dbName);
             //FILE_STORE.createDB("C:/Users/sumeet/Documents/", "Keys");
-            //FILE_STORE.importCSV("C:/Users/sumeet/Desktop/password-export-2012-05-18.csv");
         }
+        FILE_STORE.importCSV("C:/Users/sumeet/Desktop/password-export.csv");
     } catch (e)
     {
-        console.log(JSON.stringify(e));
+        console.log(JSON.stringify(e.err));
     }
 
 }(document));

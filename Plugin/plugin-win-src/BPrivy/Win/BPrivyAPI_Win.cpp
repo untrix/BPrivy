@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <system_error>
+#include "utf8_tools.h"
 
 using namespace bp;
 using namespace std;
@@ -449,7 +450,7 @@ bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::
 
 bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boost::optional<unsigned long long> o_pos)
 {
-	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
+	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ".csv", ""};
 
 	try
 	{
@@ -608,6 +609,69 @@ unsigned BPrivyAPI::lsDrives(std::ostringstream& json)
 	return n;
 }
 
+/** @requires Comdlg32.dll/lib */
+bool BPrivyAPI::chooseFile(FB::JSObjectPtr p)
+{
+	OPENFILENAME ofn;       // common dialog box structure
+	WCHAR szFile[2048];       // buffer for file name
+	HWND hwnd;              // owner window
+	HANDLE hf;              // file handle
+
+	// Initialize OPENFILENAME
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	//ofn.hwndOwner = hwnd;
+	ofn.lpstrFile = szFile;
+	// Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
+	// use the contents of szFile to initialize itself.
+	ofn.lpstrFile[0] = '\0';
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = L"All\0*.*\0Text\0*.TXT\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_DONTADDTORECENT | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_SHAREAWARE;
+	std::wstring filter;
+	std::wstring title;
+
+	try {
+		if (p->HasProperty(PROP_FILE_FILTER))
+		{
+			FB::variant t_var = p->GetProperty(PROP_FILE_FILTER);
+			std::vector<string> extn = t_var.convert_cast<std::vector<string> >();
+			if (extn.size() > 0)
+			{
+				for (std::vector<string>::iterator it = extn.begin(); it != extn.end(); it++) {
+					wstring ws = FB::utf8_to_wstring(*it);
+					filter.append(ws.c_str()); filter.append(1, 0);
+					filter.append(ws.c_str()); filter.append(1, 0);
+				}
+				filter.append(1, 0);
+				ofn.lpstrFilter = filter.data();
+			}
+		}
+		if (p->HasProperty(PROP_DIALOG_TITLE))
+		{
+			FB::variant t_var = p->GetProperty(PROP_DIALOG_TITLE);
+			title = t_var.convert_cast<std::wstring>();
+			ofn.lpstrTitle = title.c_str();
+		}
+	}
+	catch (...)
+	{}
+
+	// Display the Open dialog box. 
+
+	//CONSOLE_LOG("Going to call GetOpenFileName");
+	BOOL rval = GetOpenFileName(&ofn);
+	//CONSOLE_LOG("GetOpenFileName returned");
+	if (rval==TRUE) {
+		p->SetProperty(PROP_PATH, szFile);
+		return true;
+	}
+	else return false;
+}
 
 #ifdef DEBUG
 // API used for testing purposes

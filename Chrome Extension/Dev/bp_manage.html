@@ -47,25 +47,87 @@
             <!--Body content-->
             <div class="tab-pane" id="settings-pane">
               <h3>Settings</h3>
-              <form class="well form-inline">
-                <!--<legend>
-                    <span rel="tooltip" title="Import a comma separated password file exported from another password manager such as Mozilla Firefox">
-                      Import CSV File
+              <div class="well form-horizontal">
+                <legend>Password Stores</legend>
+                <fieldset id="formStoreLoad"  class="control-group">
+                  <label class="control-label">Store Location</label>
+                  <div class="controls form-inline">
+                    <input readonly type="text" placeholder="None Selected" class="input-xlarge" title="Currently selected password store">
+                    <button id="dbChooseLoad" type="button" class="btn btn-primary" title="Select a password store to open">
+                      <img hidden id="dbLoadSpinner" src="icons/ajax-loader-white.gif" />                      
+                      Open</button>
+                    <button id="dbChooseCreate" type="button" class="btn btn-inverse" title="Create a new password store">Create</button>
+                    <label class="checkbox">
+                      <input type="checkbox" name="savelocation" checked>
+                      Save location on this computer
+                    </label>
+                  </div>
+                </fieldset>
+
+                <fieldset class="control-group">
+                  <label class="control-label">Merge / Sync</label>
+                  <div class="controls">
+                    <button data-path-choose id="dbMerge" type="button" class="btn btn-primary" title="Both stores will have merged data.">Sync</button>                    
+                  </div>
+                </fieldset>
+
+                <fieldset class="control-group">
+                  <label class="control-label">Advanced</label>
+                  <div class="controls">
+                    <button data-path-choose id="dbMergeIn" type="button" class="btn btn-small" title="Current store will get merged data. Other store will stay unchanged.">Merge In</button>                    
+                    <button data-path-choose id="dbMergeOut" type="button" class="btn btn-small" title="Other store will get merged data. This store will stay unchanged.">Merge Out</button>                    
+                    <button id="dbDetach" type="button" class="btn btn-small" title="Close the password store">Close</button>
+                  </div>
+                </fieldset>
+
+              </div>
+              
+              <div class="form-horizontal well">
+                <legend>
+                    <span title="Import/Export a comma separated (CSV) password file exported from another password manager">
+                      Import/Export Passwords
                     </span>
                 </legend>
-                <div class="control-group controls">-->
-                  <label class="control-label" for="csvPath" title="Import a comma separated password file exported from another password manager">Import CSV File</label>
-                  <select data-path-select id="csvPathSelect" title="Browse and select the file">
+                <div class="control-group">
+                  <!-- <select data-path-select id="csvPathSelect" title="Browse and select the file">
                     <option value="">Browse Files</option>
                   </select>
                   <input data-path id="csvPath" type="text" title="Type the file name" required class="input-xlarge" data-provide="typeahead" placeholder="File Path">
                   <button data-path-submit id="csvPathSubmit" type="submit" class="btn btn-primary" title="Click to import selected file">Import</button>
-                  <button data-path-reset id="csvPathReset" type="reset" class="btn" title="Click to start over">Over</button>
-                <!-- </div> -->
-              </form>
+                  <button data-path-reset id="csvPathReset" type="reset" class="btn" title="Click to start over">Over</button> -->
+                  <label class="control-label">Import CSV File</label>
+                  <div class="controls form-inline">
+                    <button id="csvImport" type="button" class="btn btn-primary" title="Click to choose the file">Import</button>
+                    <label class="checkbox" title="Check this if import file is obfuscated">
+                      <input type="checkbox" name="obfuscated">
+                      Obfuscated
+                    </label>
+                  </div>
+                </div>
+                <div class="control-group">
+                  <label class="control-label">Export to CSV File</label>
+                  <div class="controls form-inline">
+                    <button id="csvPathExport" type="button" class="btn btn-inverse" title="Click to choose the file">Export</button>
+                    <label class="checkbox" title="Check this to obfuscate export file">
+                      <input type="checkbox" name="obfuscate" checked>
+                      Obfuscate
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="tab-pane" id="editor-pane">
               <h3>Edit Passwords</h3>
+              <div class="well form-inline">
+                <div class="control-group">
+                  <label class="control-label" title="Load a different store">Location</label>
+                  <div class="controls">
+                    <input type="text" placeholder="None" class="input-xlarge disabled" disabled title="Currently opened password store">
+                    <button data-path-choose id="dbPathChoose" type="button" class="btn btn-primary" title="Click to choose store to attach">Open</button>
+                    <button id="dbDetach" type="button" class="btn-small" title="Click to open password store">Close</button>
+                  </div>
+                </div>  
+              </div>            
             </div>
             <div class="tab-pane" id="help-pane">
               <!-- Help Content Goes Here -->

@@ -32,6 +32,7 @@ namespace bp
 	};
 
 	std::string& JsonFriendly(std::string&& s);
+	std::wstring& UTF8To16(std::string& s);
 	//std::string RandomPassword(int length);
 
 } // end namespace bp

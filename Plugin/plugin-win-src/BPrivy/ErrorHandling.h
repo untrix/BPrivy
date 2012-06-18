@@ -34,6 +34,9 @@ namespace bp
 	extern const std::string PROP_DATA;
 	extern const std::string PROP_READFILE;
 	extern const std::string PROP_LSDIR;
+	extern const std::string PROP_HIDE;
+	extern const std::string PROP_FILE_FILTER;
+	extern const std::string PROP_DIALOG_TITLE;
 
 	/***** Actionable Codes. GENERIC & System Error Codes are mapped to one of these *****/
 

@@ -401,7 +401,7 @@ var BP_MOD_PANEL = (function (g_win)
         var doc = ctx.doc, id_panel = ctx.id_panel, dnd = ctx.dnd, db = ctx.db;
         var j_panel = $(doc.createElement('div')).attr({id: id_panel, style:"display:none"});
         var html =      '<div id="com-bprivy-panelTitle"><div id="com-bprivy-TitleText">BPrivy</div>' +
-                            '<button type="button" id="com-bprivy-xB" accesskey="q">\u24CD</button>' +
+                            '<button type="button" id="com-bprivy-xB" accesskey="q">'+u_cir_X+'</button>' +
                         '</div>' +
                         '<div id="com-bprivy-panelList"></div>';
         j_panel[0].insertAdjacentHTML('beforeend', html);
@@ -528,7 +528,7 @@ var BP_MOD_PANEL = (function (g_win)
     /** @globals-begin */
     var g_loc = IMPORT(g_win.location);
     var g_doc = IMPORT(g_win.document);
-    var settings = {AutoFill:true, ShowPanelIfNoFill: true}; // User Settings
+    var settings = {AutoFill:true, ShowPanelIfNoFill: false}; // User Settings
     /** @globals-end **/
 
     /**

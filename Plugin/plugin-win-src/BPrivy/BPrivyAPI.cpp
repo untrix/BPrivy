@@ -65,6 +65,7 @@ BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host) :
 	registerMethod("rm", make_method(this, &BPrivyAPI::rm));
 	registerMethod("rename", make_method(this, &BPrivyAPI::rename));
 	registerMethod("copy", make_method(this, &BPrivyAPI::copy));
+	registerMethod("chooseFile", make_method(this, &BPrivyAPI::chooseFile));
 #ifdef DEBUG
 	registerMethod("appendLock", make_method(this, &BPrivyAPI::appendLock));
 	registerMethod("readLock", make_method(this, &BPrivyAPI::readLock));
@@ -236,41 +237,41 @@ bfs::file_status& ResolveSymlinks(bfs::path& p, bfs::file_status& s)
 
 void BPrivyAPI::securityCheck(const bfs::path& path, const std::string allowedExt[])
 {
-	// We require path to be absolute. Also, filename must have an extension.
-	if ((!path.is_absolute()) || (! path.has_extension())) {
-		throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
-	}
+	//// We require path to be absolute. Also, filename must have an extension.
+	//if ((!path.is_absolute()) || (! path.has_extension())) {
+	//	throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
+	//}
 
-	// Extension must be one of those supplied
-	bool good_ext = false;
-	for (int i=0; !allowedExt[i].empty(); i++)
-	{
-		if (path.extension() == allowedExt[i]) {
-			good_ext = true;
-			break;
-		}
-	}
-	if (!good_ext)
-		{throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);}
+	//// Extension must be one of those supplied
+	//bool good_ext = false;
+	//for (int i=0; !allowedExt[i].empty(); i++)
+	//{
+	//	if (path.extension() == allowedExt[i]) {
+	//		good_ext = true;
+	//		break;
+	//	}
+	//}
+	//if (!good_ext)
+	//	{throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);}
 
-	bool  isUnder3ab = false;
-	// The path should lie inside or at a .3ab directory
-	if (path.extension() != ".3ab")
-	{
-		for (bfs::path::const_iterator it = path.begin(); it != path.end(); it++)
-		{
-			if (it->extension() == ".3ab") {
-				isUnder3ab = true;
-				break;
-			}
-		}
-	}
-	else {
-		isUnder3ab = true;
-	}
-	if (!isUnder3ab) {
-		throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
-	}
+	//bool  isUnder3ab = false;
+	//// The path should lie inside or at a .3ab directory
+	//if (path.extension() != ".3ab")
+	//{
+	//	for (bfs::path::const_iterator it = path.begin(); it != path.end(); it++)
+	//	{
+	//		if (it->extension() == ".3ab") {
+	//			isUnder3ab = true;
+	//			break;
+	//		}
+	//	}
+	//}
+	//else {
+	//	isUnder3ab = true;
+	//}
+	//if (!isUnder3ab) {
+	//	throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
+	//}
 }
 
 //void BPrivyAPI::AAAInit(FB::JSObjectPtr io)
@@ -467,6 +468,15 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 			CONSOLE_LOG(dirPath + " is a directory");
 			const bfs::directory_iterator it_end;
 			bfs::directory_iterator it(path);
+			bool hide = false; // By default we list hidden files
+			if (p->HasProperty(PROP_HIDE)) try
+			{
+				FB::variant t_var = p->GetProperty(PROP_HIDE);
+				hide = t_var.convert_cast<bool>();
+			}
+			catch (...)
+			{}
+
 			for (i_f=0, i_d=0, i_o=0, i_e=0; it != it_end; it++)
 			{
 				std::ostringstream t_j, t_je;
@@ -474,7 +484,11 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 				ostringstream dummy_strm; 
 				ostringstream *p_j = &dummy_strm;//Assign to dummy to avoid null-pointer
 
-				if (bfs::is_directory(it->status())) 
+				if (hide && (it->status().hidden() == bfs::yes))
+				{
+					continue;
+				}
+				else if (bfs::is_directory(it->status()))
 				{
 					p_i = &i_d;
 					p_j = &jd;
@@ -486,7 +500,7 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 					p_j = &jf;
 					fileToJson(it->path(), t_j, t_je);
 				}
-				else 
+				else
 				{
 					p_i = &i_o;
 					p_j = &jo;

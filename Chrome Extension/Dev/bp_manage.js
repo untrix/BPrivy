@@ -22,7 +22,7 @@ var BP_MOD_MANAGE = (function ()
            
     function fillOptions(eid, dir)
     {
-        var o={}, d, i=0, n=0;
+        var o={hide:true}, d, i=0, n=0;
         eid = '#' + eid;
         $(eid).empty(); // Empty the selector list anyway.
         if (BP_PLUGIN.ls(dir, o) && (o.lsd) && (d=JSON.parse(o.lsd)) && d.d) {
@@ -59,6 +59,17 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('[data-path-reset]', 'click', function(e)
         {
             fillOptions("csvPathSelect", "");
+        });
+        
+        addEventListeners('#csvImport', 'click', function (e)
+        {
+            var o={filter:['*.csv'], dtitle: "BPrivy: Import CSV File"};
+            if (BP_PLUGIN.chooseFile(o)) {
+                console.log("ChooseFile returned:" + o.path);
+            }
+            else {
+                console.log("ChooseFile Failed");
+            }
         });
         
         addEventListeners('[data-path-select]', 'change', function (e) 

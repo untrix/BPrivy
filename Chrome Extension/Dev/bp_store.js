@@ -545,6 +545,7 @@ var BP_MOD_FILESTORE = (function()
     var ext_Closed=".3ac";
     var ext_MMap = ".3am";
     var ext_Temp = ".3at";
+    var ext_Csv  = ".csv";
     /**
      * Name of knowledge-dict directory on filesystem. Should be case insensitive
      * since not all filesystems will honor case.
@@ -739,9 +740,8 @@ var BP_MOD_FILESTORE = (function()
         var line = this.fstrm.getDataLine();
         if (line)
         {
-            var vals=[], idx,
-            array = regex.exec(line);
-            while (array)
+            var vals=[], idx, array;
+            while ((array = regex.exec(line)))
             {
                 vals.push(array[1] || (array[2] || array[3]));
                 idx = regex.lastIndex;

@@ -73,6 +73,7 @@ public:
 	bool rename(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
 	// Copies files only.
 	bool copy(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
+	bool chooseFile(FB::JSObjectPtr p);
 #ifdef DEBUG
 	// Locks the file for write and returns without unlocking or closing it. This is to be used for lock testing only.
 	unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr out);

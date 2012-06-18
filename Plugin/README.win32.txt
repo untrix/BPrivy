@@ -14,7 +14,7 @@ The following software is required to build the BPrivy plugin:
 	6. .\b2 install-proper
 		This will install into C:\Boost
 	7. cd C:\Boost\lib
-8. Eventhough FireBreath documentation says that you can use system-boost libs by supplying "-D WITH_SYSTEM_BOOST=1", that doesn't actually work. CMake simply ignores all the command-line variables supplied. Supplying the variables inside a 'cmake initial-cache file' worked, so I've used that technique. The following more intrusive techniques also worked but are not necessary. But I'm keeping them below in case we'll need those for other operating environments.
+8. Eventhough FireBreath documentation says that you can use system-boost libs by supplying "-D WITH_SYSTEM_BOOST=1", that doesn't actually work. CMake simply ignores all the command-line variables supplied. Supplying the variables inside a 'cmake initial-cache file' worked, so I've used that technique. The following more intrusive techniques also worked but are not necessary. But I'm keeping them below in case we'll need those for other build environments.
 
 	Hence these will need to be set inside firebreath1.7\CMakeLists.txt file. At the top somewhere add the line:
 	option(WITH_SYSTEM_BOOST "Build with system Boost" ON)
