@@ -369,15 +369,11 @@ private:
 };
 
 
-bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::JSObjectPtr out)
+bool BPrivyAPI::appendFile(const bp::uwstring& pth, const std::string& data, FB::JSObjectPtr out)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
 
-	// NOTE: FireBreath plugin is compiled with the /D_UNICODE flag. This means that
-	// the unicode character set is used for all strings, both wchar_t and char_t. This
-	// implies that char_t strings are encoded in UTF8 (since that is the unicode encoding
-	// for 8bit character strings). Encoding conversion routines such as mbstowcs translate
-	// from unicode to unicode encodings such as UTF8 to UCS32 (no encoding) and back.
+	// NOTE: FireBreath plugin is compiled with the /D_UNICODE flag.
 
 	// NOTE: FireBreath ensures that <data> will be in UTF-8 format. Therefore
 	// we're dealing with the files in BINARY mode and no the OS will not perform
@@ -411,15 +407,15 @@ bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::
 		// ensure that concurrent processes will be able to read all existing bytes
 		// but not the bytes that we will be appending to the file. Read the
 		// example 'Appending One File to Another File' in MSDN-help.
-		HANDLEGuard h( CreateFile(path.c_str(), 
-									FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile
-									// // Allow other readers but no appenders (we never write inside a file), deleters or renamers
-									FILE_SHARE_READ,
-									//FILE_SHARE_PROMISCUOUS, // // Disabling ShareMode in order to test efficacy of locking
-									NULL, 
-									OPEN_ALWAYS, 
-									FILE_ATTRIBUTE_HIDDEN | FILE_FLAG_WRITE_THROUGH, 
-									NULL) );
+		HANDLEGuard h( CreateFileW(path.c_str(), 
+						FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile
+						// // Allow other readers but no appenders (we never write inside a file), deleters or renamers
+						FILE_SHARE_READ,
+						//FILE_SHARE_PROMISCUOUS, // // Disabling ShareMode in order to test efficacy of locking
+						NULL, 
+						OPEN_ALWAYS, 
+						FILE_ATTRIBUTE_HIDDEN | FILE_FLAG_WRITE_THROUGH, 
+						NULL) );
 		
 		// OPEN_ALWAYS
 		// 4 Opens a file, always.
@@ -449,7 +445,7 @@ bool BPrivyAPI::appendFile(const std::string& pth, const std::string& data, FB::
 	return false;
 }
 
-bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boost::optional<unsigned long long> o_pos)
+bool BPrivyAPI::readFile(const bp::uwstring& pth, FB::JSObjectPtr out, const boost::optional<unsigned long long> o_pos)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ".csv", ""};
 
@@ -464,15 +460,15 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 		path.make_preferred();
 		//string path_s(path.string());
 
-		HANDLEGuard h( CreateFile(path.c_str(), 
-									FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
-									// Allow other readers as well as appenders (we never write inside a file), but no deleters or renamers
-									FILE_SHARE_WRITE | FILE_SHARE_READ,
-									//FILE_SHARE_PROMISCUOUS, // Disabling ShareMode in order to test efficacy of locking
-									NULL, 
-									OPEN_EXISTING, 
-									FILE_FLAG_SEQUENTIAL_SCAN, 
-									NULL) );
+		HANDLEGuard h( CreateFileW(path.c_str(), 
+						FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
+						// Allow other readers as well as appenders (we never write inside a file), but no deleters or renamers
+						FILE_SHARE_WRITE | FILE_SHARE_READ,
+						//FILE_SHARE_PROMISCUOUS, // Disabling ShareMode in order to test efficacy of locking
+						NULL, 
+						OPEN_EXISTING, 
+						FILE_FLAG_SEQUENTIAL_SCAN, 
+						NULL) );
 		
 		
 		LARGE_INTEGER fsiz;
@@ -483,17 +479,20 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 
 		h.PrepareForRead(pos, siz); // throws
 
-		MemGuard buf((siz+1)*sizeof(char)); // Allocates memory
+		// Allocates memory for UTF8 bytes plus null-terminator.
+		MemGuard buf((siz+1)*sizeof(char));
 		DWORD nread=0;
 		rval = ReadFile(h.m_Handle, buf.m_P, siz, &nread, NULL);
 		THROW_IF (rval==0); // throws
 		CHECK((siz==nread)); // throws
 
 		buf.NullTerm(siz);
-		FB::VariantMap m;
-		m.insert(VT(PROP_DATA, static_cast<char*>(buf.m_P)));
-		m.insert(VT(PROP_FILESIZE, siz));
-		out->SetProperty(PROP_READFILE, m);
+		//FB::VariantMap m;
+		//m.insert(VT(PROP_DATA, static_cast<char*>(buf.m_P)));
+		//m.insert(VT(PROP_FILESIZE, siz));
+		//out->SetProperty(PROP_READFILE, m);
+		out->SetProperty(PROP_DATA, static_cast<char*>(buf.m_P));
+		out->SetProperty(PROP_FILESIZE, siz);
 		return true;
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(out)
@@ -503,7 +502,7 @@ bool BPrivyAPI::readFile(const std::string& pth, FB::JSObjectPtr out, const boos
 
 HANDLE OpenFileForDeleteOrRenameLocking(bfs::path& pth)
 {
-	return CreateFile(pth.c_str(),
+	return CreateFileW(pth.c_str(),
 				GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
 				// DELETE sharing is needed for allowing deletes and renames later.
 				FILE_SHARE_DELETE,
@@ -529,14 +528,14 @@ bool BPrivyAPI::renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists)
 		h2.LockForDeleteOrRename();
 	}
 
-	BOOL rval = MoveFileEx(o_path.c_str(), n_path.c_str(), MOVEFILE_REPLACE_EXISTING);
+	BOOL rval = MoveFileExW(o_path.c_str(), n_path.c_str(), MOVEFILE_REPLACE_EXISTING);
 	THROW_IF3(!rval, o_path, n_path);
 	return true;
 }
 
 HANDLE OpenFileForCopyOutLocking(bfs::path& pth)
 {
-	return CreateFile(pth.c_str(),
+	return CreateFileW(pth.c_str(),
 				GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
 				// READ sharing is needed for allowing copy-out later.
 				FILE_SHARE_PROMISCUOUS,

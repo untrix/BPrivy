@@ -64,16 +64,16 @@ public:
 	 *  instead.
 	 */
 	bool ls(const bp::uwstring& dirPath, FB::JSObjectPtr out);
-	bool appendFile(const std::string& path, const std::string& data, FB::JSObjectPtr out);
-	bool readFile(const std::string& path, FB::JSObjectPtr out, boost::optional<unsigned long long> pos);
-	bool createDir(const std::string& path, FB::JSObjectPtr);
-	bool rm(const std::string& path, FB::JSObjectPtr out);
+	bool appendFile(const bp::uwstring& path, const std::string& data, FB::JSObjectPtr out);
+	bool readFile(const bp::uwstring& path, FB::JSObjectPtr out, boost::optional<unsigned long long> pos);
+	bool createDir(const bp::uwstring& path, FB::JSObjectPtr);
+	bool rm(const bp::uwstring& path, FB::JSObjectPtr out);
 	// Note: rename will not clobber directories. For files, it will iff 'fclobber' was true.
 	// If the renaming is for files, then it will obtain write locks on both files and ensure that no one is
 	// reading or writing to either. Also, no locking is performed when renaming directories.
-	bool rename(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
+	bool rename(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
 	// Copies files only.
-	bool copy(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
+	bool copy(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
 	bool chooseFile(FB::JSObjectPtr p);
 #ifdef DEBUG
 	// Locks the file for write and returns without unlocking or closing it. This is to be used for lock testing only.

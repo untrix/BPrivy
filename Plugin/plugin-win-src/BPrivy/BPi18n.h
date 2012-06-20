@@ -6,7 +6,7 @@
 #include "APITypes.h"
 #include "utf8_tools.h"
 #include <boost/filesystem.hpp>
-
+#include <boost/system/error_code.hpp>
 
 // NOTE: ALL INTERACTIONS WITH FIREBREATH/JSON MUST BE IN UNICODE WIDESTRING OR
 // UTF8. ONLY UNICODE-WSTRINGS MUST BE INPUT FROM FIREBREATH AND ONLY
@@ -41,6 +41,7 @@
 
 namespace bp
 {
+	namespace bs = boost::system;
 	// ustring and uwstring are being defined to alert the programmer that the string
 	// data within is unicode. This is needed in Windows, where unicode is only supported
 	// in wide-strings. Therefore one has to convert a regular mbcs-string to utf8 before
@@ -55,16 +56,44 @@ namespace bp
 	typedef std::wstring uwstring;
 	typedef std::map<uwstring, FB::variant> VariantMapW;
 
-	ustring GetUString(const std::string& s);
-	inline ustring GetUString(const char* p) 
+	class i18n
 	{
-		return GetUString(ustring(p));
-	}
-	inline ustring GetUString(const boost::filesystem::path& path)
-	{
-		return FB::wstring_to_utf8(path.wstring());
-		//return path.wstring();
-	}
-	inline std::wstring& GetLString(std::wstring& ws) { return ws; }
+	public:
+		inline static ustring GetUString(const boost::filesystem::path& path)
+		{
+			// In Windows wstring is guaranteed to be UNICODE. Boost::Filesystem will perform the MultiByteToWidechar
+			// conversion on Windows, this will utilize the codepage in vogue but will ensure that the resulting wide-string
+			// is in UNICODE - assuming that the originating string was in the native format to begin with, and I trust that
+			// boost::filsystem will take care of that for paths that it obtains from the operating system - especialy since
+			// we're providing the /D_UNICODE compile flags. For paths originating at FireBreath, Firebreath guarantees that
+			// widestrings will be in unicode (and strings in UTF8). Therefore we import FireBreath strings in wide-char and
+			// instantiate bfs::path objects with widestrings. In short the convention is that anything in widechar is encoded
+			// in unicode. For MacOSX, the default imbued locale is UTF-8 - per Boost::Filesystem, hence there is no issue
+			// there and therefore widechar or char doesn't make any difference. For Linux and POSIX, however, the default
+			// locale maybe anything. But I'm going with the assumption that anything in wide-char must be UNICODE and therefore
+			// converting strings from wchar_t to char and back using the imbued locale should ensure that we always end-up with
+			// wchar_t strings in UNICODE. Therefore any conversion from wchar_t to char_t for use within the operating system
+			// must use the imbued locale. On the other hand if the conversion must beget a bp::ustring (utf8) then the conversion
+			// must be from UNICODE (wchar_t) to UNICODE (char_t = UTF-8).
+			// Hence it is "safe" to assume that whatever comes out as path.wstring() must be UNICODE.
+			return FB::wstring_to_utf8(path.wstring());
+			//return path.wstring();
+		}
+
+		inline static ustring i18n::GetUString(const bs::error_code& ec)
+		{
+			return LocaleToUtf8(ec.message().c_str());
+		}
+
+		inline static ustring i18n::GetUString(const std::exception& e)
+		{
+			// i18n: Assuming that this will be in utf-8.
+			// e.what returns const char*
+			return LocaleToUtf8(e.what());
+		}
+		
+	private:
+		static ustring LocaleToUtf8(const char* s);
+	};
 }// end namespace bp
 #endif // H_BP_i18n

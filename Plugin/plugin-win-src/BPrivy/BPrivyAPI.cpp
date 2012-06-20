@@ -133,10 +133,10 @@ bool direntToVariant(const bfs::path& path, FB::VariantMap& v, FB::VariantMap& v
 			v.insert(VT(PROP_FILESIZE, file_size(path)));
 		}
 		if (path.has_extension()) {
-			v.insert(VT(PROP_FILEEXT, GetUString(path.extension())));
+			v.insert(VT(PROP_FILEEXT, i18n::GetUString(path.extension())));
 			//v.insert(VT(PROP_FILEEXT, path.extension().wstring()));
 			if (path.has_stem()) {
-				v.insert(VT(PROP_FILESTEM, GetUString(path.stem())));
+				v.insert(VT(PROP_FILESTEM, i18n::GetUString(path.stem())));
 			}
 		}
 
@@ -154,20 +154,21 @@ bool direntToVariant(const bfs::path& path, FB::VariantMap& v, FB::VariantMap& v
 	return rval;
 }
 
-bool fileToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
+inline bool fileToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
 {
 	return direntToVariant(path, m, me, ENT_FILE);
 }
 
-bool dirToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
+inline bool dirToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
 {
 	return direntToVariant(path, m, me, ENT_DIR);
 }
 
-bool otherToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
+inline bool otherToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
 {
 	return direntToVariant(path, m, me, ENT_OTHER);
 }
+
 FB::VariantMap& errorToVariant(const bfs::filesystem_error& e, FB::VariantMap& m)
 {
 	MakeErrorEntry(e, m);
@@ -336,7 +337,7 @@ bool BPrivyAPI::ls(const uwstring& dirPath, FB::JSObjectPtr p)
 		}
 		else if (bfs::is_directory(stat))
 		{
-			CONSOLE_LOG(GetUString(path) + " is a directory");
+			CONSOLE_LOG(i18n::GetUString(path) + " is a directory");
 			const bfs::directory_iterator it_end;
 			bool hide = false; // By default we list hidden files
 			if (p->HasProperty(PROP_HIDE)) try
@@ -351,7 +352,7 @@ bool BPrivyAPI::ls(const uwstring& dirPath, FB::JSObjectPtr p)
 			{
 				// convert filenanme to utf8.
 				// TODO: I18N
-				bp::ustring ufname(GetUString(it->path().filename()));
+				bp::ustring ufname(i18n::GetUString(it->path().filename()));
 				bfs::path pth = it->path();
 				FB::VariantMap m, e;
 
@@ -393,6 +394,8 @@ bool BPrivyAPI::ls(const uwstring& dirPath, FB::JSObjectPtr p)
 				m.insert(VT(PROP_ERRORS, me));
 			}
 			p->SetProperty(PROP_LSDIR, m);
+			// TESTING
+			FB::VariantMap mtest;
 		}
 		else if (stat.type() == bfs::reparse_file)
 		{
@@ -409,7 +412,7 @@ bool BPrivyAPI::ls(const uwstring& dirPath, FB::JSObjectPtr p)
 	return false;
 }
 
-bool BPrivyAPI::createDir(const std::string& s_path, FB::JSObjectPtr p)
+bool BPrivyAPI::createDir(const bp::uwstring& s_path, FB::JSObjectPtr p)
 {
 	static const std::string allowedExt[] = {".3ad", ""};
 
@@ -430,7 +433,7 @@ bool BPrivyAPI::createDir(const std::string& s_path, FB::JSObjectPtr p)
 	return false;
 }
 
-bool BPrivyAPI::rm(const std::string& s_path, FB::JSObjectPtr p)
+bool BPrivyAPI::rm(const bp::uwstring& s_path, FB::JSObjectPtr p)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
 
@@ -454,8 +457,6 @@ bool BPrivyAPI::rm(const std::string& s_path, FB::JSObjectPtr p)
 		}
 		else if (bfs::is_regular_file(stat))
 		{
-			//bfs::remove(path);
-			//return true;
 			return removeFile(path);
 		}
 		else if (stat.type() == bfs::reparse_file)
@@ -476,7 +477,7 @@ bool BPrivyAPI::rm(const std::string& s_path, FB::JSObjectPtr p)
 }
 
 bool
-BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr p, const boost::optional<bool> o_clob)
+BPrivyAPI::rename(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObjectPtr p, const boost::optional<bool> o_clob)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3at", ""};
 
@@ -530,7 +531,7 @@ BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObje
 }
 
 bool
-BPrivyAPI::copy(const std::string& old_p, const std::string& new_p, FB::JSObjectPtr p, const boost::optional<bool> o_clob)
+BPrivyAPI::copy(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObjectPtr p, const boost::optional<bool> o_clob)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3at", ""};
 

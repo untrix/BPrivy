@@ -1,16 +1,7 @@
-//Includes Required by FireBreath
 #include "JSObject.h"
-//#include "variant_list.h"
-//#include "DOM/Document.h"
-//#include "global/config.h"
-//#include <APITypes.h>
-//#include <DOM/Window.h>
-
 #include "BPrivyAPI.h"
 #include "ErrorHandling.h"
 #include "Utils.h"
-
-//#include <sstream>  // For stringstream
 #include <boost/system/error_code.hpp>
 
 using namespace bp;
@@ -254,14 +245,14 @@ namespace bp
 	{
 		if (!e.path1().empty())
 		{
-			m.insert(VT(PROP_PATH, GetUString(e.path1())));
-			m.insert(VT(PROP_FILENAME, GetUString(e.path1().filename())));
+			m.insert(VT(PROP_PATH, i18n::GetUString(e.path1())));
+			m.insert(VT(PROP_FILENAME, i18n::GetUString(e.path1().filename())));
 			if (e.path1().has_extension())
 			{
-				m.insert(VT(PROP_FILEEXT, GetUString(e.path1().extension())));
+				m.insert(VT(PROP_FILEEXT, i18n::GetUString(e.path1().extension())));
 				if (e.path1().has_stem())
 				{
-					m.insert(VT(PROP_FILESTEM, GetUString(e.path1().stem())));
+					m.insert(VT(PROP_FILESTEM, i18n::GetUString(e.path1().stem())));
 				}
 			}
 		}
@@ -282,9 +273,9 @@ namespace bp
 	{
 		int ev = e.code().value();
 		bs::error_code ec = e.code();
-		m.insert(VT(PROP_SYSTEM_MESSAGE, GetUString(ec.message())));
+		m.insert(VT(PROP_SYSTEM_MESSAGE, i18n::GetUString(ec)));
 		m.insert(VT(PROP_SYSTEM_CODE, SCodeToSCode(ev)));
-		//m.insert(VT(PROP_GENERIC_MESSAGE, GetUString(ec.default_error_condition().message())));
+		//m.insert(VT(PROP_GENERIC_MESSAGE, i18n::GetUString(ec.default_error_condition().message())));
 		//m.insert(VT(PROP_GENERIC_CODE, bp::PCodeToPCode(ec.default_error_condition().value())));
 		
 		// Map from SCode to ACode if possible
@@ -304,8 +295,8 @@ namespace bp
 	{
 		FB::VariantMap m;
 		ParseSystemException(e, m);
-		if (!e.path1().empty()) {m.insert(VT(PROP_PATH, GetUString(e.path1())));}
-		if (!e.path2().empty()) {m.insert(VT(PROP_PATH2, GetUString(e.path2())));}
+		if (!e.path1().empty()) {m.insert(VT(PROP_PATH, i18n::GetUString(e.path1())));}
+		if (!e.path2().empty()) {m.insert(VT(PROP_PATH2, i18n::GetUString(e.path2())));}
 		p->SetProperty(PROP_ERROR, FB::variant(m));
 	}
 
@@ -321,7 +312,7 @@ namespace bp
 	void HandleStdException(const std::exception& e, FB::JSObjectPtr& p)
 	{		
 		FB::VariantMap m;
-		m.insert(VT(PROP_SYSTEM_MESSAGE, GetUString(e.what())));
+		m.insert(VT(PROP_SYSTEM_MESSAGE, i18n::GetUString(e)));
 		p->SetProperty(PROP_ERROR, FB::variant(m));
 	}
 
@@ -346,7 +337,7 @@ namespace bp
 			m.insert(VT(PROP_GENERIC_CODE, e.gcode));
 		}
 		if (!e.path.empty()) {
-			m.insert(VT(PROP_PATH, GetUString(e.path)));
+			m.insert(VT(PROP_PATH, i18n::GetUString(e.path)));
 		}
 		if (!e.gmsg.empty()) {
 			m.insert(VT(PROP_GENERIC_MESSAGE, e.gmsg));

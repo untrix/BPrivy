@@ -36,18 +36,18 @@ namespace bp
 		((char*)m_P)[siz>=m_Siz?m_Siz-1:siz] = 0;
 	}
 
-	std::string& JsonFriendly(std::string&& s)
-	{
-		for (string::iterator it=s.begin(); it != s.end(); it++)
-		{
-			if ((*it) == '"')
-			{ *it = '\'';}
-			else if ((*it) == '\\')
-			{ *it = '/'; }
-		}
+	//std::string& JsonFriendly(std::string&& s)
+	//{
+	//	for (string::iterator it=s.begin(); it != s.end(); it++)
+	//	{
+	//		if ((*it) == '"')
+	//		{ *it = '\'';}
+	//		else if ((*it) == '\\')
+	//		{ *it = '/'; }
+	//	}
 
-		return s;
-	}
+	//	return s;
+	//}
 
 /*	std::string RandomPassword(unsigned len) 
 	{

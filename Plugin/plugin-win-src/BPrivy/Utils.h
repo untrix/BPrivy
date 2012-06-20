@@ -37,7 +37,7 @@ namespace bp
 		bp::msize32_t		m_Siz;
 	};
 
-	std::string& JsonFriendly(std::string&& s);
+	//std::string& JsonFriendly(std::string&& s);
 	//std::string RandomPassword(int length);
 } // end namespace bp
 #endif // H_BP_Utils
