@@ -10,7 +10,7 @@
 #include "BPrivyAPI.h"
 #include "ErrorHandling.h"
 #include "Utils.h"
-#include <sstream>  // For stringstream
+//#include <sstream>  // For stringstream
 #include <process.h>// For getpid
 #include <stdlib.h> // For malloc
 #include <malloc.h> // For malloc
@@ -123,105 +123,55 @@ unsigned int BPrivyAPI::getpid() const
 #endif
 }
 
-
-void fileToJson(const bfs::path& path, std::ostringstream& json, std::ostringstream& je)
+bool direntToVariant(const bfs::path& path, FB::VariantMap& v, FB::VariantMap& v_e,
+					 ENT_TYPE type)
 {
+	bool rval = false;
 	try 
 	{
-		json << QUOTE << path.filename().string() << "\":{";
-		json << "\"sz\":" << std::to_string(file_size(path));
+		if (type == ENT_FILE) {
+			v.insert(VT(PROP_FILESIZE, file_size(path)));
+		}
 		if (path.has_extension()) {
-			json << ",\"ex\":" << QUOTE << path.extension().string() << QUOTE;
+			v.insert(VT(PROP_FILEEXT, GetUString(path.extension())));
+			//v.insert(VT(PROP_FILEEXT, path.extension().wstring()));
 			if (path.has_stem()) {
-				json << ",\"st\":" << QUOTE << path.stem().string() << QUOTE;
+				v.insert(VT(PROP_FILESTEM, GetUString(path.stem())));
 			}
 		}
-		json << CLOSEB;
-	}
-	catch (const bfs::filesystem_error& e)
-	{
-		json.str(string()); // clear incompelte data
-		MakeErrorEntry(e, je);
-	}
-	catch (...)
-	{
-		json.str(string()); // clear incompelte data
-	}
-}
 
-void fileToVariant(const bfs::path& path, FB::VariantMap& v, FB::VariantMap& v_e)
-{
-	try 
-	{
-		FB::VariantMap m;
-
-		m.insert(VT(PROP_FILESIZE, file_size(path)));
-		if (path.has_extension()) {
-			m.insert(VT(PROP_FILEEXT, path.extension().string()));
-			if (path.has_stem()) {
-				m.insert(VT(PROP_FILESTEM, path.stem().string()));
-			}
-		}
-		v.insert(VT(path.filename().string(), m));
+		rval = true;
 	}
-	catch (const bfs::filesystem_error& e)
-	{
+	catch (const bfs::filesystem_error& e) {
 		v.clear(); // clear incompelte data
 		MakeErrorEntry(e, v_e);
 	}
-	catch (...)
-	{
+	catch (...)	{
 		v.clear(); // clear incompelte data
+		HandleUnknownException(v_e);
 	}
+
+	return rval;
 }
 
-void dirToJson(const bfs::path& path, std::ostringstream& json, std::ostringstream& je)
+bool fileToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
 {
-	try
-	{
-		json << QUOTE << path.filename().string() << "\":{";
-		if (path.has_extension()) 
-		{
-			json << "\"ex\":" << QUOTE << path.extension().string() << QUOTE;
-			if (path.has_stem()) {
-				json << ",\"st\":" << QUOTE << path.stem().string() << QUOTE;
-			}
-		}
-		json << CLOSEB;
-	}
-	catch (const bfs::filesystem_error& e)
-	{
-		json.str(string()); // clear incompelte data
-		MakeErrorEntry(e, je);
-	}
-	catch (...)
-	{
-		json.str(string()); // clear incompelte data
-	}
+	return direntToVariant(path, m, me, ENT_FILE);
 }
 
-void otherToJson(const bfs::path& path, std::ostringstream& json, std::ostringstream& je)
+bool dirToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
 {
-	try
-	{
-		json << QUOTE << path.filename().string() << "\":{";
-		if (path.has_extension()) {
-			json << "\"ex\":" << QUOTE << path.extension().string() << QUOTE;
-			if (path.has_stem()) {
-				json << ",\"st\":" << QUOTE << path.stem().string() << QUOTE;
-			}
-		}
-		json << CLOSEB;
-	}
-	catch (const bfs::filesystem_error& e)
-	{
-		json.str(string()); // clear incompelte data
-		MakeErrorEntry(e, je);
-	}
-	catch (...)
-	{
-		json.str(string()); // clear incompelte data
-	}
+	return direntToVariant(path, m, me, ENT_DIR);
+}
+
+bool otherToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
+{
+	return direntToVariant(path, m, me, ENT_OTHER);
+}
+FB::VariantMap& errorToVariant(const bfs::filesystem_error& e, FB::VariantMap& m)
+{
+	MakeErrorEntry(e, m);
+	return m;
 }
 
 bfs::file_status& ResolveSymlinks(bfs::path& p, bfs::file_status& s)
@@ -234,94 +184,6 @@ bfs::file_status& ResolveSymlinks(bfs::path& p, bfs::file_status& s)
 
 	return s;
 }
-
-void BPrivyAPI::securityCheck(const bfs::path& path, const std::string allowedExt[])
-{
-	//// We require path to be absolute. Also, filename must have an extension.
-	//if ((!path.is_absolute()) || (! path.has_extension())) {
-	//	throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
-	//}
-
-	//// Extension must be one of those supplied
-	//bool good_ext = false;
-	//for (int i=0; !allowedExt[i].empty(); i++)
-	//{
-	//	if (path.extension() == allowedExt[i]) {
-	//		good_ext = true;
-	//		break;
-	//	}
-	//}
-	//if (!good_ext)
-	//	{throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);}
-
-	//bool  isUnder3ab = false;
-	//// The path should lie inside or at a .3ab directory
-	//if (path.extension() != ".3ab")
-	//{
-	//	for (bfs::path::const_iterator it = path.begin(); it != path.end(); it++)
-	//	{
-	//		if (it->extension() == ".3ab") {
-	//			isUnder3ab = true;
-	//			break;
-	//		}
-	//	}
-	//}
-	//else {
-	//	isUnder3ab = true;
-	//}
-	//if (!isUnder3ab) {
-	//	throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
-	//}
-}
-
-//void BPrivyAPI::AAAInit(FB::JSObjectPtr io)
-//{
-//	// Following scenarios are possible:
-//	// 1. DB is being freshly created.
-//	// 2. An existing DB is opened.
-//	//	  Plugin needs to verify caller is not malicious and return a random-token
-//	//	  for future calls.
-//	// 3. We were invoked a second time during the lifetime of the plugin instance.
-//	//    Throw an exception in this case.
-//
-//	//FB::variant val = io->GetProperty(PROP_TOKEN);
-//	//std::string token = val.cast<std::string>();
-//
-////	if (token.empty() && m_aclToken.empty())
-//	{
-//		FB::DOM::WindowPtr pWin = m_host->getDOMWindow();
-//		std::string loc = pWin->getLocation();
-//		CONSOLE_LOG("In AAAInit, loc = " + loc);
-//		//m_aclToken = RandomPassword(32);
-//
-//		//io->SetProperty(PROP_TOKEN, m_aclToken);
-//	}
-//	//else
-//	//{
-//	//	//throw BPError(ACODE_ACCESS_DENIED, BP_PROTOCOL_VIOLATION);
-//	//}
-//}
-//
-
-//bool BPrivyAPI::createDB(const std::string& s_path,  FB::JSObjectPtr io)
-//{
-//	try
-//	{
-//		securityCheck(s_path, io);
-//		// Check that password exists and is at least 10 characters long
-//		FB::variant val = io->GetProperty(PROP_PASS);
-//		std::string pass = val.cast<std::string>();
-//		if (pass.size() < 10) {
-//			throw BPError(ACODE_ACCESS_DENIED, BPCODE_WRONG_PASS, "Supplied password is too short.");
-//		}
-//	}
-//	CATCH_FILESYSTEM_EXCEPTIONS(io)
-//}
-//
-//bool BPrivyAPI::openDB(const std::string& s_path,  FB::JSObjectPtr io)
-//{
-//	AAAInit(io);
-//}
 
 void BPrivyAPI::securityCheck(const bfs::path& path, const bfs::path& path2, const std::string allowedExt[])
 {
@@ -413,7 +275,24 @@ o: {
     }
 }
  */
-bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
+
+#ifdef DEBUG
+void BPrivyAPI::CONSOLE_LOG(const std::string& s) 
+{
+	m_host->htmlLog(std::string("BPlugin: ") + (s));
+}
+void BPrivyAPI::CONSOLE_LOG(const std::wstring& s)
+{
+	std::wstring temp(L"BPlugin: ");
+	m_host->htmlLog(FB::wstring_to_utf8(temp.append(s)));
+}
+
+#else
+void BPrivyAPI::CONSOLE_LOG(const std::string& s){}
+void BPrivyAPI::CONSOLE_LOG(const std::wstring& s) {}
+#endif
+
+bool BPrivyAPI::ls(const uwstring& dirPath, FB::JSObjectPtr p)
 {
 	try 
 	{
@@ -425,24 +304,18 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 			p->SetProperty(PROP_PATH, path.string());
 		}
 
-		//FB::VariantMap m, m2, m3;
-		//m3.insert(VT("m3-prop", "m3-val"));
-		//m2.insert(VT("m3", FB::variant(m3)));
-		//m.insert(VT("m2", FB::variant(m2)));
-		//p->SetProperty("m", FB::variant(m));
+		FB::VariantMap m, mf, md, mo, me;
 
-		std::ostringstream j, jf, jd, jo, je;
-		unsigned int i_f=0, i_d=0, i_o=0, i_e=0;
+		//unsigned int i_f=0, i_d=0, i_o=0, i_e=0;
 		bool rVal = false;
-
-		jf << OPENB;
-		jd << OPENB;
-		jo << OPENB;
-		je << OPENB;
 
 		if (dirPath.empty())
 		{
-			i_d = lsDrives(jd);
+			if (lsDrives(md)>0)
+			{
+				m.insert(VT(PROP_DIRS, md));
+				p->SetProperty(PROP_LSDIR, m);
+			}
 			rVal = true;
 		}
 		else if (!bfs::exists(stat))
@@ -452,22 +325,19 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 		else if (bfs::is_regular_file(ResolveSymlinks(path, stat)))
 		{
 			FB::VariantMap v, v_e;
-			fileToVariant(path, v, v_e);
-			if (!v.empty())
-			{
-				p->SetProperty(PROP_FILESTAT, v);
+			direntToVariant(path, v, v_e, ENT_FILE);
+			if (!v.empty()) {
+				p->SetProperty(PROP_LSFILE, v);
 			}
-			if (!v_e.empty())
-			{
+			if (!v_e.empty()) {
 				p->SetProperty(PROP_ERROR, v_e);
 			}
 			rVal = true;
 		}
 		else if (bfs::is_directory(stat))
 		{
-			CONSOLE_LOG(dirPath + " is a directory");
+			CONSOLE_LOG(GetUString(path) + " is a directory");
 			const bfs::directory_iterator it_end;
-			bfs::directory_iterator it(path);
 			bool hide = false; // By default we list hidden files
 			if (p->HasProperty(PROP_HIDE)) try
 			{
@@ -477,50 +347,52 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 			catch (...)
 			{}
 
-			for (i_f=0, i_d=0, i_o=0, i_e=0; it != it_end; it++)
+			for (bfs::directory_iterator it(path); it != it_end; it++)
 			{
-				std::ostringstream t_j, t_je;
-				unsigned int dummy_i; unsigned int *p_i = &dummy_i; //Assign to dummy to avoid null-pointer
-				ostringstream dummy_strm; 
-				ostringstream *p_j = &dummy_strm;//Assign to dummy to avoid null-pointer
+				// convert filenanme to utf8.
+				// TODO: I18N
+				bp::ustring ufname(GetUString(it->path().filename()));
+				bfs::path pth = it->path();
+				FB::VariantMap m, e;
 
-				if (hide && (it->status().hidden() == bfs::yes))
-				{
+				if (hide && (it->status().hidden() == bfs::yes)) {
 					continue;
 				}
-				else if (bfs::is_directory(it->status()))
-				{
-					p_i = &i_d;
-					p_j = &jd;
-					dirToJson(it->path(), t_j, t_je);
+				else if (bfs::is_directory(it->status())) {
+					if (dirToVariant(pth, m, e)) {
+						md.insert(VT(ufname, m));
+					}
 				}
-				else if (bfs::is_regular_file(it->status())) 
-				{
-					p_i = &i_f;
-					p_j = &jf;
-					fileToJson(it->path(), t_j, t_je);
+				else if (bfs::is_regular_file(it->status())) {
+					if (fileToVariant(pth, m, e)) {
+						mf.insert(VT(ufname, m));
+					}
 				}
-				else
-				{
-					p_i = &i_o;
-					p_j = &jo;
-					otherToJson(it->path(), t_j, t_je);
+				else {
+					if (otherToVariant(pth, m, e)) {
+						mo.insert(VT(ufname, m));
+					}
 				}
 
-				if (t_j.tellp())
-				{
-					if (*p_i>0) {(*p_j) << COMMA;}
-					(*p_j) << t_j.str();
-					(*p_i)++;
-				}
-				if (t_je.tellp())
-				{
-					if (i_e > 0) {je << COMMA;}
-					je << t_je.str();
-					i_e ++;
+				if (!e.empty()) {
+					me.insert(VT(ufname, e));
 				}
 			}
 			rVal = true;
+
+			if (!mf.empty()) {
+				m.insert(VT(PROP_FILES, mf));
+			}
+			if (!md.empty()) {
+				m.insert(VT(PROP_DIRS, md));
+			}
+			if (!mo.empty()) {
+				m.insert(VT(PROP_OTHERS, mo));
+			}
+			if (!me.empty()) {
+				m.insert(VT(PROP_ERRORS, me));
+			}
+			p->SetProperty(PROP_LSDIR, m);
 		}
 		else if (stat.type() == bfs::reparse_file)
 		{
@@ -528,37 +400,9 @@ bool BPrivyAPI::ls(const std::string& dirPath, FB::JSObjectPtr p)
 		}
 		else
 		{
-			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_BAD_FILETYPE);
 		}
-
-		jf << CLOSEB;
-		jd << CLOSEB;
-		jo << CLOSEB;
-		je << CLOSEB;
-
-		unsigned int i = i_f + i_d + i_o + i_e;
-		if (i > 0) 
-		{
-			j << OPENB;
-			if (i_f > 0) {
-				j << "\"f\":" << jf.str();
-				if ((i -= i_f) > 0) {j << COMMA;}
-			}
-			if (i_d > 0) {
-				j << "\"d\":" << jd.str();
-				if ((i -= i_d) > 0) {j << COMMA;}
-			}
-			if (i_o > 0) {
-				j << "\"o\":" << jo.str();
-				if ((i -= i_o) > 0) {j << COMMA;}
-			}
-			if (i_e > 0) {
-				j << "\"e\":" << je.str();
-			}
-			j << CLOSEB;
-			p->SetProperty(PROP_LSDIR, j.str());
-		}
-		
+	
 		return rVal;
 	} 
 	CATCH_FILESYSTEM_EXCEPTIONS(p)
@@ -624,7 +468,7 @@ bool BPrivyAPI::rm(const std::string& s_path, FB::JSObjectPtr p)
 		}
 		else
 		{
-			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_BAD_FILETYPE);
 		}
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(p)
@@ -672,13 +516,13 @@ BPrivyAPI::rename(const std::string& old_p, const std::string& new_p, FB::JSObje
 		else if (bfs::is_regular_file(o_stat))
 		{
 			if ((nexists) && (!bfs::is_regular_file(n_stat))) {
-				throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
+				throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_BAD_FILETYPE);
 			}
 			return renameFile(o_path, n_path, nexists);
 		}
 		else
 		{
-			throw BPError(BPCODE_WRONG_FILETYPE);
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_BAD_FILETYPE);
 		}
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(p)
@@ -715,23 +559,62 @@ BPrivyAPI::copy(const std::string& old_p, const std::string& new_p, FB::JSObject
 
 		if (bfs::is_directory(o_stat) | bfs::is_directory(n_stat))
 		{
-			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_BAD_FILETYPE);
 		}
 
 		if (bfs::is_regular_file(o_stat))
 		{
 			if ((nexists) && (!bfs::is_regular_file(n_stat))) {
-				throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WRONG_FILETYPE);
+				throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_BAD_FILETYPE);
 			}
 			return copyFile(o_path, n_path, nexists);
 		}
 		else
 		{
-			throw BPError(BPCODE_WRONG_FILETYPE);
+			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_BAD_FILETYPE);
 		}
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(p)
 	return false;	
+}
+
+void BPrivyAPI::securityCheck(const bfs::path& path, const std::string allowedExt[])
+{
+	//// We require path to be absolute. Also, filename must have an extension.
+	//if ((!path.is_absolute()) || (! path.has_extension())) {
+	//	throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
+	//}
+
+	//// Extension must be one of those supplied
+	//bool good_ext = false;
+	//for (int i=0; !allowedExt[i].empty(); i++)
+	//{
+	//	if (path.extension() == allowedExt[i]) {
+	//		good_ext = true;
+	//		break;
+	//	}
+	//}
+	//if (!good_ext)
+	//	{throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);}
+
+	//bool  isUnder3ab = false;
+	//// The path should lie inside or at a .3ab directory
+	//if (path.extension() != ".3ab")
+	//{
+	//	for (bfs::path::const_iterator it = path.begin(); it != path.end(); it++)
+	//	{
+	//		if (it->extension() == ".3ab") {
+	//			isUnder3ab = true;
+	//			break;
+	//		}
+	//	}
+	//}
+	//else {
+	//	isUnder3ab = true;
+	//}
+	//if (!isUnder3ab) {
+	//	throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
+	//}
 }
 
 
@@ -837,3 +720,53 @@ FB::VariantMap BPrivyAPI::ls2(std::string dirPath)
 	}
 }
 */
+
+
+//void BPrivyAPI::AAAInit(FB::JSObjectPtr io)
+//{
+//	// Following scenarios are possible:
+//	// 1. DB is being freshly created.
+//	// 2. An existing DB is opened.
+//	//	  Plugin needs to verify caller is not malicious and return a random-token
+//	//	  for future calls.
+//	// 3. We were invoked a second time during the lifetime of the plugin instance.
+//	//    Throw an exception in this case.
+//
+//	//FB::variant val = io->GetProperty(PROP_TOKEN);
+//	//std::string token = val.cast<std::string>();
+//
+////	if (token.empty() && m_aclToken.empty())
+//	{
+//		FB::DOM::WindowPtr pWin = m_host->getDOMWindow();
+//		std::string loc = pWin->getLocation();
+//		CONSOLE_LOG("In AAAInit, loc = " + loc);
+//		//m_aclToken = RandomPassword(32);
+//
+//		//io->SetProperty(PROP_TOKEN, m_aclToken);
+//	}
+//	//else
+//	//{
+//	//	//throw BPError(ACODE_ACCESS_DENIED, BP_PROTOCOL_VIOLATION);
+//	//}
+//}
+//
+
+//bool BPrivyAPI::createDB(const std::string& s_path,  FB::JSObjectPtr io)
+//{
+//	try
+//	{
+//		securityCheck(s_path, io);
+//		// Check that password exists and is at least 10 characters long
+//		FB::variant val = io->GetProperty(PROP_PASS);
+//		std::string pass = val.cast<std::string>();
+//		if (pass.size() < 10) {
+//			throw BPError(ACODE_ACCESS_DENIED, BPCODE_WRONG_PASS, "Supplied password is too short.");
+//		}
+//	}
+//	CATCH_FILESYSTEM_EXCEPTIONS(io)
+//}
+//
+//bool BPrivyAPI::openDB(const std::string& s_path,  FB::JSObjectPtr io)
+//{
+//	AAAInit(io);
+//}

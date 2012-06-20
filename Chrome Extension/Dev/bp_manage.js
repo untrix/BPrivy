@@ -25,7 +25,7 @@ var BP_MOD_MANAGE = (function ()
         var o={hide:true}, d, i=0, n=0;
         eid = '#' + eid;
         $(eid).empty(); // Empty the selector list anyway.
-        if (BP_PLUGIN.ls(dir, o) && (o.lsd) && (d=JSON.parse(o.lsd)) && d.d) {
+        if (BP_PLUGIN.ls(dir, o) && (o.lsd) && (d=(o.lsd)) && d.d) {
             var keys = Object.keys(d.d);
             if ((n = keys.length) > 0) {
                 $(eid).append($(document.createElement('option')).text('Browse Files'));

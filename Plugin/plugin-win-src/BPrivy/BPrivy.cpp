@@ -96,7 +96,7 @@ FB::JSAPIPtr BPrivy::createJSAPI()
 	std::string allowed("chrome-extension://");
 	if (loc.compare(0, allowed.size(), allowed) != 0)
 	{
-		CONSOLE_LOG("In BPrivy::createJSAPI, loc = " + loc);
+		m_host->htmlLog("In BPrivy::createJSAPI, loc = " + loc);
 		IF_DEBUG(pWin->alert, std::string(
 			"Possibly malicious website [") + loc + "] is trying to access your passwords."
 			" Please email security.bprivy@untrix.com if possible");

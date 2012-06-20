@@ -10,7 +10,7 @@
 #include "ErrorHandling.h"
 #include "Utils.h"
 
-#include <sstream>  // For stringstream
+//#include <sstream>  // For stringstream
 #include <boost/system/error_code.hpp>
 
 using namespace bp;
@@ -20,6 +20,8 @@ namespace bs = boost::system;
 typedef FB::VariantMap::value_type	VT;
 namespace bp
 {
+	//************* NOTE: All strings must be utf8/unicode********************
+
 	// Error properties (names) returned to javascript. These represent an interface
 	// with javascript and therefore are unchangeable.
 	const std::string PROP_ERROR				("err");
@@ -36,7 +38,11 @@ namespace bp
 
 	const std::string PROP_INFO					("inf");
 	const std::string PROP_LSDIR				("lsd");
-	const std::string PROP_FILESTAT				("lsf");
+	const std::string PROP_LSFILE				("lsf");
+	const std::string PROP_FILES				("f");
+	const std::string PROP_DIRS					("d");
+	const std::string PROP_OTHERS				("o");
+	const std::string PROP_ERRORS				("e");
 	const std::string PROP_READFILE				("rdf");
 	const std::string PROP_FILENAME				("fnm");
 	const std::string PROP_FILEEXT				("ext");
@@ -60,13 +66,14 @@ namespace bp
 	const std::string BPCODE_NO_MEM				("NoMem");
 	const std::string BPCODE_ASSERT_FAILED		("AssertFailed");
 	const std::string BPCODE_PATH_EXISTS		("PathAlreadyExists");
-	const std::string BPCODE_WRONG_FILETYPE		("WrongFileType");
+	const std::string BPCODE_BAD_FILETYPE		("BadFileType");
 	const std::string BPCODE_REPARSE_POINT		("PathIsReparsePoint");
 	const std::string BPCODE_IS_SYMLINK			("PathIsSymlink");
 	// Action would've resulted in clobbering
 	const std::string BPCODE_WOULD_CLOBBER		("WouldClobber");
 	const std::string BPCODE_PATH_NOT_EXIST		("PathNotExist");
 
+	//************* NOTE: All strings must be utf8/unicode********************
 	const std::string PCodeToPCode(int ev)
 	{
 		switch(ev)
@@ -242,53 +249,19 @@ namespace bp
 		}
 	}
 
-	void MakeErrorEntry(const bfs::filesystem_error& e, std::ostringstream& je)
-	{
-		if (!e.path1().empty())
-		{
-			//std::string s();
-			je << QUOTE << JsonFriendly(string(e.path1().string())) << QUOTE << ":{";
-			je << "\"name\":" << e.path1().filename();
-			if (e.path1().has_extension())
-			{
-				je << ",\"ex\":" << e.path1().extension();
-				if (e.path1().has_stem())
-				{
-					je << ",\"st\":" << e.path1().stem();
-				}
-			}
-
-			int ev = e.code().value();
-			bs::error_code ec = e.code();
-			//je << ",\"" << PROP_GENERIC_MESSAGE << "\":" << QUOTE << JsonFriendly(ec.default_error_condition().message()) << QUOTE;
-			//je << ",\"" << PROP_GENERIC_CODE << "\":" << QUOTE <<PCodeToPCode(ec.default_error_condition().value()) << QUOTE;
-			je << ",\""<< PROP_SYSTEM_MESSAGE<< "\":" << QUOTE << JsonFriendly(ec.message()) << QUOTE;
-			je << ",\""<< PROP_SYSTEM_CODE << "\":" << QUOTE << SCodeToSCode(ev) << QUOTE;
-
-			// Map from SCode to BPCode if possible
-			if (SCodeToACode(ev) != ACODE_UNMAPPED) {
-				je << ",\"" << PROP_A_CODE << "\":" << QUOTE << SCodeToACode(ev) << QUOTE;
-			}
-			else {
-				ev = e.code().default_error_condition().value();
-				je << ",\"" << PROP_A_CODE << "\":" << QUOTE << PCodeToACode(ev) << QUOTE;
-			}
-			je << CLOSEB;
-		}
-	}
-
+	// NOTE: All strings must be utf8/unicode
 	void MakeErrorEntry(const bfs::filesystem_error& e, FB::VariantMap& m)
 	{
 		if (!e.path1().empty())
 		{
-			m.insert(VT(PROP_PATH, e.path1().string()));
-			m.insert(VT(PROP_FILENAME, e.path1().filename().string()));
+			m.insert(VT(PROP_PATH, GetUString(e.path1())));
+			m.insert(VT(PROP_FILENAME, GetUString(e.path1().filename())));
 			if (e.path1().has_extension())
 			{
-				m.insert(VT(PROP_FILEEXT, e.path1().extension().string()));
+				m.insert(VT(PROP_FILEEXT, GetUString(e.path1().extension())));
 				if (e.path1().has_stem())
 				{
-					m.insert(VT(PROP_FILESTEM, e.path1().stem().string()));
+					m.insert(VT(PROP_FILESTEM, GetUString(e.path1().stem())));
 				}
 			}
 		}
@@ -296,6 +269,7 @@ namespace bp
 		ParseSystemException(e, m);
 	}
 
+	// NOTE: All strings must be utf8/unicode
 	void SetInfoMsg(const string& g_code, FB::JSObjectPtr& js)
 	{
 		FB::VariantMap m;
@@ -303,20 +277,14 @@ namespace bp
 		js->SetProperty(PROP_INFO, m);
 	}
 
-	//void SetErrorMsg(const std::string& s_code, FB::JSObjectPtr& out)
-	//{
-	//	FB::VariantMap m;
-	//	m.insert(VT(PROP_GENERIC_CODE, s_code));
-	//	out->SetProperty(PROP_ERROR, m);
-	//}
-
+	// NOTE: All strings must be utf8/unicode
 	void ParseSystemException(const bs::system_error& e, FB::VariantMap& m)
 	{
 		int ev = e.code().value();
 		bs::error_code ec = e.code();
-		m.insert(VT(PROP_SYSTEM_MESSAGE, ec.message()));
+		m.insert(VT(PROP_SYSTEM_MESSAGE, GetUString(ec.message())));
 		m.insert(VT(PROP_SYSTEM_CODE, SCodeToSCode(ev)));
-		//m.insert(VT(PROP_GENERIC_MESSAGE, ec.default_error_condition().message()));
+		//m.insert(VT(PROP_GENERIC_MESSAGE, GetUString(ec.default_error_condition().message())));
 		//m.insert(VT(PROP_GENERIC_CODE, bp::PCodeToPCode(ec.default_error_condition().value())));
 		
 		// Map from SCode to ACode if possible
@@ -331,15 +299,17 @@ namespace bp
 		}
 	}
 
+	// NOTE: All strings must be utf8/unicode
 	void HandleFilesystemException (const bfs::filesystem_error& e, FB::JSObjectPtr& p)
 	{
 		FB::VariantMap m;
 		ParseSystemException(e, m);
-		if (!e.path1().empty()) {m.insert(VT(PROP_PATH, e.path1().string()));}
-		if (!e.path2().empty()) {m.insert(VT(PROP_PATH2, e.path2().string()));}
+		if (!e.path1().empty()) {m.insert(VT(PROP_PATH, GetUString(e.path1())));}
+		if (!e.path2().empty()) {m.insert(VT(PROP_PATH2, GetUString(e.path2())));}
 		p->SetProperty(PROP_ERROR, FB::variant(m));
 	}
 
+	// NOTE: All strings must be utf8/unicode
 	void HandleSystemException(const bs::system_error& e, FB::JSObjectPtr& p)
 	{
 		FB::VariantMap m;
@@ -347,18 +317,27 @@ namespace bp
 		p->SetProperty(PROP_ERROR, FB::variant(m));
 	}
 
+	// NOTE: All strings must be utf8/unicode
 	void HandleStdException(const std::exception& e, FB::JSObjectPtr& p)
 	{		
 		FB::VariantMap m;
-		m.insert(VT(PROP_SYSTEM_MESSAGE, e.what()));
+		m.insert(VT(PROP_SYSTEM_MESSAGE, GetUString(e.what())));
 		p->SetProperty(PROP_ERROR, FB::variant(m));
 	}
 
+	// NOTE: All strings must be utf8/unicode
 	void HandleUnknownException (FB::JSObjectPtr& p)
 	{
 		p->SetProperty(PROP_ERROR, "Unknown");
 	}
 
+	// NOTE: All strings must be utf8/unicode
+	void HandleUnknownException (FB::VariantMap& me)
+	{
+		me.insert(VT(PROP_ERROR, "Unknown"));
+	}
+
+	// NOTE: All strings must be utf8/unicode
 	void HandleBPError(const BPError& e, FB::JSObjectPtr& p)
 	{
 		FB::VariantMap m;
@@ -367,7 +346,7 @@ namespace bp
 			m.insert(VT(PROP_GENERIC_CODE, e.gcode));
 		}
 		if (!e.path.empty()) {
-			m.insert(VT(PROP_PATH, e.path));
+			m.insert(VT(PROP_PATH, GetUString(e.path)));
 		}
 		if (!e.gmsg.empty()) {
 			m.insert(VT(PROP_GENERIC_MESSAGE, e.gmsg));

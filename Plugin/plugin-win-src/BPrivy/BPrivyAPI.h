@@ -4,6 +4,7 @@
 #include "JSAPIAuto.h"
 #include "BrowserHost.h"
 #include "BPrivy.h"
+#include "BPi18n.h"
 #include <boost/filesystem.hpp>
 
 
@@ -62,7 +63,7 @@ public:
 	 *	If the path argument was an empty string, then it lists all browsable drives in the system
 	 *  instead.
 	 */
-	bool ls(const std::string& dirPath, FB::JSObjectPtr out);
+	bool ls(const bp::uwstring& dirPath, FB::JSObjectPtr out);
 	bool appendFile(const std::string& path, const std::string& data, FB::JSObjectPtr out);
 	bool readFile(const std::string& path, FB::JSObjectPtr out, boost::optional<unsigned long long> pos);
 	bool createDir(const std::string& path, FB::JSObjectPtr);
@@ -84,12 +85,15 @@ private:
 	bool renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
 	bool copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
 	bool removeFile(bfs::path&);
+	unsigned BPrivyAPI::lsDrives(FB::VariantMap&);
 
 private:
 	void BPrivyAPI::AAAInit(FB::JSObjectPtr io);
 	void securityCheck(const bfs::path& path, const std::string allowedExt[] );
 	void securityCheck(const bfs::path& path, const bfs::path& path2, const std::string allowedExt[] );
-	unsigned BPrivyAPI::lsDrives(std::ostringstream& jd);
+	void BPrivyAPI::CONSOLE_LOG(const std::string& s);
+	void BPrivyAPI::CONSOLE_LOG(const std::wstring& s);
+
 	bfs::path m_dbPath;
 	std::string m_aclToken;
 

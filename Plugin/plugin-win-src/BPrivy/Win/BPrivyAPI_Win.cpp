@@ -32,6 +32,7 @@ typedef FB::VariantMap::value_type VT;
 
 namespace bp {
 
+//************* NOTE: All strings must be utf8/unicode********************
 const std::string SCodeToSCode(std::uint32_t err)
 {
 	switch (err)
@@ -590,7 +591,7 @@ bool BPrivyAPI::removeFile(bfs::path& pth)
 }
 
 
-unsigned BPrivyAPI::lsDrives(std::ostringstream& json)
+unsigned BPrivyAPI::lsDrives(FB::VariantMap& m)
 {
 	DWORD drives = GetLogicalDrives();
 	DWORD mask = 1;
@@ -600,9 +601,11 @@ unsigned BPrivyAPI::lsDrives(std::ostringstream& json)
 	{
 		if (drives & mask)
 		{
-			if ((n++)>0) {json << COMMA;}
+			//if ((n++)>0) {json << COMMA;}
+			n++;
+			// This is already utf-8 so no unicode conversion necessary
 			drive[0] = (char)('A' + i);
-			json << QUOTE << drive << QUOTE << ":null";
+			m.insert(VT(drive, (void*)NULL));
 		}
 	}
 
@@ -614,8 +617,8 @@ bool BPrivyAPI::chooseFile(FB::JSObjectPtr p)
 {
 	OPENFILENAME ofn;       // common dialog box structure
 	WCHAR szFile[2048];       // buffer for file name
-	HWND hwnd;              // owner window
-	HANDLE hf;              // file handle
+	//HWND hwnd;              // owner window
+	//HANDLE hf;              // file handle
 
 	// Initialize OPENFILENAME
 	ZeroMemory(&ofn, sizeof(ofn));

@@ -158,9 +158,9 @@
         BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
         console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
         var o={};
-        if (BP_PLUGIN.ls("", o) && (o = JSON.parse(o.lsd)) && o.d)
+        if (BP_PLUGIN.ls("", o) && (o.lsd) && o.lsd.d)
         {
-          o = Object.keys(o.d);
+          //o = Object.keys(o.lsd.d);
           //$("#csvPath").typeahead({source: o});
           BP_MOD_MANAGE.fillOptions("csvPathSelect", "");
         }

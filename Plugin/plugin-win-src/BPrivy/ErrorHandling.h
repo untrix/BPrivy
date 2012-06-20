@@ -24,7 +24,12 @@ namespace bp
 	extern const std::string PROP_A_CODE;
 	extern const std::string PROP_ERROR;
 	extern const std::string PROP_INFO;
-	extern const std::string PROP_FILESTAT;
+	extern const std::string PROP_LSFILE;
+	extern const std::string PROP_LSDIR;
+	extern const std::string PROP_FILES;
+	extern const std::string PROP_DIRS;
+	extern const std::string PROP_OTHERS;
+	extern const std::string PROP_ERRORS;
 	extern const std::string PROP_PATH;
 	extern const std::string PROP_PATH2;
 	extern const std::string PROP_FILENAME;
@@ -33,7 +38,6 @@ namespace bp
 	extern const std::string PROP_FILESIZE;
 	extern const std::string PROP_DATA;
 	extern const std::string PROP_READFILE;
-	extern const std::string PROP_LSDIR;
 	extern const std::string PROP_HIDE;
 	extern const std::string PROP_FILE_FILTER;
 	extern const std::string PROP_DIALOG_TITLE;
@@ -79,7 +83,7 @@ namespace bp
 	extern const std::string BPCODE_ASSERT_FAILED;//Logic Error
 	extern const std::string BPCODE_PATH_EXISTS;
 	extern const std::string BPCODE_PATH_NOT_EXIST;
-	extern const std::string BPCODE_WRONG_FILETYPE;
+	extern const std::string BPCODE_BAD_FILETYPE;
 	extern const std::string BPCODE_REPARSE_POINT;
 	extern const std::string BPCODE_IS_SYMLINK;
 	extern const std::string BPCODE_WOULD_CLOBBER;//Exception thrown to prevent clobbering
@@ -133,13 +137,13 @@ namespace bp
 		string gmsg;
 	};
 
-	void MakeErrorEntry(const boost::filesystem::filesystem_error& e, std::ostringstream& je);
 	void MakeErrorEntry(const boost::filesystem::filesystem_error& e, FB::VariantMap& m);
 	void HandleFilesystemException (const bfs::filesystem_error& e, FB::JSObjectPtr& p);
 	void HandleSystemException(const bs::system_error& e, FB::JSObjectPtr& p);
 	void ParseSystemException(const bs::system_error& e, FB::VariantMap& m);
 	void HandleStdException(const std::exception& e, FB::JSObjectPtr& p);
 	void HandleUnknownException (FB::JSObjectPtr& p);
+	void HandleUnknownException (FB::VariantMap& me);
 	void HandleBPError(const BPError&, FB::JSObjectPtr&);
 	void SetInfoMsg(const std::string& code, FB::JSObjectPtr&);
 	//void SetErrorMsg(const std::string& code, FB::JSObjectPtr&);
