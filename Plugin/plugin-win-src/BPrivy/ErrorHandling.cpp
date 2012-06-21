@@ -15,56 +15,56 @@ namespace bp
 
 	// Error properties (names) returned to javascript. These represent an interface
 	// with javascript and therefore are unchangeable.
-	const std::string PROP_ERROR				("err");
-	const std::string PROP_SYSTEM_MESSAGE		("smsg");
-	const std::string PROP_GENERIC_MESSAGE		("gmsg");
-	const std::string PROP_SYSTEM_CODE			("scode");
-	const std::string PROP_GENERIC_CODE			("gcode");
-	const std::string PROP_A_CODE				("acode");
-	const std::string PROP_PATH					("path");
-	const std::string PROP_PATH2				("path2");
-	const std::string PROP_HIDE					("hide");
-	const std::string PROP_FILE_FILTER			("filter");
-	const std::string PROP_DIALOG_TITLE			("dtitle");
+	const bp::ustring PROP_ERROR				(L"err");
+	const bp::ustring PROP_SYSTEM_MESSAGE		(L"smsg");
+	const bp::ustring PROP_GENERIC_MESSAGE		(L"gmsg");
+	const bp::ustring PROP_SYSTEM_CODE			(L"scode");
+	const bp::ustring PROP_GENERIC_CODE			(L"gcode");
+	const bp::ustring PROP_A_CODE				(L"acode");
+	const bp::ustring PROP_PATH					(L"path");
+	const bp::ustring PROP_PATH2				(L"path2");
+	const bp::ustring PROP_HIDE					(L"hide");
+	const bp::ustring PROP_FILE_FILTER			(L"filter");
+	const bp::ustring PROP_DIALOG_TITLE			(L"dtitle");
 
-	const std::string PROP_INFO					("inf");
-	const std::string PROP_LSDIR				("lsd");
-	const std::string PROP_LSFILE				("lsf");
-	const std::string PROP_FILES				("f");
-	const std::string PROP_DIRS					("d");
-	const std::string PROP_OTHERS				("o");
-	const std::string PROP_ERRORS				("e");
-	const std::string PROP_READFILE				("rdf");
-	const std::string PROP_FILENAME				("fnm");
-	const std::string PROP_FILEEXT				("ext");
-	const std::string PROP_FILESTEM				("stm");
-	const std::string PROP_FILESIZE				("siz");
-	const std::string PROP_DATA					("dat");
-	const std::string PROP_PASS					("pass");
+	const bp::ustring PROP_INFO					(L"inf");
+	const bp::ustring PROP_LSDIR				(L"lsd");
+	const bp::ustring PROP_LSFILE				(L"lsf");
+	const bp::ustring PROP_FILES				(L"f");
+	const bp::ustring PROP_DIRS					(L"d");
+	const bp::ustring PROP_OTHERS				(L"o");
+	const bp::ustring PROP_ERRORS				(L"e");
+	const bp::ustring PROP_READFILE				(L"rdf");
+	const bp::ustring PROP_FILENAME				(L"fnm");
+	const bp::ustring PROP_FILEEXT				(L"ext");
+	const bp::ustring PROP_FILESTEM				(L"stm");
+	const bp::ustring PROP_FILESIZE				(L"siz");
+	const bp::ustring PROP_DATA					(L"dat");
+	const bp::ustring PROP_PASS					(L"pass");
 
- 	const bp::uwstring ACODE_UNMAPPED			(L"Unmapped");
- 	const bp::uwstring ACODE_CANT_PROCEED		(L"CantProceed");
- 	const bp::uwstring ACODE_AUTORETRY			(L"AutoRetry");
- 	const bp::uwstring ACODE_RESOURCE_UNAVAILABLE(L"ResourceUnavailable");
- 	const bp::uwstring ACODE_INVALID_PATHNAME	(L"InvalidPathname");
- 	const bp::uwstring ACODE_BAD_PATH_ARGUMENT	(L"BadPathArgument");
- 	const bp::uwstring ACODE_RESOURCE_LOCKED		(L"ResourceLocked");
- 	const bp::uwstring ACODE_ACCESS_DENIED		(L"AccessDenied");
+ 	const bp::ustring ACODE_UNMAPPED			(L"Unmapped");
+ 	const bp::ustring ACODE_CANT_PROCEED		(L"CantProceed");
+ 	const bp::ustring ACODE_AUTORETRY			(L"AutoRetry");
+ 	const bp::ustring ACODE_RESOURCE_UNAVAILABLE(L"ResourceUnavailable");
+ 	const bp::ustring ACODE_INVALID_PATHNAME	(L"InvalidPathname");
+ 	const bp::ustring ACODE_BAD_PATH_ARGUMENT	(L"BadPathArgument");
+ 	const bp::ustring ACODE_RESOURCE_LOCKED		(L"ResourceLocked");
+ 	const bp::ustring ACODE_ACCESS_DENIED		(L"AccessDenied");
 
-	const bp::uwstring BPCODE_UNAUTHORIZED_CLIENT (L"UnauthorizedClient");
-	const bp::uwstring BPCODE_WRONG_PASS			(L"WrongPass"); // Password too short or wrong.
-	const bp::uwstring BPCODE_NEW_FILE_CREATED	(L"NewFileCreated");
-	const bp::uwstring BPCODE_NO_MEM				(L"NoMem");
-	const bp::uwstring BPCODE_ASSERT_FAILED		(L"AssertFailed");
-	const bp::uwstring BPCODE_PATH_EXISTS		(L"PathAlreadyExists");
-	const bp::uwstring BPCODE_BAD_FILETYPE		(L"BadFileType");
-	const bp::uwstring BPCODE_REPARSE_POINT		(L"PathIsReparsePoint");
-	const bp::uwstring BPCODE_IS_SYMLINK			(L"PathIsSymlink");
+	const bp::ustring BPCODE_UNAUTHORIZED_CLIENT (L"UnauthorizedClient");
+	const bp::ustring BPCODE_WRONG_PASS			(L"WrongPass"); // Password too short or wrong.
+	const bp::ustring BPCODE_NEW_FILE_CREATED	(L"NewFileCreated");
+	const bp::ustring BPCODE_NO_MEM				(L"NoMem");
+	const bp::ustring BPCODE_ASSERT_FAILED		(L"AssertFailed");
+	const bp::ustring BPCODE_PATH_EXISTS		(L"PathAlreadyExists");
+	const bp::ustring BPCODE_BAD_FILETYPE		(L"BadFileType");
+	const bp::ustring BPCODE_REPARSE_POINT		(L"PathIsReparsePoint");
+	const bp::ustring BPCODE_IS_SYMLINK			(L"PathIsSymlink");
 	// Action would've resulted in clobbering
-	const bp::uwstring BPCODE_WOULD_CLOBBER		(L"WouldClobber");
-	const bp::uwstring BPCODE_PATH_NOT_EXIST	(L"PathNotExist");
+	const bp::ustring BPCODE_WOULD_CLOBBER		(L"WouldClobber");
+	const bp::ustring BPCODE_PATH_NOT_EXIST	(L"PathNotExist");
 
-	const bp::uwstring& PCodeToACodeW(int ev)
+	const bp::ustring& PCodeToACodeW(int ev)
 	{
 		switch(ev)
 		{
@@ -170,7 +170,7 @@ namespace bp
 		ParseSystemException(e, m);
 	}
 
-	void SetInfoMsg(const uwstring& g_code, bp::JSObject* js)
+	void SetInfoMsg(const ustring& g_code, bp::JSObject* js)
 	{
 		bp::VariantMap m;
 		m.insert(PROP_GENERIC_CODE, g_code);

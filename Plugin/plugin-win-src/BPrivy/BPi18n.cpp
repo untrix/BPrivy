@@ -22,7 +22,7 @@ namespace bp
 #else
 #endif
 
-	ustring i18n::LocaleToUtf8(const char* s)
+	utf8 i18n::LocaleToUtf8(const char* s)
 	{
 		const char* conv_err = "BPError: could not convert error string to wcs";
 		// Convert from locale charset to UNICODE by converting to wchar_t.
@@ -44,7 +44,7 @@ namespace bp
 		}
 	}
 
-	uwstring i18n::LocaleToUnicode(const std::string& str)
+	ustring i18n::LocaleToUnicode(const std::string& str)
 	{
 		const wchar_t conv_err[] = L"BPError: could not convert error string to wcs";
 		// Convert from locale charset to UNICODE by converting to wchar_t.
@@ -111,39 +111,39 @@ namespace bp
 
 }// end namespace bp
 
-bool BPrivyAPI::ls(const bp::uwstring& path_s, FB::JSObjectPtr out) 
+bool BPrivyAPI::ls(const bp::ucs& path_s, FB::JSObjectPtr out) 
 {
 	bfs::path path(path_s); path.make_preferred();
 	return _ls(path, &bp::JSObject(out));
 }
 
-bool BPrivyAPI::appendFile(const bp::uwstring& path_s, const std::string& data, FB::JSObjectPtr out)
+bool BPrivyAPI::appendFile(const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr out)
 {
 	bfs::path path(path_s); path.make_preferred();
 	bp::JSObject o(out);
 	return _appendFile(path, data, &o);
 }
 
-bool BPrivyAPI::readFile(const bp::uwstring& path_s, FB::JSObjectPtr out, const boost::optional<unsigned long long> pos)
+bool BPrivyAPI::readFile(const bp::ucs& path_s, FB::JSObjectPtr out, const boost::optional<unsigned long long> pos)
 {
 	bfs::path path(path_s); path.make_preferred();
 	return _readFile(path, &bp::JSObject(out), pos);
 }
 
-bool BPrivyAPI::createDir(const bp::uwstring& path_s, FB::JSObjectPtr out)
+bool BPrivyAPI::createDir(const bp::ucs& path_s, FB::JSObjectPtr out)
 {
 	bfs::path path(path_s); path.make_preferred();
 	bp::JSObject o(out);
 	return _createDir(path, &o);
 }
 
-bool BPrivyAPI::rm(const bp::uwstring& path_s, FB::JSObjectPtr out)
+bool BPrivyAPI::rm(const bp::ucs& path_s, FB::JSObjectPtr out)
 {
 	bfs::path path(path_s); path.make_preferred();
 	bp::JSObject o(out);
 	return _rm(path, &o);
 }
-bool BPrivyAPI::rename(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber)
+bool BPrivyAPI::rename(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber)
 {
 	bfs::path o_path(old_p); o_path.make_preferred();
 	bfs::path n_path(new_p); n_path.make_preferred();
@@ -151,7 +151,7 @@ bool BPrivyAPI::rename(const bp::uwstring& old_p, const bp::uwstring& new_p, FB:
 	return _rename(o_path, n_path, &o, clobber);
 }
 
-bool BPrivyAPI::copy(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber)
+bool BPrivyAPI::copy(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber)
 {
 	bfs::path o_path(old_p); o_path.make_preferred();
 	bfs::path n_path(new_p); n_path.make_preferred();

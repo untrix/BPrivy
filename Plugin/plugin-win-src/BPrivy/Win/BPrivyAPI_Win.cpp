@@ -32,98 +32,98 @@ typedef FB::VariantMap::value_type VT;
 
 namespace bp {
 
-const bp::uwstring SCodeToSCodeW(std::uint32_t err)
+const bp::ustring SCodeToSCodeW(std::uint32_t err)
 {
 	switch (err)
 	{
 	// User Error: Insufficient Access Rights
 	case ERROR_ACCESS_DENIED:
-		return bp::uwstring(L"ERROR_ACCESS_DENIED");
+		return bp::ustring(L"ERROR_ACCESS_DENIED");
 	case ERROR_INVALID_ACCESS:
-		return bp::uwstring(L"ERROR_INVALID_ACCESS");
+		return bp::ustring(L"ERROR_INVALID_ACCESS");
 	//The requested files operation failed because the storage policy blocks that type of file.
 	// For more information, contact your system administrator
-	case ERROR_CONTENT_BLOCKED: return bp::uwstring(L"ERROR_CONTENT_BLOCKED");
-	case ERROR_FILE_READ_ONLY: return bp::uwstring(L"ERROR_FILE_READ_ONLY"); //The specified file is read only
+	case ERROR_CONTENT_BLOCKED: return bp::ustring(L"ERROR_CONTENT_BLOCKED");
+	case ERROR_FILE_READ_ONLY: return bp::ustring(L"ERROR_FILE_READ_ONLY"); //The specified file is read only
 	// User Error: Insufficient Network Access Rights
-	case ERROR_NETWORK_ACCESS_DENIED: return bp::uwstring(L"ERROR_NETWORK_ACCESS_DENIED");
-	case ERROR_INVALID_PASSWORD: return bp::uwstring(L"ERROR_INVALID_PASSWORD"); //The specified network password is not correct
+	case ERROR_NETWORK_ACCESS_DENIED: return bp::ustring(L"ERROR_NETWORK_ACCESS_DENIED");
+	case ERROR_INVALID_PASSWORD: return bp::ustring(L"ERROR_INVALID_PASSWORD"); //The specified network password is not correct
 	// Resource Locked
 	// System Or User Error: Try Again After Sometime
-	case ERROR_SHARING_VIOLATION: return bp::uwstring(L"ERROR_SHARING_VIOLATION");
-	case ERROR_LOCK_VIOLATION: return bp::uwstring(L"ERROR_LOCK_VIOLATION");
-	case ERROR_SHARING_BUFFER_EXCEEDED: return bp::uwstring(L"ERROR_SHARING_BUFFER_EXCEEDED"); // Too many files opened for sharing.
-	case ERROR_DRIVE_LOCKED: return bp::uwstring(L"ERROR_DRIVE_LOCKED"); //The disk is in use or locked by another process.
-	case ERROR_PATH_BUSY: return bp::uwstring(L"ERROR_PATH_BUSY"); //The path specified cannot be used at this time
-	case ERROR_LOCK_FAILED: return bp::uwstring(L"ERROR_LOCK_FAILED"); //Unable to lock a region of a file
-	case ERROR_BUSY: return bp::uwstring(L"ERROR_BUSY"); //The requested resource is in use.
-	case ERROR_DELETE_PENDING: return bp::uwstring(L"ERROR_DELETE_PENDING"); //The file cannot be opened because it is in the process of being deleted
+	case ERROR_SHARING_VIOLATION: return bp::ustring(L"ERROR_SHARING_VIOLATION");
+	case ERROR_LOCK_VIOLATION: return bp::ustring(L"ERROR_LOCK_VIOLATION");
+	case ERROR_SHARING_BUFFER_EXCEEDED: return bp::ustring(L"ERROR_SHARING_BUFFER_EXCEEDED"); // Too many files opened for sharing.
+	case ERROR_DRIVE_LOCKED: return bp::ustring(L"ERROR_DRIVE_LOCKED"); //The disk is in use or locked by another process.
+	case ERROR_PATH_BUSY: return bp::ustring(L"ERROR_PATH_BUSY"); //The path specified cannot be used at this time
+	case ERROR_LOCK_FAILED: return bp::ustring(L"ERROR_LOCK_FAILED"); //Unable to lock a region of a file
+	case ERROR_BUSY: return bp::ustring(L"ERROR_BUSY"); //The requested resource is in use.
+	case ERROR_DELETE_PENDING: return bp::ustring(L"ERROR_DELETE_PENDING"); //The file cannot be opened because it is in the process of being deleted
 
 	// User Error: Bad Path Supplied For Read
 	case ERROR_FILE_NOT_FOUND:
-	case ERROR_PATH_NOT_FOUND:	case ERROR_BAD_NETPATH: return bp::uwstring(L"ERROR_BAD_NETPATH");//The network path was not found
-	case ERROR_REM_NOT_LIST: return bp::uwstring(L"ERROR_REM_NOT_LIST"); //Windows cannot find the network path
-	case ERROR_BAD_PATHNAME: return bp::uwstring(L"ERROR_BAD_PATHNAME"); //The specified path is invalid
-	case ERROR_NETNAME_DELETED: return bp::uwstring(L"ERROR_NETNAME_DELETED"); //The specified network name is no longer available
-	case ERROR_OPEN_FAILED: return bp::uwstring(L"ERROR_OPEN_FAILED"); //The system cannot open the device or file specified
+	case ERROR_PATH_NOT_FOUND:	case ERROR_BAD_NETPATH: return bp::ustring(L"ERROR_BAD_NETPATH");//The network path was not found
+	case ERROR_REM_NOT_LIST: return bp::ustring(L"ERROR_REM_NOT_LIST"); //Windows cannot find the network path
+	case ERROR_BAD_PATHNAME: return bp::ustring(L"ERROR_BAD_PATHNAME"); //The specified path is invalid
+	case ERROR_NETNAME_DELETED: return bp::ustring(L"ERROR_NETNAME_DELETED"); //The specified network name is no longer available
+	case ERROR_OPEN_FAILED: return bp::ustring(L"ERROR_OPEN_FAILED"); //The system cannot open the device or file specified
 	// User Or Client Error: Bad path for creates or moves
-	case ERROR_ALREADY_EXISTS: return bp::uwstring(L"ERROR_ALREADY_EXISTS");//Cannot create a file when that file already exists
-	case ERROR_FILE_EXISTS: return bp::uwstring(L"ERROR_FILE_EXISTS"); //The file exists
+	case ERROR_ALREADY_EXISTS: return bp::ustring(L"ERROR_ALREADY_EXISTS");//Cannot create a file when that file already exists
+	case ERROR_FILE_EXISTS: return bp::ustring(L"ERROR_FILE_EXISTS"); //The file exists
 	// User Or Client Error: Bad pathname syntax for creates or moves
-	case ERROR_DIRECTORY: return bp::uwstring(L"ERROR_DIRECTORY"); //The directory name is invalid.
-	case ERROR_INVALID_NAME: return bp::uwstring(L"ERROR_INVALID_NAME"); //The filename, directory name, or volume label syntax is incorrect
-	case ERROR_FILENAME_EXCED_RANGE: return bp::uwstring(L"ERROR_FILENAME_EXCED_RANGE");//The filename or extension is too long
-	case ERROR_META_EXPANSION_TOO_LONG: return bp::uwstring(L"ERROR_META_EXPANSION_TOO_LONG");//The global filename characters, * or ?, are entered 
+	case ERROR_DIRECTORY: return bp::ustring(L"ERROR_DIRECTORY"); //The directory name is invalid.
+	case ERROR_INVALID_NAME: return bp::ustring(L"ERROR_INVALID_NAME"); //The filename, directory name, or volume label syntax is incorrect
+	case ERROR_FILENAME_EXCED_RANGE: return bp::ustring(L"ERROR_FILENAME_EXCED_RANGE");//The filename or extension is too long
+	case ERROR_META_EXPANSION_TOO_LONG: return bp::ustring(L"ERROR_META_EXPANSION_TOO_LONG");//The global filename characters, * or ?, are entered 
 										//incorrectly or too many global filename characters are specified
 	// System Issues : Try Again after issue is resolved
-	case ERROR_NETWORK_BUSY: return bp::uwstring(L"ERROR_NETWORK_BUSY");//The network is busy.
-	case ERROR_DEV_NOT_EXIST: return bp::uwstring(L"ERROR_DEV_NOT_EXIST"); // The specified network resource or device is no longer available.
-	case ERROR_SHARING_PAUSED: return bp::uwstring(L"ERROR_SHARING_PAUSED"); // The remote server has been paused or is in the process of being started
-	case ERROR_UNEXP_NET_ERR: return bp::uwstring(L"ERROR_UNEXP_NET_ERR"); //An unexpected network error occurred
-	case ERROR_REQ_NOT_ACCEP: return bp::uwstring(L"ERROR_REQ_NOT_ACCEP"); //No more connections can be made to this remote computer at this time
+	case ERROR_NETWORK_BUSY: return bp::ustring(L"ERROR_NETWORK_BUSY");//The network is busy.
+	case ERROR_DEV_NOT_EXIST: return bp::ustring(L"ERROR_DEV_NOT_EXIST"); // The specified network resource or device is no longer available.
+	case ERROR_SHARING_PAUSED: return bp::ustring(L"ERROR_SHARING_PAUSED"); // The remote server has been paused or is in the process of being started
+	case ERROR_UNEXP_NET_ERR: return bp::ustring(L"ERROR_UNEXP_NET_ERR"); //An unexpected network error occurred
+	case ERROR_REQ_NOT_ACCEP: return bp::ustring(L"ERROR_REQ_NOT_ACCEP"); //No more connections can be made to this remote computer at this time
 							  //because there are already as many connections as the computer can accept
-	case ERROR_NO_MORE_SEARCH_HANDLES: return bp::uwstring(L"ERROR_NO_MORE_SEARCH_HANDLES"); //No more internal file identifiers available
-	case ERROR_DISK_TOO_FRAGMENTED: return bp::uwstring(L"ERROR_DISK_TOO_FRAGMENTED");//The volume is too fragmented to complete this operation
+	case ERROR_NO_MORE_SEARCH_HANDLES: return bp::ustring(L"ERROR_NO_MORE_SEARCH_HANDLES"); //No more internal file identifiers available
+	case ERROR_DISK_TOO_FRAGMENTED: return bp::ustring(L"ERROR_DISK_TOO_FRAGMENTED");//The volume is too fragmented to complete this operation
 	//{Delayed Write Failed} Windows was unable to save all the data for the file %hs. The data has been lost.
 	// This error may be caused by a failure of your computer hardware or network connection.
 	// Please try to save this file elsewhere
-	case ERROR_LOST_WRITEBEHIND_DATA: return bp::uwstring(L"ERROR_LOST_WRITEBEHIND_DATA");
+	case ERROR_LOST_WRITEBEHIND_DATA: return bp::ustring(L"ERROR_LOST_WRITEBEHIND_DATA");
 	//{Delayed Write Failed} Windows was unable to save all the data for the file %hs; the data has been lost.
 	// This error may be caused by network connectivity issues. Please try to save this file elsewhere
-	case ERROR_LOST_WRITEBEHIND_DATA_NETWORK_DISCONNECTED: return bp::uwstring(L"ERROR_LOST_WRITEBEHIND_DATA_NETWORK_DISCONNECTED");
+	case ERROR_LOST_WRITEBEHIND_DATA_NETWORK_DISCONNECTED: return bp::ustring(L"ERROR_LOST_WRITEBEHIND_DATA_NETWORK_DISCONNECTED");
 	// {Delayed Write Failed} Windows was unable to save all the data for the file %hs; the data has been lost.
 	// This error was returned by the server on which the file exists. Please try to save this file elsewhere
-	case ERROR_LOST_WRITEBEHIND_DATA_NETWORK_SERVER_ERROR: return bp::uwstring(L"ERROR_LOST_WRITEBEHIND_DATA_NETWORK_SERVER_ERROR");
+	case ERROR_LOST_WRITEBEHIND_DATA_NETWORK_SERVER_ERROR: return bp::ustring(L"ERROR_LOST_WRITEBEHIND_DATA_NETWORK_SERVER_ERROR");
 	// {Delayed Write Failed} Windows was unable to save all the data for the file %hs; the data has been lost.
 	// This error may be caused if the device has been removed or the media is write-protected
-	case ERROR_LOST_WRITEBEHIND_DATA_LOCAL_DISK_ERROR: return bp::uwstring(L"ERROR_LOST_WRITEBEHIND_DATA_LOCAL_DISK_ERROR");
-	case ERROR_FILE_INVALID: return bp::uwstring(L"ERROR_FILE_INVALID");//The volume for a file has been externally altered so that the opened file is no longer valid
+	case ERROR_LOST_WRITEBEHIND_DATA_LOCAL_DISK_ERROR: return bp::ustring(L"ERROR_LOST_WRITEBEHIND_DATA_LOCAL_DISK_ERROR");
+	case ERROR_FILE_INVALID: return bp::ustring(L"ERROR_FILE_INVALID");//The volume for a file has been externally altered so that the opened file is no longer valid
 	// The requested file operation failed because the storage quota was exceeded. To free up disk space, move files to a
 	// different location or delete unnecessary files. For more information, contact your system administrator
-	case ERROR_DISK_QUOTA_EXCEEDED: return bp::uwstring(L"ERROR_DISK_QUOTA_EXCEEDED");
-	case ERROR_FILE_OFFLINE: return bp::uwstring(L"ERROR_FILE_OFFLINE");//The file is currently not available for use on this computer
-	case ERROR_HANDLE_DISK_FULL: return bp::uwstring(L"ERROR_HANDLE_DISK_FULL");//The disk is full
-	case ERROR_DISK_FULL: return bp::uwstring(L"ERROR_DISK_FULL"); //There is not enough space on the disk
-	case ERROR_NET_WRITE_FAULT: return bp::uwstring(L"ERROR_NET_WRITE_FAULT"); //A write fault occurred on the network
-	case ERROR_CANNOT_MAKE: return bp::uwstring(L"ERROR_CANNOT_MAKE"); //The directory or file cannot be created
+	case ERROR_DISK_QUOTA_EXCEEDED: return bp::ustring(L"ERROR_DISK_QUOTA_EXCEEDED");
+	case ERROR_FILE_OFFLINE: return bp::ustring(L"ERROR_FILE_OFFLINE");//The file is currently not available for use on this computer
+	case ERROR_HANDLE_DISK_FULL: return bp::ustring(L"ERROR_HANDLE_DISK_FULL");//The disk is full
+	case ERROR_DISK_FULL: return bp::ustring(L"ERROR_DISK_FULL"); //There is not enough space on the disk
+	case ERROR_NET_WRITE_FAULT: return bp::ustring(L"ERROR_NET_WRITE_FAULT"); //A write fault occurred on the network
+	case ERROR_CANNOT_MAKE: return bp::ustring(L"ERROR_CANNOT_MAKE"); //The directory or file cannot be created
 
 	// Recoverable Client Issues
-	case ERROR_DIR_NOT_EMPTY: return bp::uwstring(L"ERROR_DIR_NOT_EMPTY"); //The directory is not empty
-	case ERROR_NOT_LOCKED: return bp::uwstring(L"ERROR_NOT_LOCKED");//The segment is already unlocked
-	case ERROR_CANCEL_VIOLATION: return bp::uwstring(L"ERROR_CANCEL_VIOLATION");//A lock request was not outstanding for the supplied cancel region
-	case ERROR_INVALID_LOCK_RANGE: return bp::uwstring(L"ERROR_INVALID_LOCK_RANGE"); //A requested file lock operation cannot be processed due to an invalid
+	case ERROR_DIR_NOT_EMPTY: return bp::ustring(L"ERROR_DIR_NOT_EMPTY"); //The directory is not empty
+	case ERROR_NOT_LOCKED: return bp::ustring(L"ERROR_NOT_LOCKED");//The segment is already unlocked
+	case ERROR_CANCEL_VIOLATION: return bp::ustring(L"ERROR_CANCEL_VIOLATION");//A lock request was not outstanding for the supplied cancel region
+	case ERROR_INVALID_LOCK_RANGE: return bp::ustring(L"ERROR_INVALID_LOCK_RANGE"); //A requested file lock operation cannot be processed due to an invalid
 								   //byte range
 
 		// Unrecoverable System issues
-	case ERROR_FILE_TOO_LARGE: return bp::uwstring(L"ERROR_FILE_TOO_LARGE");//The file size exceeds the limit allowed and cannot be saved
-	case ERROR_HANDLE_EOF: return bp::uwstring(L"ERROR_HANDLE_EOF");//Reached the end of the file
+	case ERROR_FILE_TOO_LARGE: return bp::ustring(L"ERROR_FILE_TOO_LARGE");//The file size exceeds the limit allowed and cannot be saved
+	case ERROR_HANDLE_EOF: return bp::ustring(L"ERROR_HANDLE_EOF");//Reached the end of the file
 
 	default:
 		return std::to_wstring((unsigned long long)err);
 	}
 }
 
-const bp::uwstring& SCodeToACodeW(std::uint32_t err)
+const bp::ustring& SCodeToACodeW(std::uint32_t err)
 {
 	switch (err)
 	{
@@ -589,7 +589,7 @@ unsigned BPrivyAPI::lsDrives(bp::VariantMap& m)
 {
 	DWORD drives = GetLogicalDrives();
 	DWORD mask = 1;
-	char drive[3]; drive[1] = ':'; drive[2] = 0;
+	wchar_t drive[3]; drive[1] = L':'; drive[2] = 0;
 	unsigned n; char i;
 	for (i=0, n=0; i < 26; i++, mask <<= 1)
 	{
@@ -598,7 +598,7 @@ unsigned BPrivyAPI::lsDrives(bp::VariantMap& m)
 			//if ((n++)>0) {json << COMMA;}
 			n++;
 			// This is already utf-8 so no unicode conversion necessary
-			drive[0] = (char)('A' + i);
+			drive[0] = (wchar_t)(L'A' + i);
 			m.insert(drive);
 		}
 	}
