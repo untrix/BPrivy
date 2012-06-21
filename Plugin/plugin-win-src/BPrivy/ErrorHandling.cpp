@@ -42,118 +42,29 @@ namespace bp
 	const std::string PROP_DATA					("dat");
 	const std::string PROP_PASS					("pass");
 
-	const std::string ACODE_UNMAPPED			("Unmapped");
-	const std::string ACODE_CANT_PROCEED		("CantProceed");
-	const std::string ACODE_AUTORETRY			("AutoRetry");
-	const std::string ACODE_RESOURCE_UNAVAILABLE("ResourceUnavailable");
-	const std::string ACODE_INVALID_PATHNAME	("InvalidPathname");
-	const std::string ACODE_BAD_PATH_ARGUMENT	("BadPathArgument");
-	const std::string ACODE_RESOURCE_LOCKED		("ResourceLocked");
-	const std::string ACODE_ACCESS_DENIED		("AccessDenied");
+ 	const bp::uwstring ACODE_UNMAPPED			(L"Unmapped");
+ 	const bp::uwstring ACODE_CANT_PROCEED		(L"CantProceed");
+ 	const bp::uwstring ACODE_AUTORETRY			(L"AutoRetry");
+ 	const bp::uwstring ACODE_RESOURCE_UNAVAILABLE(L"ResourceUnavailable");
+ 	const bp::uwstring ACODE_INVALID_PATHNAME	(L"InvalidPathname");
+ 	const bp::uwstring ACODE_BAD_PATH_ARGUMENT	(L"BadPathArgument");
+ 	const bp::uwstring ACODE_RESOURCE_LOCKED		(L"ResourceLocked");
+ 	const bp::uwstring ACODE_ACCESS_DENIED		(L"AccessDenied");
 
-	const std::string BPCODE_UNAUTHORIZED_CLIENT ("UnauthorizedClient");
-	const std::string BPCODE_WRONG_PASS			("WrongPass"); // Password too short or wrong.
-	const std::string BPCODE_NEW_FILE_CREATED	("NewFileCreated");
-	const std::string BPCODE_NO_MEM				("NoMem");
-	const std::string BPCODE_ASSERT_FAILED		("AssertFailed");
-	const std::string BPCODE_PATH_EXISTS		("PathAlreadyExists");
-	const std::string BPCODE_BAD_FILETYPE		("BadFileType");
-	const std::string BPCODE_REPARSE_POINT		("PathIsReparsePoint");
-	const std::string BPCODE_IS_SYMLINK			("PathIsSymlink");
+	const bp::uwstring BPCODE_UNAUTHORIZED_CLIENT (L"UnauthorizedClient");
+	const bp::uwstring BPCODE_WRONG_PASS			(L"WrongPass"); // Password too short or wrong.
+	const bp::uwstring BPCODE_NEW_FILE_CREATED	(L"NewFileCreated");
+	const bp::uwstring BPCODE_NO_MEM				(L"NoMem");
+	const bp::uwstring BPCODE_ASSERT_FAILED		(L"AssertFailed");
+	const bp::uwstring BPCODE_PATH_EXISTS		(L"PathAlreadyExists");
+	const bp::uwstring BPCODE_BAD_FILETYPE		(L"BadFileType");
+	const bp::uwstring BPCODE_REPARSE_POINT		(L"PathIsReparsePoint");
+	const bp::uwstring BPCODE_IS_SYMLINK			(L"PathIsSymlink");
 	// Action would've resulted in clobbering
-	const std::string BPCODE_WOULD_CLOBBER		("WouldClobber");
-	const std::string BPCODE_PATH_NOT_EXIST		("PathNotExist");
+	const bp::uwstring BPCODE_WOULD_CLOBBER		(L"WouldClobber");
+	const bp::uwstring BPCODE_PATH_NOT_EXIST	(L"PathNotExist");
 
-	//************* NOTE: All strings must be utf8/unicode********************
-	const std::string PCodeToPCode(int ev)
-	{
-		switch(ev)
-		{
-		case 0: return "SUCCESS";
-		case EAFNOSUPPORT: return "EAFNOSUPPORT";
-		case EADDRINUSE: return "EADDRINUSE";
-		case EADDRNOTAVAIL: return "EADDRNOTAVAIL";
-		case EISCONN: return "EISCONN";
-		case E2BIG: return "E2BIG";
-		case EDOM: return "EDOM";
-		case EFAULT: return "EFAULT";
-		case EBADF: return "EBADF";
-		case EBADMSG: return "EBADMSG";
-		case EPIPE: return "EPIPE";
-		case ECONNABORTED: return "ECONNABORTED";
-		case EALREADY: return "EALREADY";
-		case ECONNREFUSED: return "ECONNREFUSED";
-		case ECONNRESET: return "ECONNRESET";
-		case EXDEV: return "EXDEV";
-		case EDESTADDRREQ: return "EDESTADDRREQ";
-		case EBUSY: return "EBUSY";
-		case ENOTEMPTY: return "ENOTEMPTY";
-		case ENOEXEC: return "ENOEXEC";
-		case EEXIST: return "EEXIST";
-		case EFBIG: return "EFBIG";
-		case ENAMETOOLONG: return "ENAMETOOLONG";
-		case ENOSYS: return "ENOSYS";
-		case EHOSTUNREACH: return "EHOSTUNREACH";
-		case EIDRM: return "EIDRM";
-		case EILSEQ: return "EILSEQ";
-		case ENOTTY: return "ENOTTY";
-		case EINTR: return "EINTR";
-		case EINVAL: return "EINVAL";
-		case ESPIPE: return "ESPIPE";
-		case EIO: return "EIO";
-		case EISDIR: return "EISDIR";
-		case EMSGSIZE: return "EMSGSIZE";
-		case ENETDOWN: return "ENETDOWN";
-		case ENETRESET: return "ENETRESET";
-		case ENETUNREACH: return "ENETUNREACH";
-		case ENOBUFS: return "ENOBUFS";
-		case ECHILD: return "ECHILD";
-		case ENOLINK: return "ENOLINK";
-		case ENOLCK: return "ENOLCK";
-		case ENODATA: return "ENODATA";
-		case ENOMSG: return "ENOMSG";
-		case ENOPROTOOPT: return "ENOPROTOOPT";
-		case ENOSPC: return "ENOSPC";
-		case ENOSR: return "ENOSR";
-		case ENXIO: return "ENXIO";
-		case ENODEV: return "ENODEV";
-		case ENOENT: return "ENOENT";
-		case ESRCH: return "ESRCH";
-		case ENOTDIR: return "ENOTDIR";
-		case ENOTSOCK: return "ENOTSOCK";
-		case ENOSTR: return "ENOSTR";
-		case ENOTCONN: return "ENOTCONN";
-		case ENOMEM: return "ENOMEM";
-		case ENOTSUP: return "ENOTSUP";
-		case ECANCELED: return "ECANCELED";
-		case EINPROGRESS: return "EINPROGRESS";
-		case EPERM: return "EPERM";
-		case EOPNOTSUPP: return "EOPNOTSUPP";
-		case EWOULDBLOCK: return "EWOULDBLOCK";
-		case EOWNERDEAD: return "EOWNERDEAD";
-		case EACCES: return "EACCES";
-		case EPROTO: return "EPROTO";
-		case EPROTONOSUPPORT: return "EPROTONOSUPPORT";
-		case EROFS: return "EROFS";
-		case EDEADLK: return "EDEADLK";
-		case EAGAIN: return "EAGAIN";
-		case ERANGE: return "ERANGE";
-		case ENOTRECOVERABLE: return "ENOTRECOVERABLE";
-		case ETIME: return "ETIME";
-		case ETXTBSY: return "ETXTBSY";
-		case ETIMEDOUT: return "ETIMEDOUT";
-		case ENFILE: return "ENFILE";
-		case EMFILE: return "EMFILE";
-		case EMLINK: return "EMLINK";
-		case ELOOP: return "ELOOP";
-		case EOVERFLOW: return "EOVERFLOW";
-		case EPROTOTYPE: return "EPROTOTYPE";
-		default:
-			return std::to_string((unsigned long long)ev);
-		}
-	}
-
-	const std::string& PCodeToACode(int ev)
+	const bp::uwstring& PCodeToACodeW(int ev)
 	{
 		switch(ev)
 		{
@@ -176,7 +87,7 @@ namespace bp
 		case EBUSY: return ACODE_RESOURCE_UNAVAILABLE;
 		case ENOTEMPTY: return ACODE_AUTORETRY;
 		case ENOEXEC: return ACODE_UNMAPPED;
-		case EEXIST: return BPCODE_PATH_EXISTS;
+		case EEXIST: return ACODE_BAD_PATH_ARGUMENT;
 		case EFBIG: return ACODE_CANT_PROCEED;
 		case ENAMETOOLONG: return ACODE_INVALID_PATHNAME;
 		case ENOSYS: return ACODE_UNMAPPED;
@@ -240,19 +151,18 @@ namespace bp
 		}
 	}
 
-	// NOTE: All strings must be utf8/unicode
-	void MakeErrorEntry(const bfs::filesystem_error& e, FB::VariantMap& m)
+	void MakeErrorEntry(const bfs::filesystem_error& e, bp::VariantMap& m)
 	{
 		if (!e.path1().empty())
 		{
-			m.insert(VT(PROP_PATH, i18n::GetUString(e.path1())));
-			m.insert(VT(PROP_FILENAME, i18n::GetUString(e.path1().filename())));
+			m.insert(PROP_PATH, e.path1());
+			m.insert(PROP_FILENAME, e.path1().filename());
 			if (e.path1().has_extension())
 			{
-				m.insert(VT(PROP_FILEEXT, i18n::GetUString(e.path1().extension())));
+				m.insert(PROP_FILEEXT, e.path1().extension());
 				if (e.path1().has_stem())
 				{
-					m.insert(VT(PROP_FILESTEM, i18n::GetUString(e.path1().stem())));
+					m.insert(PROP_FILESTEM, e.path1().stem());
 				}
 			}
 		}
@@ -260,89 +170,87 @@ namespace bp
 		ParseSystemException(e, m);
 	}
 
-	// NOTE: All strings must be utf8/unicode
-	void SetInfoMsg(const string& g_code, FB::JSObjectPtr& js)
+	void SetInfoMsg(const uwstring& g_code, bp::JSObject* js)
 	{
-		FB::VariantMap m;
-		m.insert(VT(PROP_GENERIC_CODE, g_code));
+		bp::VariantMap m;
+		m.insert(PROP_GENERIC_CODE, g_code);
 		js->SetProperty(PROP_INFO, m);
 	}
 
-	// NOTE: All strings must be utf8/unicode
-	void ParseSystemException(const bs::system_error& e, FB::VariantMap& m)
+	void ParseSystemException(const bs::system_error& e, bp::VariantMap& m)
 	{
 		int ev = e.code().value();
 		bs::error_code ec = e.code();
-		m.insert(VT(PROP_SYSTEM_MESSAGE, i18n::GetUString(ec)));
-		m.insert(VT(PROP_SYSTEM_CODE, SCodeToSCode(ev)));
-		//m.insert(VT(PROP_GENERIC_MESSAGE, i18n::GetUString(ec.default_error_condition().message())));
-		//m.insert(VT(PROP_GENERIC_CODE, bp::PCodeToPCode(ec.default_error_condition().value())));
+		m.insert(PROP_SYSTEM_MESSAGE, ec);
+		m.insert(PROP_SYSTEM_CODE, SCodeToSCodeW(ev));
+		//m.insert(VT(PROP_GENERIC_MESSAGE, ec.default_error_condition()));
+		//m.insert(VT(PROP_GENERIC_CODE, bp::PCodeToPCodeW(ec.default_error_condition().value())));
 		
 		// Map from SCode to ACode if possible
-		if (SCodeToACode(ev) != ACODE_UNMAPPED) {
-			m.insert(VT(PROP_A_CODE, SCodeToACode(ev)));
+		if (SCodeToACodeW(ev) != ACODE_UNMAPPED) {
+			m.insert(PROP_A_CODE, SCodeToACodeW(ev));
 		}
 		else {
 			ev = ec.default_error_condition().value();
 			// POSIX codes are pretty much useless. On top of that Boost's mapping from system codes to
 			// POSIX codes is dubious. Therefore this mapping from gcode to ACode is not very useful.
-			m.insert(VT(PROP_A_CODE, PCodeToACode(ev)));
+			m.insert(PROP_A_CODE, PCodeToACodeW(ev));
 		}
 	}
 
 	// NOTE: All strings must be utf8/unicode
-	void HandleFilesystemException (const bfs::filesystem_error& e, FB::JSObjectPtr& p)
+	void HandleFilesystemException (const bfs::filesystem_error& e, bp::JSObject* p)
 	{
-		FB::VariantMap m;
+		bp::VariantMap m;
 		ParseSystemException(e, m);
-		if (!e.path1().empty()) {m.insert(VT(PROP_PATH, i18n::GetUString(e.path1())));}
-		if (!e.path2().empty()) {m.insert(VT(PROP_PATH2, i18n::GetUString(e.path2())));}
-		p->SetProperty(PROP_ERROR, FB::variant(m));
+		if (!e.path1().empty()) {m.insert(PROP_PATH, e.path1());}
+		if (!e.path2().empty()) {m.insert(PROP_PATH2, e.path2());}
+		p->SetProperty(PROP_ERROR, m);
 	}
 
 	// NOTE: All strings must be utf8/unicode
-	void HandleSystemException(const bs::system_error& e, FB::JSObjectPtr& p)
+	void HandleSystemException(const bs::system_error& e, bp::JSObject* p)
 	{
-		FB::VariantMap m;
+		bp::VariantMap m;
 		ParseSystemException(e, m);
-		p->SetProperty(PROP_ERROR, FB::variant(m));
+		p->SetProperty(PROP_ERROR, m);
 	}
 
 	// NOTE: All strings must be utf8/unicode
-	void HandleStdException(const std::exception& e, FB::JSObjectPtr& p)
+	void HandleStdException(const std::exception& e, bp::JSObject* p)
 	{		
-		FB::VariantMap m;
-		m.insert(VT(PROP_SYSTEM_MESSAGE, i18n::GetUString(e)));
-		p->SetProperty(PROP_ERROR, FB::variant(m));
+		bp::VariantMap m;
+		m.insert(PROP_SYSTEM_MESSAGE, e);
+		p->SetProperty(PROP_ERROR, m);
 	}
 
 	// NOTE: All strings must be utf8/unicode
-	void HandleUnknownException (FB::JSObjectPtr& p)
+	void HandleUnknownException (bp::JSObject* p)
 	{
-		p->SetProperty(PROP_ERROR, "Unknown");
+		p->SetProperty(PROP_ERROR, L"Unknown");
 	}
 
-	// NOTE: All strings must be utf8/unicode
-	void HandleUnknownException (FB::VariantMap& me)
+	void HandleUnknownException (bp::VariantMap& me)
 	{
-		me.insert(VT(PROP_ERROR, "Unknown"));
+		me.insert(PROP_ERROR, L"Unknown");
 	}
 
+
 	// NOTE: All strings must be utf8/unicode
-	void HandleBPError(const BPError& e, FB::JSObjectPtr& p)
+	void HandleBPError(const BPError& e, bp::JSObject* p)
 	{
-		FB::VariantMap m;
-		m.insert(VT(PROP_A_CODE, e.acode));
+		bp::VariantMap m;
+		m.insert(PROP_A_CODE, e.acode);
 		if (!e.gcode.empty()) {
-			m.insert(VT(PROP_GENERIC_CODE, e.gcode));
+			m.insert(PROP_GENERIC_CODE, (e.gcode));
 		}
 		if (!e.path.empty()) {
-			m.insert(VT(PROP_PATH, i18n::GetUString(e.path)));
+			m.insert(PROP_PATH, e.path);
 		}
 		if (!e.gmsg.empty()) {
-			m.insert(VT(PROP_GENERIC_MESSAGE, e.gmsg));
+			m.insert(PROP_GENERIC_MESSAGE, e.gmsg);
 		}
-		p->SetProperty(PROP_ERROR, FB::variant(m));
+		p->SetProperty(PROP_ERROR, m);
 	}
 
 	//const std::string SCodeToPCode(std::uint32_t err)
@@ -350,8 +258,183 @@ namespace bp
 	//	boost::system::error_code ec(err, boost::system::system_category());
 	//	bs::error_condition econd = ec.default_error_condition();
 	//	int ev = econd.value();
-	//	return bp::PCodeToPCode(ev);
+	//	return bp::PCodeToPCodeW(ev);
 	//}
 
+	//************* NOTE: All strings must be utf8/unicode********************
+	/*const std::string&& PCodeToPCodeW(int ev)
+	{
+		switch(ev)
+		{
+		case 0: return bp::ustring("SUCCESS");
+		case EAFNOSUPPORT: return bp::ustring("EAFNOSUPPORT");
+		case EADDRINUSE: return bp::ustring("EADDRINUSE");
+		case EADDRNOTAVAIL: return bp::ustring("EADDRNOTAVAIL");
+		case EISCONN: return bp::ustring("EISCONN");
+		case E2BIG: return bp::ustring("E2BIG");
+		case EDOM: return bp::ustring("EDOM");
+		case EFAULT: return bp::ustring("EFAULT");
+		case EBADF: return bp::ustring("EBADF");
+		case EBADMSG: return bp::ustring("EBADMSG");
+		case EPIPE: return bp::ustring("EPIPE");
+		case ECONNABORTED: return bp::ustring("ECONNABORTED");
+		case EALREADY: return bp::ustring("EALREADY");
+		case ECONNREFUSED: return bp::ustring("ECONNREFUSED");
+		case ECONNRESET: return bp::ustring("ECONNRESET");
+		case EXDEV: return bp::ustring("EXDEV");
+		case EDESTADDRREQ: return bp::ustring("EDESTADDRREQ");
+		case EBUSY: return bp::ustring("EBUSY");
+		case ENOTEMPTY: return bp::ustring("ENOTEMPTY");
+		case ENOEXEC: return bp::ustring("ENOEXEC");
+		case EEXIST: return bp::ustring("EEXIST");
+		case EFBIG: return bp::ustring("EFBIG");
+		case ENAMETOOLONG: return bp::ustring("ENAMETOOLONG");
+		case ENOSYS: return bp::ustring("ENOSYS");
+		case EHOSTUNREACH: return bp::ustring("EHOSTUNREACH");
+		case EIDRM: return bp::ustring("EIDRM");
+		case EILSEQ: return bp::ustring("EILSEQ");
+		case ENOTTY: return bp::ustring("ENOTTY");
+		case EINTR: return bp::ustring("EINTR");
+		case EINVAL: return bp::ustring("EINVAL");
+		case ESPIPE: return bp::ustring("ESPIPE");
+		case EIO: return bp::ustring("EIO");
+		case EISDIR: return bp::ustring("EISDIR");
+		case EMSGSIZE: return bp::ustring("EMSGSIZE");
+		case ENETDOWN: return bp::ustring("ENETDOWN");
+		case ENETRESET: return bp::ustring("ENETRESET");
+		case ENETUNREACH: return bp::ustring("ENETUNREACH");
+		case ENOBUFS: return bp::ustring("ENOBUFS");
+		case ECHILD: return bp::ustring("ECHILD");
+		case ENOLINK: return bp::ustring("ENOLINK");
+		case ENOLCK: return bp::ustring("ENOLCK");
+		case ENODATA: return bp::ustring("ENODATA");
+		case ENOMSG: return bp::ustring("ENOMSG");
+		case ENOPROTOOPT: return bp::ustring("ENOPROTOOPT");
+		case ENOSPC: return bp::ustring("ENOSPC");
+		case ENOSR: return bp::ustring("ENOSR");
+		case ENXIO: return bp::ustring("ENXIO");
+		case ENODEV: return bp::ustring("ENODEV");
+		case ENOENT: return bp::ustring("ENOENT");
+		case ESRCH: return bp::ustring("ESRCH");
+		case ENOTDIR: return bp::ustring("ENOTDIR");
+		case ENOTSOCK: return bp::ustring("ENOTSOCK");
+		case ENOSTR: return bp::ustring("ENOSTR");
+		case ENOTCONN: return bp::ustring("ENOTCONN");
+		case ENOMEM: return bp::ustring("ENOMEM");
+		case ENOTSUP: return bp::ustring("ENOTSUP");
+		case ECANCELED: return bp::ustring("ECANCELED");
+		case EINPROGRESS: return bp::ustring("EINPROGRESS");
+		case EPERM: return bp::ustring("EPERM");
+		case EOPNOTSUPP: return bp::ustring("EOPNOTSUPP");
+		case EWOULDBLOCK: return bp::ustring("EWOULDBLOCK");
+		case EOWNERDEAD: return bp::ustring("EOWNERDEAD");
+		case EACCES: return bp::ustring("EACCES");
+		case EPROTO: return bp::ustring("EPROTO");
+		case EPROTONOSUPPORT: return bp::ustring("EPROTONOSUPPORT");
+		case EROFS: return bp::ustring("EROFS");
+		case EDEADLK: return bp::ustring("EDEADLK");
+		case EAGAIN: return bp::ustring("EAGAIN");
+		case ERANGE: return bp::ustring("ERANGE");
+		case ENOTRECOVERABLE: return bp::ustring("ENOTRECOVERABLE");
+		case ETIME: return bp::ustring("ETIME");
+		case ETXTBSY: return bp::ustring("ETXTBSY");
+		case ETIMEDOUT: return bp::ustring("ETIMEDOUT");
+		case ENFILE: return bp::ustring("ENFILE");
+		case EMFILE: return bp::ustring("EMFILE");
+		case EMLINK: return bp::ustring("EMLINK");
+		case ELOOP: return bp::ustring("ELOOP");
+		case EOVERFLOW: return bp::ustring("EOVERFLOW");
+		case EPROTOTYPE: return bp::ustring("EPROTOTYPE");
+		default:
+			return std::to_string((unsigned long long)ev);
+		}
+	}*/
+
+	/*const bp::ustring& PCodeToACode(int ev)
+	{
+		switch(ev)
+		{
+		case EAFNOSUPPORT: return Acode.utf8(ACODE_UNMAPPED);
+		case EADDRINUSE: return Acode.utf8(ACODE_RESOURCE_LOCKED);
+		case EADDRNOTAVAIL: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EISCONN: return Acode.utf8(ACODE_UNMAPPED);
+		case E2BIG: return Acode.utf8(ACODE_UNMAPPED);
+		case EDOM: return Acode.utf8(ACODE_UNMAPPED);
+		case EFAULT: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EBADF: return Acode.utf8(ACODE_AUTORETRY);
+		case EBADMSG: return Acode.utf8(ACODE_UNMAPPED);
+		case EPIPE: return Acode.utf8(ACODE_UNMAPPED);
+		case ECONNABORTED: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EALREADY: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ECONNREFUSED: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ECONNRESET: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EXDEV: return Acode.utf8(ACODE_UNMAPPED);
+		case EDESTADDRREQ: return Acode.utf8(ACODE_UNMAPPED);
+		case EBUSY: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ENOTEMPTY: return Acode.utf8(ACODE_AUTORETRY);
+		case ENOEXEC: return Acode.utf8(ACODE_UNMAPPED);
+		case EEXIST: return Acode.utf8(ACODE_BAD_PATH_ARGUMENT);
+		case EFBIG: return Acode.utf8(ACODE_CANT_PROCEED);
+		case ENAMETOOLONG: return Acode.utf8(ACODE_INVALID_PATHNAME);
+		case ENOSYS: return Acode.utf8(ACODE_UNMAPPED);
+		case EHOSTUNREACH: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EIDRM: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EILSEQ:
+		case ENOTTY: return Acode.utf8(ACODE_UNMAPPED);
+		case EINTR: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EINVAL: 
+		case ESPIPE: return Acode.utf8(ACODE_UNMAPPED);
+		case EIO: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EISDIR: return Acode.utf8(ACODE_BAD_PATH_ARGUMENT);
+		case EMSGSIZE: return Acode.utf8(ACODE_UNMAPPED);
+		case ENETDOWN: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ENETRESET: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ENETUNREACH: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ENOBUFS: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ECHILD: 
+		case ENOLINK: return Acode.utf8(ACODE_UNMAPPED);
+		case ENOLCK: return Acode.utf8(ACODE_RESOURCE_LOCKED);
+		case ENODATA: 
+		case ENOMSG: 
+		case ENOPROTOOPT: return Acode.utf8(ACODE_UNMAPPED);
+		case ENOSPC: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ENOSR: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ENXIO: return Acode.utf8(ACODE_BAD_PATH_ARGUMENT);
+		case ENODEV: return Acode.utf8(ACODE_BAD_PATH_ARGUMENT);
+		case ENOENT: return Acode.utf8(ACODE_BAD_PATH_ARGUMENT);
+		case ESRCH: return Acode.utf8(ACODE_UNMAPPED);
+		case ENOTDIR: return Acode.utf8(ACODE_BAD_PATH_ARGUMENT);
+		case ENOTSOCK:
+		case ENOSTR: return Acode.utf8(ACODE_UNMAPPED);
+		case ENOTCONN: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ENOMEM: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ENOTSUP:
+		case ECANCELED:
+		case EINPROGRESS:
+		case EPERM:
+		case EOPNOTSUPP:
+		case EWOULDBLOCK:
+		case EOWNERDEAD: return Acode.utf8(ACODE_UNMAPPED);
+		case EACCES: return Acode.utf8(ACODE_ACCESS_DENIED);
+		case EPROTO:
+		case EPROTONOSUPPORT: return Acode.utf8(ACODE_UNMAPPED);
+		case EROFS: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EDEADLK: return Acode.utf8(ACODE_RESOURCE_LOCKED);
+		case EAGAIN: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ERANGE:
+		case ENOTRECOVERABLE:
+		case ETIME: return Acode.utf8(ACODE_UNMAPPED);
+		case ETXTBSY: return Acode.utf8(ACODE_RESOURCE_LOCKED);
+		case ETIMEDOUT: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case ENFILE: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EMFILE: return Acode.utf8(ACODE_RESOURCE_UNAVAILABLE);
+		case EMLINK: return Acode.utf8(ACODE_BAD_PATH_ARGUMENT);
+		case ELOOP: return Acode.utf8(ACODE_BAD_PATH_ARGUMENT);
+		case EOVERFLOW: 
+		case EPROTOTYPE:
+		default:
+			return Acode.utf8(ACODE_UNMAPPED);
+		}
+	}*/
 
 }// End namespace bp

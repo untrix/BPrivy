@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include "BPi18n.h"
 #include "Utils.h"
+#include "BPrivyAPI.h"
+#include "ErrorHandling.h"
 #ifdef WIN32
 #include <mbctype.h>
 #endif
@@ -8,12 +10,6 @@
 
 namespace bp 
 {
-	// convert a mbcs string to utf8 string.
-	ustring GetUString(const std::string& s)
-	{
-		return s;
-	}
-
 #ifdef WIN32
 	void i18n()
 	{
@@ -34,15 +30,13 @@ namespace bp
 		if (n) 
 		{
 			n++; // Add one for null terminator
-			// buf.m_P below won't be word aligned. Not sure if that will
-			// be a problem on Mac/Linux. On Windows this is okay per documentation.
-			MemGuard buf(n*sizeof(wchar_t));//throws
-			size_t r = mbstowcs((wchar_t*)buf.m_P, s, n);
+			MemGuard<wchar_t> buf(n);//throws
+			size_t r = mbstowcs((wchar_t*)buf, s, n);
 			if (r == (size_t)-1) {
 				return conv_err;
 			}
 			else {
-				return FB::wstring_to_utf8((wchar_t*)buf.m_P);
+				return FB::wstring_to_utf8((wchar_t*)buf);
 			}
 		}
 		else {
@@ -50,5 +44,135 @@ namespace bp
 		}
 	}
 
+	uwstring i18n::LocaleToUnicode(const std::string& str)
+	{
+		const wchar_t conv_err[] = L"BPError: could not convert error string to wcs";
+		// Convert from locale charset to UNICODE by converting to wchar_t.
+		const char* s = str.c_str();
+		size_t n = mbstowcs(NULL, s, 0);
+		if (n) 
+		{
+			n++; // Add one for null terminator
+			MemGuard<wchar_t> buf(n);//throws
+			size_t r = mbstowcs((wchar_t*)buf, s, n);
+			if (r == (size_t)-1) {
+				return conv_err;
+			}
+			else {
+				return (wchar_t*)buf;
+			}
+		}
+		else {
+			return conv_err;
+		}
+	}
+
+//	const ACodes Acode;
+//	template <>
+//	Codes<ACODE, ACODE_NUM, ACODE_UNMAPPED>::Codes()
+//	{
+//		_utf8[ACODE_UNMAPPED]			= "Unmapped";
+//		_ucs[ACODE_UNMAPPED]			= L"Unmapped";
+//		_utf8[ACODE_CANT_PROCEED]		= "CantProceed";
+//		_ucs[ACODE_CANT_PROCEED]			= L"CantProceed";
+//		_utf8[ACODE_AUTORETRY]			= "AutoRetry";
+//		_ucs[ACODE_AUTORETRY]			= L"AutoRetry";
+//		_utf8[ACODE_RESOURCE_UNAVAILABLE]= "ResourceUnavailable";
+//		_ucs[ACODE_RESOURCE_UNAVAILABLE]	= L"ResourceUnavailable";
+//		_utf8[ACODE_INVALID_PATHNAME]	= "InvalidPathname";
+//		_ucs[ACODE_INVALID_PATHNAME]		= L"InvalidPathname";
+//		_utf8[ACODE_BAD_PATH_ARGUMENT]	= "BadPathArgument";
+//		_ucs[ACODE_BAD_PATH_ARGUMENT]	= L"BadPathArgument";
+//		_utf8[ACODE_RESOURCE_LOCKED]		= "ResourceLocked";
+//		_ucs[ACODE_RESOURCE_LOCKED]		= L"ResourceLocked";
+//		_utf8[ACODE_ACCESS_DENIED]		= "AccessDenied";
+//		_ucs[ACODE_ACCESS_DENIED]		= L"AccessDenied";
+//	}
+//
+//#define MAP_CODE(P, C, V) _ucs[ P ## _ ## C ] =  L#V
+//#define MAP_BPCODE(C,V) MAP_CODE(BPCODE, C, V)
+//
+//	const BPCodes BPcode;
+//	template <>
+//	Codes<BPCODE, BPCODE_NUM, BPCODE_UNMAPPED>::Codes()
+//	{
+//		MAP_BPCODE(UNAUTHORIZED_CLIENT, L"UnauthorizedClient");
+//		MAP_BPCODE(WRONG_PASS, L"WrongPass");
+//		MAP_BPCODE(NEW_FILE_CREATED, L"NewFileCreated");
+//		MAP_BPCODE(NO_MEM, L"NoMem");
+//		MAP_BPCODE(ASSERT_FAILED, L"AssertFailed");
+//		MAP_BPCODE(PATH_EXISTS, L"PathAlreadyExists");
+//		MAP_BPCODE(BAD_FILETYPE, L"BadFileType");
+//		MAP_BPCODE(REPARSE_POINT, L"PathIsReparsePoint");
+//		MAP_BPCODE(IS_SYMLINK, L"PathIsSymlink");
+//		MAP_BPCODE(WOULD_CLOBBER, L"WouldClobber");
+//		MAP_BPCODE(PATH_NOT_EXIST, L"PathNotExist");
+//	}
+
 }// end namespace bp
 
+bool BPrivyAPI::ls(const bp::uwstring& path_s, FB::JSObjectPtr out) 
+{
+	bfs::path path(path_s); path.make_preferred();
+	return _ls(path, &bp::JSObject(out));
+}
+
+bool BPrivyAPI::appendFile(const bp::uwstring& path_s, const std::string& data, FB::JSObjectPtr out)
+{
+	bfs::path path(path_s); path.make_preferred();
+	bp::JSObject o(out);
+	return _appendFile(path, data, &o);
+}
+
+bool BPrivyAPI::readFile(const bp::uwstring& path_s, FB::JSObjectPtr out, const boost::optional<unsigned long long> pos)
+{
+	bfs::path path(path_s); path.make_preferred();
+	return _readFile(path, &bp::JSObject(out), pos);
+}
+
+bool BPrivyAPI::createDir(const bp::uwstring& path_s, FB::JSObjectPtr out)
+{
+	bfs::path path(path_s); path.make_preferred();
+	bp::JSObject o(out);
+	return _createDir(path, &o);
+}
+
+bool BPrivyAPI::rm(const bp::uwstring& path_s, FB::JSObjectPtr out)
+{
+	bfs::path path(path_s); path.make_preferred();
+	bp::JSObject o(out);
+	return _rm(path, &o);
+}
+bool BPrivyAPI::rename(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber)
+{
+	bfs::path o_path(old_p); o_path.make_preferred();
+	bfs::path n_path(new_p); n_path.make_preferred();
+	bp::JSObject o(out);
+	return _rename(o_path, n_path, &o, clobber);
+}
+
+bool BPrivyAPI::copy(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber)
+{
+	bfs::path o_path(old_p); o_path.make_preferred();
+	bfs::path n_path(new_p); n_path.make_preferred();
+	bp::JSObject o(out);
+	return _copy(o_path, n_path, &o, clobber);
+}
+bool BPrivyAPI::chooseFile(FB::JSObjectPtr out)
+{
+	bp::JSObject o(out);
+	return _chooseFile(&o);
+}
+unsigned long long BPrivyAPI::appendLock(const std::wstring& path_s, FB::JSObjectPtr out)
+{
+	bfs::path path(path_s); path.make_preferred();
+	bp::JSObject o(out);
+	return _appendLock(path, &o);
+}
+
+unsigned long long BPrivyAPI::readLock(const std::wstring& path_s, FB::JSObjectPtr out)
+{
+	bfs::path path(path_s); path.make_preferred();
+	bp::JSObject o(out);
+	return _readLock(path, &o);
+}

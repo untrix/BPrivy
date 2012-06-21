@@ -16,26 +16,6 @@ namespace bp
 	const std::string OPENB						("{");
 	const std::string CLOSEB					("}");
 
-	MemGuard::MemGuard(msize32_t siz)
-	{
-		m_P = malloc(siz);
-		if (!m_P) {
-			throw BPError(ACODE_RESOURCE_UNAVAILABLE, BPCODE_NO_MEM);
-		}
-		else {
-			m_Siz = siz;
-		}
-	}
-
-	MemGuard::~MemGuard	()
-	{free(m_P);}
-
-	void 
-	MemGuard::NullTerm(msize32_t siz)
-	{
-		((char*)m_P)[siz>=m_Siz?m_Siz-1:siz] = 0;
-	}
-
 	//std::string& JsonFriendly(std::string&& s)
 	//{
 	//	for (string::iterator it=s.begin(); it != s.end(); it++)

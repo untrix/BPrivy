@@ -4,9 +4,12 @@
 #include <cstdint> // for uint64_t and uint32_t
 #include <string> // for std::string
 #include "APITypes.h"
+#include "JSAPIAuto.h"
+#include "BrowserHost.h"
 #include "utf8_tools.h"
 #include <boost/filesystem.hpp>
 #include <boost/system/error_code.hpp>
+#include "Utils.h"
 
 // NOTE: ALL INTERACTIONS WITH FIREBREATH/JSON MUST BE IN UNICODE WIDESTRING OR
 // UTF8. ONLY UNICODE-WSTRINGS MUST BE INPUT FROM FIREBREATH AND ONLY
@@ -26,22 +29,17 @@
 //    to narrow-char, Windows will treat the wstring as UNICODE eventhough the locale maybe a
 //    non-unicode codepage (say german.xyz). Similarly when converting back from char to wchar_t
 //    windows will apply the correct codepage (if environment is properly setup).
-// 2. GetLString will convert Unicode widestrings to Locale-specific narrow-strings if needed. For
-//    windows, however I'm assuming that any converstion from wchar_t to char_t will do the right
-//    thing automatically, hence the GetLString function for Windows will be a no-op. If this
-//    turns out to be a wrong assumption then the fix should only be necessary within BPi18n.h and
-//    BPi18n.cpp. All other code should call the GetUString and GetLString functions
-//    judiciously even if the functions maybe be no-ops today.
 // 3. All strings going back to FB must be utf8 strings. This is done at the point of
-//    FB::VariantMap.insert calls. If the string is already known to be UTF-8 - e.g. hard-coded
+//    bp::VariantMap.insert calls. If the string is already known to be UTF-8 - e.g. hard-coded
 //    error-codes, then there is no need to call GetUString. However, if the string is known to be
-//    in the locale-dependent codepage, then the conversion must be performed by calling GetUString.
-//    For e.g. path strings and system error messages that coul've been localized.
+//    in the locale-dependent codepage, then the conversion must be performed by calling LocaleToUtf8.
+//    For e.g. system error messages that could've been localized.
 
 
 namespace bp
 {
 	namespace bs = boost::system;
+	namespace bfs = boost::filesystem;
 	// ustring and uwstring are being defined to alert the programmer that the string
 	// data within is unicode. This is needed in Windows, where unicode is only supported
 	// in wide-strings. Therefore one has to convert a regular mbcs-string to utf8 before
@@ -54,12 +52,14 @@ namespace bp
 									// unicode data in wide-char instead of in utf-8.
 	typedef std::string	ustring;
 	typedef std::wstring uwstring;
-	typedef std::map<uwstring, FB::variant> VariantMapW;
+	class VariantMap;
 
 	class i18n
 	{
-	public:
-		inline static ustring GetUString(const boost::filesystem::path& path)
+		friend class bp::VariantMap;
+
+	private:
+		inline static ustring GetUString(const bfs::path& path)
 		{
 			// In Windows wstring is guaranteed to be UNICODE. Boost::Filesystem will perform the MultiByteToWidechar
 			// conversion on Windows, this will utilize the codepage in vogue but will ensure that the resulting wide-string
@@ -92,8 +92,87 @@ namespace bp
 			return LocaleToUtf8(e.what());
 		}
 		
+		static uwstring LocaleToUnicode(const std::string& str);
 	private:
 		static ustring LocaleToUtf8(const char* s);
+	};
+
+	// Wrapper around VariantMap to help localize all i18n code to one place.
+	// Rest of the code will only use UNICODE wide-strings. This code will perform
+	// conversion from wide-string to utf8 in order to satisfy FireBreath.
+	class VariantMap
+	{
+	public:
+		friend			class JSObject;
+		typedef FB::VariantMap::value_type VT;
+
+						VariantMap			() {}
+
+		inline void		insert				(const ustring& name) {
+			m_map.insert(VT(name, 0));
+		}
+		inline void		insert				(const ustring& name, bp::VariantMap& value) {
+			m_map.insert(VT(name, value.m_map));
+		}
+		inline void		insert				(const bfs::path& path, bp::VariantMap& value) {
+			m_map.insert(VT(i18n::GetUString(path), value.m_map));
+		}
+		inline void		insert				(const ustring& name, const wchar_t* value) {
+			m_map.insert(VT(name, value));
+		}
+		inline void		insert				(const ustring& name, const uwstring& value) {
+			m_map.insert(VT(name, value));
+		}
+		inline void		insert				(const ustring& name, const bs::error_code ec) {
+			m_map.insert(VT(name, i18n::GetUString(ec)));
+		}
+		inline void		insert				(const ustring& name, const std::exception& e) {
+			m_map.insert(VT(name, i18n::GetUString(e)));
+		}
+		inline void		insert				(const ustring& name, const bfs::path& path) {
+			m_map.insert(VT(name, path.wstring()));
+		}
+		inline void		insert				(const ustring& name, uintmax_t n)	{
+			m_map.insert(VT(name, n));
+		}
+		inline bool		empty				() {return m_map.empty();}
+		inline void		clear				() {return m_map.clear();}
+
+	private:
+		FB::VariantMap	m_map;
+	};
+
+	// Wrapper around JSObjectPtr to help localize all i18n code to one place.
+	// Rest of the code will only use UNICODE wide-strings. This code will perform
+	// conversion from wide-string to utf8 in order to satisfy FireBreath.
+	class JSObject
+	{
+	public:
+		inline			JSObject			(FB::JSObjectPtr p) : m_p(p) {}
+		inline void		SetProperty			(const ustring& name, const bp::VariantMap& val) {
+			m_p->SetProperty(name, val.m_map);
+		}
+		inline void		SetProperty			(const ustring& name, const wchar_t* value)	{
+			m_p->SetProperty(name, value);
+		}
+		inline void	SetProperty			(const ustring& name, const bfs::path& path) {
+			m_p->SetProperty(name, path.wstring());
+		}
+		inline void SetProperty				(const ustring& name, MemGuard<char>& buf) {
+			m_p->SetProperty(name, static_cast<char*>(buf));
+		}
+		inline void SetProperty				(const ustring& name, uintmax_t n) {
+			m_p->SetProperty(name, n);
+		}
+		inline bool		HasProperty			(const ustring& name) {
+			return m_p->HasProperty(name);
+		}
+		inline FB::variant GetProperty		(const ustring& name) {
+			return m_p->GetProperty(name);
+		}
+
+	private:
+		FB::JSObjectPtr	m_p;
 	};
 }// end namespace bp
 #endif // H_BP_i18n

@@ -63,9 +63,9 @@ public:
 	 *	If the path argument was an empty string, then it lists all browsable drives in the system
 	 *  instead.
 	 */
-	bool ls(const bp::uwstring& dirPath, FB::JSObjectPtr out);
-	bool appendFile(const bp::uwstring& path, const std::string& data, FB::JSObjectPtr out);
-	bool readFile(const bp::uwstring& path, FB::JSObjectPtr out, boost::optional<unsigned long long> pos);
+	bool ls(const bp::uwstring& path_s, FB::JSObjectPtr out);
+	bool appendFile(const bp::uwstring& path_s, const std::string& data, FB::JSObjectPtr out);
+	bool readFile(const bp::uwstring& path, FB::JSObjectPtr out, const boost::optional<unsigned long long> pos);
 	bool createDir(const bp::uwstring& path, FB::JSObjectPtr);
 	bool rm(const bp::uwstring& path, FB::JSObjectPtr out);
 	// Note: rename will not clobber directories. For files, it will iff 'fclobber' was true.
@@ -77,15 +77,25 @@ public:
 	bool chooseFile(FB::JSObjectPtr p);
 #ifdef DEBUG
 	// Locks the file for write and returns without unlocking or closing it. This is to be used for lock testing only.
-	unsigned long long BPrivyAPI::appendLock(const std::string& pth, FB::JSObjectPtr out);
-	unsigned long long BPrivyAPI::readLock(const std::string& pth, FB::JSObjectPtr out);
+	unsigned long long appendLock(const std::wstring& pth, FB::JSObjectPtr out);
+	unsigned long long readLock(const std::wstring& pth, FB::JSObjectPtr out);
 #endif // DEBUG
 private:
+	bool _ls(bfs::path& path, bp::JSObject* out);
+	bool _appendFile(bfs::path&, const std::string& data, bp::JSObject* out);
+	bool _readFile(bfs::path& path, bp::JSObject* out, const boost::optional<unsigned long long>& pos);
+	bool _createDir(bfs::path& path, bp::JSObject*);
+	bool _rm(bfs::path& path, bp::JSObject* out);
+	bool _rename(bfs::path& old_p, bfs::path& new_p, bp::JSObject* out, const boost::optional<bool> clobber);
+	bool _copy(bfs::path& old_p, bfs::path& new_p, bp::JSObject* out, const boost::optional<bool> clobber);
+	bool _chooseFile(bp::JSObject* p);
 	// Platform specific rename operation.
 	bool renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
 	bool copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
 	bool removeFile(bfs::path&);
-	unsigned BPrivyAPI::lsDrives(FB::VariantMap&);
+	unsigned BPrivyAPI::lsDrives(bp::VariantMap&);
+	unsigned long long _appendLock(bfs::path& path, bp::JSObject* out);
+	unsigned long long _readLock(bfs::path& path, bp::JSObject* out);
 
 private:
 	void BPrivyAPI::AAAInit(FB::JSObjectPtr io);

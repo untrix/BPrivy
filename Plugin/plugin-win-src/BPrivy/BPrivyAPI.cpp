@@ -123,20 +123,20 @@ unsigned int BPrivyAPI::getpid() const
 #endif
 }
 
-bool direntToVariant(const bfs::path& path, FB::VariantMap& v, FB::VariantMap& v_e,
+bool direntToVariant(const bfs::path& path, bp::VariantMap& v, bp::VariantMap& v_e,
 					 ENT_TYPE type)
 {
 	bool rval = false;
 	try 
 	{
 		if (type == ENT_FILE) {
-			v.insert(VT(PROP_FILESIZE, file_size(path)));
+			v.insert(PROP_FILESIZE, file_size(path));
 		}
 		if (path.has_extension()) {
-			v.insert(VT(PROP_FILEEXT, i18n::GetUString(path.extension())));
+			v.insert(PROP_FILEEXT, path.extension());
 			//v.insert(VT(PROP_FILEEXT, path.extension().wstring()));
 			if (path.has_stem()) {
-				v.insert(VT(PROP_FILESTEM, i18n::GetUString(path.stem())));
+				v.insert(PROP_FILESTEM, path.stem());
 			}
 		}
 
@@ -152,27 +152,6 @@ bool direntToVariant(const bfs::path& path, FB::VariantMap& v, FB::VariantMap& v
 	}
 
 	return rval;
-}
-
-inline bool fileToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
-{
-	return direntToVariant(path, m, me, ENT_FILE);
-}
-
-inline bool dirToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
-{
-	return direntToVariant(path, m, me, ENT_DIR);
-}
-
-inline bool otherToVariant(const bfs::path& path, FB::VariantMap& m, FB::VariantMap& me)
-{
-	return direntToVariant(path, m, me, ENT_OTHER);
-}
-
-FB::VariantMap& errorToVariant(const bfs::filesystem_error& e, FB::VariantMap& m)
-{
-	MakeErrorEntry(e, m);
-	return m;
 }
 
 bfs::file_status& ResolveSymlinks(bfs::path& p, bfs::file_status& s)
@@ -293,28 +272,27 @@ void BPrivyAPI::CONSOLE_LOG(const std::string& s){}
 void BPrivyAPI::CONSOLE_LOG(const std::wstring& s) {}
 #endif
 
-bool BPrivyAPI::ls(const uwstring& dirPath, FB::JSObjectPtr p)
+bool BPrivyAPI::_ls(bfs::path& path, bp::JSObject* p)
 {
 	try 
 	{
-		bfs::path path(dirPath);
+		//bfs::path path(dirPath);
 		bfs::file_status stat;
-		if (!dirPath.empty()) {
+		if (!path.empty()) {
 			stat = bfs::status(path);
-			path.make_preferred();
-			p->SetProperty(PROP_PATH, path.string());
+			p->SetProperty(PROP_PATH, path);
 		}
 
-		FB::VariantMap m, mf, md, mo, me;
+		bp::VariantMap m, mf, md, mo, me;
 
 		//unsigned int i_f=0, i_d=0, i_o=0, i_e=0;
 		bool rVal = false;
 
-		if (dirPath.empty())
+		if (path.empty())
 		{
 			if (lsDrives(md)>0)
 			{
-				m.insert(VT(PROP_DIRS, md));
+				m.insert(PROP_DIRS, md);
 				p->SetProperty(PROP_LSDIR, m);
 			}
 			rVal = true;
@@ -325,7 +303,7 @@ bool BPrivyAPI::ls(const uwstring& dirPath, FB::JSObjectPtr p)
 		}
 		else if (bfs::is_regular_file(ResolveSymlinks(path, stat)))
 		{
-			FB::VariantMap v, v_e;
+			bp::VariantMap v, v_e;
 			direntToVariant(path, v, v_e, ENT_FILE);
 			if (!v.empty()) {
 				p->SetProperty(PROP_LSFILE, v);
@@ -337,7 +315,7 @@ bool BPrivyAPI::ls(const uwstring& dirPath, FB::JSObjectPtr p)
 		}
 		else if (bfs::is_directory(stat))
 		{
-			CONSOLE_LOG(i18n::GetUString(path) + " is a directory");
+			CONSOLE_LOG(path.wstring() + L" is a directory");
 			const bfs::directory_iterator it_end;
 			bool hide = false; // By default we list hidden files
 			if (p->HasProperty(PROP_HIDE)) try
@@ -352,50 +330,48 @@ bool BPrivyAPI::ls(const uwstring& dirPath, FB::JSObjectPtr p)
 			{
 				// convert filenanme to utf8.
 				// TODO: I18N
-				bp::ustring ufname(i18n::GetUString(it->path().filename()));
-				bfs::path pth = it->path();
-				FB::VariantMap m, e;
+				bfs::path fname = it->path().filename();
+				bfs::path pth = it->path();//TODO: Unnecessary copy
+				bp::VariantMap m, e;
 
 				if (hide && (it->status().hidden() == bfs::yes)) {
 					continue;
 				}
 				else if (bfs::is_directory(it->status())) {
-					if (dirToVariant(pth, m, e)) {
-						md.insert(VT(ufname, m));
+					if (direntToVariant(pth, m, e, ENT_DIR)) {
+						md.insert(fname, m);
 					}
 				}
 				else if (bfs::is_regular_file(it->status())) {
-					if (fileToVariant(pth, m, e)) {
-						mf.insert(VT(ufname, m));
+					if (direntToVariant(pth, m, e, ENT_FILE)) {
+						mf.insert(fname, m);
 					}
 				}
 				else {
-					if (otherToVariant(pth, m, e)) {
-						mo.insert(VT(ufname, m));
+					if (direntToVariant(pth, m, e, ENT_OTHER)) {
+						mo.insert(fname, m);
 					}
 				}
 
 				if (!e.empty()) {
-					me.insert(VT(ufname, e));
+					me.insert(fname, e);
 				}
 			}
 			rVal = true;
 
 			if (!mf.empty()) {
-				m.insert(VT(PROP_FILES, mf));
+				m.insert(PROP_FILES, mf);
 			}
 			if (!md.empty()) {
-				m.insert(VT(PROP_DIRS, md));
+				m.insert(PROP_DIRS, md);
 			}
 			if (!mo.empty()) {
-				m.insert(VT(PROP_OTHERS, mo));
+				m.insert(PROP_OTHERS, mo);
 			}
 			if (!me.empty()) {
-				m.insert(VT(PROP_ERRORS, me));
+				m.insert(PROP_ERRORS, me);
 			}
 			p->SetProperty(PROP_LSDIR, m);
-			// TESTING
-			FB::VariantMap mtest;
 		}
 		else if (stat.type() == bfs::reparse_file)
 		{
@@ -412,7 +388,7 @@ bool BPrivyAPI::ls(const uwstring& dirPath, FB::JSObjectPtr p)
 	return false;
 }
 
-bool BPrivyAPI::createDir(const bp::uwstring& s_path, FB::JSObjectPtr p)
+bool BPrivyAPI::_createDir(bfs::path& path, bp::JSObject* p)
 {
 	static const std::string allowedExt[] = {".3ad", ""};
 
@@ -420,7 +396,6 @@ bool BPrivyAPI::createDir(const bp::uwstring& s_path, FB::JSObjectPtr p)
 	{
 		CONSOLE_LOG("In createDir");
 
-		bfs::path path(s_path);
 		securityCheck(path, allowedExt);
 
 		if (!bfs::create_directory(path)) {ThrowLastSystemError(path);}
@@ -433,7 +408,7 @@ bool BPrivyAPI::createDir(const bp::uwstring& s_path, FB::JSObjectPtr p)
 	return false;
 }
 
-bool BPrivyAPI::rm(const bp::uwstring& s_path, FB::JSObjectPtr p)
+bool BPrivyAPI::_rm(bfs::path& path, bp::JSObject* p)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
 
@@ -441,7 +416,6 @@ bool BPrivyAPI::rm(const bp::uwstring& s_path, FB::JSObjectPtr p)
 	{
 		CONSOLE_LOG("In rmDir");
 
-		bfs::path path(s_path);
 		securityCheck(path, allowedExt);
 
 		bfs::file_status stat = bfs::symlink_status(path);
@@ -477,7 +451,7 @@ bool BPrivyAPI::rm(const bp::uwstring& s_path, FB::JSObjectPtr p)
 }
 
 bool
-BPrivyAPI::rename(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObjectPtr p, const boost::optional<bool> o_clob)
+BPrivyAPI::_rename(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const boost::optional<bool> o_clob)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3at", ""};
 
@@ -485,8 +459,6 @@ BPrivyAPI::rename(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSOb
 	{
 		CONSOLE_LOG("In rename");
 
-		bfs::path n_path(new_p);
-		bfs::path o_path(old_p);
 		securityCheck(n_path, o_path, allowedExt);
 
 		bfs::file_status n_stat = bfs::symlink_status(n_path);
@@ -531,7 +503,7 @@ BPrivyAPI::rename(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSOb
 }
 
 bool
-BPrivyAPI::copy(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObjectPtr p, const boost::optional<bool> o_clob)
+BPrivyAPI::_copy(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const boost::optional<bool> o_clob)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3at", ""};
 
@@ -539,9 +511,7 @@ BPrivyAPI::copy(const bp::uwstring& old_p, const bp::uwstring& new_p, FB::JSObje
 	{
 		CONSOLE_LOG("In copy");
 
-		bfs::path n_path(new_p);
-		bfs::path o_path(old_p);
-		securityCheck(old_p, new_p, allowedExt);
+		securityCheck(o_path, n_path, allowedExt);
 
 		bfs::file_status n_stat = bfs::symlink_status(n_path);
 		bfs::file_status o_stat = bfs::symlink_status(o_path);
