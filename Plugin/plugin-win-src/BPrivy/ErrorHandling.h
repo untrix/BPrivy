@@ -201,11 +201,11 @@ namespace bp
 		BPError(const wstring& ac, const wstring& gc) : acode(ac), gcode(gc) {}
 		BPError(const wstring& ac, const wstring& gc, const wstring& gmsg)
 			: acode(ac), gcode(gc), gmsg(gmsg) {}
-		BPError(const wstring& ac, const wstring& gc, const bfs::path& pth)
-			: acode(ac), gcode(gc), path(pth.string()) {}
+		BPError(const wstring& ac, const wstring& gc, const bp::constPathPtr pth)
+			: acode(ac), gcode(gc), path(pth->wstring()) {}
 		wstring acode;
 		wstring gcode;
-		string path;
+		bfs::path path;
 		wstring gmsg;
 	};
 

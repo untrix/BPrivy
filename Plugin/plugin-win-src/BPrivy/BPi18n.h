@@ -50,16 +50,45 @@ namespace bp
 									// Also, in general unicode is the only wide-character
 									// in the world. Therefore it is safer to keep all
 									// unicode data in wide-char instead of in utf-8.
+	//class ustring : public std::wstring
+	//{
+	//public:
+	//	ustring (const std::wstring& ws) : std::wstring(ws) {}
+	//	ustring (const wchar_t* c_ws) : std::wstring(c_ws) {}
+	//	inline std::string utf8() {return FB::wstring_to_utf8(*this);}
+	//private:
+	//	ustring (const std::string&);//disabled
+	//	ustring (const char*);//disabled
+	//	ustring& operator= (const std::string&); //disabled
+	//	ustring& operator= (const char*); //disabled
+	//};
 	typedef std::string	ustring;
-	typedef std::wstring uwstring;
 	class VariantMap;
+
+	// Wrapper class used to prevent implicit conversion of non-path strings
+	// to paths and eventually getting inserted into bp::VariantMap and bp::JSObject,
+	// when actually the string wasn't a path.
+	class constPathPtr
+	{
+	public:
+		constPathPtr(const bfs::path& p) : pathP(&p) {}
+		const bfs::path* operator-> () const {return pathP;}
+
+	private:
+		const bfs::path* pathP;
+		constPathPtr(); // disabled
+		constPathPtr(const char*);//disabled
+		constPathPtr(const std::string&);//disabled
+		constPathPtr& operator= (const char*);//disabled
+		constPathPtr& operator= (const std::string&); // disabled 
+	};
 
 	class i18n
 	{
 		friend class bp::VariantMap;
 
 	private:
-		inline static ustring GetUString(const bfs::path& path)
+		inline static ustring GetUString(const bp::constPathPtr path)
 		{
 			// In Windows wstring is guaranteed to be UNICODE. Boost::Filesystem will perform the MultiByteToWidechar
 			// conversion on Windows, this will utilize the codepage in vogue but will ensure that the resulting wide-string
@@ -76,7 +105,7 @@ namespace bp
 			// must use the imbued locale. On the other hand if the conversion must beget a bp::ustring (utf8) then the conversion
 			// must be from UNICODE (wchar_t) to UNICODE (char_t = UTF-8).
 			// Hence it is "safe" to assume that whatever comes out as path.wstring() must be UNICODE.
-			return FB::wstring_to_utf8(path.wstring());
+			return FB::wstring_to_utf8(path->wstring());
 			//return path.wstring();
 		}
 
@@ -87,7 +116,6 @@ namespace bp
 
 		inline static ustring i18n::GetUString(const std::exception& e)
 		{
-			// i18n: Assuming that this will be in utf-8.
 			// e.what returns const char*
 			return LocaleToUtf8(e.what());
 		}
@@ -114,7 +142,7 @@ namespace bp
 		inline void		insert				(const ustring& name, bp::VariantMap& value) {
 			m_map.insert(VT(name, value.m_map));
 		}
-		inline void		insert				(const bfs::path& path, bp::VariantMap& value) {
+		inline void		insert				(const bp::constPathPtr& path, bp::VariantMap& value) {
 			m_map.insert(VT(i18n::GetUString(path), value.m_map));
 		}
 		inline void		insert				(const ustring& name, const wchar_t* value) {
@@ -129,8 +157,8 @@ namespace bp
 		inline void		insert				(const ustring& name, const std::exception& e) {
 			m_map.insert(VT(name, i18n::GetUString(e)));
 		}
-		inline void		insert				(const ustring& name, const bfs::path& path) {
-			m_map.insert(VT(name, path.wstring()));
+		inline void		insert				(const ustring& name, const bp::constPathPtr& path) {
+			m_map.insert(VT(name, path->wstring()));
 		}
 		inline void		insert				(const ustring& name, uintmax_t n)	{
 			m_map.insert(VT(name, n));
@@ -140,6 +168,10 @@ namespace bp
 
 	private:
 		FB::VariantMap	m_map;
+		VariantMap	(const std::string&); //disabled
+		VariantMap	(const char*); // disabled
+		VariantMap&	operator= (const std::string&);//disabled
+		VariantMap& operator= (const char*); // disabled
 	};
 
 	// Wrapper around JSObjectPtr to help localize all i18n code to one place.
@@ -155,8 +187,8 @@ namespace bp
 		inline void		SetProperty			(const ustring& name, const wchar_t* value)	{
 			m_p->SetProperty(name, value);
 		}
-		inline void	SetProperty			(const ustring& name, const bfs::path& path) {
-			m_p->SetProperty(name, path.wstring());
+		inline void	SetProperty			(const ustring& name, const bp::constPathPtr& path) {
+			m_p->SetProperty(name, path->wstring());
 		}
 		inline void SetProperty				(const ustring& name, MemGuard<char>& buf) {
 			m_p->SetProperty(name, static_cast<char*>(buf));
@@ -172,6 +204,8 @@ namespace bp
 		}
 
 	private:
+		void		SetProperty	(const ustring& name, const std::string& val);//disabled
+		void		SetProperty	(const uwstring& name, const std::string& val);//disabled
 		FB::JSObjectPtr	m_p;
 	};
 }// end namespace bp
