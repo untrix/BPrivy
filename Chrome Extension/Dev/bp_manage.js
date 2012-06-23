@@ -63,12 +63,38 @@ var BP_MOD_MANAGE = (function ()
         
         addEventListeners('#csvImport', 'click', function (e)
         {
-            var o={filter:['*.csv'], dtitle: "BPrivy: Import CSV File"};
+            var o={filter:['CSV','*.csv'],
+                   dtitle: "BPrivy: Import CSV File",
+                   dbutton: "Import"};
             if (BP_PLUGIN.chooseFile(o)) {
                 console.log("ChooseFile returned:" + o.path);
             }
             else {
                 console.log("ChooseFile Failed");
+            }
+        });
+        
+        addEventListeners('#dbChooseLoad', 'click', function (e)
+        {
+            var o={dtitle:"BPrivy: Select Store Folder",
+                   dbutton: "Open Password Store"};
+            if (BP_PLUGIN.chooseFolder(o)) {
+                console.log("ChooseFolder returned:" + o.path);
+            }
+            else {
+                console.log("ChooseFolder Failed");
+            }
+        });
+        
+        addEventListeners('#dbChooseCreate', 'click', function (e)
+        {
+            var o={dtitle:"BPrivy: Select Folder to Store Passwords In",
+                   dbutton: "Create Password Store"};
+            if (BP_PLUGIN.chooseFolder(o)) {
+                console.log("ChooseFolder returned:" + o.path);
+            }
+            else {
+                console.log("ChooseFolder Failed");
             }
         });
         

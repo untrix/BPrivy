@@ -42,6 +42,7 @@ namespace bp
 	extern const bp::ustring PROP_HIDE;
 	extern const bp::ustring PROP_FILE_FILTER;
 	extern const bp::ustring PROP_DIALOG_TITLE;
+	extern const bp::ustring PROP_DIALOG_BUTTON;
 
 	/***** Actionable Codes. GENERIC & System Error Codes are mapped to one of these *****/
  	// User Actionable. User should resolve the situation

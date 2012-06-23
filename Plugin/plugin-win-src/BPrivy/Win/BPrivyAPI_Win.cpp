@@ -16,6 +16,9 @@
 #include <malloc.h>
 #include <system_error>
 #include "utf8_tools.h"
+#include <Shlobj.h>
+#include <Shobjidl.h>
+#include <Objbase.h>
 
 using namespace bp;
 using namespace std;
@@ -606,8 +609,31 @@ unsigned BPrivyAPI::lsDrives(bp::VariantMap& m)
 	return n;
 }
 
+bool GetDialogTitle(bp::JSObject* p, wstring& prop)
+{
+	if (p->HasProperty(PROP_DIALOG_TITLE))
+	try {
+		FB::variant t_var = p->GetProperty(PROP_DIALOG_TITLE);
+		prop = t_var.convert_cast<std::wstring>();
+		return true;	
+	} catch (...) {}
+
+	return false;
+}
+
+bool GetDialogButtonTitle(bp::JSObject* p, wstring& prop)
+{
+	if (p->HasProperty(PROP_DIALOG_BUTTON))
+	try {
+		FB::variant t_var = p->GetProperty(PROP_DIALOG_BUTTON);
+		prop = t_var.convert_cast<std::wstring>();
+		return true;	
+	} catch (...) {}
+
+	return false;
+}
 /** @requires Comdlg32.dll/lib */
-bool BPrivyAPI::_chooseFile(bp::JSObject* p)
+bool BPrivyAPI::_chooseFileXP(bp::JSObject* p)
 {
 	OPENFILENAMEW ofn;       // common dialog box structure
 	WCHAR szFile[2048];       // buffer for file name
@@ -636,13 +662,11 @@ bool BPrivyAPI::_chooseFile(bp::JSObject* p)
 		if (p->HasProperty(PROP_FILE_FILTER))
 		{
 			FB::variant t_var = p->GetProperty(PROP_FILE_FILTER);
-			std::vector<string> extn = t_var.convert_cast<std::vector<string> >();
+			std::vector<wstring> extn = t_var.convert_cast<std::vector<wstring> >();
 			if (extn.size() > 0)
 			{
-				for (std::vector<string>::iterator it = extn.begin(); it != extn.end(); it++) {
-					wstring ws = FB::utf8_to_wstring(*it);
-					filter.append(ws.c_str()); filter.append(1, 0);
-					filter.append(ws.c_str()); filter.append(1, 0);
+				for (std::vector<wstring>::iterator it = extn.begin(); it != extn.end(); it++) {
+					filter.append(it->c_str()); filter.append(1, 0);
 				}
 				filter.append(1, 0);
 				ofn.lpstrFilter = filter.data();
@@ -664,10 +688,144 @@ bool BPrivyAPI::_chooseFile(bp::JSObject* p)
 	BOOL rval = GetOpenFileName(&ofn);
 	//CONSOLE_LOG("GetOpenFileName returned");
 	if (rval==TRUE) {
-		p->SetProperty(PROP_PATH, szFile);
+		SetChosenPath(p, szFile, ENT_FILE);
+		//p->SetProperty(PROP_PATH, szFile);
 		return true;
 	}
 	else return false;
+}
+
+// Requires Ole32.lib and Shell32.lib
+bool BPrivyAPI::_chooseFolderXP(bp::JSObject* p)
+{
+	//typedef struct _browseinfo {
+	//  HWND              hwndOwner;
+	//  PCIDLIST_ABSOLUTE pidlRoot;
+	//  LPTSTR            pszDisplayName;
+	//  LPCTSTR           lpszTitle;
+	//  UINT              ulFlags;
+	//  BFFCALLBACK       lpfn;
+	//  LPARAM            lParam;
+	//  int               iImage;
+	//} BROWSEINFO, *PBROWSEINFO, *LPBROWSEINFO;
+
+	std::wstring title;
+	BROWSEINFOW bi;
+	wchar_t name[MAX_PATH];
+	ZeroMemory(&bi, sizeof(bi));
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = name;
+	if (p->HasProperty(PROP_DIALOG_TITLE))
+	try {
+		FB::variant t_var = p->GetProperty(PROP_DIALOG_TITLE);
+		title = t_var.convert_cast<std::wstring>();
+		bi.lpszTitle = title.c_str();
+	} catch (...) {}
+	bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE  | BIF_EDITBOX | BIF_USENEWUI | BIF_SHAREABLE ;
+	PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi);
+	if (pidl)
+	{
+		name[MAX_PATH-1] = 0;
+		p->SetProperty(PROP_FILENAME, name);
+		wchar_t path[2048]; path[0] = 0; // returned name is in unicode.
+		if (SHGetPathFromIDListEx(pidl, path, 2048, GPFIDL_DEFAULT )) {
+			SetChosenPath(p, path, ENT_DIR);
+			//p->SetProperty(PROP_PATH, path);
+		}
+
+		return true;
+	}
+	else { return false; }
+}
+
+bool BPrivyAPI::_choose(bp::JSObject* p, bool chooseFile)
+{
+	bool rval = false;
+	// CoCreate the File Open Dialog object.
+	IFileDialog *pfd = NULL;
+	HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, 
+		NULL, 
+		CLSCTX_INPROC_SERVER, 
+		IID_PPV_ARGS(&pfd));
+	if (!SUCCEEDED(hr))
+	{
+		if (chooseFile) {return _chooseFileXP(p);}
+		else {return _chooseFolderXP(p);}
+	}
+	else
+	{
+		FILEOPENDIALOGOPTIONS dwFlags;
+
+		// Before setting, always get the options first in order 
+		// not to override existing options.
+		hr = pfd->GetOptions(&dwFlags);
+		if (SUCCEEDED(hr))
+		{
+			// In this case, get shell items only for file system items.
+			dwFlags |= (FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST | FOS_FILEMUSTEXIST | FOS_DONTADDTORECENT |
+						FOS_PICKFOLDERS | FOS_STRICTFILETYPES);
+			if (chooseFile) {dwFlags &= (~FOS_PICKFOLDERS );}
+
+			hr = pfd->SetOptions(dwFlags);
+
+			if (SUCCEEDED(hr))
+			{
+				pfd->ClearClientData();
+				std::wstring prop;
+				if (p->HasProperty(PROP_FILE_FILTER))
+				try {
+					FB::variant t_var = p->GetProperty(PROP_FILE_FILTER);
+					std::vector<wstring> extn = t_var.convert_cast<std::vector<wstring> >();
+					if (extn.size() > 0)
+					{
+						COMDLG_FILTERSPEC rgSpec[MAX_EXT_LIST];
+						int i; std::vector<wstring>::iterator it;
+						for ( i=0, it= extn.begin(); (it != extn.end()) && (i<20); i++,it++) 
+						{
+							rgSpec[i].pszName = it->c_str();
+							// Advance to next item in the list
+							++it;
+							rgSpec[i].pszSpec = it->c_str();
+						}
+						pfd->SetFileTypes(i, rgSpec);
+					}
+				} catch (...) {}
+
+				if (GetDialogTitle(p, prop)) {
+					pfd->SetTitle(prop.c_str());
+				}
+				if (GetDialogButtonTitle(p, prop)) {
+					pfd->SetOkButtonLabel(prop.c_str());
+				}
+
+				// Show the dialog
+				hr = pfd->Show(NULL);
+				if (SUCCEEDED(hr))
+				{
+					// Obtain the result once the user clicks 
+					// the 'Open' button.
+					// The result is an IShellItem object.
+					IShellItem *psiResult;
+					hr = pfd->GetResult(&psiResult);
+					if (SUCCEEDED(hr))
+					{
+						PWSTR pszFilePath = NULL;
+						hr = psiResult->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+						if (SUCCEEDED(hr))
+						{
+							SetChosenPath(p, pszFilePath, chooseFile? ENT_FILE : ENT_DIR);
+							CoTaskMemFree(pszFilePath);
+						}
+						psiResult->Release();
+					}
+				}
+			}
+		}
+		pfd->Release();
+		rval = true;
+	}
+
+	return rval;
 }
 
 #ifdef DEBUG

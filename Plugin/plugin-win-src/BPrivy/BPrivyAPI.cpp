@@ -66,7 +66,10 @@ BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host) :
 	registerMethod("rename", make_method(this, &BPrivyAPI::rename));
 	registerMethod("copy", make_method(this, &BPrivyAPI::copy));
 	registerMethod("chooseFile", make_method(this, &BPrivyAPI::chooseFile));
+	registerMethod("chooseFolder", make_method(this, &BPrivyAPI::chooseFolder));
 #ifdef DEBUG
+	registerMethod("chooseFileXP", make_method(this, &BPrivyAPI::chooseFileXP));
+	registerMethod("chooseFolderXP", make_method(this, &BPrivyAPI::chooseFolderXP));
 	registerMethod("appendLock", make_method(this, &BPrivyAPI::appendLock));
 	registerMethod("readLock", make_method(this, &BPrivyAPI::readLock));
 #endif
@@ -121,37 +124,6 @@ unsigned int BPrivyAPI::getpid() const
 #else
 	return getpid();
 #endif
-}
-
-bool direntToVariant(const bfs::path& path, bp::VariantMap& v, bp::VariantMap& v_e,
-					 ENT_TYPE type)
-{
-	bool rval = false;
-	try 
-	{
-		if (type == ENT_FILE) {
-			v.insert(PROP_FILESIZE, file_size(path));
-		}
-		if (path.has_extension()) {
-			v.insert(PROP_FILEEXT, path.extension());
-			//v.insert(VT(PROP_FILEEXT, path.extension().wstring()));
-			if (path.has_stem()) {
-				v.insert(PROP_FILESTEM, path.stem());
-			}
-		}
-
-		rval = true;
-	}
-	catch (const bfs::filesystem_error& e) {
-		v.clear(); // clear incompelte data
-		MakeErrorEntry(e, v_e);
-	}
-	catch (...)	{
-		v.clear(); // clear incompelte data
-		HandleUnknownException(v_e);
-	}
-
-	return rval;
 }
 
 bfs::file_status& ResolveSymlinks(bfs::path& p, bfs::file_status& s)

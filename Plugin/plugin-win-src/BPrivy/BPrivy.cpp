@@ -12,6 +12,10 @@
 #include "BPrivy.h"
 #include <DOM/Window.h>
 #include "Utils.h"
+#ifdef WIN32
+#include <ObjBase.h>
+#include <Ole2.h>
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn BPrivy::StaticInitialize()
@@ -24,10 +28,20 @@ void BPrivy::StaticInitialize()
 {
     // Place one-time initialization stuff here; As of FireBreath 1.4 this should only
     // be called once per process
+#ifdef WIN32
+	// Initialize COM. COINIT_MULTITHREADED implies that it is our responsibility to
+	// synchronize calls to a given COM object. This is not a problem for us since the
+	// incoming calls to the plugin are all handled by one thread anyway, even if multiple
+	// plugin instances may be initialized per plugin-process (i.e. per browser). Per FB
+	// documentation, there is one plugin-process per browser and it hosts all plugin-instances
+	// embedded in that browser (e.g. in various windows, tabs and frames of Google-chrome).
+	//HRESULT r = CoInitializeEx(NULL, COINIT_MULTITHREADED); // Requires Ole32.lib
+	HRESULT r = OleInitialize(NULL);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// @fn BPrivy::StaticInitialize()
+/// @fn BPrivy::StaticDeinitialize()
 ///
 /// @brief  Called from PluginFactory::globalPluginDeinitialize()
 ///
@@ -37,6 +51,10 @@ void BPrivy::StaticDeinitialize()
 {
     // Place one-time deinitialization stuff here. As of FireBreath 1.4 this should
     // always be called just before the plugin library is unloaded
+#ifdef WIN32
+	//CoUninitialize(); // Uninitialize COM. Requires Ole32.lib
+	OleUninitialize();
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////

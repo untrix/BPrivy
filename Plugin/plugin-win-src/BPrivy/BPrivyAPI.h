@@ -5,6 +5,7 @@
 #include "BrowserHost.h"
 #include "BPrivy.h"
 #include "BPi18n.h"
+
 #include <boost/filesystem.hpp>
 
 
@@ -75,11 +76,8 @@ public:
 	// Copies files only.
 	bool copy(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
 	bool chooseFile(FB::JSObjectPtr p);
-#ifdef DEBUG
-	// Locks the file for write and returns without unlocking or closing it. This is to be used for lock testing only.
-	unsigned long long appendLock(const std::wstring& pth, FB::JSObjectPtr out);
-	unsigned long long readLock(const std::wstring& pth, FB::JSObjectPtr out);
-#endif // DEBUG
+	bool chooseFolder(FB::JSObjectPtr p);
+
 private:
 	bool _ls(bfs::path& path, bp::JSObject* out);
 	bool _appendFile(bfs::path&, const std::string& data, bp::JSObject* out);
@@ -88,14 +86,26 @@ private:
 	bool _rm(bfs::path& path, bp::JSObject* out);
 	bool _rename(bfs::path& old_p, bfs::path& new_p, bp::JSObject* out, const boost::optional<bool> clobber);
 	bool _copy(bfs::path& old_p, bfs::path& new_p, bp::JSObject* out, const boost::optional<bool> clobber);
-	bool _chooseFile(bp::JSObject* p);
+	bool _chooseFileXP(bp::JSObject* p);
+	bool _chooseFolderXP(bp::JSObject* p);
+	bool _choose(bp::JSObject* p, bool chooseFile = false);
 	// Platform specific rename operation.
 	bool renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
 	bool copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
 	bool removeFile(bfs::path&);
 	unsigned BPrivyAPI::lsDrives(bp::VariantMap&);
+
+#ifdef DEBUG
+public:
+	bool chooseFileXP(FB::JSObjectPtr p);
+	bool chooseFolderXP(FB::JSObjectPtr p);
+	// Locks the file for write and returns without unlocking or closing it. This is to be used for lock testing only.
+	unsigned long long appendLock(const std::wstring& pth, FB::JSObjectPtr out);
+	unsigned long long readLock(const std::wstring& pth, FB::JSObjectPtr out);
+private:
 	unsigned long long _appendLock(bfs::path& path, bp::JSObject* out);
 	unsigned long long _readLock(bfs::path& path, bp::JSObject* out);
+#endif
 
 private:
 	void BPrivyAPI::AAAInit(FB::JSObjectPtr io);
@@ -112,5 +122,9 @@ private:
 
     std::string m_testString;
 };
-
+namespace bp
+{
+	// Max number of file extensions that can be supplied to choose* methods
+	const size_t MAX_EXT_LIST = 20;
+}
 #endif // H_BPrivyAPI

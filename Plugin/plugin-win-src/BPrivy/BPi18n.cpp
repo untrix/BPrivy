@@ -10,8 +10,9 @@
 
 namespace bp 
 {
-#ifdef WIN32
-	void i18n()
+#if 0 
+	// Not being used at this time.
+	void i18n() 
 	{
 		// Assume that the locale is set correctly automatically.
 		// Make the multibyte codepage same as the locale codepage so that
@@ -19,7 +20,6 @@ namespace bp
 		// will perform the same conversions.
 		_setmbcp(_MB_CP_LOCALE);
 	}
-#else
 #endif
 
 	utf8 i18n::LocaleToUtf8(const char* s)
@@ -66,50 +66,11 @@ namespace bp
 			return conv_err;
 		}
 	}
-
-//	const ACodes Acode;
-//	template <>
-//	Codes<ACODE, ACODE_NUM, ACODE_UNMAPPED>::Codes()
-//	{
-//		_utf8[ACODE_UNMAPPED]			= "Unmapped";
-//		_ucs[ACODE_UNMAPPED]			= L"Unmapped";
-//		_utf8[ACODE_CANT_PROCEED]		= "CantProceed";
-//		_ucs[ACODE_CANT_PROCEED]			= L"CantProceed";
-//		_utf8[ACODE_AUTORETRY]			= "AutoRetry";
-//		_ucs[ACODE_AUTORETRY]			= L"AutoRetry";
-//		_utf8[ACODE_RESOURCE_UNAVAILABLE]= "ResourceUnavailable";
-//		_ucs[ACODE_RESOURCE_UNAVAILABLE]	= L"ResourceUnavailable";
-//		_utf8[ACODE_INVALID_PATHNAME]	= "InvalidPathname";
-//		_ucs[ACODE_INVALID_PATHNAME]		= L"InvalidPathname";
-//		_utf8[ACODE_BAD_PATH_ARGUMENT]	= "BadPathArgument";
-//		_ucs[ACODE_BAD_PATH_ARGUMENT]	= L"BadPathArgument";
-//		_utf8[ACODE_RESOURCE_LOCKED]		= "ResourceLocked";
-//		_ucs[ACODE_RESOURCE_LOCKED]		= L"ResourceLocked";
-//		_utf8[ACODE_ACCESS_DENIED]		= "AccessDenied";
-//		_ucs[ACODE_ACCESS_DENIED]		= L"AccessDenied";
-//	}
-//
-//#define MAP_CODE(P, C, V) _ucs[ P ## _ ## C ] =  L#V
-//#define MAP_BPCODE(C,V) MAP_CODE(BPCODE, C, V)
-//
-//	const BPCodes BPcode;
-//	template <>
-//	Codes<BPCODE, BPCODE_NUM, BPCODE_UNMAPPED>::Codes()
-//	{
-//		MAP_BPCODE(UNAUTHORIZED_CLIENT, L"UnauthorizedClient");
-//		MAP_BPCODE(WRONG_PASS, L"WrongPass");
-//		MAP_BPCODE(NEW_FILE_CREATED, L"NewFileCreated");
-//		MAP_BPCODE(NO_MEM, L"NoMem");
-//		MAP_BPCODE(ASSERT_FAILED, L"AssertFailed");
-//		MAP_BPCODE(PATH_EXISTS, L"PathAlreadyExists");
-//		MAP_BPCODE(BAD_FILETYPE, L"BadFileType");
-//		MAP_BPCODE(REPARSE_POINT, L"PathIsReparsePoint");
-//		MAP_BPCODE(IS_SYMLINK, L"PathIsSymlink");
-//		MAP_BPCODE(WOULD_CLOBBER, L"WouldClobber");
-//		MAP_BPCODE(PATH_NOT_EXIST, L"PathNotExist");
-//	}
-
 }// end namespace bp
+
+/*******************************************************************************************************/
+/************* API INGRES POINTS. ENSURE THAT WE'RE ONLY INJECTING UNICODE INTO THE SYSTEM *************/
+/*******************************************************************************************************/
 
 bool BPrivyAPI::ls(const bp::ucs& path_s, FB::JSObjectPtr out) 
 {
@@ -161,7 +122,25 @@ bool BPrivyAPI::copy(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr
 bool BPrivyAPI::chooseFile(FB::JSObjectPtr out)
 {
 	bp::JSObject o(out);
-	return _chooseFile(&o);
+	//return _chooseFileXP(&o);
+	return _choose(&o, true);
+}
+bool BPrivyAPI::chooseFolder(FB::JSObjectPtr out)
+{
+	bp::JSObject o(out);
+	//return _chooseFolderXP(&o);
+	return _choose(&o, false);
+}
+#ifdef DEBUG
+bool BPrivyAPI::chooseFileXP(FB::JSObjectPtr out)
+{
+	bp::JSObject o(out);
+	return _chooseFileXP(&o);
+}
+bool BPrivyAPI::chooseFolderXP(FB::JSObjectPtr out)
+{
+	bp::JSObject o(out);
+	return _chooseFolderXP(&o);
 }
 unsigned long long BPrivyAPI::appendLock(const std::wstring& path_s, FB::JSObjectPtr out)
 {
@@ -176,3 +155,46 @@ unsigned long long BPrivyAPI::readLock(const std::wstring& path_s, FB::JSObjectP
 	bp::JSObject o(out);
 	return _readLock(path, &o);
 }
+#endif // DEBUG
+/////////////////////////  DEAD CODE BELOW THIS POINT ////////////////////////////////////
+//	const ACodes Acode;
+//	template <>
+//	Codes<ACODE, ACODE_NUM, ACODE_UNMAPPED>::Codes()
+//	{
+//		_utf8[ACODE_UNMAPPED]			= "Unmapped";
+//		_ucs[ACODE_UNMAPPED]			= L"Unmapped";
+//		_utf8[ACODE_CANT_PROCEED]		= "CantProceed";
+//		_ucs[ACODE_CANT_PROCEED]			= L"CantProceed";
+//		_utf8[ACODE_AUTORETRY]			= "AutoRetry";
+//		_ucs[ACODE_AUTORETRY]			= L"AutoRetry";
+//		_utf8[ACODE_RESOURCE_UNAVAILABLE]= "ResourceUnavailable";
+//		_ucs[ACODE_RESOURCE_UNAVAILABLE]	= L"ResourceUnavailable";
+//		_utf8[ACODE_INVALID_PATHNAME]	= "InvalidPathname";
+//		_ucs[ACODE_INVALID_PATHNAME]		= L"InvalidPathname";
+//		_utf8[ACODE_BAD_PATH_ARGUMENT]	= "BadPathArgument";
+//		_ucs[ACODE_BAD_PATH_ARGUMENT]	= L"BadPathArgument";
+//		_utf8[ACODE_RESOURCE_LOCKED]		= "ResourceLocked";
+//		_ucs[ACODE_RESOURCE_LOCKED]		= L"ResourceLocked";
+//		_utf8[ACODE_ACCESS_DENIED]		= "AccessDenied";
+//		_ucs[ACODE_ACCESS_DENIED]		= L"AccessDenied";
+//	}
+//
+//#define MAP_CODE(P, C, V) _ucs[ P ## _ ## C ] =  L#V
+//#define MAP_BPCODE(C,V) MAP_CODE(BPCODE, C, V)
+//
+//	const BPCodes BPcode;
+//	template <>
+//	Codes<BPCODE, BPCODE_NUM, BPCODE_UNMAPPED>::Codes()
+//	{
+//		MAP_BPCODE(UNAUTHORIZED_CLIENT, L"UnauthorizedClient");
+//		MAP_BPCODE(WRONG_PASS, L"WrongPass");
+//		MAP_BPCODE(NEW_FILE_CREATED, L"NewFileCreated");
+//		MAP_BPCODE(NO_MEM, L"NoMem");
+//		MAP_BPCODE(ASSERT_FAILED, L"AssertFailed");
+//		MAP_BPCODE(PATH_EXISTS, L"PathAlreadyExists");
+//		MAP_BPCODE(BAD_FILETYPE, L"BadFileType");
+//		MAP_BPCODE(REPARSE_POINT, L"PathIsReparsePoint");
+//		MAP_BPCODE(IS_SYMLINK, L"PathIsSymlink");
+//		MAP_BPCODE(WOULD_CLOBBER, L"WouldClobber");
+//		MAP_BPCODE(PATH_NOT_EXIST, L"PathNotExist");
+//	}

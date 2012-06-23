@@ -11,23 +11,50 @@ namespace bp
 	// *** Value MUST be less than 4GiB since msize32_t is uint32_t
 	const msize32_t MAX_READ_BYTES = 1048576; // = 1MB
 
-	const std::string QUOTE						("\"");
-	const std::string COMMA						(",");
-	const std::string OPENB						("{");
-	const std::string CLOSEB					("}");
+	bool direntToVariant(const bfs::path& path, bp::VariantMap& v, bp::VariantMap& v_e,
+					 ENT_TYPE type)
+	{
+		bool rval = false;
+		try 
+		{
+			if (type == ENT_FILE) {
+				v.insert(PROP_FILESIZE, file_size(path));
+			}
+			if (path.has_extension()) {
+				v.insert(PROP_FILEEXT, path.extension());
+				if (path.has_stem()) {
+					v.insert(PROP_FILESTEM, path.stem());
+				}
+			}
 
-	//std::string& JsonFriendly(std::string&& s)
-	//{
-	//	for (string::iterator it=s.begin(); it != s.end(); it++)
-	//	{
-	//		if ((*it) == '"')
-	//		{ *it = '\'';}
-	//		else if ((*it) == '\\')
-	//		{ *it = '/'; }
-	//	}
+			rval = true;
+		}
+		catch (const bfs::filesystem_error& e) {
+			v.clear(); // clear incompelte data
+			MakeErrorEntry(e, v_e);
+		}
+		catch (...)	{
+			v.clear(); // clear incompelte data
+			HandleUnknownException(v_e);
+		}
 
-	//	return s;
-	//}
+		return rval;
+	}
+
+	void SetChosenPath(bp::JSObject* p, const wchar_t* path_s, ENT_TYPE entType)
+	{
+		bfs::path path(path_s);
+		p->SetProperty(PROP_PATH, path);
+		bp::VariantMap m, me;
+		direntToVariant(path, m, me, entType);
+		if (!m.empty()) {
+			p->SetProperty(PROP_LSFILE, m);
+		}
+		if (!me.empty()) {
+			p->SetProperty(PROP_ERROR, me);
+		}
+	}
+
 
 /*	std::string RandomPassword(unsigned len) 
 	{
@@ -50,4 +77,5 @@ namespace bp
 
 		return pass.str();
 	}*/
+
 } // end namespace bp

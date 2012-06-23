@@ -9,7 +9,7 @@
 #include "utf8_tools.h"
 #include <boost/filesystem.hpp>
 #include <boost/system/error_code.hpp>
-#include "Utils.h"
+#include "BPTypes.h"
 
 // NOTE: ALL INTERACTIONS WITH FIREBREATH/JSON MUST BE IN UNICODE WIDESTRING OR
 // UTF8. ONLY UNICODE-WSTRINGS MUST BE INPUT FROM FIREBREATH AND ONLY

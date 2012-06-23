@@ -26,6 +26,7 @@ namespace bp
 	const bp::ustring PROP_HIDE					(L"hide");
 	const bp::ustring PROP_FILE_FILTER			(L"filter");
 	const bp::ustring PROP_DIALOG_TITLE			(L"dtitle");
+	const bp::ustring PROP_DIALOG_BUTTON		(L"dbutton");
 
 	const bp::ustring PROP_INFO					(L"inf");
 	const bp::ustring PROP_LSDIR				(L"lsd");
