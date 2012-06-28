@@ -31,7 +31,7 @@ var BP_MOD_ERROR = (function()
            acode: "Actionable (BP) Code",
            gcode: "BP Code (More Specific than A-Code)",
            scode: "System Specific Code",
-           gmsg: "Generic/BP Message",
+           gmsg: "BP Message (G stands for Generic - obsolte)",
            smsg: "System Message",
            path: "Path 1",
            path2: "Path 2"
@@ -111,37 +111,78 @@ var BP_MOD_ERROR = (function()
     const std::string BPCODE_WOULD_CLOBBER      ("WouldClobber");
     const std::string BPCODE_PATH_NOT_EXIST     ("PathNotExist");
     */
-   // err is either o.err returned from the plugin or a message string. actn is an optional
-   // action string denoting the sub-activity when the error occurred. If not supplied,
-   // BPError.actn is used. BPError.atvt is always used to derive the activity.
-    function BPError(err)
-    {
-        if (err && (typeof err === "object"))
-        {
-            Object.defineProperties(this,
-            {   // name and message are standard in ECmascript Error prototype.
-                name: {value:"BPError"},
-                err: {value:err}
-            });
-        }
-        else if (err && (typeof err === "string"))
-        {
-            Object.defineProperties(this,
-            {
-                 name: {value:"BPError"},
-                 err: {value: {gmsg:err}}
-            });
-        }
-        
+
+   /*
+    * More codes
+    */
+    var ac = {}, bc={}, msg={};
+    ac.BadPathArgument = 'BadPathArgument';
+    bc.ExistingStore = 'ExistingStore';
+    msg[bc.ExistingStore] = "The selected folder seems to already be part of another Privy Wallet"; 
+
+   function Activity(arg)
+   {
         Object.defineProperties(this,
         {
-            message: {value: err.gmsg},
-            name: {value:"BPError"},
-            atvt: {value:BPError.atvt} // The current activity this thread is engaged in.
+            name: {writable: true, enumerable: true},
+            actions: {writable: true, enumerable: true}    
         });
+        
+        if (arg && (typeof arg === 'string')) {
+            this.name = arg;
+            this.actions = [];
+        }
+        else if (arg && typeof arg === 'object') {
+            this.name = arg.name;
+            this.actions = arg.actions;
+        }
+        
         Object.freeze(this);
+   }
+   Activity.prototype.push = function (actn) {
+       if (actn) {this.actions.push(actn);}
+   };
+   
+   // err is either o.err returned from the plugin or a message string. BPError.atvt is
+   // always used to derive the activity when created from a throw statement.
+    function BPError(_err)
+    {
+        Object.defineProperties(this,
+        {// name and message are standard in ECmascript Error prototype.
+            name: {value:"BPError", enumerable: true},
+            message: {writable:true, enumerable: true},
+            atvt: {writable:true, enumerable:true},
+            err: {value:{}, writable:true, enumerable:true}                
+        });
+
+        if (_err && (typeof _err === "string"))
+        {
+            this.atvt = BPError.atvt; // Take value of page atvt
+            this.message = _err;
+        }
+        else if (_err && (typeof _err === "object"))
+        {
+            if (_err.name === "PluginError" || _err.acode) {
+                this.err = _err;
+                this.atvt = BPError.atvt; // Take value of page atvt
+                this.message = _err.gmsg || _err.smsg || _err.acode || _err.gcode || _err.scode;
+            }
+            else if (_err.name === "BPError") {
+                // Copy Construct
+                this.err = _err.err;
+                this.atvt = new Activity(_err.atvt);
+                this.message = _err.message;        
+            }
+            else { // System error
+                this.atvt = BPError.atvt;
+                this.message = _err.message;
+                this.err = _err;
+            }
+        }
+        
+        Object.freeze(this); // turn-off writable, configurable and extensible flags
     }
-    BPError.atvt = {}; // Global object for storing current activity
+    BPError.atvt = undefined; // Global object for storing current activity. 
     BPError.prototype.toString = function()
     {
         return JSON.stringify(this);
@@ -152,6 +193,38 @@ var BP_MOD_ERROR = (function()
                (this.smg? "&smg="+this.smg : "");*/
     };
     
-    return {BPError: BPError};
+    function alert (arg) 
+    {
+        var msg;
+        if (arg && (typeof arg === 'string')) {
+            msg = arg;
+        }
+        else if (arg && (typeof arg === 'object') && (arg.name === "BPError")) {
+            msg = arg.message;
+        }
+        
+        window.alert(msg);
+    }
+    
+    function log (str)
+    {
+        console.log(str);
+    }
+    
+    var iface = {
+        BPError: BPError,
+        Activity: Activity,
+        alert: alert,
+        warn: alert,
+        success: alert,
+        log: log,
+        loginfo: log,
+        logwarn: log,
+        ac: ac,
+        bc: bc,
+        msg: msg
+    };
+    Object.freeze(iface);
+    return iface;
     /** @end-class-def BPError **/
 }());

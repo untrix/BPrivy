@@ -67,6 +67,7 @@ BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host) :
 	registerMethod("copy", make_method(this, &BPrivyAPI::copy));
 	registerMethod("chooseFile", make_method(this, &BPrivyAPI::chooseFile));
 	registerMethod("chooseFolder", make_method(this, &BPrivyAPI::chooseFolder));
+	registerMethod("pathSeparator", make_method(this, &BPrivyAPI::pathSeparator));
 #ifdef DEBUG
 	registerMethod("chooseFileXP", make_method(this, &BPrivyAPI::chooseFileXP));
 	registerMethod("chooseFolderXP", make_method(this, &BPrivyAPI::chooseFolderXP));
@@ -519,6 +520,13 @@ BPrivyAPI::_copy(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const bo
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(p)
 	return false;	
+}
+
+std::wstring BPrivyAPI::pathSeparator()
+{
+	bfs::path path(L"/");
+	path.make_preferred();
+	return path.wstring();
 }
 
 void BPrivyAPI::securityCheck(const bfs::path& path, const std::string allowedExt[])

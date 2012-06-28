@@ -815,6 +815,7 @@ bool BPrivyAPI::_choose(bp::JSObject* p, bool chooseFile)
 						{
 							SetChosenPath(p, pszFilePath, chooseFile? ENT_FILE : ENT_DIR);
 							CoTaskMemFree(pszFilePath);
+							rval = true;
 						}
 						psiResult->Release();
 					}
@@ -822,7 +823,6 @@ bool BPrivyAPI::_choose(bp::JSObject* p, bool chooseFile)
 			}
 		}
 		pfd->Release();
-		rval = true;
 	}
 
 	return rval;

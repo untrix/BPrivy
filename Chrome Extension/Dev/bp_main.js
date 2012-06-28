@@ -7,7 +7,7 @@
 
 /* JSLint directives */
 /*global $, document, BP_MOD_MAIN_PLAT, BP_MOD_CONNECT, BP_MOD_COMMON, IMPORT, localStorage,
-  BP_MOD_MEMSTORE, BP_MOD_FILESTORE */
+  BP_MOD_MEMSTORE, BP_MOD_FILESTORE, BP_MOD_ERROR */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -24,6 +24,7 @@
     var cm_getRecs = IMPORT(m.cm_getRecs);
     var cm_loadDB = IMPORT(m.cm_loadDB);
     var cm_createDB = IMPORT(m.cm_createDB);
+    var cm_getDBPath = IMPORT(m.cm_getDBPath);
     /** @import-module-begin COMMON */
     m = BP_MOD_COMMON;
     var dt_eRecord = IMPORT(m.dt_eRecord);
@@ -31,39 +32,70 @@
     /** @import-module-begin MemStore */
     var MEM_STORE = IMPORT(BP_MOD_MEMSTORE);
     var FILE_STORE = IMPORT(BP_MOD_FILESTORE);
+    /** @import-module-begin Error */
+    m = BP_MOD_ERROR;
+    var BPError = BP_MOD_ERROR.BPError;
+    var Activity = BP_MOD_ERROR.Activity;
+    
     /** @import-module-end **/    m = null;
 
     function onRequest(rq, sender, funcSendResponse)
     {
+        var result, recs, dbPath;
         console.info("Mothership Received object of type " + rq.dt);
-        switch (rq.dt) {
-            case dt_eRecord:
-            case dt_pRecord:
-                funcSendResponse({
-                    ack : MEM_STORE.insertRec(rq)
-                });
-                break;
-            case cm_getRecs:
-                var db = MEM_STORE.getRecs(rq.loc);
-                funcSendResponse(db);
-                break;
-            case cm_loadDB:
-                try {
-                    FILE_STORE.loadDB(rq.dbName, rq.dbDir);
-                    funcSendResponse(true);
-                } catch (e) {
-                    funcSendResponse(e);
-                }
-                break;
-            case cm_createDB:
-                try {
-                    FILE_STORE.createDB(rq.dbName, rq.dbDir);
-                    funcSendResponse(true);
-                } catch (err) {
-                    funcSendResponse(err);
-                }
-                break;
-            default: // do nothing
+        
+        rq.atvt ? (BPError.atvt = new Activity(rq.atvt)) : (BPError.atvt = new Activity("BPMain::OnRequest"));
+        
+        try  {
+            switch (rq.dt) {
+                case dt_eRecord:
+                    BPError.atvt.push("SaveERecord");
+                    result = MEM_STORE.insertRec(rq) &&
+                             FILE_STORE.insertRec(rq);
+                    funcSendResponse({result:result});
+                    break;
+                case dt_pRecord:
+                    BPError.atvt.push("SavePRecord");
+                    result = MEM_STORE.insertRec(rq) &&
+                             FILE_STORE.insertRec(rq);
+                    funcSendResponse({result:result});
+                    break;
+                case cm_getRecs:
+                    BPError.atvt.push("GetRecs");
+                    recs = MEM_STORE.getRecs(rq.loc);
+                    funcSendResponse({result:true, db:recs});
+                    break;
+                case cm_loadDB:
+                    BPError.atvt.push("LoadDB");
+                    dbPath = FILE_STORE.loadDB(rq.dbPath);
+                    funcSendResponse({result:true, dbPath:dbPath});
+                    break;
+                case cm_createDB:
+                    BPError.atvt.push("CreateDB");
+                    dbPath = FILE_STORE.createDB(rq.dbName, rq.dbDir);
+                    funcSendResponse({result:true, dbPath:dbPath});
+                    break;
+                case cm_getDBPath:
+                    BPError.atvt.push("GetDBPath");
+                    dbPath = BP_MOD_FILESTORE.getDBPath();
+                    funcSendResponse({result:true, dbPath:dbPath});
+                    break;
+                case BP_MOD_CONNECT.cm_importCSV:
+                    BPError.atvt.push("ImportCSV");
+                    result = FILE_STORE.importCSV(rq.dbPath);
+                    funcSendResponse({result: result});
+                    break;
+                default: // do nothing
+            }
+        } 
+        catch (err) {
+            if (err.name && err.name==='BPError') {
+                console.log("Exception\n"+err.toString());
+            }
+            else {
+                console.log("Exception\n"+JSON.stringify(err));
+            }
+            funcSendResponse({result:false, err:err});
         }
     }
     
@@ -71,17 +103,15 @@
     {
         initScaffolding(doc);
         registerMsgListener(onRequest);
-        var dbDir = localStorage["Db.Dir"];
-        var dbName = localStorage['Db.Name'];
-        if (dbDir && dbName)
+        var dbPath = localStorage["db.path"];
+        if (dbPath)
         {
-            FILE_STORE.loadDB(dbDir, dbName);
+            FILE_STORE.loadDB(dbPath);
             //FILE_STORE.createDB("C:/Users/sumeet/Documents/", "Keys");
         }
-        FILE_STORE.importCSV("C:/Users/sumeet/Desktop/password-export.csv");
     } catch (e)
     {
-        console.log(JSON.stringify(e.err));
+        console.log("Exception in main.js = " + JSON.stringify(e));
     }
 
 }(document));

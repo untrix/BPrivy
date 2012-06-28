@@ -6,7 +6,7 @@
  */
 
 /* Global declaration for JSLint */
-/*global BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT */
+/*global BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT, BP_MOD_ERROR */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -40,6 +40,8 @@ var BP_MOD_CONNECT = (function ()
     var cm_getRecs = "cm_getRecs";     // Represents a getDB command
     var cm_loadDB = "cm_loadDB";
     var cm_createDB = "cm_createDB";
+    var cm_getDBPath = "cm_getDBPath";
+    var cm_importCSV = "cm_importCSV";
     var DNODE_TAG = {};
     Object.defineProperties(DNODE_TAG,
         {
@@ -177,6 +179,21 @@ var BP_MOD_CONNECT = (function ()
     }
     /** @end-class-defn **/
 
+    function createDB (dbName, dbDir, callbackFunc) 
+    {
+        rpcToMothership({dt: cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
+    }
+
+    function loadDB (dbPath, callbackFunc) 
+    {
+        rpcToMothership({dt: cm_loadDB, dbPath:dbPath}, callbackFunc);
+    }
+
+    function importCSV (dbPath, callbackFunc) 
+    {
+        rpcToMothership({dt: cm_importCSV, dbPath:dbPath}, callbackFunc);
+    }
+
     /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
@@ -193,6 +210,11 @@ var BP_MOD_CONNECT = (function ()
         var getRecs = function(loc, callback)
         {
             return rpcToMothership({dt:cm_getRecs, loc: loc}, callback);
+        };
+        
+        var getDBPath = function (callback)
+        {
+            return rpcToMothership({dt:cm_getDBPath}, callback);
         };
 
         var recKey = function(rec)
@@ -214,6 +236,8 @@ var BP_MOD_CONNECT = (function ()
             cm_getRecs: {value: cm_getRecs},
             cm_loadDB: {value: cm_loadDB},
             cm_createDB: {value: cm_createDB},
+            cm_getDBPath: {value: cm_getDBPath},
+            cm_importCSV: {value: cm_importCSV},
             DNODE_TAG: {value: DNODE_TAG},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
@@ -221,7 +245,11 @@ var BP_MOD_CONNECT = (function ()
             newPRecord: {value: newPRecord},
             newActions: {value: newActions},
             getRecs: {value: getRecs},
-            recKey: {value: recKey}
+            recKey: {value: recKey},
+            loadDB: {value: loadDB},
+            createDB: {value: createDB},
+            getDBPath: {value: getDBPath},
+            importCSV: {value: importCSV}
         });
         Object.freeze(iface);
 

@@ -77,6 +77,8 @@ public:
 	bool copy(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
 	bool chooseFile(FB::JSObjectPtr p);
 	bool chooseFolder(FB::JSObjectPtr p);
+	// Returns path separator based on the operating system
+	std::wstring pathSeparator();
 
 private:
 	bool _ls(bfs::path& path, bp::JSObject* out);

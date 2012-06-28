@@ -78,7 +78,7 @@ var BP_MOD_MEMSTORE = (function ()
         if (! (l && 
                 (typeof l.protocol=== "string") && (l.protocol.length > 0) &&
                 (typeof l.hostname === "string") && (l.hostname.length > 0) ) )
-            {throw new BPError("Scheme or Hostname lacking in URI argument to newUrla: "+JSON.stringify(l));}
+            {throw new BPError("Usupported Page (only http/https websites are supported): "+JSON.stringify(l));}
         
         pr = l.protocol.toLowerCase();
 
@@ -321,13 +321,15 @@ var BP_MOD_MEMSTORE = (function ()
             // n.insert(rec); Tail-recursive.
         }
     };
-    /** Non-Recursive insert. Usually invoked at the root of a tree. */
+    /** Non-Recursive insert. Intended to be invoked at the root of a tree. */
     DNode.prototype.insert = function (drec)
     {       
         var n = this;    
         do {
             n = n.tryInsert(drec);
         } while (n);
+        
+        return true;
     };
     DNode.prototype.tryFind = function(urli) 
     {
@@ -484,15 +486,16 @@ var BP_MOD_MEMSTORE = (function ()
 
     function insertRec(rec)
     {
+        var result = false;
         switch (rec.dt) {
             case dt_eRecord:
-                g_kd.insert(new DRecord(rec));
+                result = g_kd.insert(new DRecord(rec));
                 break;
             case dt_pRecord:
-                g_pd.insert(new DRecord(rec));
+                result = g_pd.insert(new DRecord(rec));
                 break;
         }
-        return true;
+        return result;
     }
     
     //Assemble the interface    
@@ -505,321 +508,4 @@ var BP_MOD_MEMSTORE = (function ()
     Object.freeze(iface);
 
     return iface;
-}());
-
-/**
- * @ModuleBegin FileStore
- */
-var BP_MOD_FILESTORE = (function() 
-{
-    "use strict"; //TODO: Remove this from prod. build
-    
-    /** @import-module-begin Error */
-    var m = IMPORT(BP_MOD_ERROR);
-    var BPError = IMPORT(m.BPError);
-    /** @import-module-begin common **/
-    m = BP_MOD_COMMON;
-    var dt_eRecord = IMPORT(m.dt_eRecord);
-    var dt_pRecord = IMPORT(m.dt_pRecord);
-    var toJson = IMPORT(m.toJson);
-    var uid_aliases = IMPORT(m.uid_aliases);
-    var pass_aliases= IMPORT(m.pass_aliases);
-    var url_aliases = IMPORT(m.url_aliases);
-    var parseURL = IMPORT(m.parseURL);
-    var stripQuotes = IMPORT(m.stripQuotes);
-    /** @import-module-begin connector **/
-    m = BP_MOD_CONNECT; 
-    var newPRecord = IMPORT(m.newPRecord);
-    /** @import-module-begin MemStore **/
-    var MEM_STORE = BP_MOD_MEMSTORE;
-    /** @import-module-end **/    m = null;
-
-    /** @constant ID of BP-Plugin HtmlEmbedElement*/
-    var eid_bp = "com-untrix-bpplugin";
-    // Points to the bp-plugin
-    var g_bp = document.getElementById(eid_bp);  
-    /** File/Dirname extenstions */
-    var ext_Root = ".3ab";
-    var ext_Dict = ".3ad";
-    var ext_Open = ".3ao";
-    var ext_Closed=".3ac";
-    var ext_MMap = ".3am";
-    var ext_Temp = ".3at";
-    var ext_Csv  = ".csv";
-    /**
-     * Name of knowledge-dict directory on filesystem. Should be case insensitive
-     * since not all filesystems will honor case.
-     */
-    var dir_k = "k" + ext_Dict;
-    /**
-     * Name of passwords-dict directory on filesystem. Should be case insensitive
-     * since not all filesystems will honor case.
-     */
-    var dir_p = "p" + ext_Dict;
-    
-    function savePRec(rec)
-    {
-        // switch (rec.dt)
-        // {
-            // case dt_pRecord: // password rec
-//             
-            // case dt_eRecord: // knowledge rec  
-            // default:
-            // break;         
-        // }
-    // }
-    }
-    
-    function createDB(dir, name) // throws
-    {
-        var o={},
-            root = dir + "/" + name + ext_Root;
-        
-        if (g_bp.createDir(root,o))
-        {
-            var p = root + "/" + dir_p;
-            if (!g_bp.createDir(p,o)) {
-                o={}; g_bp.rm(root, o);
-                throw new BPError(o.err);
-            }
-            p = root + "/" + dir_k;
-            if (!g_bp.createDir(p,o)) {
-                o={}; g_bp.rm(root, o);
-                throw new BPError(o.err);
-            }
-        }
-        else
-        {
-            throw new BPError(o.err);
-        }
-        
-        return true;
-    }
-    
-    function findPPropsIdx(keys)
-    {
-        var rval = {}, i, j, n, k,
-            //keys,
-            bN = false, bP = false, bU = false;
-        //for (i=0; i<5; i++) 
-        //{ // Search the first few rows for a valid line
-            //keys = Object.keys(recs[i]);
-            
-            for (j=0, n=keys.length; j<n; j++) 
-            {
-                k = keys[j];
-                if ((!bN) && (uid_aliases.indexOf(k) !== (-1))) {
-                    rval.userid = j;
-                    bN = true; continue;
-                }
-                else if ((!bP) && (pass_aliases.indexOf(k) !== (-1))) {
-                    rval.pass = j;
-                    bP = true; continue;
-                }
-                else if ((!bU) && (url_aliases.indexOf(k) !== (-1))) {
-                    rval.url = j;
-                    bU = true; continue;
-                }
-            }
-            
-            //if ((bN && bP && bU)) {break;}   // We're done.
-            //else {bN = (bP = (bU = false));} // Probably a header line. Start over
-        //}
-        
-        // We'll return rval only if we got all property names
-        if (bN && bP && bU) {return rval;}
-    }
-    
-    /**
-     * @begin-class-def TextFileStream
-    */
-    function TextFileStream(pth)
-    {
-        Object.defineProperties(this,
-        {
-            path: {value: pth, writable:false, configurable:false, enumerable:true},
-            buf: {writable:true, configurable:false, enumerable:false},
-            siz: {writable: true, configurable:false, enumerable:true},
-            regex: {value: new RegExp('(?:^([^#\\r\\n]+[^\\r\\n]*)[\\r\\n]*$){1,1}?', 'mg'), writable: false, enumerable: false, configurable: false}
-        });
-        Object.seal(this);
-    }
-    // Returns the next data-line, i.e. the next non-comment and non-empty line
-    TextFileStream.prototype.getDataLine = function() // throws BPError
-    {
-        var o={};
-        if (!this.buf) {
-            if (!g_bp.readFile(this.path, o)) {throw new BPError(o.err);}
-            this.buf = o.rdf.dat;
-            this.siz = o.rdf.siz;
-        }
-        var rval = this.regex.exec(this.buf);
-        if (rval!==null) {return rval[1];}
-    };
-    
-    /** @end-class-def **/
-    /** 
-     *@begin-class-def CSVFile
-     *  
-     */
-    function CSVFile(path) // throws BPError
-    {
-        var n, err = {};
-        err.gcode = "InvalidFileContents";
-        err.path = path;
-
-        Object.defineProperties(this,
-        {
-            fstrm: {value: new TextFileStream(path), writable:false, enumerable:false, configurable:false},
-            csvex: {value: /\s*,\s*/, writable:false, configurable:false, enumerable:false},
-            props: {writable:true, enumerable:false, configurable:false},
-            regex: {writable:true, enumerable:false, configurable:false},
-            pidx: {writable:true, enumerable:false, configurable:false}
-        });
-        // Load and Initialize.
-        var line = this.fstrm.getDataLine();
-        if (!line)
-        {throw new BPError(err);}// line is undefined || null || !empty
-        
-        // Parse the first data-line for property names
-        this.props = line.split(this.csvex);// split by space-comma-space
-        if (!this.props || !this.props.length) { throw new BPError(err);}
-        else 
-        { // Remove leading quotes
-            for (n = this.props.length; n; n--)
-            {
-                this.props[n-1] = stripQuotes(this.props[n-1]);
-                if (!this.props[n-1]) {throw new BPError(err);}
-            }
-        }
-
-        // Map the property names to P-Rec properties.
-        this.pidx = findPPropsIdx(this.props);
-        if (!this.pidx) { throw new BPError(err);}
-
-        // Finally, generate a regular expression for data parsing
-        // Make a regexp with props.length capture groups
-        var field = "[\\s\"\']*([^\\s\"\']*)[\\s\"\']*",
-            separator = '\\s*,\\s*', 
-            i,
-            regex = '^' + field;
-
-        for (n = this.props.length-1, i=0; i<n; i++)
-        {
-            regex = regex + separator + field;
-        }
-        regex = regex + '$';
-        this.regex = new RegExp(regex);
-
-        Object.freeze(this);
-    }
-    // Returns an array of values from the next csv-line in the file. If EOF is encountered,
-    // returns undefined. If Line is found, but can't be parsed, then returns null. THis
-    // function may get confused by embedded commas (within quotes). getcsv2 handles that
-    // case.
-    CSVFile.prototype.getcsv = function()
-    {
-        var line = this.fstrm.getDataLine();
-        if (line)
-        {
-            var vals = line.match(this.regex);
-            if (vals)
-            {
-                vals.shift();
-                return vals;
-            }
-            else {return null;} // Line was retrieved but didn't match the pattern.
-        }
-    };
-    // Same semantics as getcsv but better implementation. This function will identify
-    // quoted fields with embedded commas.
-    CSVFile.prototype.getcsv2 = function()
-    {
-        var regex = /\s*(?:"([^"]*)"|'([^']*)'|([^"',]*))\s*,/g;
-        var lastex = /\s*(?:"([^"]*)"|'([^']*)'|([^"',]*))\s*$/;
-        var line = this.fstrm.getDataLine();
-        if (line)
-        {
-            var vals=[], idx, array;
-            while ((array = regex.exec(line)))
-            {
-                vals.push(array[1] || (array[2] || array[3]));
-                idx = regex.lastIndex;
-            }
-            // Catch the last field. It has no comma at the end.
-            array = lastex.exec(line.slice(idx));
-            vals.push(array[1] || (array[2] || array[3]));
-            
-            if (vals.length === this.props.length) {return vals;}
-            else {return null;}
-        }
-    };
-    /** @end-class-def CSVFile **/
-   
-    function importCSV(path)
-    {
-        var o={}, rval, i, prec, pidx, csv, line;
-        if (g_bp.ls(path, o))
-        {
-            switch (path.slice(-4).toLowerCase())
-            {
-                case ".csv":
-                    BPError.actn = "ImportCSV";
-                    var csvf = new CSVFile(path);
-
-                    while ((csv = csvf.getcsv2()) !== undefined)
-                    {
-                        if (!csv) {continue;} // unparsable line
-                        else {console.log(JSON.stringify(csv));}
-                        pidx = csvf.pidx;
-                        prec = newPRecord();
-                        prec.userid = csv[pidx.userid];
-                        prec.pass = csv[pidx.pass];
-                        prec.loc = parseURL(csv[pidx.url]);
-                        if (!prec.isValid()) {
-                            console.log("Discarding invalid csv record - " + JSON.stringify(csv));
-                            prec = null; continue;
-                        }
-                        if (MEM_STORE.insertRec(prec)) {
-                            savePRec(prec);
-                        }
-                    }
-                    return true;
-                default:
-                    return false;
-                // case ".3db":
-                    // path = path + "/" + dir_p + "/open.3eo";
-                    // rval = g_bp.readJFile(path, o);
-                    // if (!rval) {throw o.err;}
-                    // recs = JSON.parse(o.rdf);
-                    // return recs;
-//                 
-                // case ".3eo":
-                // case ".3ec":
-                    // rval = g_bp.readJFile(path, o);
-                    // if (!rval) {throw o.err;}
-                    // recs = JSON.parse(o.rdf);
-                    // return recs;                
-            }
-        }
-        else
-        {
-            var err = o.err.gmsg + "(" + o.err.gcode + "). " + o.err.smsg;
-            console.error(err);
-            document.defaultView.alert(err);
-            return false;
-        }
-    }
-    
-    //Assemble the interface    
-    var iface = {};
-    Object.defineProperties(iface, 
-    {
-        importCSV: {value: importCSV},
-        createDB: {value: createDB}
-    });
-    Object.freeze(iface);
-
-    return iface;
-
 }());

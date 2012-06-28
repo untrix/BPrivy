@@ -5,7 +5,8 @@
  * @mail sumeet@untrix.com
  */
 /* JSLint directives */
-/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT */
+/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT,
+  BP_MOD_ERROR */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 /* members el.type,
@@ -646,16 +647,21 @@ var BP_MOD_PANEL = (function (g_win)
      * Invoked upon receipt of DB records from the MemStore module.
      * @param {db}  Holds DB records relevant to this page. 
      */
-    function callbackGetDB (db)
-    {        
-        console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(db));
-
-        g_db.ingest(db);
+    function initialGetDB (resp)
+    {   
+        var filled;
+        if (resp.result === true) 
+        {
+            var db = resp.db;
+            console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(db));
+            g_db.ingest(db);
+            filled = autoFill();
         
-        if (settings.AutoFill) {
-            if (!autoFill() && g_db.numUserids && settings.ShowPanelIfNoFill)
-            {
-                createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
+            if (settings.AutoFill) {
+                if ((filled===false) && g_db.numUserids && settings.ShowPanelIfNoFill)
+                {
+                    createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
+                }
             }
         }
     }
@@ -664,10 +670,21 @@ var BP_MOD_PANEL = (function (g_win)
      * Invoked upon receipt of DB records from the MemStore module.
      * @param {db}  Holds DB records relevant to this page. 
      */
-    function asyncShowPanel (db)
+    function asyncShowPanel (resp)
     {
-        console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(g_db));
-        g_db.ingest(db);
+        if (resp.result === true)
+        {
+            var db = resp.db;
+            console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(g_db));
+            g_db.ingest(db);
+        }
+        else
+        {
+            g_db.clear();
+            BP_MOD_ERROR.warn("BPrivy: There was an error looking up passwords [" +
+                               resp.err.message + "]");
+        }
+
         // TODO: Since this is async, maybe we should check if the panel exists.
         createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
     }
@@ -880,7 +897,7 @@ var BP_MOD_PANEL = (function (g_win)
         if(isTopLevel(g_win)) 
         {
             console.log("BP_CS entered on page " + location.href);
-            getRecs(g_win.location, callbackGetDB);
+            getRecs(g_win.location, initialGetDB);
             registerMsgListener(clickBP);
             setupDNDWatchers(g_win);
         }

@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global chrome */
+/*global chrome, BP_MOD_ERROR, $ */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -29,13 +29,23 @@ var BP_MOD_CS_PLAT = (function()
                        console.log(chrome.extension.lastError.message);
                     }
                 }
+                else if (rsp.result===false) {
+                    BP_MOD_ERROR.warn(rsp.err);
+                }
             }
             chrome.extension.sendRequest(o, rcvAck);
         },
         
         rpcToMothership: function (req, respCallback)
         {
-            chrome.extension.sendRequest(req, respCallback);
+            chrome.extension.sendRequest(req, function (resp)
+            {
+                if (resp && resp.result===false && resp.err) {
+                    var exp = resp.err;
+                    resp.err = new BP_MOD_ERROR.BPError(exp);
+                }
+                respCallback(resp); // respCallback exists in function closure
+            });
         },
         
         registerMsgListener: function(foo)

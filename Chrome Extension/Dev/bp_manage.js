@@ -14,12 +14,17 @@
 var BP_MOD_MANAGE = (function () 
 {
     "use strict"; //TODO: Remove this from prod. build
+    /** @import-module-begin BP_PLUGIN */
     /** @import-module-begin CSPlatform */
     var m = BP_MOD_CS_PLAT;
     var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
     var DIR_SEP = IMPORT(m.DIR_SEP);
+    /** @import-module-begin Common */
+    m = BP_MOD_FILESTORE;
+    var parseDBName = IMPORT(m.parseDBName);
     /** @import-module-end **/ m = null;
-           
+    var path_sep;
+               
     function fillOptions(eid, dir)
     {
         var o={hide:true}, d, i=0, n=0;
@@ -36,8 +41,17 @@ var BP_MOD_MANAGE = (function ()
         }
     }
 
+    function callbackHandleError (resp)
+    {
+        if (resp.result===false) {
+            BP_MOD_ERROR.alert(resp.err);
+        }
+    }
+    
     function onload()
     {
+         path_sep = BP_PLUGIN.pathSeparator();
+                
         //$("#nav-list a[data-nav]").click(function (e)
         addEventListeners("#nav-list a[data-nav]", "click", function(e)
         {
@@ -68,6 +82,15 @@ var BP_MOD_MANAGE = (function ()
                    dbutton: "Import"};
             if (BP_PLUGIN.chooseFile(o)) {
                 console.log("ChooseFile returned:" + o.path);
+                BP_MOD_CONNECT.importCSV(o.path, function (resp)
+                {
+                    if (resp.result === true) {
+                        BP_MOD_ERROR.success('Imported passwords from ' + o.path);
+                    }
+                    else {
+                        callbackHandleError(resp);
+                    }
+                });
             }
             else {
                 console.log("ChooseFile Failed");
@@ -80,21 +103,52 @@ var BP_MOD_MANAGE = (function ()
                    dbutton: "Open Password Store"};
             if (BP_PLUGIN.chooseFolder(o)) {
                 console.log("ChooseFolder returned:" + o.path);
+                BP_MOD_CONNECT.loadDB(o.path, function (resp)
+                {
+                    if (resp.result === true) {
+                        if ($('#dbSaveLocation:checked').length) {
+                            localStorage['db.path'] = resp.dbPath;
+                        }
+                        $('#dbPath').val(parseDBName(resp.dbPath, path_sep)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+                        BP_MOD_ERROR.success('Opened password wallet at ' + resp.dbPath);
+                    }
+                    else {
+                        callbackHandleError(resp);
+                    }
+                });
             }
             else {
-                console.log("ChooseFolder Failed");
+                console.log("ChooseFolder returned false");
             }
         });
         
         addEventListeners('#dbChooseCreate', 'click', function (e)
         {
+            var dbName = $('#dbName').val();
+            if (!dbName) {
+                BP_MOD_ERROR.alert("Please first enter a name for the new Wallet");
+                return;
+            }
             var o={dtitle:"BPrivy: Select Folder to Store Passwords In",
                    dbutton: "Create Password Store"};
             if (BP_PLUGIN.chooseFolder(o)) {
                 console.log("ChooseFolder returned:" + o.path);
+                BP_MOD_CONNECT.createDB(dbName, o.path, function (resp)
+                {
+                    if (resp.result === true) {
+                        if ($('#dbSaveLocation:checked').length) {
+                            localStorage['db.path'] = resp.dbPath;
+                        }
+                        $('#dbPath').val(parseDBName(resp.dbPath, path_sep)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+                        BP_MOD_ERROR.success('Password store created at ' + resp.dbPath);
+                    }
+                    else {
+                        callbackHandleError(resp);
+                    }
+                });
             }
             else {
-                console.log("ChooseFolder Failed");
+                console.log("ChooseFolder returned false");
             }
         });
         
@@ -106,6 +160,36 @@ var BP_MOD_MANAGE = (function ()
             //$(this).trigger('click');
             this.focus();
         });
+        
+        addEventListeners('#dbSaveLocation', 'change', function (e)
+        {
+            if (this.checked) {
+                localStorage["db.path"] = $('#dbPath').attr('data-path');
+                localStorage['dbSaveLocation'] = 'true';
+            }
+            else {
+                localStorage["db.path"] = '';
+                localStorage['dbSaveLocation'] = '';
+            }
+        });
+        
+        if (localStorage['dbSaveLocation']) {
+            $('#dbSaveLocation')[0].checked = true;
+        }
+        else {
+            $('#dbSaveLocation')[0].checked = false;
+        }
+
+        BP_MOD_CONNECT.getDBPath(function(resp) 
+        {
+            if (resp.result) {
+                $('#dbPath').val(parseDBName(resp.dbPath, path_sep)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+            }
+            else {
+                $('#dbPath').val(null).attr('data-original-title', '').attr('data-path', null);
+            }
+        });
+
     }
    
     //Assemble the interface    
