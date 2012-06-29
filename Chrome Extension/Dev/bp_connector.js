@@ -27,7 +27,6 @@ var BP_MOD_CONNECT = (function ()
     m = BP_MOD_COMMON; 
     var dt_eRecord = IMPORT(m.dt_eRecord);
     var dt_pRecord = IMPORT(m.dt_pRecord);
-    var isValidLocation = IMPORT(m.isValidLocation);
     /** @import-module-end **/    m = null;
     
     // 'enumerated' values used internally only. We need these here in order
@@ -42,52 +41,24 @@ var BP_MOD_CONNECT = (function ()
     var cm_createDB = "cm_createDB";
     var cm_getDBPath = "cm_getDBPath";
     var cm_importCSV = "cm_importCSV";
-    var DNODE_TAG = {};
-    Object.defineProperties(DNODE_TAG,
-        {
-            DATA: {value:"{dt}", writable:false, configurable:false, enumerable: true},
-            TLD: {value:"{t}", writable:false, configurable:false, enumerable: true},
-            HOST: {value:"{h}", writable:false, configurable:false, enumerable: true},
-            DOMAIN: {value:"{d}", writable:false, configurable:false, enumerable: true},
-            PORT: {value:"{o}", writable:false, configurable:false, enumerable: true},
-            PATH: {value:"{p}", writable:false, configurable:false, enumerable: true},
-            getDataTag: {value: function (dt) {
-                // tag is a property name that should never clash withe a URL
-                // segment. Hence the bracket
-                // characters are being used because they are excluded in rfc
-                // 3986.
-                if(dt) {
-                    return DNODE_TAG.DATA + dt;
-                }
-            }, writable:false, configurable:false}
-        }
-    );
     
     /** Pseudo Inheritance */
-    function inheritARec(that, type, loc, date)
+    function imbueARec(that, type, loc, date)
     {
         Object.defineProperties(that,
         {
-            //Record Type. Determines which dictionary this record belongs to.
+            // Record Type. Determines which dictionary this record belongs to and a bunch
+            // of other logic based on DT_NATURES
             dt: {value: type, writable: false, enumerable: true, configurable: false},
             date: {value: date || Date.now(), writable: false, enumerable: true, configurable: false},
             // URL that this record pertains to. Determines where the record will sit within the URL-trie.
-            loc: {writable: true, enumerable: true, configurable: false}
+            loc: {value: loc, writable: true, enumerable: true, configurable: false}
         });
     }
     
-    function isValidARec(that)
-    {
-        if (that  && 
-                (typeof that.dt === "string") &&
-                (typeof that.date === "number") &&
-                isValidLocation(that.loc))
-            { return true;}
-        else {return false;}
-    }
     function ERecord()
     {
-        inheritARec(this, dt_eRecord);
+        imbueARec(this, dt_eRecord);
         var descriptor2 = {writable: true, enumerable: true, configurable: false};
         Object.defineProperties(this, 
         {
@@ -107,78 +78,23 @@ var BP_MOD_CONNECT = (function ()
         return new ERecord();    
     }
 
-    function PRecord()
+    function PRecord(loc, userid, pass)
     {
-        inheritARec(this, dt_pRecord);
+        imbueARec(this, dt_pRecord, loc);
         Object.defineProperties(this,
             {
-                userid: {writable: true, enumerable: true, configurable: false},
-                pass: {writable: true, enumerable: true, configurable: false}
+                userid: {value: userid, writable: true, enumerable: true, configurable: false},
+                pass: {value: pass, writable: true, enumerable: true, configurable: false}
             }
         );
         Object.seal(this);
     }
-    PRecord.prototype.isValid = function()
-    {
-        return (isValidARec(this) && 
-                (typeof this.userid === "string") &&
-                (typeof this.pass === "string"));
-    };
     
-    function newPRecord()
+    function newPRecord(loc, userid, pass)
     {
-        return new PRecord();
+        return new PRecord(loc, userid, pass);
     }
     
-    /**
-     * @begin-class-def Actions
-     * Represents Actions on a given item/key. Figures out the latest value etc.
-     * Inserted records should be Action Records with timestamps in them. If no timestamp
-     * is found, the current timestamp will be inserted.
-     */
-    /** Constructor.
-     * Acts as default constructor with no argument.
-     * For an argument, it expects an Action Record or an Object object created from a
-     * JSON serialized Action Record.
-     * In that case it behaves as a Move Constructor. That is, it adopts the
-     * properties of the argument and deletes them from the argument.
-     */
-    function Actions(jo)
-    {
-        if (jo)
-        {
-            Object.defineProperties(this,
-                {
-                    curr: {value: jo.curr, writable: true, enumerable: true},
-                    arecs: {value: jo.arecs, enumerable: true}
-                }
-            );
-        }
-        else {
-            Object.defineProperties(this,
-                {
-                    curr: {writable: true, enumerable: true},
-                    arecs: {value: [], enumerable: true}
-                }
-            );
-        }
-        Object.seal(this);
-    }
-    /** Method. Insert a record into the Action Records collection */
-    Actions.prototype.insert = function(arec)
-    {//TODO: Check for exact duplicate records. That is, records with matching timestamp and values.
-        //if (!arec.date) { arec.date = Date.now();} // TODO: Remove auto-population of date in PRecord constructor.
-        var n = this.arecs.push(arec);
-        if ((!this.curr) || (this.curr.date < arec.date)) {
-            this.curr = this.arecs[n-1];
-        }
-    };
-    
-    function newActions(jo) {
-        return new Actions(jo);
-    }
-    /** @end-class-defn **/
-
     function createDB (dbName, dbDir, callbackFunc) 
     {
         rpcToMothership({dt: cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
@@ -217,16 +133,6 @@ var BP_MOD_CONNECT = (function ()
             return rpcToMothership({dt:cm_getDBPath}, callback);
         };
 
-        var recKey = function(rec)
-        {
-            if (rec.dt === dt_eRecord) {
-                return rec.fieldType;
-            }
-            else if (rec.dt === dt_pRecord) {
-                return rec.userid;
-            }
-        };
-        
         //Assemble the interface    
         var iface = {};
         Object.defineProperties(iface, 
@@ -238,14 +144,11 @@ var BP_MOD_CONNECT = (function ()
             cm_createDB: {value: cm_createDB},
             cm_getDBPath: {value: cm_getDBPath},
             cm_importCSV: {value: cm_importCSV},
-            DNODE_TAG: {value: DNODE_TAG},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
             newERecord: {value: newERecord},
             newPRecord: {value: newPRecord},
-            newActions: {value: newActions},
             getRecs: {value: getRecs},
-            recKey: {value: recKey},
             loadDB: {value: loadDB},
             createDB: {value: createDB},
             getDBPath: {value: getDBPath},

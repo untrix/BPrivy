@@ -41,8 +41,6 @@ var BP_MOD_PANEL = (function (g_win)
     var saveRecord = IMPORT(m.saveRecord);
     var deleteRecord = IMPORT(m.deleteRecord);
     var getRecs = IMPORT(m.getRecs);
-    var tag_eRecs = IMPORT(m.DNODE_TAG.getDataTag(dt_eRecord));
-    var tag_pRecs = IMPORT(m.DNODE_TAG.getDataTag(dt_pRecord));
     /** @import-module-begin CSPlatform */
     m = BP_MOD_CS_PLAT;
     var getURL = IMPORT(m.getURL);
@@ -123,7 +121,7 @@ var BP_MOD_PANEL = (function (g_win)
         var dnd = ctx.dnd;
         function handleDragStart (e)
         {
-            console.info("DragStartHandler entered");
+            //console.info("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
             var data = $(e.target).data(pn_d_value);
             if ($(e.target).data(pn_d_dataType) === ft_pass) {
@@ -143,7 +141,7 @@ var BP_MOD_PANEL = (function (g_win)
 
         function handleDrag(e)
         {
-            console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
             e.stopImmediatePropagation();
         }
@@ -153,7 +151,7 @@ var BP_MOD_PANEL = (function (g_win)
 
         function handleDragEnd(e)
         {
-            console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             //dnd.draggedElementID = null;
             //dnd.draggedElement = null;
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
@@ -239,7 +237,7 @@ var BP_MOD_PANEL = (function (g_win)
 	{
 	    var doc = e.target.ownerDocument; // TODO: Experimenting, was g_doc
         var d = e.target.dataset;
-        console.info("tb clicked" + JSON.stringify(d));
+        //console.info("tb clicked" + JSON.stringify(d));
 	    var op = doc.getElementById(d.opid),
 	        ifm = doc.getElementById(d.ifid),
 	        id = d.id,
@@ -279,10 +277,7 @@ var BP_MOD_PANEL = (function (g_win)
 	        if ((uo !== u) || (po !== p))
 	        {
 	            // save to db
-	            var pRec = newPRecord();
-	            pRec.loc = g_loc;
-	            pRec.userid = u;
-	            pRec.pass = p;
+	            var pRec = newPRecord(g_loc, u, p);
                 // Can't update locally because we only have one DNode locally and
                 // that may not be the right one to insert the record into.
 	            saveRecord(pRec);
@@ -481,6 +476,11 @@ var BP_MOD_PANEL = (function (g_win)
             }
         }
     };
+    Object.defineProperties(g_db,
+        {
+            ingest: {enumerable:false, writable:false, configurable:false},
+            clear: {enumerable:false, writable:false, configurable:false}
+        });
     /** Returns true if the BPrivy control panel should be created in the supplied browsing context */
     function isTopLevel(win) {
         return (win.top === win.self);
@@ -675,7 +675,7 @@ var BP_MOD_PANEL = (function (g_win)
         if (resp.result === true)
         {
             var db = resp.db;
-            console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(g_db));
+            console.info("bp_cs retrieved DB-Records\n" + JSON.stringify(db));
             g_db.ingest(db);
         }
         else
@@ -782,8 +782,8 @@ var BP_MOD_PANEL = (function (g_win)
     
     function dragoverHandler(e)
     {
-        console.info("dragoverHandler(type = " + e.type + ") invoked ! effectAllowed/dropEffect = " +
-                        e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+        //console.info("dragoverHandler(type = " + e.type + ") invoked ! effectAllowed/dropEffect = " +
+        //                e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
 
         var r = matchDTwField(e);
         if (r.isBPDrag)
@@ -795,7 +795,7 @@ var BP_MOD_PANEL = (function (g_win)
                 e.dataTransfer.dropEffect = 'none'; // Prevent drop here.
             }
             
-            console.info("dropEffect set to " + e.dataTransfer.dropEffect);
+            //console.info("dropEffect set to " + e.dataTransfer.dropEffect);
             e.preventDefault(); // cancel the event signalling that we've handled it.
             e.stopImmediatePropagation();
         }
@@ -804,7 +804,7 @@ var BP_MOD_PANEL = (function (g_win)
     
     function dropHandler(e)
     {
-        console.info("dropHandler invoked ! effectAllowed/dropEffect = " + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+        //console.info("dropHandler invoked ! effectAllowed/dropEffect = " + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
  
         var data, r = matchDTwField(e);
         
@@ -841,23 +841,23 @@ var BP_MOD_PANEL = (function (g_win)
                 }
             }
         }
-        console.info("dropEffect set to " + e.dataTransfer.dropEffect);
+        // console.info("dropEffect set to " + e.dataTransfer.dropEffect);
     }
 
     function setupDNDWatchers(win)
     {
         function inputHandler(e)
         {
-            console.info("inputHandler invoked");
+            // console.info("inputHandler invoked");
             var eRec = newERecord(), dragged_el;
             if (g_dnd.draggedElementID) {
                 //dragged_el = g_doc.getElementById(g_dnd.draggedElementID);
                 dragged_el = g_dnd.draggedElement;
-                console.info("DraggedElementID is " + g_dnd.draggedElementID);
+                // console.info("DraggedElementID is " + g_dnd.draggedElementID);
             }
-            else {
-                console.info("DraggedElementID is null");
-            }
+            // else {
+                // console.info("DraggedElementID is null");
+            // }
             
             if ( dragged_el && ($(dragged_el).data(pn_d_value) === e.target.value))
             {
@@ -874,22 +874,28 @@ var BP_MOD_PANEL = (function (g_win)
                 if (p) {
                     autoFillPeer(e.target, $(p).data(pn_d_value));
                 }
-                console.info("Linking elements " + g_dnd.draggedElementID + "/" + name + " and " + e.target.id + "/" + e.target.name);
+                // console.info("Linking elements " + g_dnd.draggedElementID + "/" + name + " and " + e.target.id + "/" + e.target.name);
             }
         }
         
-        $(g_doc.getElementsByTagName('input')).each(function(i, el) {
-            if (isUserid(el) || isPassword(el))
-            {
+        //$(g_doc.getElementsByTagName('input')).each(function(i, el) {
+        $('input').each(function(i, el)
+        {
+            var u;
+            if ( (u = isUserid(el)) || isPassword(el)) {
                 //addEventListener(el, "input", inputHandler);
                 addEventListener(el, "dragenter", dragoverHandler);
                 addEventListener(el, "dragover", dragoverHandler);
                 addEventListener(el, "drop", dropHandler);
-                if (isUserid(el)) {$(el).data(pn_d_dataType, ft_userid);}
-                else {$(el).data(pn_d_dataType, ft_pass);}
-                console.log("Added event listener for element " + el.id + "/" + el.name);
+                if (u) {
+                    $(el).data(pn_d_dataType, ft_userid);
+                } else {
+                    $(el).data(pn_d_dataType, ft_pass);
+                }
+                // console.log("Added event listener for element " + el.id +
+                // "/" + el.name);
             }
-        });
+        }); 
     }
     
     function main()

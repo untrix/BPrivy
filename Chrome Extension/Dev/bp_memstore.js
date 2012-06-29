@@ -20,18 +20,14 @@ var BP_MOD_MEMSTORE = (function ()
     var BPError = IMPORT(m.BPError);
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
-    var PROTO_HTTP = IMPORT(m.PROTO_HTTP);
-    var PROTO_HTTPS = IMPORT(m.PROTO_HTTPS);
-    var dt_eRecord = IMPORT(m.dt_eRecord);
-    var dt_pRecord = IMPORT(m.dt_pRecord);
+    var PROTO_HTTP = IMPORT(m.PROTO_HTTP),
+        PROTO_HTTPS = IMPORT(m.PROTO_HTTPS),
+        dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord),
+        dt_default = "DefaultDT";
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
     var cm_getRecs = IMPORT(m.cm_getRecs);
-    var recKey = IMPORT(m.recKey);
-    var newActions = IMPORT(m.newActions); // Actions constructor
-    var DNODE_TAG = IMPORT(m.DNODE_TAG);
-    var tag_eRecs = IMPORT(m.DNODE_TAG.getDataTag(dt_eRecord));
-    var tag_pRecs = IMPORT(m.DNODE_TAG.getDataTag(dt_pRecord));
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
@@ -40,37 +36,211 @@ var BP_MOD_MEMSTORE = (function ()
      * @constant 
      * @enumerator return value of comparison function 
      */
-    var D_EQUAL = Number(0);
+    var D_EQUAL = Number(0),
     /** 
      * @constant 
      * @enumerator return value of comparison function 
      */
-    var D_SUB = Number(-1);
+        D_SUB = Number(-1),
     /** 
      * @constant 
      * @enumerator return value of comparison function 
      */
-    var D_SUPER = Number(1);
+        D_SUPER = Number(1),
     /** 
      * @constant 
      * @enumerator return value of comparison function 
      */
-    var D_DIFF = Number(2);
+        D_DIFF = Number(2),
     /** Two in-mem Tries. Make sure this file is run only in one thread otherwise multiple
      * copies of the tries will get created.
      */
-    var g_pd, g_kd;
+        g_pd, g_kd,
+        DNODE_TAG = {};
+    Object.defineProperties(DNODE_TAG,
+        {
+            DATA: {value:"{dt}"},// writable, enumerable and configurable=false by default.
+            TLD: {value:"{t}"},
+            HOST: {value:"{h}"},
+            DOMAIN: {value:"{d}"},
+            PORT: {value:"{o}"},
+            PATH: {value:"{p}"},
+            getDataTag: {value: function (dt) {
+                // tag is a property name that should never clash withe a URL
+                // segment. Hence the bracket
+                // characters are being used because they are excluded in rfc
+                // 3986.
+                if(dt) {
+                    return DNODE_TAG.DATA + dt;
+                }
+            }, writable:false, configurable:false}
+        }
+    );
+    var tag_eRecs = DNODE_TAG.getDataTag(dt_eRecord),
+        tag_pRecs = DNODE_TAG.getDataTag(dt_pRecord),
+        PREC_NATURE ={}, EREC_NATURE={}, DEFAULT_NATURE={},
+        DT_NATURES = {};
+        
+    function isValidLocation(loc) // TODO: Incorporate this into a URL class.
+    {
+        return (loc && 
+                (typeof loc.protocol=== "string") && (loc.protocol.length > 0) &&
+                (typeof loc.hostname === "string") && (loc.hostname.length > 0) &&
+                (typeof loc.pathname === "string") && (loc.pathname.length > 0));
+    }
 
-    /** @globals-end **/
+    function isValidARec(that)
+    {
+        if (that  && 
+                (typeof that.dt === "string") &&
+                (typeof that.date === "number") &&
+                isValidLocation(that.loc))
+            { return true;}
+        else {return false;}
+    }
+
+    // Top-Level properties defined in DEFAULT_NATURE are mandatory for any NATURE object.
+    // Omitting second-level properties (e.g. dict.url_scheme) is okay - implies false for
+    // boolean properties.
+    Object.defineProperties(DEFAULT_NATURE,
+    {
+        // dict: Properties referenced by dictionary/trie/URLA.
+        // dict.url_xyz=true implies that xyz will be matched in insertions and lookups from dictionary.
+        dict: {value: {url_scheme: false, url_host:true, url_port:true, url_path:true}},
+        // action: properties referenced by the Actions class.
+        action: {value: {no_history:true} // no_history=true asserts we're not interested in maintaining history.
+                                          // Will cause Actions class to only keep the current value in memory
+                                          // A value of false asserts the opposite. Will
+                                          // cause Actions to save all previous values in memory.
+        },
+        
+        // Return key value of the record.
+        getKey: {value: function (rec) {}}
+    }); Object.freeze(DEFAULT_NATURE);
     
+    Object.defineProperties(PREC_NATURE,
+    {
+        dict: {value: {url_host:true, url_port:true}},
+        actions: {value: {}},
+        getKey: {value: function(rec)
+            {
+                return rec.userid;
+            }},        
+        isValid: {value: function(rec)
+            {
+                return (isValidARec(rec) && 
+                    (typeof rec.userid === "string") &&
+                    (typeof rec.pass === "string"));
+            }}
+    }); Object.freeze(PREC_NATURE);
+    
+    Object.defineProperties(EREC_NATURE,
+    {
+        dict: {value: {url_host:true, url_port:true, url_path:true}},
+        actions: {value: {no_history: true}},
+        getKey: {value: function(rec)
+            {
+                return rec.fieldType;
+            }},
+        isValid: {value: function(rec)
+            {
+                return (isValidARec(rec) && 
+                    (typeof rec.fieldType === "string") &&
+                    (typeof rec.tagName === "string"));
+            }}
+    }); Object.freeze(EREC_NATURE);
+    
+    Object.defineProperty(DT_NATURES, dt_eRecord, {value: EREC_NATURE});
+    Object.defineProperty(DT_NATURES, dt_pRecord, {value: PREC_NATURE});
+    Object.defineProperty(DT_NATURES, dt_default, {value: DEFAULT_NATURE});
+    Object.defineProperties(DT_NATURES,
+    {
+        getNature: {
+            value: function (dt)
+            {
+                var n = this[dt];
+                if (!n) {
+                    n = this[dt_default];
+                }
+                return n;
+            }},
+        getDictNature: {
+            value: function (dt) {
+                return this.getNature(dt).dict;
+            }
+        },
+        getKey: {
+            value: function (rec)
+            {
+                var n = this[rec.dt];
+                if (n && n.getKey) {
+                    return n.getKey(rec);
+                }
+            }}
+    });
+    Object.freeze(DT_NATURES);
+  
+    /** @globals-end **/
+
+    /**
+     * @begin-class-def Actions
+     * Represents Actions on a given item/key. Figures out the latest value etc.
+     * Inserted records should be Action Records with timestamps in them. If no timestamp
+     * is found, the current timestamp will be inserted.
+     */
+    /** Constructor.
+     * Acts as default constructor with no argument.
+     * For an argument, it expects an Action Record or an Object object created from a
+     * JSON serialized Action Record.
+     * In that case it behaves as a Move Constructor. That is, it adopts the
+     * properties of the argument and deletes them from the argument.
+     */
+    function Actions(jo)
+    {
+        if (jo)
+        {
+            Object.defineProperties(this,
+                {
+                    curr: {value: jo.curr, writable: true, enumerable: true},
+                    arecs: {value: jo.arecs, enumerable: true}
+                }
+            );
+        }
+        else {
+            Object.defineProperties(this,
+                {
+                    curr: {writable: true, enumerable: true},
+                    arecs: {value: [], enumerable: true}
+                }
+            );
+        }
+        Object.seal(this);
+    }
+    /** Method. Insert a record into the Action Records collection */
+    Actions.prototype.insert = function(arec)
+    {//TODO: Check for exact duplicate records. That is, records with matching timestamp and values.
+        //if (!arec.date) { arec.date = Date.now();} // TODO: Remove auto-population of date in PRecord constructor.
+        var n = this.arecs.push(arec);
+        if ((!this.curr) || (this.curr.date < arec.date)) {
+            this.curr = this.arecs[n-1];
+        }
+    };
+    
+    function newActions(jo) {
+        return new Actions(jo);
+    }
+    /** @end-class-defn **/
+
+
     /** 
      * Dissects document.location into URL segment array suitable for
      * insertion into a DNode. Discards URL-scheme, query and fragment
      * values as those are deemed irrelevant for our purpose.
      */
-    function newUrla (l) // throws BPError
+    function newUrla (l, dt) // throws BPError
     {
-        var ha, pa, qa, pr, pn, urla = [], i, s;
+        var ha, pa, pr, pn, urla = [], i, s,
+        dtNature = DT_NATURES.getDictNature(dt);
 
         // Note: We need scheme and hostname at a minimum for a valid URL. We also need
         // pathname before we insert into TRIE, hence we'll append a "/" if path is missing.
@@ -82,23 +252,31 @@ var BP_MOD_MEMSTORE = (function ()
         
         pr = l.protocol.toLowerCase();
 
-        // Split hostname into an array of strings.       
-        ha = l.hostname.split('.');
-        ha.reverse();
+        if (dtNature.url_host)
+        {
+            // Split hostname into an array of strings.       
+            ha = l.hostname.split('.');
+            ha.reverse();
+        }
         
-        if (!l.pathname) {s = "/";} // In practice, all code tacks-on a "/" if missing in a valid URL.
-        else {s = l.pathname;}
-        // Split pathname into path segments.
-        // First remove leading slashes
-        s = s.replace(/^\/+/,'');
-        // Now split into an array of strings.
-        pa = s.split('/');
-
-        if (l.search) {
-            qa = l.search.split('&');
+        if (dtNature.url_path)
+        {
+            if (!l.pathname) {s = "/";} // In practice, all code tacks-on a "/" if missing in a valid URL.
+            else {s = l.pathname;}
+            // Split pathname into path segments.
+            // First remove leading slashes
+            s = s.replace(/^\/+/,'');
+            // Now split into an array of strings.
+            pa = s.split('/');
         }
 
-        if (l.port) {
+        // if (dtNature.url_query && l.search)
+        // {
+            // qa = l.search.split('&');
+        // }
+        
+        if (l.port && dtNature.url_port)
+        {
             i = Number(l.port);
             switch(pr) {
                 case PROTO_HTTP:
@@ -113,18 +291,19 @@ var BP_MOD_MEMSTORE = (function ()
         }
         
         // Construct the url segment array
-                // if (pr) {
-            // switch(pr) {
-               // case PROTO_HTTP:
-                    // urla.push('{s}http');
-                    // break;
-                // case PROTO_HTTPS:
-                    // urla.push('{s}https');
-                    // break;
-                // default:
-                    // urla.push('{s}' + pr);           
-            // }
-        // }
+        
+        if (dtNature.url_scheme && pr) {
+            switch(pr) {
+                case PROTO_HTTP:
+                    urla.push('{s}http');
+                    break;
+                case PROTO_HTTPS:
+                    urla.push('{s}https');
+                    break;
+                default:
+                    urla.push('{s}' + pr);
+            }
+        }
 
         if (ha) {
             for (i=0; i<ha.length; i++) {
@@ -302,7 +481,7 @@ var BP_MOD_MEMSTORE = (function ()
             if (!recsMap) {
                 this[recTag] = (recsMap = {});
             }
-            r = recsMap[ki=recKey(rec)];
+            r = recsMap[ki=DT_NATURES.getKey(rec)];
             if (r) {
                 r.insert(rec);
             }
@@ -454,8 +633,7 @@ var BP_MOD_MEMSTORE = (function ()
     function DRecord(rec)
     {
         // Construct url segment array iterator.
-        var urla = newUrla(rec.loc);
-        //delete rec.loc;
+        var urla = newUrla(rec.loc, rec.dt);
         
         this.urli = new Iterator(urla);
         this.rec = rec;
@@ -474,12 +652,12 @@ var BP_MOD_MEMSTORE = (function ()
     function getRecs(loc)
     {
         var kdb, pdb, r,
-            urli = new Iterator(newUrla(loc));
+            urlk = new Iterator(newUrla(loc, dt_eRecord)),
+            urlp = new Iterator(newUrla(loc, dt_pRecord));
 
         r = {};
-        r.eRecsMapArray = g_kd.findERecsMapArray(urli);
-        urli.rwnd();
-        r.pRecsMap = g_pd.findPRecsMap(urli);
+        r.eRecsMapArray = g_kd.findERecsMapArray(urlk);
+        r.pRecsMap = g_pd.findPRecsMap(urlp);
 
         return r;
     }

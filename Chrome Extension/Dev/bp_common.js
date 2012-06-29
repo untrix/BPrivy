@@ -62,14 +62,6 @@ var BP_MOD_COMMON = (function()
         return JSON.stringify(o, null, 2);
     }
     
-    function isValidLocation(loc) // TODO: Incorporate this into a URL class.
-    {
-        return (loc && 
-                (typeof loc.protocol=== "string") && (loc.protocol.length > 0) &&
-                (typeof loc.hostname === "string") && (loc.hostname.length > 0) &&
-                (typeof loc.pathname === "string") && (loc.pathname.length > 0));
-    }
-
   // // URL decomposition IDL attributes
            // attribute DOMString protocol;
            // attribute DOMString host;
@@ -158,7 +150,6 @@ var BP_MOD_COMMON = (function()
         url_aliases: {value: url_aliases},
         toJson: {value: toJson},
         parseURL: {value: parseURL},
-        isValidLocation: {value: isValidLocation},
         stripQuotes: {value: stripQuotes},
         encrypt: {value: encrypt},
         decrypt: {value: decrypt},
