@@ -43,16 +43,25 @@ var BP_MOD_CONNECT = (function ()
     var cm_importCSV = "cm_importCSV";
     
     /** Pseudo Inheritance */
-    function imbueARec(that, type, loc, date)
+    function imbueARec(that, type, loc, date) // TODO: Make everything unwritable
     {
+        // date is number of milliseconds since midnight Jan 1, 1970.
+        if (date !== undefined && date !== null) {
+            date = Number(date);
+        }
+        else {
+            date = Date.now(); // returns a Number
+        }
+        
         Object.defineProperties(that,
         {
             // Record Type. Determines which dictionary this record belongs to and a bunch
             // of other logic based on DT_NATURES
             dt: {value: type, writable: false, enumerable: true, configurable: false},
-            date: {value: date || Date.now(), writable: false, enumerable: true, configurable: false},
+            date: {value: date, writable: false, enumerable: true, configurable: false},
             // URL that this record pertains to. Determines where the record will sit within the URL-trie.
-            loc: {value: loc, writable: true, enumerable: true, configurable: false}
+            loc: {value: loc, writable: true, enumerable: true, configurable: false},
+            notes: {value: {}, writable: false, enumerable: true, configurable: false}
         });
     }
     
@@ -68,7 +77,7 @@ var BP_MOD_CONNECT = (function ()
             name: descriptor2,
             type: descriptor2
         });
-        Object.seal(this);
+        Object.seal(this); // TODO: Freeze the object
     }
     ERecord.prototype.toJson = function ()
     {
@@ -87,7 +96,7 @@ var BP_MOD_CONNECT = (function ()
                 pass: {value: pass, writable: true, enumerable: true, configurable: false}
             }
         );
-        Object.seal(this);
+        Object.seal(this); // TODO: Freeze the object
     }
     
     function newPRecord(loc, userid, pass)

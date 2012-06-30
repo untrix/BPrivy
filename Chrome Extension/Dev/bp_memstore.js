@@ -79,7 +79,7 @@ var BP_MOD_MEMSTORE = (function ()
     var tag_eRecs = DNODE_TAG.getDataTag(dt_eRecord),
         tag_pRecs = DNODE_TAG.getDataTag(dt_pRecord),
         PREC_NATURE ={}, EREC_NATURE={}, DEFAULT_NATURE={},
-        DT_NATURES = {};
+        DT_NATURE = {};
         
     function isValidLocation(loc) // TODO: Incorporate this into a URL class.
     {
@@ -108,20 +108,33 @@ var BP_MOD_MEMSTORE = (function ()
         // dict.url_xyz=true implies that xyz will be matched in insertions and lookups from dictionary.
         dict: {value: {url_scheme: false, url_host:true, url_port:true, url_path:true}},
         // action: properties referenced by the Actions class.
-        action: {value: {no_history:true} // no_history=true asserts we're not interested in maintaining history.
-                                          // Will cause Actions class to only keep the current value in memory
-                                          // A value of false asserts the opposite. Will
-                                          // cause Actions to save all previous values in memory.
+        action: {
+            value: {
+                // history=true asserts we're interested in maintaining history.
+                // Will cause Actions class to keep history in memory
+                // A value of false asserts the opposite. Will
+                // cause Actions to only keep current value in memory.
+                history: false,
+                // An assert action is one that re-asserts the existing value. When a record
+                // is received that has the same value as the most current value for its key,
+                // but a different timestamp, then it is deemed as an assertion of an existing
+                // value. 'save_asserts' dictates whether or not such records should be persisted
+                // to storage. Persisting repeated values can significantly increase the storage
+                // size for situations where the same values are repeatedly generated - e.g. E-Records.
+                // Note that an assert with the same exact value and timestamp is a duplicate and will
+                // always be ignored and discarded - the value of save_asserts nature will not
+                // affect that behaviour.
+                persist_asserts: false
+            },
         },
-        
-        // Return key value of the record.
+        // Returns record key
         getKey: {value: function (rec) {}}
     }); Object.freeze(DEFAULT_NATURE);
     
     Object.defineProperties(PREC_NATURE,
     {
         dict: {value: {url_host:true, url_port:true}},
-        actions: {value: {}},
+        actions: {value: {history:true, persist_asserts: true}},
         getKey: {value: function(rec)
             {
                 return rec.userid;
@@ -137,7 +150,7 @@ var BP_MOD_MEMSTORE = (function ()
     Object.defineProperties(EREC_NATURE,
     {
         dict: {value: {url_host:true, url_port:true, url_path:true}},
-        actions: {value: {no_history: true}},
+        actions: {value: {history: false, persist_asserts:false}},
         getKey: {value: function(rec)
             {
                 return rec.fieldType;
@@ -150,10 +163,10 @@ var BP_MOD_MEMSTORE = (function ()
             }}
     }); Object.freeze(EREC_NATURE);
     
-    Object.defineProperty(DT_NATURES, dt_eRecord, {value: EREC_NATURE});
-    Object.defineProperty(DT_NATURES, dt_pRecord, {value: PREC_NATURE});
-    Object.defineProperty(DT_NATURES, dt_default, {value: DEFAULT_NATURE});
-    Object.defineProperties(DT_NATURES,
+    Object.defineProperty(DT_NATURE, dt_eRecord, {value: EREC_NATURE});
+    Object.defineProperty(DT_NATURE, dt_pRecord, {value: PREC_NATURE});
+    Object.defineProperty(DT_NATURE, dt_default, {value: DEFAULT_NATURE});
+    Object.defineProperties(DT_NATURE,
     {
         getNature: {
             value: function (dt)
@@ -178,7 +191,7 @@ var BP_MOD_MEMSTORE = (function ()
                 }
             }}
     });
-    Object.freeze(DT_NATURES);
+    Object.freeze(DT_NATURE);
   
     /** @globals-end **/
 
@@ -192,8 +205,6 @@ var BP_MOD_MEMSTORE = (function ()
      * Acts as default constructor with no argument.
      * For an argument, it expects an Action Record or an Object object created from a
      * JSON serialized Action Record.
-     * In that case it behaves as a Move Constructor. That is, it adopts the
-     * properties of the argument and deletes them from the argument.
      */
     function Actions(jo)
     {
@@ -219,119 +230,40 @@ var BP_MOD_MEMSTORE = (function ()
     /** Method. Insert a record into the Action Records collection */
     Actions.prototype.insert = function(arec)
     {//TODO: Check for exact duplicate records. That is, records with matching timestamp and values.
-        //if (!arec.date) { arec.date = Date.now();} // TODO: Remove auto-population of date in PRecord constructor.
-        var n = this.arecs.push(arec);
-        if ((!this.curr) || (this.curr.date < arec.date)) {
-            this.curr = this.arecs[n-1];
+        if (this.curr) {
+            if (this.curr.date <= arec.date) {
+                // This is the latest value. Check if has same value as current.
+                if (DT_NATURE.compare(this.curr, arec.dt) === D_EQUAL) { // TODO: Implement DT_NATURE.compare
+                    // Same values. Now compare timestamps to check if they're the same record being
+                    // resent (when merging DBs for e.g.)
+                    if (this.curr.date !== arec.date) {
+                        // Same value being re-asserted. Just update the timestamp of the current record.
+                        this.curr.date = arec.date;
+                        arec.notes.isAssert = true; // Tell filestore that this is an assert. 
+                    } else {
+                        //repeated record (e.g. imported a CSV file again, re-merged with a DB), discard it.
+                        arec.notes.isRepeat = true; // Tell filestore that this is a repeat.
+                    }
+                }
+            }
+            else {
+                // This is a historical value. Consult with DT_NATURE whether we want to keep it.
+                arec.notes.isHistory = true;
+                if (DT_NATURE.keepHistory(arec.dt)) { // TODO: implement keepHistory
+                    this.arecs.push(arec);
+                }
+            }
         }
+        else { // This is the first value.
+            var n = this.arecs.push(arec);
+            this.curr = this.arecs[n-1];    
+        }        
     };
     
     function newActions(jo) {
         return new Actions(jo);
     }
     /** @end-class-defn **/
-
-
-    /** 
-     * Dissects document.location into URL segment array suitable for
-     * insertion into a DNode. Discards URL-scheme, query and fragment
-     * values as those are deemed irrelevant for our purpose.
-     */
-    function newUrla (l, dt) // throws BPError
-    {
-        var ha, pa, pr, pn, urla = [], i, s,
-        dtNature = DT_NATURES.getDictNature(dt);
-
-        // Note: We need scheme and hostname at a minimum for a valid URL. We also need
-        // pathname before we insert into TRIE, hence we'll append a "/" if path is missing.
-        // But first ensure that this is indeed a URL.
-        if (! (l && 
-                (typeof l.protocol=== "string") && (l.protocol.length > 0) &&
-                (typeof l.hostname === "string") && (l.hostname.length > 0) ) )
-            {throw new BPError("Usupported Page (only http/https websites are supported): "+JSON.stringify(l));}
-        
-        pr = l.protocol.toLowerCase();
-
-        if (dtNature.url_host)
-        {
-            // Split hostname into an array of strings.       
-            ha = l.hostname.split('.');
-            ha.reverse();
-        }
-        
-        if (dtNature.url_path)
-        {
-            if (!l.pathname) {s = "/";} // In practice, all code tacks-on a "/" if missing in a valid URL.
-            else {s = l.pathname;}
-            // Split pathname into path segments.
-            // First remove leading slashes
-            s = s.replace(/^\/+/,'');
-            // Now split into an array of strings.
-            pa = s.split('/');
-        }
-
-        // if (dtNature.url_query && l.search)
-        // {
-            // qa = l.search.split('&');
-        // }
-        
-        if (l.port && dtNature.url_port)
-        {
-            i = Number(l.port);
-            switch(pr) {
-                case PROTO_HTTP:
-                    if(i !== 80) {pn = i;}
-                break;
-                case PROTO_HTTPS:
-                    if(i !== 443) {pn = i;}
-                break;
-                default:
-                    pn = i;
-            }
-        }
-        
-        // Construct the url segment array
-        
-        if (dtNature.url_scheme && pr) {
-            switch(pr) {
-                case PROTO_HTTP:
-                    urla.push('{s}http');
-                    break;
-                case PROTO_HTTPS:
-                    urla.push('{s}https');
-                    break;
-                default:
-                    urla.push('{s}' + pr);
-            }
-        }
-
-        if (ha) {
-            for (i=0; i<ha.length; i++) {
-                if (i===0) {
-                    // Top-Level Domain. Doesn't account for TLDs like 'co.in' though.
-                    urla.push(DNODE_TAG.TLD + ha[i].toLowerCase());
-                }
-                else if (i === (ha.length-1)) {
-                    // Host name
-                    urla.push(DNODE_TAG.HOST + ha[i].toLowerCase());
-                }
-                else {
-                    // Second level domain
-                    urla.push(DNODE_TAG.DOMAIN + ha[i].toLowerCase());
-                }
-            }
-        }
-        if (pn) {urla.push(DNODE_TAG.PORT + pn);} // Port Number
-        if (pa) { // Path
-            for (i=0; i<pa.length; i++) {
-                if (pa[i] !== '') {
-                    urla.push(DNODE_TAG.PATH + pa[i]);
-                }
-            }
-        }
-        
-        return urla;
-    }
 
     /** @begin-class-def Iterator */
     /**
@@ -403,7 +335,7 @@ var BP_MOD_MEMSTORE = (function ()
         else if (i1.count() < i2.count()) {return D_SUB;}
         else {return D_SUPER;}
     }
-    /** @end-class-defn **/
+    /** @end-class-defn Iterator **/
       
     /** @begin-class-def DNode */
 
@@ -481,7 +413,7 @@ var BP_MOD_MEMSTORE = (function ()
             if (!recsMap) {
                 this[recTag] = (recsMap = {});
             }
-            r = recsMap[ki=DT_NATURES.getKey(rec)];
+            r = recsMap[ki=DT_NATURE.getKey(rec)];
             if (r) {
                 r.insert(rec);
             }
@@ -624,7 +556,109 @@ var BP_MOD_MEMSTORE = (function ()
             //}
         }
     };
-    /** @end-class-def **/
+    
+    /** 
+     * Dissects document.location into URL segment array suitable for
+     * insertion into a DNode. Discards URL-scheme, query and fragment
+     * values as those are deemed irrelevant for our purpose.
+     */
+    function newUrla (l, dt) // throws BPError
+    {
+        var ha, pa, pr, pn, urla = [], i, s,
+        dtNature = DT_NATURE.getDictNature(dt);
+
+        // Note: We need scheme and hostname at a minimum for a valid URL. We also need
+        // pathname before we insert into TRIE, hence we'll append a "/" if path is missing.
+        // But first ensure that this is indeed a URL.
+        if (! (l && 
+                (typeof l.protocol=== "string") && (l.protocol.length > 0) &&
+                (typeof l.hostname === "string") && (l.hostname.length > 0) ) )
+            {throw new BPError("Usupported Page (only http/https websites are supported): "+JSON.stringify(l));}
+        
+        pr = l.protocol.toLowerCase();
+
+        if (dtNature.url_host)
+        {
+            // Split hostname into an array of strings.       
+            ha = l.hostname.split('.');
+            ha.reverse();
+        }
+        
+        if (dtNature.url_path)
+        {
+            if (!l.pathname) {s = "/";} // In practice, all code tacks-on a "/" if missing in a valid URL.
+            else {s = l.pathname;}
+            // Split pathname into path segments.
+            // First remove leading slashes
+            s = s.replace(/^\/+/,'');
+            // Now split into an array of strings.
+            pa = s.split('/');
+        }
+
+        // if (dtNature.url_query && l.search)
+        // {
+            // qa = l.search.split('&');
+        // }
+        
+        if (l.port && dtNature.url_port)
+        {
+            i = Number(l.port);
+            switch(pr) {
+                case PROTO_HTTP:
+                    if(i !== 80) {pn = i;}
+                break;
+                case PROTO_HTTPS:
+                    if(i !== 443) {pn = i;}
+                break;
+                default:
+                    pn = i;
+            }
+        }
+        
+        // Construct the url segment array
+        
+        if (dtNature.url_scheme && pr) {
+            switch(pr) {
+                case PROTO_HTTP:
+                    urla.push('{s}http');
+                    break;
+                case PROTO_HTTPS:
+                    urla.push('{s}https');
+                    break;
+                default:
+                    urla.push('{s}' + pr);
+            }
+        }
+
+        if (ha) {
+            for (i=0; i<ha.length; i++) {
+                if (i===0) {
+                    // Top-Level Domain. Doesn't account for TLDs like 'co.in' though.
+                    urla.push(DNODE_TAG.TLD + ha[i].toLowerCase());
+                }
+                else if (i === (ha.length-1)) {
+                    // Host name
+                    urla.push(DNODE_TAG.HOST + ha[i].toLowerCase());
+                }
+                else {
+                    // Second level domain
+                    urla.push(DNODE_TAG.DOMAIN + ha[i].toLowerCase());
+                }
+            }
+        }
+        if (pn) {urla.push(DNODE_TAG.PORT + pn);} // Port Number
+        if (pa) { // Path
+            for (i=0; i<pa.length; i++) {
+                if (pa[i] !== '') {
+                    urla.push(DNODE_TAG.PATH + pa[i]);
+                }
+            }
+        }
+        
+        return urla;
+    }
+
+    /** @end-class-def DNode **/
 
     /**
      * @constructor
@@ -665,6 +699,7 @@ var BP_MOD_MEMSTORE = (function ()
     function insertRec(rec)
     {
         var result = false;
+        DT_NATURE.imbue(rec);
         switch (rec.dt) {
             case dt_eRecord:
                 result = g_kd.insert(new DRecord(rec));
