@@ -109,8 +109,9 @@ var BP_MOD_PANEL = (function (g_win)
     var u_cir_F = '\u24BB';
     var u_cir_X = '\u24CD';
     
-    // Function callback from MOD_BP_CS
-    var g_autoFill; // autoFill function to call back.
+    // Object sent by BP_MOD_CS
+    // = {doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill, autoFillable: autoFillable}
+    var g_ctx;
     /** @globals-end **/
     
 	function createImageElement(imgPath)
@@ -121,7 +122,7 @@ var BP_MOD_PANEL = (function (g_win)
 		return el;
 	}
 	
-    function makeDataDraggable2(ctx, j_panelList) // ctx = {doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}
+    function makeDataDraggable2(ctx, j_panelList) // ctx saved in g_ctx
     {
         var dnd = ctx.dnd;
         function handleDragStart (e)
@@ -420,7 +421,7 @@ var BP_MOD_PANEL = (function (g_win)
     }
     
     // CREATE THE CONTROL-PANEL
-    function createPanel(ctx) // ctx = {doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill}
+    function createPanel(ctx) // ctx saved in g_ctx
     {
         var doc = ctx.doc, id_panel = ctx.id_panel, dnd = ctx.dnd, db = ctx.db,
             j_panel = $(doc.createElement('div')).attr({id: id_panel, style:"display:none"}),
@@ -428,7 +429,7 @@ var BP_MOD_PANEL = (function (g_win)
                             '<button type="button" id="com-bprivy-xB" accesskey="q">'+u_cir_X+'</button>' +
                         '</div>' +
                         '<div id="com-bprivy-panelList"></div>';
-        g_autoFill = ctx.autoFill;
+        g_ctx = ctx;
         j_panel[0].insertAdjacentHTML('beforeend', html);
         makeDataDraggable2(ctx, $('#'+eid_panelList,j_panel));
         var j_xButton = $('#'+eid_xButton, j_panel).data(pn_d_panelID, id_panel);
@@ -562,6 +563,7 @@ var BP_MOD_CS = (function(g_win)
     var g_loc = IMPORT(g_win.location);
     var g_doc = IMPORT(g_win.document);
     var settings = {AutoFill:true, ShowPanelIfNoFill: false}; // User Settings
+    var g_autoFillable; // Indicates that the page was found to be autofillable.
     /** @globals-end **/
 
     /**
@@ -622,7 +624,7 @@ var BP_MOD_CS = (function(g_win)
 
     function autoFill(userid, pass) // if arguments are not supplied, takes them from global
     {
-        var eRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone;
+        var eRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone, pRecsMap;
         // auto-fill
         // if we don't have a stored username/password, then there is nothing
         // to autofill.
@@ -630,17 +632,24 @@ var BP_MOD_CS = (function(g_win)
         if (userid && pass) {
             u = userid; p = pass;
         }
-        else if ((pRecsMap  = g_db.pRecsMap)) 
+        else if ((pRecsMap = g_db.pRecsMap)) 
         {
             ua = Object.keys(pRecsMap); 
-            // if there is more than one username, do not autofill
-            if (ua && (ua.length === 1)) {
-                u = ua[0];
-                p = pRecsMap[ua[0]].curr.pass;
+            if (ua) {
+                if (ua.length === 1) {
+                    u = ua[0];
+                    p = pRecsMap[ua[0]].curr.pass;
+                }
+                else if (ua.length > 1) {
+                    // if there is more than one username, do not autofill, but
+                    // try to determine if autofilling is possible.
+                    u = "";
+                    p = ""
+                }
             }
         }
         
-        if (u && p && (g_db.eRecsMapArray)) 
+        if ((u!==undefined) && (p!==undefined) && (g_db.eRecsMapArray)) 
         {
             // Cycle through eRecords starting with the
             // best URL matching node.
@@ -689,8 +698,8 @@ var BP_MOD_CS = (function(g_win)
             }
         }  
 
-    
-        if (uDone && pDone) {
+        if (uDone || pDone) {
+            g_autoFillable = true;
             return true;
         }
     }
@@ -813,7 +822,7 @@ var BP_MOD_CS = (function(g_win)
         }
 
         // TODO: Since this is async, maybe we should check if the panel already exists?
-        createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill}).show();
+        createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill, autoFillable: g_autoFillable}).show();
     }
     
    
