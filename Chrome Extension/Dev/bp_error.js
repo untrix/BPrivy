@@ -124,23 +124,33 @@ var BP_MOD_ERROR = (function()
    {
         Object.defineProperties(this,
         {
-            name: {writable: true, enumerable: true},
-            actions: {writable: true, enumerable: true}    
+            name: {value: "unknown", writable: true, enumerable: true},
+            actions: {value: [], writable: true, enumerable: true}    
         });
         
         if (arg && (typeof arg === 'string')) {
             this.name = arg;
-            this.actions = [];
         }
-        else if (arg && typeof arg === 'object') {
+        else if (arg && (typeof arg === 'object') && (arg.constructor === Activity)) {
             this.name = arg.name;
             this.actions = arg.actions;
         }
         
         Object.freeze(this);
    }
-   Activity.prototype.push = function (actn) {
+   Activity.prototype.push = function (actn)
+   {
        if (actn) {this.actions.push(actn);}
+   };
+   Activity.prototype.toString = function ()
+   {
+       var str = this.name || "", i,
+           n = this.actions.length;
+           
+       for (i=0; i<n; i++) {
+           str += ";" + this.actions[i];
+       }
+       return str;
    };
    
    // err is either o.err returned from the plugin or a message string. BPError.atvt is
@@ -149,34 +159,46 @@ var BP_MOD_ERROR = (function()
     {
         Object.defineProperties(this,
         {// name and message are standard in ECmascript Error prototype.
-            name: {value:"BPError", enumerable: true},
+            name: {writable: true, enumerable: true},
             message: {writable:true, enumerable: true},
             atvt: {writable:true, enumerable:true},
-            err: {value:{}, writable:true, enumerable:true}                
+            err: {value:{}, writable:true, enumerable:true},
         });
 
         if (_err && (typeof _err === "string"))
         {
             this.atvt = BPError.atvt; // Take value of page atvt
             this.message = _err;
+            this.name = "BPError";
         }
         else if (_err && (typeof _err === "object"))
         {
+            this.name = _err.name;
+            this.atvt = BPError.atvt;
+            this.err = _err;
+            
             if (_err.name === "PluginError" || _err.acode) {
-                this.err = _err;
-                this.atvt = BPError.atvt; // Take value of page atvt
                 this.message = _err.gmsg || _err.smsg || _err.acode || _err.gcode || _err.scode;
             }
             else if (_err.name === "BPError") {
                 // Copy Construct
-                this.err = _err.err;
                 this.atvt = new Activity(_err.atvt);
                 this.message = _err.message;        
             }
             else { // System error
-                this.atvt = BPError.atvt;
-                this.message = _err.message;
-                this.err = _err;
+                switch (_err.constructor) {
+                    case Error:
+                    case RangeError:
+                    case TypeError:
+                    case EvalError:
+                    case ReferenceError:
+                    case SyntaxError:
+                    case URIError:
+                        this.message = _err.message;
+                    break;
+                    default:
+                        this.message = _err.name + ": " + _err.message;
+                }                
             }
         }
         
@@ -185,12 +207,12 @@ var BP_MOD_ERROR = (function()
     BPError.atvt = undefined; // Global object for storing current activity. 
     BPError.prototype.toString = function()
     {
-        return JSON.stringify(this);
-        /*return this.name + "://" + (this.message? this.message : "") +
-                "?activity=" + JSON.stringify(this.atvt) +
+        //return JSON.stringify(this);
+        return this.name + "://" + (this.message || "") +
+               (this.atvt? "?activity=" + this.atvt.toString() : "") +
                (this.acd? "&acd="+this.acd : "") +
                (this.gcd? "&gcd="+this.gcd : "") + (this.scd? "&scd="+this.scd : "") +
-               (this.smg? "&smg="+this.smg : "");*/
+               (this.smg? "&smg="+this.smg : "");
     };
     
     function alert (arg) 

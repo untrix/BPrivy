@@ -162,8 +162,13 @@ var BP_MOD_FILESTORE = (function()
         var data = '[{"header":true}' + o.dat + "]";
         var recs = JSON.parse(data);
         if (recs && (typeof recs === 'object') && recs.constructor === Array) {
-            for (i=recs.length-1; i>=0; i--) {
-                MEM_STORE.insertRec(recs[i]);
+            for (i=recs.length-1; i>0; i--) {
+                try {
+                    MEM_STORE.insertRec(recs[i]);
+                } catch (e) {
+                    var bpe = new BPError(e);
+                    BP_MOD_ERROR.logwarn("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
+                }
             }
             MOD_ERROR.log("Loaded file " + filePath);
         }
@@ -182,24 +187,36 @@ var BP_MOD_FILESTORE = (function()
         // Load P-Records
         if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_p, o) && o.lsd && o.lsd.f)
         {
-            path_dir_p = g_dbPath + path_sep + dir_p;
+            path_dir_p = g_dbPath + path_sep + dir_p + path_sep;
             f = o.lsd.f; file_names = Object.keys(f);
             for (i=file_names.length-1; i>=0; --i)
             {
                 if (f[ file_names[i] ].ext === ext_Open) {
-                    loadFile(path_dir_p + path_sep + file_names[i]);
+                    try {
+                        loadFile(path_dir_p + file_names[i]);
+                    } catch (e) {
+                        var bpe = new BPError(e);
+                        BP_MOD_ERROR.logwarn("loadFile@bp_filestore.js " + bpe.toString());
+                        BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_p + file_names[i]);
+                    }
                 }
             }
         }
         // Load K-Records
         if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_k, o) && o.lsd && o.lsd.f)
         {
-            path_dir_k = g_dbPath + path_sep + dir_k;
+            path_dir_k = g_dbPath + path_sep + dir_k + path_sep;
             f = o.lsd.f; file_names = Object.keys(f);
             for (i=file_names.length-1; i>=0; --i)
             {
                 if (f[ file_names[i] ].ext === ext_Open) {
-                    loadFile(path_dir_k + path_sep + file_names[i]);
+                    try {
+                        loadFile(path_dir_k + file_names[i]);
+                    } catch (e) {
+                        var bpe = new BPError(e);
+                        BP_MOD_ERROR.logwarn("loadFile@bp_filestore.js " + bpe.toString());
+                        BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_k + file_names[i]);
+                    }
                 }
             }
         }
@@ -413,7 +430,7 @@ var BP_MOD_FILESTORE = (function()
     };
     /** @end-class-def CSVFile **/
    
-    function importCSV(path)
+    function importCSV(path, obfuscated)
     {
         var o={}, rval, i, prec, pidx, csv, line;
         if (BP_PLUGIN.ls(path, o))
@@ -427,36 +444,28 @@ var BP_MOD_FILESTORE = (function()
                     while ((csv = csvf.getcsv2()) !== undefined)
                     {
                         if (!csv) {continue;} // unparsable line
-                        else {console.log(JSON.stringify(csv));}
+                        else {BP_MOD_ERROR.loginfo("Importing " + JSON.stringify(csv));}
                         pidx = csvf.pidx;
-                        prec = newPRecord();
-                        prec.userid = csv[pidx.userid];
-                        prec.pass = csv[pidx.pass];
-                        prec.loc = parseURL(csv[pidx.url]);
-                        if (!prec.isValid()) {
+                        prec = newPRecord(parseURL(csv[pidx.url]), Date.now(), 
+                                          csv[pidx.userid],
+                                          csv[pidx.pass]);
+                        // prec.userid = csv[pidx.userid];                        // prec.pass = csv[pidx.pass];                        // prec.loc = parseURL(csv[pidx.url]);
+                        if (!MEM_STORE.PREC_TRAITS.isValid(prec)) {
                             console.log("Discarding invalid csv record - " + JSON.stringify(csv));
                             prec = null; continue;
                         }
                         if (MEM_STORE.insertRec(prec)) {
-                            insertRec(prec);
+                            try {
+                                insertRec(prec);                                
+                            } catch (e) {
+                                var bpe = new BPError(e);
+                                BP_MOD_ERROR.logwarn("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());
+                            }
                         }
                     }
                     return true;
                 default:
-                    return false;
-                // case ".3db":
-                    // path = path + "/" + dir_p + "/open.3eo";
-                    // rval = BP_PLUGIN.readJFile(path, o);
-                    // if (!rval) {throw o.err;}
-                    // recs = JSON.parse(o.rdf);
-                    // return recs;
-//                 
-                // case ".3eo":
-                // case ".3ec":
-                    // rval = BP_PLUGIN.readJFile(path, o);
-                    // if (!rval) {throw o.err;}
-                    // recs = JSON.parse(o.rdf);
-                    // return recs;                
+                    return false;              
             }
         }
         else

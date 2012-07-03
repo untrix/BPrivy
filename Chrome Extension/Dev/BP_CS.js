@@ -67,6 +67,7 @@ var BP_MOD_PANEL = (function (g_win)
 	var eid_inForm = "com-bprivy-iform-";
 	var eid_tButton = "com-bprivy-tB-"; // ID prefix for IO toggle button
 	var eid_xButton = "com-bprivy-xB"; // ID of the panel close button
+	var eid_fButton = "com-bprivy-fB"; // ID of the fill fields button
 
 	// CSS Class Names. Visible as value of 'class' attribute in HTML
 	// and used as keys in CSS selectors. These need to be globally
@@ -105,7 +106,11 @@ var BP_MOD_PANEL = (function (g_win)
     var u_cir_S = '\u24C8';
     var u_cir_e = '\u24D4';
     var u_cir_E = '\u24BA';
+    var u_cir_F = '\u24BB';
     var u_cir_X = '\u24CD';
+    
+    // Function callback from MOD_BP_CS
+    var g_autoFill; // autoFill function to call back.
     /** @globals-end **/
     
 	function createImageElement(imgPath)
@@ -231,7 +236,7 @@ var BP_MOD_PANEL = (function (g_win)
         
         return j_inf[0];
 	}
-	
+
 	/** Toggles the IO Widget **/
 	function toggleIO(e)
 	{
@@ -240,7 +245,7 @@ var BP_MOD_PANEL = (function (g_win)
         //console.info("tb clicked" + JSON.stringify(d));
 	    var op = doc.getElementById(d.opid),
 	        ifm = doc.getElementById(d.ifid),
-	        id = d.id,
+	        id = d.id, fb = doc.getElementById(d.fbid),
 	        parent, col, ue, pe, uo, po;
 	    
 	    if (op) { // replace draggable text with input form
@@ -260,6 +265,7 @@ var BP_MOD_PANEL = (function (g_win)
 	           parent.removeChild(op);
 	           parent.appendChild(ifm);
 	           $(e.target).text(u_cir_S); // unicode circled s = save
+	           $(fb).prop('disabled', true);
 	        }
 	    }
 	    else if (ifm) { // replace input-form with draggable text
@@ -277,7 +283,7 @@ var BP_MOD_PANEL = (function (g_win)
 	        if ((uo !== u) || (po !== p))
 	        {
 	            // save to db
-	            var pRec = newPRecord(g_loc, u, p);
+	            var pRec = newPRecord(g_loc, Date.now(), u, p);
                 // Can't update locally because we only have one DNode locally and
                 // that may not be the right one to insert the record into.
 	            saveRecord(pRec);
@@ -295,6 +301,7 @@ var BP_MOD_PANEL = (function (g_win)
 	            //parent.removeChild(ifm);
 	            parent.appendChild(op);// Insert the 'op' item.
 	            $(e.target).text(u_cir_E); // unicode circled e = edit
+                $(fb).prop('disabled', false);
 	        }
 	        
 	        $(ifm).remove(); // Then remove the 'ifm' item.
@@ -304,7 +311,12 @@ var BP_MOD_PANEL = (function (g_win)
         e.preventDefault(); // Causes event to get cancelled if cancellable
         return false; // Causes the event to be cancelled (except mouseover event).
 	}
-	
+
+    function fillHandler(e)
+    {
+        
+    }
+    
     /** Creates an IO Widget with a Toggle Button and Output Fields **/
     function insertIOItem2 (doc, j_panel, user, pass, bInp)
     {
@@ -314,32 +326,48 @@ var BP_MOD_PANEL = (function (g_win)
         var opid = eid_opElement + id;
         var ifid = eid_inForm + id;
         var tbid = eid_tButton + id;
+        var fbid = eid_fButton + id;//TODO: define eid_fButton
         
         var j_li = $(doc.createElement("div")).attr({id: liid, class: css_class_li});
+        var j_fb = $('<button type="button">').attr(
+            {
+                'data-opid': opid,
+                'data-id': id,
+                'data-tbid': tbid,
+                id: fbid,
+                disabled: true
+            }
+        ).addClass(css_class_tButton).text(u_cir_F);//TODO: Define u_cir_F
+        addEventListener(j_fb[0], 'click', fillHandler);//TODO: Define fillHandler
+        j_li.append(j_fb);
+        
         var j_tb = $('<button type="button">').attr(
             {
                 'data-opid': opid,
                 'data-ifid': ifid,
                 'data-id': id,
-                'data-tbid': tbid,
+                'data-fbid': fbid,
                 id: tbid
+                //'data-tbid': tbid,
                 //style: BP_MOD_CSS.style_tButton
             }
         ).addClass(css_class_tButton);
         addEventListener(j_tb[0], 'click', toggleIO);
-
+        
         j_li.append(j_tb);
-        if (!bInp) {
+        if (!bInp) { // Output Fields
             j_tb.text(u_cir_E); // Unicode circled e = edit
-            j_li.append(createOpItem(doc, id, user, pass)); 
-        } // Output Fields
-        else {
+            j_li.append(createOpItem(doc, id, user, pass));
+            j_fb.prop('disabled', false);
+        }
+        else { // Input fields
             j_tb.text(u_cir_S); // unicode circled s = save
             j_li.append(createInItem(doc, id, user, pass));
+            j_fb.prop('disabled', true);
         }
         jq.append(j_li);
 
-        // Prevent mousedown to bubble up in order to prevent panel dragging by
+        // Prevent mousedown from bubbling up; so as to prevent panel dragging by
         // jquery-ui.
         addEventListener(j_li[0], 'mousedown', stopPropagation);
     }
@@ -351,7 +379,7 @@ var BP_MOD_PANEL = (function (g_win)
         pRecsMap=db.pRecsMap;
         if (pRecsMap) 
         {
-            userids = Object.getOwnPropertyNames(pRecsMap);
+            userids = Object.keys(pRecsMap);
         
             for (i=0; i<userids.length; i++) {
                 //var curr = pRecsMap[userids[i]].curr;
@@ -392,14 +420,15 @@ var BP_MOD_PANEL = (function (g_win)
     }
     
     // CREATE THE CONTROL-PANEL
-    function createPanel(ctx) // ctx = {doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}
+    function createPanel(ctx) // ctx = {doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill}
     {
-        var doc = ctx.doc, id_panel = ctx.id_panel, dnd = ctx.dnd, db = ctx.db;
-        var j_panel = $(doc.createElement('div')).attr({id: id_panel, style:"display:none"});
-        var html =      '<div id="com-bprivy-panelTitle"><div id="com-bprivy-TitleText">BPrivy</div>' +
+        var doc = ctx.doc, id_panel = ctx.id_panel, dnd = ctx.dnd, db = ctx.db,
+            j_panel = $(doc.createElement('div')).attr({id: id_panel, style:"display:none"}),
+            html =      '<div id="com-bprivy-panelTitle"><div id="com-bprivy-TitleText">BPrivy</div>' +
                             '<button type="button" id="com-bprivy-xB" accesskey="q">'+u_cir_X+'</button>' +
                         '</div>' +
                         '<div id="com-bprivy-panelList"></div>';
+        g_autoFill = ctx.autoFill;
         j_panel[0].insertAdjacentHTML('beforeend', html);
         makeDataDraggable2(ctx, $('#'+eid_panelList,j_panel));
         var j_xButton = $('#'+eid_xButton, j_panel).data(pn_d_panelID, id_panel);
@@ -449,7 +478,7 @@ var BP_MOD_PANEL = (function (g_win)
 }(window));
 /** @ModuleEnd */
 
-(function(g_win)
+var BP_MOD_CS = (function(g_win)
 {
     'use strict';
     /** @export-module-begin */
@@ -525,6 +554,9 @@ var BP_MOD_PANEL = (function (g_win)
     var MT_BP_DT = IMPORT(m.MT_BP_DT);
     var MT_TEXT_PLAIN = IMPORT(m.MT_TEXT_PLAIN);
     var MT_BP_PREFIX = IMPORT(m.MT_BP_PREFIX);
+    /** @import-module-begin Error */
+    m = BP_MOD_ERROR;
+    var BPError = IMPORT(m.BPError);
     /** @import-module-end **/ m = null;
     /** @globals-begin */
     var g_loc = IMPORT(g_win.location);
@@ -543,7 +575,7 @@ var BP_MOD_PANEL = (function (g_win)
             el = doc.getElementById(er.id);
             if (!el) {el = null;}
         }
-        if((el === undefined) && er.name) 
+        if((el === undefined) && er.name) // (!er.id), therefore search based on field name
         {
             nl = doc.getElementsByName(er.name);
 
@@ -559,7 +591,12 @@ var BP_MOD_PANEL = (function (g_win)
                 ell.push(nl.item(i));
             }
             
-            if (ell.length === 1) {
+            // if (ell.length === 1) {                // el = ell[0];            // }            // else {                // el = null;            // }
+            if (ell.length > 0) {
+                // One or more elements had the same name,type and tagName. We'll fill
+                // them all because this is probably a pattern wherein alternate forms are
+                // declared on the page for the same purpose but different environments
+                // e.g. with JS/ without JS (twitter has such a page).
                 el = ell[0];
             }
             else {
@@ -568,13 +605,97 @@ var BP_MOD_PANEL = (function (g_win)
         }
 
         if (el) {
-            // We found the element. AutoFill it.
+            // We found the element(s). AutoFill it/them. We're assuming that it is an 'input'
+            // element, hence values will go into its .value IDL attribute. If we start filling
+            // other elements (such as textarea) then this assumption won't hold anymore.
             el.value = dcrpt ? decrypt(str) : str;
+            if (ell.length > 1) {
+                for (i=1; i<ell.length; i++)
+                {
+                    ell[i].value = dcrpt ? decrypt(str) : str;
+                }
+            }
             return true;
         }
     }
     
 
+    function autoFill(userid, pass) // if arguments are not supplied, takes them from global
+    {
+        var eRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone;
+        // auto-fill
+        // if we don't have a stored username/password, then there is nothing
+        // to autofill.
+        
+        if (userid && pass) {
+            u = userid; p = pass;
+        }
+        else if ((pRecsMap  = g_db.pRecsMap)) 
+        {
+            ua = Object.keys(pRecsMap); 
+            // if there is more than one username, do not autofill
+            if (ua && (ua.length === 1)) {
+                u = ua[0];
+                p = pRecsMap[ua[0]].curr.pass;
+            }
+        }
+        
+        if (u && p && (g_db.eRecsMapArray)) 
+        {
+            // Cycle through eRecords starting with the
+            // best URL matching node.
+            l = g_db.eRecsMapArray.length; uDone=false; pDone=false;
+            for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
+                eRecsMap = g_db.eRecsMapArray.pop();
+                
+                if (eRecsMap[ft_userid]) { uer = eRecsMap[ft_userid].curr;}
+                if (eRecsMap[ft_pass]) {per = eRecsMap[ft_pass].curr;}
+                if ((!uDone) && uer) {
+                    uDone = autoFillEl(uer, u);
+                    if (!uDone && (i===0)) {
+                        // The data in the E-Record was an exact URL match
+                        // yet, it has been shown to be not useful.
+                        // Therefore purge it form the K-DB.
+                      
+                        // Location gets deleted from e-rec when it is
+                        // inserted into the DB. Therefore we'll need to
+                        // put it back in.
+                        uer.loc = g_loc; // TODO: This may not be required anymore.
+
+                        // TODO: Can't assume that i===0 implies full url match.
+                        // Need to construct a URLA from uer.loc and compare it with
+                        // g_loc. Commenting out for the time being.
+                        //deleteRecord(uer); // TODO: implement deleteRecord
+                    }
+                }
+                if ((!pDone) && per) {
+                    pDone = autoFillEl(per, p, true);
+                    if (!pDone && (i===0)) {
+                        // The data in the E-Record was an exact URL match
+                        // yet, it has been shown to be not useful.
+                        // Therefore purge it form the K-DB.
+
+                        // Location gets deleted from e-rec when it is
+                        // inserted into the DB. Therefore we'll need to
+                        // put it back in.
+                        per.loc = g_loc; // TODO: This may not be required anymore.
+
+                        // TODO: Can't assume that i===0 implies full url match.
+                        // Need to construct a URLA from uer.loc and compare it with
+                        // g_loc. Commenting out for the time being.
+                        //deleteRecord(per); // TODO: implement deleteRecord
+                    }
+                }
+            }
+        }  
+
+    
+        if (uDone && pDone) {
+            return true;
+        }
+    }
+       
+/*
     function autoFill()
     {
         var eRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone,
@@ -588,7 +709,7 @@ var BP_MOD_PANEL = (function (g_win)
             // if there is more than one username, do not autofill
             if (ua && (ua.length === 1) && (g_db.eRecsMapArray)) 
             {
-                // Cycle through tag_eRecs records starting with the
+                // Cycle through eRecords starting with the
                 // best URL matching node.
                 l = g_db.eRecsMapArray.length; uDone=false; pDone=false;
                 for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
@@ -641,7 +762,8 @@ var BP_MOD_PANEL = (function (g_win)
         if (uDone && pDone) {
             return true;
         }
-    }
+    }*/
+
        
     /** 
      * Invoked upon receipt of DB records from the MemStore module.
@@ -664,6 +786,11 @@ var BP_MOD_PANEL = (function (g_win)
                 }
             }
         }
+        else
+        {
+            var exc = new BPError(resp.err);
+            BP_MOD_ERROR.warn("bp_cs.js@init " + exc.toString() + "]");
+        }        
     }
     
     /** 
@@ -681,12 +808,12 @@ var BP_MOD_PANEL = (function (g_win)
         else
         {
             g_db.clear();
-            BP_MOD_ERROR.warn("BPrivy: There was an error looking up passwords [" +
-                               resp.err.message + "]");
+            var exc = new BPError(resp.err);
+            BP_MOD_ERROR.warn("bp_cs.js@showPanel " + exc.toString() + "]");
         }
 
-        // TODO: Since this is async, maybe we should check if the panel exists.
-        createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
+        // TODO: Since this is async, maybe we should check if the panel already exists?
+        createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill}).show();
     }
     
    
@@ -825,14 +952,14 @@ var BP_MOD_PANEL = (function (g_win)
                 e.dataTransfer.dropEffect = 'copy';
 
                 // Save an ERecord.
-                var eRec = newERecord();
-                eRec.tagName = e.target.tagName;
-                eRec.id = e.target.id;
-                eRec.name = e.target.name;
-                eRec.type = e.target.type;
-                eRec.fieldType = e.dataTransfer.getData(MT_BP_DT);
-                //could this lead to a security issue? should we use g_doc instead?
-                eRec.loc = e.target.ownerDocument.location;
+                var eRec = newERecord(e.target.ownerDocument.location,
+                                      Date.now(),
+                                      e.dataTransfer.getData(MT_BP_DT), // fieldType
+                                      e.target.tagName,
+                                      e.target.id,
+                                      e.target.name,
+                                      e.target.type);
+                // eRec.tagName = e.target.tagName;                // eRec.id = e.target.id;                // eRec.name = e.target.name;                // eRec.type = e.target.type;                // eRec.fieldType = e.dataTransfer.getData(MT_BP_DT);                // //could this lead to a security issue? should we use g_doc instead?                // eRec.loc = e.target.ownerDocument.location;
                 saveRecord(eRec);
 
                 data = e.dataTransfer.getData(MT_TEXT_PLAIN);
@@ -849,7 +976,7 @@ var BP_MOD_PANEL = (function (g_win)
         function inputHandler(e)
         {
             // console.info("inputHandler invoked");
-            var eRec = newERecord(), dragged_el;
+            var eRec, dragged_el;
             if (g_dnd.draggedElementID) {
                 //dragged_el = g_doc.getElementById(g_dnd.draggedElementID);
                 dragged_el = g_dnd.draggedElement;
@@ -861,12 +988,14 @@ var BP_MOD_PANEL = (function (g_win)
             
             if ( dragged_el && ($(dragged_el).data(pn_d_value) === e.target.value))
             {
-                eRec.tagName = e.target.tagName;
-                eRec.id = e.target.id;
-                eRec.name = e.target.name;
-                eRec.type = e.target.type;
-                eRec.fieldType = $(dragged_el).data(pn_d_dataType);
-                eRec.loc = g_doc.location;
+                eRec = newERecord(g_doc.location,
+                                 Date.now(),
+                                 $(dragged_el).data(pn_d_dataType),//fieldType
+                                 e.target.tagName,
+                                 e.target.id,
+                                 e.target.name,
+                                 e.target.type);
+                // eRec.tagName = e.target.tagName;                // eRec.id = e.target.id;                // eRec.name = e.target.name;                // eRec.type = e.target.type;                // eRec.fieldType = $(dragged_el).data(pn_d_dataType);                // eRec.loc = g_doc.location;
                                 
                 saveRecord(eRec);
                 

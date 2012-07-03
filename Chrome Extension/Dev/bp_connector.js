@@ -46,62 +46,57 @@ var BP_MOD_CONNECT = (function ()
     function imbueARec(that, type, loc, date) // TODO: Make everything unwritable
     {
         // date is number of milliseconds since midnight Jan 1, 1970.
-        if (date !== undefined && date !== null) {
-            date = Number(date);
+        if (date !== undefined && date !== null)
+        {
+            date = Number(date); 
         }
-        else {
-            date = Date.now(); // returns a Number
-        }
+        // else {            // date = Date.now(); // returns a Number        // }
         
         Object.defineProperties(that,
         {
             // Record Type. Determines which dictionary this record belongs to and a bunch
-            // of other logic based on DT_NATURES
-            dt: {value: type, writable: false, enumerable: true, configurable: false},
-            date: {value: date, writable: false, enumerable: true, configurable: false},
+            // of other logic based on DT_TRAITS
+            dt: {value: type, enumerable: true},
+            date: {value: date, enumerable: true},
             // URL that this record pertains to. Determines where the record will sit within the URL-trie.
-            loc: {value: loc, writable: true, enumerable: true, configurable: false},
-            notes: {value: {}, writable: false, enumerable: true, configurable: false}
+            loc: {value: loc, enumerable: true}
         });
     }
     
-    function ERecord()
+    function ERecord(loc, date, fieldType, tagName, id, name, type)
     {
-        imbueARec(this, dt_eRecord);
-        var descriptor2 = {writable: true, enumerable: true, configurable: false};
+        imbueARec(this, dt_eRecord, loc, date);
         Object.defineProperties(this, 
         {
-            fieldType: descriptor2,
-            tagName: descriptor2,
-            id: descriptor2,
-            name: descriptor2,
-            type: descriptor2
+            fieldType: {value: fieldType, enumerable: true},
+            tagName: {value: tagName, enumerable: true},
+            id: {value: id, enumerable: true},
+            name: {value: name, enumerable: true},
+            type: {value: type, enumerable: true}
         });
-        Object.seal(this); // TODO: Freeze the object
     }
     ERecord.prototype.toJson = function ()
     {
         return JSON.stringify(this, null, 2);
     };
-    function newERecord() {
-        return new ERecord();    
+    function newERecord(loc, date, fieldType, tagName, id, name, type) {
+        return new ERecord(loc, date, fieldType, tagName, id, name, type);    
     }
 
-    function PRecord(loc, userid, pass)
+    function PRecord(loc, date, userid, pass)
     {
-        imbueARec(this, dt_pRecord, loc);
+        imbueARec(this, dt_pRecord, loc, date);
         Object.defineProperties(this,
             {
-                userid: {value: userid, writable: true, enumerable: true, configurable: false},
-                pass: {value: pass, writable: true, enumerable: true, configurable: false}
+                userid: {value: userid, enumerable: true},
+                pass: {value: pass, enumerable: true}
             }
         );
-        Object.seal(this); // TODO: Freeze the object
     }
     
-    function newPRecord(loc, userid, pass)
+    function newPRecord(loc, date, userid, pass)
     {
-        return new PRecord(loc, userid, pass);
+        return new PRecord(loc, date, userid, pass);
     }
     
     function createDB (dbName, dbDir, callbackFunc) 
@@ -114,9 +109,9 @@ var BP_MOD_CONNECT = (function ()
         rpcToMothership({dt: cm_loadDB, dbPath:dbPath}, callbackFunc);
     }
 
-    function importCSV (dbPath, callbackFunc) 
+    function importCSV (dbPath, obfuscated, callbackFunc) 
     {
-        rpcToMothership({dt: cm_importCSV, dbPath:dbPath}, callbackFunc);
+        rpcToMothership({dt: cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
     }
 
     /** ModuleInterfaceGetter Connector */

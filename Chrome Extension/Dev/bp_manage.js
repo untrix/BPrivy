@@ -82,7 +82,9 @@ var BP_MOD_MANAGE = (function ()
                    dbutton: "Import"};
             if (BP_PLUGIN.chooseFile(o)) {
                 console.log("ChooseFile returned:" + o.path);
-                BP_MOD_CONNECT.importCSV(o.path, function (resp)
+                var obfuscated = $('#csvImportObfuscated')[0].checked;
+                //var overrides = $('#csvImportOverrides')[0].checked;
+                BP_MOD_CONNECT.importCSV(o.path, obfuscated, function (resp)
                 {
                     if (resp.result === true) {
                         BP_MOD_ERROR.success('Imported passwords from ' + o.path);

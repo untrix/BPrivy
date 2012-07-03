@@ -82,20 +82,16 @@
                     break;
                 case BP_MOD_CONNECT.cm_importCSV:
                     BPError.atvt.push("ImportCSV");
-                    result = FILE_STORE.importCSV(rq.dbPath);
+                    result = FILE_STORE.importCSV(rq.dbPath, rq.obfuscated);
                     funcSendResponse({result: result});
                     break;
                 default: // do nothing
             }
         } 
         catch (err) {
-            if (err.name && err.name==='BPError') {
-                console.log("Exception\n"+err.toString());
-            }
-            else {
-                console.log("Exception\n"+JSON.stringify(err));
-            }
-            funcSendResponse({result:false, err:err});
+            var exc = new BPError(err);
+            BP_MOD_ERROR.logwarn("onRequest@bp_main.js " + exc.toString());
+            funcSendResponse({result:false, err:exc});
         }
     }
     
@@ -111,7 +107,8 @@
         }
     } catch (e)
     {
-        console.log("Exception in main.js = " + JSON.stringify(e));
+        var exc = new BPError(e);
+        BP_MOD_ERROR.logwarn("init@bp_main.js = " + exc.toString());
     }
 
 }(document));
