@@ -28,6 +28,8 @@ var BP_MOD_MEMSTORE = (function ()
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
     var cm_getRecs = IMPORT(m.cm_getRecs);
+    var newPRecord = IMPORT(m.newPRecord);
+    var newERecord = IMPORT(m.newERecord);
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
@@ -127,6 +129,7 @@ var BP_MOD_MEMSTORE = (function ()
                 persist_asserts: false
             },
         },
+        ui: {value: {fields: ["key", "value"]}},
         // Returns record key
         getKey: {value: function (rec) {return rec.key;}},
         isValid: {value: function (rec){return isValidARec(rec) && rec.key!==undefined && rec.key!==null && rec.key !== "";}},
@@ -148,6 +151,7 @@ var BP_MOD_MEMSTORE = (function ()
     {
         dict: {value: {url_host:true, url_port:true}},
         actions: {value: {history:2, persist_asserts: true}},
+        ui: {value: {fields: newPRecord().keys()}},
         getKey: {value: function(rec)
             {
                 return rec.userid;
@@ -177,6 +181,7 @@ var BP_MOD_MEMSTORE = (function ()
     {
         dict: {value: {url_host:true, url_port:true, url_path:true}},
         actions: {value: {history: 0, persist_asserts:false}},
+        ui: {value: {fields: newERecord().keys()}},
         getKey: {value: function(rec)
             {
                 return rec.fieldType;

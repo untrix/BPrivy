@@ -58,7 +58,7 @@ var BP_MOD_PANEL = (function (g_win)
 	var eid_panel = "com-bprivy-panel"; // Used by panel elements
 	var eid_panelTitle ="com-bprivy-panelTitle"; // Used by panel elements
 	var eid_panelList ="com-bprivy-panelList"; // Used by panel elements
-	var eid_ioItem = "com-bprivy-ioItem";
+	var eid_ioItem = "com-bprivy-ioItem-";
     var eid_opElement = 'com-bprivy-op-'; // ID prefix of an output line of panel
     var eid_userOElement = "com-bprivy-useridO-"; // ID Prefix used by panel elements
 	var eid_passOElement = "com-bprivy-passO-"; // ID Prefix Used by panel elements
@@ -113,7 +113,7 @@ var BP_MOD_PANEL = (function (g_win)
     // = {doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill, autoFillable: autoFillable}
     var g_ctx;
     /** @globals-end **/
-    
+      
 	function createImageElement(imgPath)
 	{
 		var el = g_doc.createElement("img");
@@ -124,7 +124,7 @@ var BP_MOD_PANEL = (function (g_win)
 	
     function makeDataDraggable2(ctx, j_panelList) // ctx saved in g_ctx
     {
-        var dnd = ctx.dnd;
+        //var dnd = ctx.dnd;
         function handleDragStart (e)
         {
             //console.info("DragStartHandler entered");
@@ -449,8 +449,9 @@ var BP_MOD_PANEL = (function (g_win)
         
         console.info("WinW = " + winW + " panelW = " + panelW);
 
-        j_panel.css({position: 'fixed', top: '0px', 'left': left + "px"});
-
+        //j_panel.css({position: 'fixed', top: '0px', 'left': left + "px"});
+        j_panel.css({position: 'fixed', top: '0px', 'right': "0px"});
+        
         // Make it draggable after all above mentioned style properties have been applied to the element.
         // Otherwise draggable() will override those properties.
         j_panel.draggable();     
