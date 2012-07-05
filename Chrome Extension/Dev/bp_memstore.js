@@ -151,7 +151,7 @@ var BP_MOD_MEMSTORE = (function ()
     {
         dict: {value: {url_host:true, url_port:true}},
         actions: {value: {history:2, persist_asserts: true}},
-        ui: {value: {fields: newPRecord().keys()}},
+        ui: {value: {fields: Object.keys(newPRecord())}},
         getKey: {value: function(rec)
             {
                 return rec.userid;
@@ -181,7 +181,7 @@ var BP_MOD_MEMSTORE = (function ()
     {
         dict: {value: {url_host:true, url_port:true, url_path:true}},
         actions: {value: {history: 0, persist_asserts:false}},
-        ui: {value: {fields: newERecord().keys()}},
+        ui: {value: {fields: Object.keys(newERecord())}},
         getKey: {value: function(rec)
             {
                 return rec.fieldType;

@@ -6,7 +6,7 @@
  */
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT,
-  BP_MOD_ERROR */
+  BP_MOD_ERROR, BP_MOD_WDL */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 /* members el.type,
@@ -87,16 +87,16 @@ var BP_MOD_PANEL = (function (g_win)
 	// clash with other HTML elements. However, their names could clash
 	// with jQuery. Hence they are placed here so that they maybe easily
 	// changed if needed.
-	var pn_d_value = "bpValue";
-	var pn_d_dataType = "bpDataType";
-	var pn_d_peerID = 'bpPeerID';
-	var pn_d_panelID = 'bpPanelID';
-	var pn_d_ctx = 'bpPanelCtx';
-    var MT_TEXT_PLAIN = 'text/plain';
-    var MT_BP_PREFIX = 'application/x-bprivy-';
-    var MT_BP_DT = MT_BP_PREFIX + 'dt';
-    var MT_BP_PASS = MT_BP_PREFIX + ft_pass;
-    var MT_BP_USERID = MT_BP_PREFIX + ft_userid;
+	var prop_value = "bpValue";
+	var prop_dataType = "bpDataType";
+	var prop_peerID = 'bpPeerID';
+	var prop_panelID = 'bpPanelID';
+	var prop_ctx = 'bpPanelCtx';
+    var CT_TEXT_PLAIN = 'text/plain';
+    var CT_BP_PREFIX = 'application/x-bprivy-';
+    var CT_BP_DT = CT_BP_PREFIX + 'dt';
+    var CT_BP_PASS = CT_BP_PREFIX + ft_pass;
+    var CT_BP_USERID = CT_BP_PREFIX + ft_userid;
 
     // Other Globals
     var g_doc = g_win.document;
@@ -129,14 +129,14 @@ var BP_MOD_PANEL = (function (g_win)
         {
             //console.info("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
-            var data = $(e.target).data(pn_d_value);
-            if ($(e.target).data(pn_d_dataType) === ft_pass) {
+            var data = $(e.target).data(prop_value);
+            if ($(e.target).data(prop_dataType) === ft_pass) {
                 data = decrypt(data);
             }
             
-            e.dataTransfer.items.add('', MT_BP_PREFIX + $(e.target).data(pn_d_dataType)); // Keep this on top for quick matching later
-            e.dataTransfer.items.add($(e.target).data(pn_d_dataType), MT_BP_DT); // Keep this second for quick matching later
-            e.dataTransfer.items.add(data, MT_TEXT_PLAIN); // Keep this last
+            e.dataTransfer.items.add('', CT_BP_PREFIX + $(e.target).data(prop_dataType)); // Keep this on top for quick matching later
+            e.dataTransfer.items.add($(e.target).data(prop_dataType), CT_BP_DT); // Keep this second for quick matching later
+            e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
             e.dataTransfer.setDragImage(createImageElement("icon16.png"), 0, 0);
             //e.dataTransfer.addElement(e.target); Not supported in Google-Chrome
             //dnd.draggedElementID = e.target.id;
@@ -187,7 +187,7 @@ var BP_MOD_PANEL = (function (g_win)
              //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_userOut
              }
             ).addClass(css_class_field+css_class_userOut).text(u);
-        j_opu.data(pn_d_dataType, ft_userid).data(pn_d_value, u);
+        j_opu.data(prop_dataType, ft_userid).data(prop_value, u);
 
         var j_opp = $(doc.createElement('span')).attr(
             {
@@ -197,7 +197,7 @@ var BP_MOD_PANEL = (function (g_win)
                 //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_passOut
             }
             ).addClass(css_class_field + css_class_passOut).text("*****");
-        j_opp.data(pn_d_dataType, ft_pass).data(pn_d_value, p);
+        j_opp.data(prop_dataType, ft_pass).data(prop_value, p);
         
         j_div.append(j_opu).append(j_opp);
 
@@ -222,7 +222,7 @@ var BP_MOD_PANEL = (function (g_win)
             value: u || undefined,
             placeholder: 'Username'
             //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_userIn
-        }).addClass(css_class_field+css_class_userIn).data(pn_d_value, u);
+        }).addClass(css_class_field+css_class_userIn).data(prop_value, u);
         var j_inp = $(doc.createElement('input')).attr(
         {
             type: 'password',
@@ -231,7 +231,7 @@ var BP_MOD_PANEL = (function (g_win)
             value: p? decrypt(p): undefined,
             placeholder: 'Password'
             //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_passIn
-        }).addClass(css_class_field+css_class_passIn).data(pn_d_value, p);
+        }).addClass(css_class_field+css_class_passIn).data(prop_value, p);
 
         j_inf.append(j_inu).append(j_inp);
         
@@ -254,8 +254,8 @@ var BP_MOD_PANEL = (function (g_win)
 	        col = op.children;
 	        ue = col[eid_userOElement + id];
 	        pe = col[eid_passOElement + id];
-	        uo = $(ue).data(pn_d_value);
-	        po = $(pe).data(pn_d_value);
+	        uo = $(ue).data(prop_value);
+	        po = $(pe).data(prop_value);
 	        // remove the 'op' item.
 	        // Create an 'ifm' item and save the values hidden away somewhere.
 	        parent = op.parentElement;
@@ -278,8 +278,8 @@ var BP_MOD_PANEL = (function (g_win)
 	       
 	        if (!isValidInput(ue.value) || !isValidInput(pe.value)) {return false;}
 	        
-	        uo = $(ue).data(pn_d_value);
-	        po = $(pe).data(pn_d_value);
+	        uo = $(ue).data(prop_value);
+	        po = $(pe).data(prop_value);
 	        // Check if values have changed. If so, save to DB.
 	        if ((uo !== u) || (po !== p))
 	        {
@@ -338,7 +338,7 @@ var BP_MOD_PANEL = (function (g_win)
                 id: fbid,
                 disabled: true
             }
-        ).addClass(css_class_tButton).text(u_cir_F);//TODO: Define u_cir_F
+        ).addClass(css_class_tButton).text(u_cir_F);
         addEventListener(j_fb[0], 'click', fillHandler);//TODO: Define fillHandler
         j_li.append(j_fb);
         
@@ -401,7 +401,7 @@ var BP_MOD_PANEL = (function (g_win)
     {
         if (el)
         {   
-            //$(el).data(pn_d_ctx).db.clear(); //g_db.clear(); // clear the data.
+            //$(el).data(prop_ctx).db.clear(); //g_db.clear(); // clear the data.
             // Need to do this using jquery so that it will remove $.data of all descendants
             $(el).remove();
         }        
@@ -411,7 +411,7 @@ var BP_MOD_PANEL = (function (g_win)
     {
         if (e)
         {
-            var id_panel = $(e.target).data(pn_d_panelID);
+            var id_panel = $(e.target).data(prop_panelID);
             var el = g_doc.getElementById(id_panel);
             deletePanel(el);
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
@@ -432,7 +432,7 @@ var BP_MOD_PANEL = (function (g_win)
         g_ctx = ctx;
         j_panel[0].insertAdjacentHTML('beforeend', html);
         makeDataDraggable2(ctx, $('#'+eid_panelList,j_panel));
-        var j_xButton = $('#'+eid_xButton, j_panel).data(pn_d_panelID, id_panel);
+        var j_xButton = $('#'+eid_xButton, j_panel).data(prop_panelID, id_panel);
         addEventListener(j_xButton[0], 'click', deletePanelHandler);
         insertSettingsPanel(j_panel);
         insertIOItems2(ctx, j_panel);
@@ -454,7 +454,7 @@ var BP_MOD_PANEL = (function (g_win)
         
         // Make it draggable after all above mentioned style properties have been applied to the element.
         // Otherwise draggable() will override those properties.
-        j_panel.draggable();     
+        j_panel.draggable();
 
         return j_panel;
     }
@@ -466,12 +466,12 @@ var BP_MOD_PANEL = (function (g_win)
         createPanel: {value: createPanel},
         deletePanel: {value: deletePanel},
         eid_panel: {value: eid_panel},
-        pn_d_value: {value: pn_d_value},
-        pn_d_dataType: {value: pn_d_dataType},
-        pn_d_peerID: {value: pn_d_peerID},
-        MT_BP_DT: {value: MT_BP_DT},
-        MT_TEXT_PLAIN: {value: MT_TEXT_PLAIN},
-        MT_BP_PREFIX: {value: MT_BP_PREFIX}
+        prop_value: {value: prop_value},
+        prop_dataType: {value: prop_dataType},
+        prop_peerID: {value: prop_peerID},
+        CT_BP_DT: {value: CT_BP_DT},
+        CT_TEXT_PLAIN: {value: CT_TEXT_PLAIN},
+        CT_BP_PREFIX: {value: CT_BP_PREFIX}
     });
     Object.freeze(iface);
 
@@ -549,13 +549,18 @@ var BP_MOD_CS = (function(g_win)
     var createPanel = IMPORT(m.createPanel);
     var deletePanel = IMPORT(m.deletePanel);
     // Since there is only one panel, we're using eid_panel as the global panel id.
-    var gid_panel = IMPORT(m.eid_panel);
-    var pn_d_value = IMPORT(m.pn_d_value);
-    var pn_d_dataType = IMPORT(m.pn_d_dataType);
-    var pn_d_peerID = IMPORT(m.pn_d_peerID);
-    var MT_BP_DT = IMPORT(m.MT_BP_DT);
-    var MT_TEXT_PLAIN = IMPORT(m.MT_TEXT_PLAIN);
-    var MT_BP_PREFIX = IMPORT(m.MT_BP_PREFIX);
+    var prop_value = IMPORT(m.prop_value);
+    var prop_dataType = IMPORT(m.prop_dataType);
+    var prop_peerID = IMPORT(m.prop_peerID);
+    var CT_BP_DT = IMPORT(m.CT_BP_DT);
+    var CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN);
+    var CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX);
+    /** @import-module-begin WDL */
+    m = BP_MOD_WDL;
+    var w$ = IMPORT(m);
+    var cs_panel_wdt = IMPORT(m.cs_panel_wdt);
+    var w$exec = IMPORT(m.w$exec);
+    var w$get = IMPORT(m.w$get);
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
@@ -563,6 +568,7 @@ var BP_MOD_CS = (function(g_win)
     /** @globals-begin */
     var g_loc = IMPORT(g_win.location);
     var g_doc = IMPORT(g_win.document);
+    var gid_panel; // id of created panel if any
     var settings = {AutoFill:true, ShowPanelIfNoFill: false}; // User Settings
     var g_autoFillable; // Indicates that the page was found to be autofillable.
     /** @globals-end **/
@@ -792,7 +798,9 @@ var BP_MOD_CS = (function(g_win)
             if (settings.AutoFill) {
                 if ((filled===false) && g_db.numUserids && settings.ShowPanelIfNoFill)
                 {
-                    createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
+                    var panel = w$exec(cs_panel_wdt);
+                    gid_panel = panel.data.id;
+                    //createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
                 }
             }
         }
@@ -823,19 +831,20 @@ var BP_MOD_CS = (function(g_win)
         }
 
         // TODO: Since this is async, maybe we should check if the panel already exists?
-        createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill, autoFillable: g_autoFillable}).show();
+        //createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill, autoFillable: g_autoFillable}).show();
+        var panel = w$exec(cs_panel_wdt);
+        gid_panel = panel.id;
     }
-    
    
     function clickBP (request, sender, sendResponse)
     {
         if(isTopLevel(g_win)) 
         {
-            var el = g_doc.getElementById(gid_panel);
-            if (el)
-            {
-                // Need to do this using jquery so that it cleans up all related $.data attrs
-                $(el).remove();
+            var panel;
+            // var el = g_doc.getElementById(gid_panel);            // if (el)            // {                // // Need to do this using jquery so that it cleans up all related $.data attrs                // $(el).remove();            // }
+            if (gid_panel && (panel = w$get(gid_panel))) {
+                panel.die();
+                gid_panel = null;
             }
             else {
                 // Post a message to MemStore to retrieve the set of recs afresh.
@@ -899,7 +908,7 @@ var BP_MOD_CS = (function(g_win)
     function matchDTwField(e)
     {
         var dtMatched = false, isBPDrag = false, 
-        items = e.dataTransfer.items, pn=MT_BP_PREFIX + $(e.target).data(pn_d_dataType),
+        items = e.dataTransfer.items, pn=CT_BP_PREFIX + $(e.target).data(prop_dataType),
         n;
         for (n=items.length-1; n>=0; n--)
         {
@@ -908,7 +917,7 @@ var BP_MOD_CS = (function(g_win)
                 console.info("Matched BP Drag w/ Field !");
                 break;
             }
-            else if ((!isBPDrag) && items[n] && items[n].type === MT_BP_DT) {
+            else if ((!isBPDrag) && items[n] && items[n].type === CT_BP_DT) {
                 isBPDrag = true;
                 console.info("Matched BP Drag !");
             }
@@ -964,15 +973,15 @@ var BP_MOD_CS = (function(g_win)
                 // Save an ERecord.
                 var eRec = newERecord(e.target.ownerDocument.location,
                                       Date.now(),
-                                      e.dataTransfer.getData(MT_BP_DT), // fieldType
+                                      e.dataTransfer.getData(CT_BP_DT), // fieldType
                                       e.target.tagName,
                                       e.target.id,
                                       e.target.name,
                                       e.target.type);
-                // eRec.tagName = e.target.tagName;                // eRec.id = e.target.id;                // eRec.name = e.target.name;                // eRec.type = e.target.type;                // eRec.fieldType = e.dataTransfer.getData(MT_BP_DT);                // //could this lead to a security issue? should we use g_doc instead?                // eRec.loc = e.target.ownerDocument.location;
+                // eRec.tagName = e.target.tagName;                // eRec.id = e.target.id;                // eRec.name = e.target.name;                // eRec.type = e.target.type;                // eRec.fieldType = e.dataTransfer.getData(CT_BP_DT);                // //could this lead to a security issue? should we use g_doc instead?                // eRec.loc = e.target.ownerDocument.location;
                 saveRecord(eRec);
 
-                data = e.dataTransfer.getData(MT_TEXT_PLAIN);
+                data = e.dataTransfer.getData(CT_TEXT_PLAIN);
                 if (data) {
                     e.target.value = data;
                 }
@@ -996,22 +1005,22 @@ var BP_MOD_CS = (function(g_win)
                 // console.info("DraggedElementID is null");
             // }
             
-            if ( dragged_el && ($(dragged_el).data(pn_d_value) === e.target.value))
+            if ( dragged_el && ($(dragged_el).data(prop_value) === e.target.value))
             {
                 eRec = newERecord(g_doc.location,
                                  Date.now(),
-                                 $(dragged_el).data(pn_d_dataType),//fieldType
+                                 $(dragged_el).data(prop_dataType),//fieldType
                                  e.target.tagName,
                                  e.target.id,
                                  e.target.name,
                                  e.target.type);
-                // eRec.tagName = e.target.tagName;                // eRec.id = e.target.id;                // eRec.name = e.target.name;                // eRec.type = e.target.type;                // eRec.fieldType = $(dragged_el).data(pn_d_dataType);                // eRec.loc = g_doc.location;
+                // eRec.tagName = e.target.tagName;                // eRec.id = e.target.id;                // eRec.name = e.target.name;                // eRec.type = e.target.type;                // eRec.fieldType = $(dragged_el).data(prop_dataType);                // eRec.loc = g_doc.location;
                                 
                 saveRecord(eRec);
                 
-                var p = $(dragged_el).data(pn_d_peerID);
+                var p = $(dragged_el).data(prop_peerID);
                 if (p) {
-                    autoFillPeer(e.target, $(p).data(pn_d_value));
+                    autoFillPeer(e.target, $(p).data(prop_value));
                 }
                 // console.info("Linking elements " + g_dnd.draggedElementID + "/" + name + " and " + e.target.id + "/" + e.target.name);
             }
@@ -1027,9 +1036,9 @@ var BP_MOD_CS = (function(g_win)
                 addEventListener(el, "dragover", dragoverHandler);
                 addEventListener(el, "drop", dropHandler);
                 if (u) {
-                    $(el).data(pn_d_dataType, ft_userid);
+                    $(el).data(prop_dataType, ft_userid);
                 } else {
-                    $(el).data(pn_d_dataType, ft_pass);
+                    $(el).data(prop_dataType, ft_pass);
                 }
                 // console.log("Added event listener for element " + el.id +
                 // "/" + el.name);

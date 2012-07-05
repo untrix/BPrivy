@@ -49,39 +49,39 @@
         try  {
             switch (rq.dt) {
                 case dt_eRecord:
-                    BPError.atvt.push("SaveERecord");
+                    BPError.push("SaveERecord");
                     result = MEM_STORE.insertRec(rq) &&
                              FILE_STORE.insertRec(rq);
                     funcSendResponse({result:result});
                     break;
                 case dt_pRecord:
-                    BPError.atvt.push("SavePRecord");
+                    BPError.push("SavePRecord");
                     result = MEM_STORE.insertRec(rq) &&
                              FILE_STORE.insertRec(rq);
                     funcSendResponse({result:result});
                     break;
                 case cm_getRecs:
-                    BPError.atvt.push("GetRecs");
+                    BPError.push("GetRecs");
                     recs = MEM_STORE.getRecs(rq.loc);
                     funcSendResponse({result:true, db:recs});
                     break;
                 case cm_loadDB:
-                    BPError.atvt.push("LoadDB");
+                    BPError.push("LoadDB");
                     dbPath = FILE_STORE.loadDB(rq.dbPath);
                     funcSendResponse({result:true, dbPath:dbPath});
                     break;
                 case cm_createDB:
-                    BPError.atvt.push("CreateDB");
+                    BPError.push("CreateDB");
                     dbPath = FILE_STORE.createDB(rq.dbName, rq.dbDir);
                     funcSendResponse({result:true, dbPath:dbPath});
                     break;
                 case cm_getDBPath:
-                    BPError.atvt.push("GetDBPath");
+                    BPError.push("GetDBPath");
                     dbPath = BP_MOD_FILESTORE.getDBPath();
                     funcSendResponse({result:true, dbPath:dbPath});
                     break;
                 case BP_MOD_CONNECT.cm_importCSV:
-                    BPError.atvt.push("ImportCSV");
+                    BPError.push("ImportCSV");
                     result = FILE_STORE.importCSV(rq.dbPath, rq.obfuscated);
                     funcSendResponse({result: result});
                     break;

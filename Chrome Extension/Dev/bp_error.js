@@ -23,6 +23,7 @@ function IMPORT(sym)
 var BP_MOD_ERROR = (function()
 {
     'use strict';
+
    /** @begin-class-def BPError
     o: {//Object returned by the plugin
         path: // sanitizes and echo's back path parameter
@@ -112,6 +113,10 @@ var BP_MOD_ERROR = (function()
     const std::string BPCODE_PATH_NOT_EXIST     ("PathNotExist");
     */
 
+    var dt_Activity= 'Activity';// Represents an Activity object. Needed because message
+                                // objects reassmbled across a the message-pipe loose their
+                                // constructor property and hence there is no way to find out
+                                // type of the object. 
    /*
     * More codes
     */
@@ -124,6 +129,7 @@ var BP_MOD_ERROR = (function()
    {
         Object.defineProperties(this,
         {
+            dt: {value: dt_Activity},
             name: {value: "unknown", writable: true, enumerable: true},
             actions: {value: [], writable: true, enumerable: true}    
         });
@@ -131,7 +137,7 @@ var BP_MOD_ERROR = (function()
         if (arg && (typeof arg === 'string')) {
             this.name = arg;
         }
-        else if (arg && (typeof arg === 'object') && (arg.constructor === Activity)) {
+        else if (arg && (typeof arg === 'object') && (arg.dt === dt_Activity)) {
             this.name = arg.name;
             this.actions = arg.actions;
         }
@@ -214,6 +220,13 @@ var BP_MOD_ERROR = (function()
                (this.gcd? "&gcd="+this.gcd : "") + (this.scd? "&scd="+this.scd : "") +
                (this.smg? "&smg="+this.smg : "");
     };
+    BPError.push = function (actn)
+    {
+        if (!BPError.atvt) {
+            BPError.atvt = new Activity('unknown');
+        }
+        BPError.atvt.push(actn);
+    };
     
     function alert (arg) 
     {
@@ -221,7 +234,7 @@ var BP_MOD_ERROR = (function()
         if (arg && (typeof arg === 'string')) {
             msg = arg;
         }
-        else if (arg && (typeof arg === 'object') && (arg.name === "BPError")) {
+        else if (arg && (typeof arg === 'object')) {
             msg = arg.message;
         }
         
@@ -230,7 +243,8 @@ var BP_MOD_ERROR = (function()
     
     function log (str)
     {
-        console.log(str);
+        //console.log(str);
+        alert(str);
     }
     
     var iface = {
@@ -242,6 +256,7 @@ var BP_MOD_ERROR = (function()
         log: log,
         loginfo: log,
         logwarn: log,
+        logdebug: log,
         ac: ac,
         bc: bc,
         msg: msg
