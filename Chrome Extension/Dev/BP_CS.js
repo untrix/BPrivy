@@ -6,7 +6,7 @@
  */
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT,
-  BP_MOD_ERROR, BP_MOD_WDL, BP_MOD_W$ */
+  BP_MOD_ERROR, BP_MOD_WDL, BP_MOD_W$, BP_MOD_TRAITS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 /* members el.type,
@@ -508,10 +508,10 @@ var BP_MOD_CS = (function(g_win)
         }
     };
     Object.defineProperties(g_db,
-        {
-            ingest: {enumerable:false, writable:false, configurable:false},
-            clear: {enumerable:false, writable:false, configurable:false}
-        });
+    {
+        ingest: {enumerable:false, writable:false, configurable:false},
+        clear: {enumerable:false, writable:false, configurable:false}
+    });
     /** Returns true if the BPrivy control panel should be created in the supplied browsing context */
     function isTopLevel(win) {
         return (win.top === win.self);
@@ -556,12 +556,15 @@ var BP_MOD_CS = (function(g_win)
     var CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN);
     var CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX);
     /** @import-module-begin W$ */
-    var m = IMPORT(BP_MOD_W$);
-    var w$exec = IMPORT(m.exec);
-    var w$get = IMPORT(m.get);
+        m = IMPORT(BP_MOD_W$);
+    var w$exec = IMPORT(m.w$exec);
+    var w$get = IMPORT(m.w$get);
     /** @import-module-begin WDL */
     m = BP_MOD_WDL;
     var cs_panel_wdt = IMPORT(m.cs_panel_wdt);
+    /** @import-module-begin Traits */
+    m = IMPORT(BP_MOD_TRAITS);
+    var RecsIterator = IMPORT(m.RecsIterator);
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
@@ -712,76 +715,6 @@ var BP_MOD_CS = (function(g_win)
         }
     }
        
-/*
-    function autoFill()
-    {
-        var eRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone,
-        // auto-fill
-        // if we don't have a stored username/password, then there is nothing
-        // to autofill.
-        pRecsMap  = g_db.pRecsMap;
-        if (pRecsMap) 
-        {
-            ua = Object.keys(pRecsMap); 
-            // if there is more than one username, do not autofill
-            if (ua && (ua.length === 1) && (g_db.eRecsMapArray)) 
-            {
-                // Cycle through eRecords starting with the
-                // best URL matching node.
-                l = g_db.eRecsMapArray.length; uDone=false; pDone=false;
-                for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
-                    eRecsMap = g_db.eRecsMapArray.pop();
-                    
-                    if (eRecsMap[ft_userid]) { uer = eRecsMap[ft_userid].curr;}
-                    if (eRecsMap[ft_pass]) {per = eRecsMap[ft_pass].curr;}
-                    if ((!uDone) && uer) {
-                        u = ua[0];
-                        uDone = autoFillEl(uer, u);
-                        if (!uDone && (i===0)) {
-                            // The data in the E-Record was an exact URL match
-                            // yet, it has been shown to be not useful.
-                            // Therefore purge it form the K-DB.
-                          
-                            // Location gets deleted from e-rec when it is
-                            // inserted into the DB. Therefore we'll need to
-                            // put it back in.
-                            uer.loc = g_loc; // TODO: This may not be required anymore.
-
-                            // TODO: Can't assume that i===0 implies full url match.
-                            // Need to construct a URLA from uer.loc and compare it with
-                            // g_loc. Commenting out for the time being.
-                            //deleteRecord(uer); // TODO: implement deleteRecord
-                        }
-                    }
-                    if ((!pDone) && per) {
-                        p = pRecsMap[ua[0]].curr.pass;
-                        pDone = autoFillEl(per, p, true);
-                        if (!pDone && (i===0)) {
-                            // The data in the E-Record was an exact URL match
-                            // yet, it has been shown to be not useful.
-                            // Therefore purge it form the K-DB.
-
-                            // Location gets deleted from e-rec when it is
-                            // inserted into the DB. Therefore we'll need to
-                            // put it back in.
-                            per.loc = g_loc; // TODO: This may not be required anymore.
-
-                            // TODO: Can't assume that i===0 implies full url match.
-                            // Need to construct a URLA from uer.loc and compare it with
-                            // g_loc. Commenting out for the time being.
-                            //deleteRecord(per); // TODO: implement deleteRecord
-                        }
-                    }
-                }
-            }  
-        }
-        
-        if (uDone && pDone) {
-            return true;
-        }
-    }*/
-
-       
     /** 
      * Invoked upon receipt of DB records from the MemStore module.
      * @param {db}  Holds DB records relevant to this page. 
@@ -799,7 +732,8 @@ var BP_MOD_CS = (function(g_win)
             if (settings.AutoFill) {
                 if ((filled===false) && g_db.numUserids && settings.ShowPanelIfNoFill)
                 {
-                    var panel = w$exec(cs_panel_wdt, {it: new PREC_TRAITS.it(g_db.pRecsMap)});
+                    var ctx = {it: new RecsIterator(g_db.pRecsMap)},
+                        panel = w$exec(cs_panel_wdt, ctx);
                     gid_panel = panel.data.id;
                     //createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
                 }
@@ -833,7 +767,8 @@ var BP_MOD_CS = (function(g_win)
 
         // TODO: Since this is async, maybe we should check if the panel already exists?
         //createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill, autoFillable: g_autoFillable}).show();
-        var panel = w$exec(cs_panel_wdt);
+        var ctx = {it: new RecsIterator(g_db.pRecsMap)};
+        var    panel = w$exec(cs_panel_wdt, ctx);
         gid_panel = panel.id;
     }
    
@@ -1060,34 +995,4 @@ var BP_MOD_CS = (function(g_win)
     
     return main();
     
-    // Following are not being used.
-    // function isDocVisible(document) {
-        // /*properties is */
-        // return ((document.webkitVisibilityState && (document.webkitVisibilityState === 'visible')) || ($(document.body).is(":visible")));
-    // }
-// 
-    // function isFrameVisible(frame)
-    // {
-        // var retval = true;
-        // console.info("Entered IsFrameVisible");
-        // if (frame.hidden) {
-            // retval = false;
-        // }
-        // else if (!frame.style) {
-            // retval = true;
-        // }
-        // else// frame.style exists
-        // {
-            // if(frame.style.visibility && frame.style.visibility === 'hidden') {
-                // retval = false;
-            // }
-            // else if(frame.style.display && frame.style.display === 'none') {
-                // retval = false;
-            // }
-        // }
-// 
-        // console.info("Exiting IsFrameVisible");
-        // return retval;
-    // }
-
 }(window));

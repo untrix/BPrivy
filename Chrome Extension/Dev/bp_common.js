@@ -16,7 +16,7 @@ var BP_MOD_COMMON = (function()
     /** @globals-begin */      
     var CSS_HIDDEN = "com-bprivy-hidden";
     /** 
-     * @constant Used for three purposes. Therefore be careful of what chars
+     * @constant Used for multiple purposes. Therefore be careful of what chars
      * you use in the string.
      * 1. As a data-type (class) identifier within in-memory objects.
      * 2. As a component of filesystem directory/filenames of ADB. Therefore
@@ -28,6 +28,7 @@ var BP_MOD_COMMON = (function()
      *    use any chars that are disallowed as Javascript properties.
      * 4. These values will get marshalled into JSON files, therefore make sure
      *    that they are all valid JSON property names (e.g. no backslash or quotes).
+     * 5. To represent the data-type in general at other places in the code ...
      */
     var dt_eRecord = "E-Rec";  // Represents a E-Record (html-element record)
     var dt_pRecord = "P-Rec";  // Represents a P-Record (password record)
@@ -137,6 +138,21 @@ var BP_MOD_COMMON = (function()
         ev.stopPropagation();
     }
     
+    // Returns a newly created object inherited from the supplied object or constructor
+    // argument. If the argument is a constructor, then the o.prototype is set to a new
+    // object created using that constructor. Otherwise o.prototype=argument
+    function newInherited(arg)
+    {
+        function Inheritor(){}
+        if (typeof arg === 'object') {
+            Inheritor.prototype = arg;
+        }
+        else if (typeof arg === 'function') {
+            Inheritor.prototype = new arg();
+        }
+        return new Inheritor();
+    }
+
     var iface = {};
     Object.defineProperties(iface, 
     {
@@ -154,12 +170,15 @@ var BP_MOD_COMMON = (function()
         encrypt: {value: encrypt},
         decrypt: {value: decrypt},
         stopPropagation: {value: stopPropagation},
-        preventDefault: {value: preventDefault}
+        preventDefault: {value: preventDefault},
+        newInherited: {value: newInherited}
     });
     Object.freeze(iface);
 
     return iface;
         
+}());
+
     // Function.prototype.defineMethod = function (name, value)
     // {
         // this.prototype[name] = value;
@@ -182,4 +201,34 @@ var BP_MOD_COMMON = (function()
     // };
     
     //Object.defineProperty(Object.prototype, "bp_common_clone", {value: bp_common_clone, writable: false, enumerable: false, configurable: false});
-}());
+
+    // function isDocVisible(document) {
+        // /*properties is */
+        // return ((document.webkitVisibilityState && (document.webkitVisibilityState === 'visible')) || ($(document.body).is(":visible")));
+    // }
+// 
+    // function isFrameVisible(frame)
+    // {
+        // var retval = true;
+        // console.info("Entered IsFrameVisible");
+        // if (frame.hidden) {
+            // retval = false;
+        // }
+        // else if (!frame.style) {
+            // retval = true;
+        // }
+        // else// frame.style exists
+        // {
+            // if(frame.style.visibility && frame.style.visibility === 'hidden') {
+                // retval = false;
+            // }
+            // else if(frame.style.display && frame.style.display === 'none') {
+                // retval = false;
+            // }
+        // }
+// 
+        // console.info("Exiting IsFrameVisible");
+        // return retval;
+    // }
+
+

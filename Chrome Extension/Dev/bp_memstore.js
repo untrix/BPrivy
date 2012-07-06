@@ -26,10 +26,10 @@ var BP_MOD_MEMSTORE = (function ()
         dt_pRecord = IMPORT(m.dt_pRecord),
         dt_default = "DefaultDT";
     /** @import-module-begin Connector */
-    m = BP_MOD_CONNECT;
-    var cm_getRecs = IMPORT(m.cm_getRecs);
-    var newPRecord = IMPORT(m.newPRecord);
-    var newERecord = IMPORT(m.newERecord);
+    m = IMPORT(BP_MOD_CONNECT);
+    var cm_getRecs = IMPORT(m.cm_getRecs),
+        newPRecord = IMPORT(m.newPRecord),
+        newERecord = IMPORT(m.newERecord);
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
@@ -61,28 +61,24 @@ var BP_MOD_MEMSTORE = (function ()
         DNODE_TAG = {};
     Object.defineProperties(DNODE_TAG,
         {
-            DATA: {value:"{dt}"},// writable, enumerable and configurable=false by default.
+            //DATA: {value: 'data' /*"{dt}"*/},// writable, enumerable and configurable=false by default.
+            // tag is a property name that should never clash withe a URL
+            // segment. Hence the bracket
+            // characters are being used because they are excluded in rfc
+            // 3986.
             TLD: {value:"{t}"},
             HOST: {value:"{h}"},
             DOMAIN: {value:"{d}"},
             PORT: {value:"{o}"},
             PATH: {value:"{p}"},
-            getDataTag: {value: function (dt) {
-                // tag is a property name that should never clash withe a URL
-                // segment. Hence the bracket
-                // characters are being used because they are excluded in rfc
-                // 3986.
-                if(dt) {
-                    return DNODE_TAG.DATA + dt;
-                }
-            }, writable:false, configurable:false}
+            // getDataTag: {value: function (dt) {
+                // if(dt) {
+                    // return /*DNODE_TAG.DATA +*/ dt;
+                // }
+            // }},
         }
-    );
-    var tag_eRecs = DNODE_TAG.getDataTag(dt_eRecord),
-        tag_pRecs = DNODE_TAG.getDataTag(dt_pRecord),
-        PREC_TRAITS ={}, EREC_TRAITS={}, DEFAULT_TRAITS={},
-        DT_TRAITS = {};
-        
+    );    
+
     function isValidLocation(loc)
     {
         return (loc && 
@@ -101,6 +97,161 @@ var BP_MOD_MEMSTORE = (function ()
         else {return false;}
     }
 
+    var PREC_TRAITS ={}, EREC_TRAITS={}, DEFAULT_TRAITS={},
+        DT_TRAITS = {};
+        
+    /** @begin-static-class-defn DEFAULT_TRAITS */
+    // Top-Level properties defined in DEFAULT_TRAITS are mandatory for any TRAITS object.
+    // Omitting second-level properties (e.g. dict.url_scheme) is okay - implies false for
+    // boolean properties.
+    Object.defineProperties(DEFAULT_TRAITS,
+    {
+        // dict: Properties referenced by dictionary/trie/URLA.
+        // dict.url_xyz=true implies that xyz will be matched in insertions and lookups from dictionary.
+        dict: {value: {url_scheme: false, url_host:true, url_port:true, url_path:true}},
+        // action: properties referenced by the Actions class.
+        actions: {
+            value: {
+                // history=true asserts we're interested in maintaining history.
+                // Will cause Actions class to keep history in memory
+                // A value of false asserts the opposite. Will
+                // cause Actions to only keep current value in memory.
+                history: 0,
+                // An assert action is one that re-asserts the existing value. When a record
+                // is received that has the same value as the most current value for its key,
+                // but a different timestamp, then it is deemed as an assertion of an existing
+                // value. 'save_asserts' dictates whether or not such records should be persisted
+                // to storage. Persisting repeated values can significantly increase the storage
+                // size for situations where the same values are repeatedly generated - e.g. E-Records.
+                // Note that an assert with the same exact value and timestamp is a duplicate and will
+                // always be ignored and discarded - the value of save_asserts traits will not
+                // affect that behaviour.
+                persist_asserts: false
+            },
+        },
+        ui: {value: {fields: ["key", "value"]}},
+        // Returns record key
+        getKey: {value: function (rec) {return rec.key;}},
+        isValid: {value: function (rec){return isValidARec(rec) && rec.key!==undefined && rec.key!==null && rec.key !== "";}},
+        compareVals: {value: function(rec1, rec2) 
+            {
+              if (rec1 && rec2) {
+                  if (rec1.value === rec2.value) {return EQUAL;}
+                  else {return DIFFRNT;}
+              }
+              else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
+                  return EQUAL;
+              }
+              else { return DIFFRNT;}
+            }}
+    }); Object.freeze(DEFAULT_TRAITS);
+    /** @end-static-class-defn DEFAULT_TRAITS **/
+    /** @begin-static-class-defn PREC_TRAITS */
+    Object.defineProperties(PREC_TRAITS,
+    {
+        dict: {value: {url_host:true, url_port:true}},
+        actions: {value: {history:2, persist_asserts: true}},
+        ui: {value: {fields: Object.keys(newPRecord())}},
+        getKey: {value: function(rec)
+            {
+                return rec.userid;
+            }},        
+        isValid: {value: function(rec)
+            {
+                return (isValidARec(rec) && 
+                    (typeof rec.userid === "string") &&
+                    (typeof rec.pass === "string"));
+            }},
+        compareVals: {value: function(rec1, rec2) 
+            {
+                if (rec1 && rec2)
+                {
+                    if (rec1.pass === rec2.pass) { return EQUAL;}
+                    else {return DIFFRNT;}
+                }
+                else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
+                    return EQUAL;
+                }
+                else { return DIFFRNT;}
+            }}
+    }); Object.freeze(PREC_TRAITS);
+    /** @end-static-class-defn PREC_TRAITS **/
+    /** @begin-static-class-defn EREC_TRAITS */
+    Object.defineProperties(EREC_TRAITS,
+    {
+        dict: {value: {url_host:true, url_port:true, url_path:true}},
+        actions: {value: {history: 0, persist_asserts:false}},
+        ui: {value: {fields: Object.keys(newERecord())}},
+        getKey: {value: function(rec)
+            {
+                return rec.fieldType;
+            }},
+        isValid: {value: function(rec)
+            {
+                return (isValidARec(rec) && 
+                    (typeof rec.fieldType === "string") &&
+                    (typeof rec.tagName === "string"));
+            }},
+        compareVals: {value: function(rec1, rec2) 
+            {
+                if (rec1 && rec2)
+                {
+                    if (rec1.tagName === rec2.tagName &&
+                        rec1.id === rec2.id &&
+                        rec1.name === rec2.name &&
+                        rec1.type === rec2.type)
+                        {
+                            return EQUAL;
+                        }
+                    else {return DIFFRNT;}
+                }
+                else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
+                    return EQUAL;
+                }
+                else { return DIFFRNT;}                
+            }}
+    }); Object.freeze(EREC_TRAITS);
+    /** @end-static-class-defn EREC_TRAITS **/
+    /** @begin-static-class-defn DT_TRAITS */
+    Object.defineProperty(DT_TRAITS, dt_eRecord, {value: EREC_TRAITS});
+    Object.defineProperty(DT_TRAITS, dt_pRecord, {value: PREC_TRAITS});
+    Object.defineProperty(DT_TRAITS, dt_default, {value: DEFAULT_TRAITS});
+    Object.defineProperties(DT_TRAITS,
+    {
+        getTraits: {
+            value: function (dt) {
+                var n = this[dt];
+                if (!n) {
+                    n = this[dt_default];
+                }
+                return n;
+            }
+        },
+        getDictTraits: {
+            value: function (dt) {
+                return this.getTraits(dt).dict;
+            }
+        },
+        getKey: {
+            value: function (rec) {
+                var n = this[rec.dt];
+                if (n && n.getKey) {
+                    return n.getKey(rec);
+                }
+            }
+        },
+        imbue: {
+            value: function (rec) {
+                Object.defineProperty(rec, "traits", 
+                {
+                    value: this.getTraits(rec.dt) // enumerable, writable, configurable=false.
+                });
+                return rec;
+            }
+        }
+    });
+    Object.freeze(DT_TRAITS);
+    /** @end-static-class-defn DT_TRAITS **/    
   
     /** @globals-end **/
 
@@ -371,7 +522,7 @@ var BP_MOD_MEMSTORE = (function ()
     // value is constructed such that it won't clash with the properties for
     // the child-node pointers, which are URL-segments. Hence the key for the
     // payload is constructed such that it will never conflict with any URL
-    // segment. At this writing the values chosen are {erec} and {pdict}. Hence
+    // segment. At this writing the values chosen are {dt}e-rec and {dt}p-rec. Hence
     // a payload object of a DNode in the g_kdb dictionary will look like:
     // this["{dt}e-rec"] =
     // {"ft_userid":{"dt":"E-Record","fieldType":"ft_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},
@@ -414,14 +565,45 @@ var BP_MOD_MEMSTORE = (function ()
     // e.g. this['www:8080'] = child-node;
 
     /** @constructor */
-    function DNode (){}
+    function DNode ()
+    {
+        /* Contains
+         * 1) DNODE_TAG properties whose value is one url segment (string) prefixed with the
+         *    segment-type prefix - e.g. {p} for path. See DNODE_TAG.
+         * 2) A 'data' property whose value is an object which contains one recMap for each
+         *    data-type, keyed by its dt string (e.g. dt_pRecord and dt_eRecord).
+         *    If there are no records stored in the DNode, then 'data' must be null and
+         *    vice-versa. So, if you delete records from a DNode then be sure to delte the 'data'
+         *    object as well.
+         */
+    }
+    DNode.prototype.hasData = function() {return this.data;};
+    DNode.prototype.getData = function(dt) {return this.data?this.data[dt]:null;};
+    DNode.prototype.putData = function(drec)
+    {
+        var r, ki, 
+            rec = drec.rec, 
+            dt = rec.dt;
+            
+        if (!this.data) { // ensure that a data node has been allocated
+            this.data = {};
+        }
+        var recsMap = this.data[dt];
+        if (!recsMap) {
+            this.data[dt] = (recsMap = {});
+        }
+        r = recsMap[ki=DT_TRAITS.getKey(rec)];
+        if (r) {
+            r.insert(drec);
+        }
+        else {
+            (recsMap[ki] = newActions()).insert(drec);
+        }
+                
+    };
+    
     function newDNode () {return new DNode();}
     
-    /** Class DupeRecs Record Collection
-     *  Manages duplicate records according to record-type rules.
-     */
-    //function DupeRecs
-
     /** Helper function to DNode.prototype.insert */
     DNode.prototype.tryInsert = function (drec)
     {
@@ -430,18 +612,7 @@ var BP_MOD_MEMSTORE = (function ()
             r, t, ki;
         if (!k) 
         {
-            var recTag = DNODE_TAG.getDataTag(rec.dt);
-            var recsMap = this[recTag];
-            if (!recsMap) {
-                this[recTag] = (recsMap = {});
-            }
-            r = recsMap[ki=DT_TRAITS.getKey(rec)];
-            if (r) {
-                r.insert(drec);
-            }
-            else {
-                (recsMap[ki] = newActions()).insert(drec);
-            }
+            this.putData(drec);
         }
         else 
         {   // continue walking down the trie
@@ -473,11 +644,11 @@ var BP_MOD_MEMSTORE = (function ()
         else {
             n = this[k];
             if (!n) {
-                return undefined; // exact URL match does not exist
+                return undefined; // exact URL match does not exist. We're a substring match.
             }
             else {
                 urli.incr();
-                return n;
+                return n; // Walk this way...
                 //if (n instanceof DNode) {
                     //urli.incr();
                     //return n; // Not recursive.
@@ -534,7 +705,7 @@ var BP_MOD_MEMSTORE = (function ()
             // get all the e-recs encountered in the walk. They most
             // likely belong to the same website and therefore the knowledge may
             // apply across pages.
-            if (r[tag_eRecs]) {stack.push(r[tag_eRecs]);}
+            if (r.getData(dt_eRecord)) {stack.push(r.getData(dt_eRecord));}
             n = r;
             r = n.tryFind(urli);
         } while (r);
@@ -564,7 +735,7 @@ var BP_MOD_MEMSTORE = (function ()
         // Walk down the dictionary tree.
         do {
             // save node if it has the desired data type
-            if (n[tag_pRecs]) {n2 = n; /*idb = urli.pos();*/}
+            if (n.getData(dt_pRecord)) {n2 = n; /*idb = urli.pos();*/}
             n = n.tryFind(urli);
         } while (n);
         
@@ -576,7 +747,7 @@ var BP_MOD_MEMSTORE = (function ()
         if (n2) {
             //urli.seek(idb);
             //if (urli.isBelowTLD()) {
-                return n2[tag_pRecs];
+                return n2.getData(dt_pRecord);
             //}
         }
     };
@@ -600,6 +771,11 @@ var BP_MOD_MEMSTORE = (function ()
         return DNode[rec.dt].insert(new DRecord(rec));        
     };
     /** @end-class-def DNode **/
+
+    function DNodeIterator (root) // Walks dictionary and returns DNodes that have data.
+    {
+        
+    }
 
     /**
      * @constructor

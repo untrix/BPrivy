@@ -7,7 +7,7 @@
 
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_W$ */
+  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_W$, BP_MOD_TRAITS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -103,27 +103,12 @@ var BP_MOD_WDL = (function ()
     var u_cir_F = '\u24BB';
     var u_cir_X = '\u24CD';
     /** @globals-end **/
-   
-    // Returns a newly created object inherited from the supplied object or constructor
-    // argument. If the argument is a constructor, then the o.prototype is set to a new
-    // object created using that constructor. Otherwise o.prototype=argument
-    function newInherited(arg)
-    {
-        function Inheritor(){}
-        if (typeof arg === 'object') {
-            Inheritor.prototype = arg;
-        }
-        else if (typeof arg === 'function') {
-            Inheritor.prototype = new arg();
-        }
-        return new Inheritor();
-    }
-    
+       
     /********************** UI Widgets in Javascript!  **************************
-     * WDL = Widget Description Language. WDL objects are evaluated by wdl-compiler
+     * WDL = Widget Description Language. WDL objects are evaluated by wdl-interpretor
      * WDT = WDL Template. Functions that produce WDL objects. These may be executed either
-     *       directly by javascript or by the WDL-compiler.
-     * W$EL = Widget Element. This is the element finally produced by the wdl-compiler.
+     *       directly by javascript or by the wdl-interpretor.
+     * W$EL = Widget Element. This is the element finally produced by the wdl-interpretor.
      *       It is a proxy to the DOM element. If the DOM is laid on a two-dimensional plane
      *       then w$el elements are laid out on a parallel plane, with the same hierarchy
      *       as the DOM elements and with cross-links between each pair of DOM and w$ element.
@@ -174,12 +159,12 @@ var BP_MOD_WDL = (function ()
         }
     };
     
-    function iItem_wdt (ctx, w$rec, w$i)
+    function iItem_wdi (ctx, w$rec, w$i)
     {
         return  {tag:'div', text:"This is an input item"};
     }
     
-    function oItem_wdt (ctx, w$rec, w$i)
+    function oItem_wdi (ctx, w$rec, w$i)
     {
         return  {tag:'div', text:"This is an output item"};
     }
@@ -192,10 +177,11 @@ var BP_MOD_WDL = (function ()
              text:ctx.io_bInp?u_cir_S:u_cir_E,
              on:{ click:io.toggleIO }
             },
-            iItem_wdt(ctx, w$rec, w$i), oItem_wdt(ctx, w$rec, w$i),
+            iItem_wdi, oItem_wdi,
             ],
          // save references to o and i item objects. Will be used by toggleIO
-         _data:{ ctx:{oItem:"oItem", iItem:"iItem", io_bInp:"io_bInp"} }        };    }    
+         _data:{ ctx:{oItem:"oItem", iItem:"iItem", io_bInp:"io_bInp"} }        };
+        return wdl;    }    
     function cs_panelList_wdt (ctx)
     {
         function handleDragStart (e)
@@ -247,7 +233,7 @@ var BP_MOD_WDL = (function ()
          // Post w$el creation steps
          // Copy props to ctx with values:
          // 1. Directly from the javascript runtime.
-         // 2. For the props under w$, copy them from the wdl-compiler runtime. In this case
+         // 2. For the props under w$, copy them from the wdl-interpretor runtime. In this case
          //    the value of the prop defined below should be name of the prop in the wdl-runtime.
          // 3. Props listed under w$ctx are copied over from the context object - ctx - only makes
          //    sence when you're copying into something other than the context itself.
