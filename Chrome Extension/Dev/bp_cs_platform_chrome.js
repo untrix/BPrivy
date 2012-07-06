@@ -63,12 +63,23 @@ var BP_MOD_CS_PLAT = (function()
             el.addEventListener(ev, fn);
         },
         
-        addEventListeners: function(select, ev, fn)
+        addEventListeners: function(selector, ev, fn)
         {
-            var j = $(select), i = j.length;
+            var j = $(selector), i = j.length;
             for (--i; i>=0; --i) {
                 var el = j[i];
-                if (el) {module.addEventListener(el, ev, fn);}               
+                if (el) {el.addEventListener(ev, fn);}               
+            }
+        },
+        
+        addHandlers: function (el, on) 
+        {
+            if (!el || !on || (typeof on !== 'object')) {return;}
+            
+            var ks = Object.keys(on), k, i, n;
+            for (i=0, n=ks.length, k=ks[0]; i<n ; k=ks[++i])
+            {
+                el.addEventListener(k, on[k]);
             }
         }
     };

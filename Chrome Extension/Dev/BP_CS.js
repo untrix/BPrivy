@@ -6,7 +6,7 @@
  */
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT,
-  BP_MOD_ERROR, BP_MOD_WDL */
+  BP_MOD_ERROR, BP_MOD_WDL, BP_MOD_W$ */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 /* members el.type,
@@ -555,12 +555,13 @@ var BP_MOD_CS = (function(g_win)
     var CT_BP_DT = IMPORT(m.CT_BP_DT);
     var CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN);
     var CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX);
+    /** @import-module-begin W$ */
+    var m = IMPORT(BP_MOD_W$);
+    var w$exec = IMPORT(m.exec);
+    var w$get = IMPORT(m.get);
     /** @import-module-begin WDL */
     m = BP_MOD_WDL;
-    var w$ = IMPORT(m);
     var cs_panel_wdt = IMPORT(m.cs_panel_wdt);
-    var w$exec = IMPORT(m.w$exec);
-    var w$get = IMPORT(m.w$get);
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
@@ -651,7 +652,7 @@ var BP_MOD_CS = (function(g_win)
                     // if there is more than one username, do not autofill, but
                     // try to determine if autofilling is possible.
                     u = "";
-                    p = ""
+                    p = "";
                 }
             }
         }
@@ -798,7 +799,7 @@ var BP_MOD_CS = (function(g_win)
             if (settings.AutoFill) {
                 if ((filled===false) && g_db.numUserids && settings.ShowPanelIfNoFill)
                 {
-                    var panel = w$exec(cs_panel_wdt);
+                    var panel = w$exec(cs_panel_wdt, {it: new PREC_TRAITS.it(g_db.pRecsMap)});
                     gid_panel = panel.data.id;
                     //createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
                 }
