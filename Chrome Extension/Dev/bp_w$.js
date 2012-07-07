@@ -31,7 +31,7 @@ var BP_MOD_W$ = (function ()
         {
             el: {value: $el[0]}, // pointer to DOM element object
             $el: {value: $el}, // pointer to jquery wrapped DOM element object
-            children: {value: []}, // A set of children, parallel to their DOM elements
+            //children: {value: []}, // A set of children, parallel to their DOM elements
             data: {value: {}}
             // Other properties and functions will be inserted here through wdl.
             // That will serve as the JS-interface of the WidgetElement
@@ -39,10 +39,11 @@ var BP_MOD_W$ = (function ()
     }
     WidgetElement.prototype.append = function(wgt)
     {
-        this.$el.append(wgt.el); this.children.push(wgt);
+        this.$el.append(wgt.el); 
+        //this.children.push(wgt);
     };
-    WidgetElement.prototype.show = function() {this.$el.show();};
-    WidgetElement.prototype.hide = function() {this.$el.hide();};
+    WidgetElement.prototype.show = function() {this.el.style.removeProperty('display');};
+    WidgetElement.prototype.hide = function() {this.el.style.display = 'none';};
    
     function copyIndirect (sk, sv, dst) 
     {
@@ -173,9 +174,9 @@ var BP_MOD_W$ = (function ()
         // Finally, post Creation steps
         if ((_final=wdl._final)) {            
             if (_final.show === true) {
-                $el.show();
+                w$el.show();
             } else if (_final.show === false) {
-                $el.hide();
+                w$el.hide();
             }
             
             if (_final.exec) { // execute functions dictated by wdl
