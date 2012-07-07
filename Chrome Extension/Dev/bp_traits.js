@@ -35,18 +35,24 @@ var BP_MOD_TRAITS = (function ()
     var UI_TRAITS={}, P_UI_TRAITS={}, E_UI_TRAITS={}, DEFAULT_UI_TRAITS={};
     /** @globals-end **/
    
+    Object.freeze(
     Object.defineProperties(P_UI_TRAITS,
     {
+        dt: {value: dt_pRecord},
         fields: {value: Object.keys(newPRecord)}
-    });
+    }));
+    Object.freeze(
     Object.defineProperties(E_UI_TRAITS,
     {
+        dt: {value: dt_eRecord},
         fields: {value: Object.keys(newERecord)}
-    });
+    }));
+    Object.freeze(
     Object.defineProperties(DEFAULT_UI_TRAITS,
     {
+        dt: {value: dt_default},
         fields: {value: ['key', 'value']}
-    });
+    }));
     
     Object.defineProperty(UI_TRAITS, dt_eRecord, {value: E_UI_TRAITS});
     Object.defineProperty(UI_TRAITS, dt_pRecord, {value: P_UI_TRAITS});
@@ -63,6 +69,15 @@ var BP_MOD_TRAITS = (function ()
                 return n;
             }
         },
+        imbue: {
+            value: function (rec) {
+                Object.defineProperty(rec, "traits", 
+                {
+                    value: this.getTraits(rec.dt) // enumerable, writable, configurable=false.
+                });
+                return rec;
+            }
+        }
     });
     
     function RecsIterator (recsMap)

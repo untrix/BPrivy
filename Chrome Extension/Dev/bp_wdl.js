@@ -6,7 +6,8 @@
  */
 
 /* JSLint directives */
-/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR, BP_MOD_MEMSTORE */
+/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR,
+  BP_MOD_MEMSTORE, BP_MOD_TRAITS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
  
@@ -99,7 +100,7 @@ var BP_MOD_W$ = (function ()
         BPError.push("WDL Interpret");
         
         if (typeof wdl === 'function') {
-            wdl = wdl(ctx);
+            wdl = wdl(ctx); // compile wdt to wdl
         }
         if (!wdl || (typeof wdl !== 'object')) {
             throw new BPError("Bad WDL: not JS object");
@@ -129,7 +130,7 @@ var BP_MOD_W$ = (function ()
             .css(wdl.css || {})
             .addClass(wdl.addClass || {})
             .data('w$el', w$el); // point el back to w$el. jQuery ensures no cyclic references.
-        addHandlers(el, wdl.on);
+        addHandlers(el, wdl.on); // Didn't want to use $.on for fear of bad performance.
 
         // Update w$ runtime env.
         w$.w$el = w$el;
@@ -146,15 +147,18 @@ var BP_MOD_W$ = (function ()
             w$el.append(w$exec(wdl.children[i], ctx, true)); // insert children
         }
         // now the iterative children
-        if (wdl.iterate && wdl.iterate.it && wdl.iterate.wdl) 
+        if (wdl.iterate && wdl.iterate.it && wdl.iterate.wdi) 
         {
-            var rec, it=wdl.iterate.it, iwdl = wdl.iterate.wdl, cwdl, isFun=false;
+            var rec, it=wdl.iterate.it, wdi = wdl.iterate.wdi, cwdl, isFunc=false;
 
-            if (typeof iwdl === 'function') { isFun = true; }
+            if (typeof wdi === 'function') { isFunc = true; }
 
-            for (i=0, cwdl=iwdl; ((rec = it.next())); i++, cwdl=iwdl) 
+            for (i=0, cwdl=wdi; ((rec = it.next())); i++, cwdl=wdi) 
             {
-                if (isFun) { cwdl = cwdl(ctx, rec, i); } // compile dynamic wdt
+                if (isFunc) {
+                    ctx.w$rec = rec; ctx.w$i = i;
+                    cwdl = cwdl(ctx);
+                } // compile wdi to wdl
                 
                 w$el.append(w$exec(cwdl, ctx, true));
             }

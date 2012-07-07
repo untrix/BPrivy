@@ -20,23 +20,30 @@ var BP_MOD_WDL = (function ()
     var m;
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
-    var encrypt = IMPORT(m.encrypt);
-    var decrypt = IMPORT(m.decrypt);
-    var stopPropagation = IMPORT(m.stopPropagation);
-    var preventDefault = IMPORT(m.preventDefault);
+    var encrypt = IMPORT(m.encrypt),
+        decrypt = IMPORT(m.decrypt),
+        stopPropagation = IMPORT(m.stopPropagation),
+        preventDefault = IMPORT(m.preventDefault),
+        dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin W$ */
-    var w$ = IMPORT(BP_MOD_W$);
+    m = IMPORT(BP_MOD_W$);
+    var w$get = IMPORT(m.w$get),
+        w$exec = IMPORT(m.w$exec);
     /** @import-module-begin CSPlatform */
     m = BP_MOD_CS_PLAT;
-    var getURL = IMPORT(m.getURL);
-    var addHandlers = IMPORT(m.addHandlers); // Compatibility function
+    var getURL = IMPORT(m.getURL),
+        addHandlers = IMPORT(m.addHandlers); // Compatibility function
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
-    var ft_userid = IMPORT(m.ft_userid);   // Represents data-type userid
-    var ft_pass = IMPORT(m.ft_pass);        // Represents data-type password
+    var ft_userid = IMPORT(m.ft_userid),   // Represents data-type userid
+        ft_pass = IMPORT(m.ft_pass);        // Represents data-type password
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
+    /** @import-module-begin */
+    var MOD_TRAITS = IMPORT(BP_MOD_TRAITS);
+    var UI_TRAITS = IMPORT(MOD_TRAITS.UI_TRAITS);
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
@@ -124,23 +131,21 @@ var BP_MOD_WDL = (function ()
         tag:"div", attr:{ id: eid_panelTitleText }, text:"BPrivy"
     };
 
-    function xButton_wdt(ctx)
+    function xButton_wdt(w$ctx)
     {
-        // make sure wel is captured into private closure, so we won't lose it.
+        // make sure panel is captured into private closure, so we won't lose it.
         // values inside ctx will get changed as other wdls and wdts are executed.
-        var w$el = ctx.panel_wel;
+        var panel = w$ctx.panel;
         function click (e)
         {
-            // Need to do this using jquery so that it will remove $.data of all descendants
-            if (w$el) {
-                w$el.die();
-                
+            if (panel) {               
                 e.stopPropagation(); // We don't want the enclosing web-page to interefere
                 e.preventDefault(); // Causes event to get cancelled if cancellable
+                panel.die();
                 return false; // Causes the event to be cancelled (except mouseover event).
             }
         }
-        // $el = element to be 'x'd.
+
         var wdl =
         {html:'<button type="button" accesskey="q">', attr:{ id:eid_xButton, accesskey:'q'},
          text:u_cir_X, on:{ click:click }
@@ -149,39 +154,109 @@ var BP_MOD_WDL = (function ()
         return wdl;
     }
     
-    var io =
+    var wdl_f =
     {
-        autoFill: function (ev) {
+        autoFill: function (ev) 
+        {
             BP_MOD_ERROR.loginfo('autoFill invoked');
         },
-        toggleIO: function (ev) {
-            BP_MOD_ERROR.loginfo('toggleIO invoked');            
+        toggleIO: function (ev)
+        {
+            console.log('toggleIO invoked');
+            var el = w$get(ev), ioI, iI, oI;
+            if (el && el.ioItem) {
+                ioI = el.ioItem; iI = ioI.iItem; oI = ioI.oItem;
+                if (iI && oI) {
+                    if (ioI.bInp) {
+                        ioI.bInp = false; // Show output element
+                        oI.show(); iI.hide();
+                        el.$el.text(u_cir_E);
+                    }
+                    else {
+                        ioI.bInp = true; // Show input element
+                        iI.show(); oI.hide();
+                        el.$el.text(u_cir_S);
+                    }
+                }
+            }
         }
     };
     
-    function iItem_wdi (ctx, w$rec, w$i)
+    function iItem_wdi (w$ctx)
     {
-        return  {tag:'div', text:"This is an input item"};
+        var u, p, rec = UI_TRAITS.imbue(w$ctx.w$rec.curr);
+        if (rec && rec.traits.dt === dt_pRecord) {
+            u = rec.userid;
+            p = rec.pass;
+        }
+        return {
+        tag:'div', addClass:css_class_ioFields,
+        ctx:{ w$:{iItem:'w$el'} },
+            children: [
+            {tag:'input',
+             attr:{ type:'text', value:u, placeholder:'Username'},
+             addClass:css_class_field+" "+css_class_userIn,
+             _iface:{ value:u }},
+            {tag:'input',
+             attr:{ type:'text', value:"*****", placeholder:'Password'},
+             addClass:css_class_field+" "+css_class_userIn,
+             _iface:{ value: decrypt(p) },
+             }
+            ],
+        _final:{show:w$ctx.io_bInp}
+        };
     }
     
-    function oItem_wdi (ctx, w$rec, w$i)
+    function oItem_wdi (w$ctx)
     {
-        return  {tag:'div', text:"This is an output item"};
-    }
-    
-    function ioItem_wdt (ctx, w$rec, w$i)    {        var wdl =        {tag:'div', attr:{id:eid_ioItem+w$i, class:css_class_li}, text:"Hello World",            children:[            {html:'<button type="button">',
-             attr:{class:css_class_tButton,id:eid_fButton+w$i},             text:u_cir_F,
-             on:{ click:io.autoFill},            },
-            {html:'<button type="button">',
-             attr:{ class:css_class_tButton, id:eid_tButton+w$i },
-             text:ctx.io_bInp?u_cir_S:u_cir_E,
-             on:{ click:io.toggleIO }
+        var u, p, rec = UI_TRAITS.imbue(w$ctx.w$rec.curr);
+        if (rec && rec.traits.dt === dt_pRecord) {
+            u = rec.userid;
+            p = rec.pass;
+        }
+        return {
+        tag:'div', addClass:css_class_ioFields,
+        ctx:{ w$:{oItem:'w$el'} },
+            children:[
+            {tag:'span',
+             attr:{ draggable:true },
+             addClass:css_class_field+" "+css_class_userOut,
+             text:u,
+             _iface:{ dt:ft_userid, value:u }
             },
-            iItem_wdi, oItem_wdi,
+            {tag:'span',
+             attr:{ draggable:true },
+             addClass:css_class_field+" "+css_class_passOut,
+             text:'*****',
+             _iface:{ dt:ft_pass, value:p }
+            }],
+        _final:{show:!w$ctx.io_bInp}
+        };
+    }
+    
+    function tButton_wdi (w$ctx)
+    {
+        return {
+        html:'<button type="button">',
+         attr:{ class:css_class_tButton, /*id:eid_tButton+w$i*/ },
+         text:w$ctx.io_bInp?u_cir_S:u_cir_E,
+         on:{ click:wdl_f.toggleIO },
+         _iface:{ w$ctx:{ ioItem:"ioItem" } }
+        };
+    }
+    
+    function ioItem_wdi (w$ctx)    {
+        var w$i=w$ctx.w$i;        return {
+        tag:'div', attr:{id:eid_ioItem+w$i, class:css_class_li},
+        ctx:{ w$:{ioItem:'w$el'} },
+        on: {mousedown:stopPropagation},            children:[            {html:'<button type="button">',
+             attr:{class:css_class_tButton,id:eid_fButton+w$i},             text:u_cir_F,
+             on:{ click:wdl_f.autoFill},            },
+            tButton_wdi, oItem_wdi, iItem_wdi,
             ],
          // save references to o and i item objects. Will be used by toggleIO
-         _data:{ ctx:{oItem:"oItem", iItem:"iItem", io_bInp:"io_bInp"} }        };
-        return wdl;    }    
+         _iface:{ id:w$i, w$ctx:{oItem:"oItem", iItem:"iItem", bInp:"io_bInp"} }        };
+    }    
     function cs_panelList_wdt (ctx)
     {
         function handleDragStart (e)
@@ -196,7 +271,7 @@ var BP_MOD_WDL = (function ()
             e.dataTransfer.items.add('', CT_BP_PREFIX + $(e.target).data(prop_dataType)); // Keep this on top for quick matching later
             e.dataTransfer.items.add($(e.target).data(prop_dataType), CT_BP_DT); // Keep this second for quick matching later
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
-            e.dataTransfer.setDragImage(w$.exec(image_wdt,{imgPath:"icon16.png"}).el, 0, 0);
+            e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"icon16.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //return true;
         }
@@ -215,29 +290,29 @@ var BP_MOD_WDL = (function ()
             //return true;
         }
 
-        var wdl = 
-        {tag:'div', attr:{ id:eid_panelList },
-         on:{ dragstart:handleDragStart, drag:handleDrag, dragend:handleDragEnd }
-              //,var_child:{ array:ctx.recs[dt_pRecord], ctx:ctx, wdt_var:ioItem_wdt_var }
+        return {
+        tag:'div', attr:{ id:eid_panelList },
+        on:{ dragstart:handleDragStart, drag:handleDrag, dragend:handleDragEnd },
+        ctx:{ bInp:false },
+             iterate:{ it:ctx.it, wdi:ioItem_wdi }
         };
-        return wdl;
     }
     
     function cs_panel_wdt (ctx)
     {
-        var wdl = 
-        {tag:"div",
-         attr:{ id:eid_panel },
-         css:{ position:'fixed', top:'0px', 'right':"0px" },
+        return {
+        tag:"div",
+        attr:{ id:eid_panel },
+        css:{ position:'fixed', top:'0px', 'right':"0px" },
          
-         // Post w$el creation steps
-         // Copy props to ctx with values:
-         // 1. Directly from the javascript runtime.
-         // 2. For the props under w$, copy them from the wdl-interpretor runtime. In this case
-         //    the value of the prop defined below should be name of the prop in the wdl-runtime.
-         // 3. Props listed under w$ctx are copied over from the context object - ctx - only makes
-         //    sence when you're copying into something other than the context itself.
-         ctx:{ io_bInp:false, w$:{ panel_wel:"w$el" } },
+        // Post w$el creation steps
+        // Copy props to ctx with values:
+        // 1. Directly from the javascript runtime.
+        // 2. For the props under w$, copy them from the wdl-interpretor runtime. In this case
+        //    the value of the prop defined below should be name of the prop in the wdl-runtime.
+        // 3. Props listed under w$ctx are copied over from the context object - ctx - only makes
+        //    sence when you're copying into something other than the context itself.
+        ctx:{ io_bInp:false, w$:{ panel:"w$el" } },
 
             // Create children
             children:[
@@ -245,15 +320,12 @@ var BP_MOD_WDL = (function ()
                 children:[                cs_panelTitleText_wdl,                xButton_wdt]
             },
             cs_panelList_wdt],
-            iterate:{ it:ctx.it, wdl:ioItem_wdt },
 
-         // Post processing steps
-         _data:{ w$ctx:{}, w$:{} }, // props to be copied to w$el.data after creating children
-         _iface:{ die:function(){this.$el.remove();}, w$:{id:"id"} },
-         _final:{ appendTo:document.body, show:true, exec:function(ctx, w$){w$.w$el.$el.draggable();} }
+        // Post processing steps
+        _data:{ w$ctx:{}, w$:{} }, // props to be copied to w$el.data after creating children
+        _iface:{ die:function(){this.$el.remove();}, w$:{id:"id"} },
+        _final:{ appendTo:document.body, show:true, exec:function(ctx, w$){w$.w$el.$el.draggable();} }
         };
-        
-        return wdl;
     }
    
     var iface = 
