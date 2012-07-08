@@ -31,6 +31,7 @@ var BP_MOD_W$ = (function ()
         {
             el: {value: $el[0]}, // pointer to DOM element object
             $el: {value: $el}, // pointer to jquery wrapped DOM element object
+            w$: {value: {}},
             //children: {value: []}, // A set of children, parallel to their DOM elements
             data: {value: {}}
             // Other properties and functions will be inserted here through wdl.
@@ -90,10 +91,34 @@ var BP_MOD_W$ = (function ()
                 w$el = $('#'+arg).data('w$el');
                 break;
             case 'object':
-                w$el = $(arg.target).data('w$el');
+                w$el = $(arg.currentTarget).data('w$el');
                 break;
         }
         return w$el;
+    }
+    
+    function w$eventProxy (e)
+    {
+        var wel = w$get(e), func, wel2;
+        if (wel) {
+            func = wel.w$.on[e.type];
+        }
+        if (func) {
+            wel2 = $(e.target).data('w$el');
+            func.apply(wel2, [e]);
+        }
+    }
+    
+    function w$on (wel, on)
+    {
+        if (wel && on) {
+            wel.w$.on = on;
+            var _on = {}, keys = Object.keys(on), i;
+            for (i=keys.length-1; i>=0; i--) {
+                _on[keys[i]] = w$eventProxy;
+            }
+            addHandlers(wel.el, _on);    
+        }
     }
     
     function w$exec(wdl, ctx, recursion)
@@ -131,7 +156,7 @@ var BP_MOD_W$ = (function ()
             .css(wdl.css || {})
             .addClass(wdl.addClass || {})
             .data('w$el', w$el); // point el back to w$el. jQuery ensures no cyclic references.
-        addHandlers(el, wdl.on); // Didn't want to use $.on for fear of bad performance.
+        w$on(w$el, wdl.on); // Didn't want to use jQuery.on for fear of bad performance.
 
         // Update w$ runtime env.
         w$.w$el = w$el;

@@ -263,13 +263,13 @@ var BP_MOD_WDL = (function ()
         {
             //console.info("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
-            var data = $(e.target).data(prop_value);
-            if ($(e.target).data(prop_dataType) === ft_pass) {
-                data = decrypt(data);
+            var data = this.value;
+            if (this.dt === ft_pass) {
+                data = decrypt(this.value);
             }
             
-            e.dataTransfer.items.add('', CT_BP_PREFIX + $(e.target).data(prop_dataType)); // Keep this on top for quick matching later
-            e.dataTransfer.items.add($(e.target).data(prop_dataType), CT_BP_DT); // Keep this second for quick matching later
+            e.dataTransfer.items.add('', CT_BP_PREFIX + this.dt); // Keep this on top for quick matching later
+            e.dataTransfer.items.add(this.dt, CT_BP_DT); // Keep this second for quick matching later
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
             e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"icon16.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere

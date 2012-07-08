@@ -33,6 +33,7 @@ var BP_MOD_TRAITS = (function ()
     /** @import-module-end **/    m = null;
     /** @globals-begin */
     var UI_TRAITS={}, P_UI_TRAITS={}, E_UI_TRAITS={}, DEFAULT_UI_TRAITS={};
+    var EMPTY_OBJECT = {}; Object.freeze(EMPTY_OBJECT);
     /** @globals-end **/
    
     Object.freeze(
@@ -82,7 +83,7 @@ var BP_MOD_TRAITS = (function ()
     
     function RecsIterator (recsMap)
     {
-        var k = Object.keys(recsMap);
+        var k = recsMap? Object.keys(recsMap) : EMPTY_OBJECT;
         Object.defineProperties(this,
         {
             _o: {value: recsMap},
