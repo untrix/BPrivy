@@ -184,12 +184,12 @@ var BP_MOD_MEMSTORE = (function ()
         ui: {value: {fields: Object.keys(newERecord())}},
         getKey: {value: function(rec)
             {
-                return rec.fieldType;
+                return rec.fieldName;
             }},
         isValid: {value: function(rec)
             {
                 return (isValidARec(rec) && 
-                    (typeof rec.fieldType === "string") &&
+                    (typeof rec.fieldName === "string") &&
                     (typeof rec.tagName === "string"));
             }},
         compareVals: {value: function(rec1, rec2) 
@@ -525,8 +525,8 @@ var BP_MOD_MEMSTORE = (function ()
     // segment. At this writing the values chosen are {dt}e-rec and {dt}p-rec. Hence
     // a payload object of a DNode in the g_kdb dictionary will look like:
     // this["{dt}e-rec"] =
-    // {"ft_userid":{"dt":"E-Record","fieldType":"ft_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},
-    //  "ft_pass":{"dt":"E-Record","fieldType":"ft_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
+    // {"fn_userid":{"dt":"E-Record","fieldName":"fn_userid","tagName":"INPUT","id":"email","name":"email","type":"text"},
+    //  "fn_pass":{"dt":"E-Record","fieldName":"fn_pass","tagName":"INPUT","id":"pass","name":"pass","type":"password"}}
     // The payload itself is an object with multiple properties. Each of the
     // properties is a 'record' (i.e. e-rec in k-dict and p-rec in p-dict).
     // The property-name is the record-key and is carried within each record
@@ -535,8 +535,8 @@ var BP_MOD_MEMSTORE = (function ()
     // or record type. For each dictionary, the record keys are chosen
     // differently.
     // For e.g. in the case of e-dict, the record keys are from a fixed set :
-    // 'ft_userid',
-    // 'ft_password', 'dt_email' etc. etc. because that makes sense for that
+    // 'fn_userid',
+    // 'fn_password', 'dt_email' etc. etc. because that makes sense for that
     // domain. However,
     // for the p-dict the record keys can be anything because they are the
     // username.

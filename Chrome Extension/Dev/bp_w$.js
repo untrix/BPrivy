@@ -22,10 +22,18 @@ var BP_MOD_W$ = (function ()
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
+    var logwarn = IMPORT(m.logwarn);
+    /** @import-module-begin */
+    m = BP_MOD_COMMON;
+    var newInherited = IMPORT(m.newInherited);
     /** @import-module-end **/    m = null;
 
     /********************** WDL Interpretor ************************/
     function WidgetElement($el)
+    {
+        this.cons($el);
+    }
+    WidgetElement.prototype.cons = function($el) 
     {
         Object.defineProperties(this,
         {
@@ -36,16 +44,25 @@ var BP_MOD_W$ = (function ()
             data: {value: {}}
             // Other properties and functions will be inserted here through wdl.
             // That will serve as the JS-interface of the WidgetElement
-        });
-    }
-    WidgetElement.prototype.append = function(wgt)
+        });        
+    };
+    WidgetElement.prototype.append = function(w)
     {
-        this.$el.append(wgt.el); 
+        this.$el.append(w.el); 
         //this.children.push(wgt);
     };
+    WidgetElement.prototype.appendTo = function(w) {w.append(this);};
     WidgetElement.prototype.show = function() {this.el.style.removeProperty('display');};
     WidgetElement.prototype.hide = function() {this.el.style.display = 'none';};
    
+    // Returns an object to be used as a prototype for a widget element.
+    function w$defineProto (props) // props has same syntax as Object.defineProperties
+    {
+        var proto = newInherited(WidgetElement.prototype);
+        Object.defineProperties(proto, props);
+        return proto;
+    }
+    
     function copyIndirect (sk, sv, dst) 
     {
         // sk = source object of keys for the destination as well as provides keys for the 'sv' object
@@ -148,7 +165,14 @@ var BP_MOD_W$ = (function ()
             $el = $(wdl.html); 
             el = $el[0];
         }
-        w$el = new WidgetElement($el);
+        // Create the widget element
+        if (wdl.proto) {
+            w$el = newInherited(wdl.proto);
+            w$el.cons($el);
+        }
+        else {
+            w$el = new WidgetElement($el);
+        }
         
         $el.attr(wdl.attr || {})
             .text(wdl.text || "")
@@ -180,13 +204,15 @@ var BP_MOD_W$ = (function ()
             if (typeof wdi === 'function') { isFunc = true; }
 
             for (i=0, cwdl=wdi; ((rec = it.next())); i++, cwdl=wdi) 
-            {
+            try {
                 if (isFunc) {
                     ctx.w$rec = rec; ctx.w$i = i;
                     cwdl = cwdl(ctx);
                 } // compile wdi to wdl
                 
                 w$el.append(w$exec(cwdl, ctx, true));
+            } catch (e) {
+                logwarn(e);
             }
         }
         
@@ -221,7 +247,9 @@ var BP_MOD_W$ = (function ()
     var iface = 
     {
        w$exec: w$exec,
-       w$get: w$get
+       w$get: w$get,
+       w$defineProto: w$defineProto,
+       Widget: WidgetElement
    };
    return Object.freeze(iface);
 }());

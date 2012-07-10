@@ -32,6 +32,10 @@ var BP_MOD_TRAITS = (function ()
 
     /** @import-module-end **/    m = null;
     /** @globals-begin */
+    var FT = Object.freeze({
+        text: 1,
+        pass: 2
+    });
     var UI_TRAITS={}, P_UI_TRAITS={}, E_UI_TRAITS={}, DEFAULT_UI_TRAITS={};
     var EMPTY_OBJECT = {}; Object.freeze(EMPTY_OBJECT);
     /** @globals-end **/
@@ -40,19 +44,25 @@ var BP_MOD_TRAITS = (function ()
     Object.defineProperties(P_UI_TRAITS,
     {
         dt: {value: dt_pRecord},
-        fields: {value: Object.keys(newPRecord)}
+        key: {value: {uiName:"Username", apiName:"userid", ft:FT.text}},
+        fields: {value: [{uiName:"Password", apiName:"pass", ft:FT.pass}]}
     }));
     Object.freeze(
     Object.defineProperties(E_UI_TRAITS,
     {
         dt: {value: dt_eRecord},
-        fields: {value: Object.keys(newERecord)}
+        key: {value: {uiName:'fieldName', apiName:'fieldName', ft:FT.text}},
+        fields: {value: [{uiName:'tagName', apiName:'tagName', ft:FT.text},
+                         {uiName:'id', apiName:'id', ft:FT.text},
+                         {uiName:'name', apiName:'name', ft:FT.text},
+                         {uiName:'type', apiName:'type', ft:FT.text}]}
     }));
     Object.freeze(
     Object.defineProperties(DEFAULT_UI_TRAITS,
     {
         dt: {value: dt_default},
-        fields: {value: ['key', 'value']}
+        key: {value: {uiName:'key', apiName:'key'} },
+        fields: {value: [{uiName:'value', apiName:'value'}]}
     }));
     
     Object.defineProperty(UI_TRAITS, dt_eRecord, {value: E_UI_TRAITS});
@@ -72,7 +82,7 @@ var BP_MOD_TRAITS = (function ()
         },
         imbue: {
             value: function (rec) {
-                Object.defineProperty(rec, "traits", 
+                Object.defineProperty(rec, "uiTraits", 
                 {
                     value: this.getTraits(rec.dt) // enumerable, writable, configurable=false.
                 });

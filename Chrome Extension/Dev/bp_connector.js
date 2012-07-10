@@ -32,9 +32,9 @@ var BP_MOD_CONNECT = (function ()
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
     /** @constant */
-    var ft_userid = "ft_userid";   // Represents field-type userid
+    var fn_userid = "userid";   // Represents field userid. Copy value from P_UI_TRAITS.
     /** @constant */
-    var ft_pass = "ft_pass";       // Represents field-type password
+    var fn_pass = "pass";       // Represents field password. Copy value from P_UI_TRAITS.
     /** @constant */
     var cm_getRecs = "cm_getRecs";     // Represents a getDB command
     var cm_loadDB = "cm_loadDB";
@@ -63,12 +63,12 @@ var BP_MOD_CONNECT = (function ()
         });
     }
     
-    function ERecord(loc, date, fieldType, tagName, id, name, type)
+    function ERecord(loc, date, fieldName, tagName, id, name, type)
     {
         imbueARec(this, dt_eRecord, loc, date);
         Object.defineProperties(this, 
         {
-            fieldType: {value: fieldType, enumerable: true},
+            fieldName: {value: fieldName, enumerable: true},
             tagName: {value: tagName, enumerable: true},
             id: {value: id, enumerable: true},
             name: {value: name, enumerable: true},
@@ -79,8 +79,8 @@ var BP_MOD_CONNECT = (function ()
     {
         return JSON.stringify(this, null, 2);
     };
-    function newERecord(loc, date, fieldType, tagName, id, name, type) {
-        return new ERecord(loc, date, fieldType, tagName, id, name, type);    
+    function newERecord(loc, date, fieldName, tagName, id, name, type) {
+        return new ERecord(loc, date, fieldName, tagName, id, name, type);    
     }
 
     function PRecord(loc, date, userid, pass)
@@ -141,8 +141,8 @@ var BP_MOD_CONNECT = (function ()
         var iface = {};
         Object.defineProperties(iface, 
         {
-            ft_userid: {value: ft_userid},
-            ft_pass: {value: ft_pass},
+            fn_userid: {value: fn_userid},
+            fn_pass: {value: fn_pass},
             cm_getRecs: {value: cm_getRecs},
             cm_loadDB: {value: cm_loadDB},
             cm_createDB: {value: cm_createDB},

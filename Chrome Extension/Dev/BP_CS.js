@@ -35,8 +35,8 @@ var BP_MOD_PANEL = (function (g_win)
     var preventDefault = IMPORT(m.preventDefault);
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
-    var ft_userid = IMPORT(m.ft_userid);   // Represents data-type userid
-    var ft_pass = IMPORT(m.ft_pass);        // Represents data-type password
+    var fn_userid = IMPORT(m.fn_userid);   // Represents data-type userid
+    var fn_pass = IMPORT(m.fn_pass);        // Represents data-type password
     var newPRecord = IMPORT(m.newPRecord);
     var saveRecord = IMPORT(m.saveRecord);
     var deleteRecord = IMPORT(m.deleteRecord);
@@ -94,9 +94,9 @@ var BP_MOD_PANEL = (function (g_win)
 	var prop_ctx = 'bpPanelCtx';
     var CT_TEXT_PLAIN = 'text/plain';
     var CT_BP_PREFIX = 'application/x-bprivy-';
-    var CT_BP_DT = CT_BP_PREFIX + 'dt';
-    var CT_BP_PASS = CT_BP_PREFIX + ft_pass;
-    var CT_BP_USERID = CT_BP_PREFIX + ft_userid;
+    var CT_BP_FN = CT_BP_PREFIX + 'fn';
+    var CT_BP_PASS = CT_BP_PREFIX + fn_pass;
+    var CT_BP_USERID = CT_BP_PREFIX + fn_userid;
 
     // Other Globals
     var g_doc = g_win.document;
@@ -130,12 +130,12 @@ var BP_MOD_PANEL = (function (g_win)
             //console.info("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
             var data = $(e.target).data(prop_value);
-            if ($(e.target).data(prop_dataType) === ft_pass) {
+            if ($(e.target).data(prop_dataType) === fn_pass) {
                 data = decrypt(data);
             }
             
             e.dataTransfer.items.add('', CT_BP_PREFIX + $(e.target).data(prop_dataType)); // Keep this on top for quick matching later
-            e.dataTransfer.items.add($(e.target).data(prop_dataType), CT_BP_DT); // Keep this second for quick matching later
+            e.dataTransfer.items.add($(e.target).data(prop_dataType), CT_BP_FN); // Keep this second for quick matching later
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
             e.dataTransfer.setDragImage(createImageElement("icon16.png"), 0, 0);
             //e.dataTransfer.addElement(e.target); Not supported in Google-Chrome
@@ -187,7 +187,7 @@ var BP_MOD_PANEL = (function (g_win)
              //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_userOut
              }
             ).addClass(css_class_field+css_class_userOut).text(u);
-        j_opu.data(prop_dataType, ft_userid).data(prop_value, u);
+        j_opu.data(prop_dataType, fn_userid).data(prop_value, u);
 
         var j_opp = $(doc.createElement('span')).attr(
             {
@@ -197,7 +197,7 @@ var BP_MOD_PANEL = (function (g_win)
                 //style: BP_MOD_CSS.style_field + BP_MOD_CSS.style_passOut
             }
             ).addClass(css_class_field + css_class_passOut).text("*****");
-        j_opp.data(prop_dataType, ft_pass).data(prop_value, p);
+        j_opp.data(prop_dataType, fn_pass).data(prop_value, p);
         
         j_div.append(j_opu).append(j_opp);
 
@@ -469,7 +469,7 @@ var BP_MOD_PANEL = (function (g_win)
         prop_value: {value: prop_value},
         prop_dataType: {value: prop_dataType},
         prop_peerID: {value: prop_peerID},
-        CT_BP_DT: {value: CT_BP_DT},
+        CT_BP_FN: {value: CT_BP_FN},
         CT_TEXT_PLAIN: {value: CT_TEXT_PLAIN},
         CT_BP_PREFIX: {value: CT_BP_PREFIX}
     });
@@ -542,8 +542,8 @@ var BP_MOD_CS = (function(g_win)
     var deleteRecord = IMPORT(m.deleteRecord);
     var saveRecord = IMPORT(m.saveRecord);
     var newERecord = IMPORT(m.newERecord);
-    var ft_userid = IMPORT(m.ft_userid);   // Represents data-type userid
-    var ft_pass = IMPORT(m.ft_pass);        // Represents data-type password
+    var fn_userid = IMPORT(m.fn_userid);   // Represents data-type userid
+    var fn_pass = IMPORT(m.fn_pass);        // Represents data-type password
     /** @import-module-begin Panel */
     m = BP_MOD_PANEL;
     var createPanel = IMPORT(m.createPanel);
@@ -552,7 +552,7 @@ var BP_MOD_CS = (function(g_win)
     var prop_value = IMPORT(m.prop_value);
     var prop_dataType = IMPORT(m.prop_dataType);
     var prop_peerID = IMPORT(m.prop_peerID);
-    var CT_BP_DT = IMPORT(m.CT_BP_DT);
+    var CT_BP_FN = IMPORT(m.CT_BP_FN);
     var CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN);
     var CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX);
     /** @import-module-begin W$ */
@@ -668,8 +668,8 @@ var BP_MOD_CS = (function(g_win)
             for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
                 eRecsMap = g_db.eRecsMapArray.pop();
                 
-                if (eRecsMap[ft_userid]) { uer = eRecsMap[ft_userid].curr;}
-                if (eRecsMap[ft_pass]) {per = eRecsMap[ft_pass].curr;}
+                if (eRecsMap[fn_userid]) { uer = eRecsMap[fn_userid].curr;}
+                if (eRecsMap[fn_pass]) {per = eRecsMap[fn_pass].curr;}
                 if ((!uDone) && uer) {
                     uDone = autoFillEl(uer, u);
                     if (!uDone && (i===0)) {
@@ -799,7 +799,7 @@ var BP_MOD_CS = (function(g_win)
         var p_el = findPeerElement(el);
         if (p_el)
         {
-            if (data.type() === ft_pass) {
+            if (data.type() === fn_pass) {
                 p_el.value = decrypt(data);
             }
             else {
@@ -831,12 +831,12 @@ var BP_MOD_CS = (function(g_win)
         return (el.type === "password");
      }
 
-    function isFieldType (ft, el)
+    function isField (ft, el)
     {
         switch (ft)
         {
-            case ft_userid: return isUserid(el);
-            case ft_pass: return isPassword(el);
+            case fn_userid: return isUserid(el);
+            case fn_pass: return isPassword(el);
             default: return;
         }
     }
@@ -853,7 +853,7 @@ var BP_MOD_CS = (function(g_win)
                 console.info("Matched BP Drag w/ Field !");
                 break;
             }
-            else if ((!isBPDrag) && items[n] && items[n].type === CT_BP_DT) {
+            else if ((!isBPDrag) && items[n] && items[n].type === CT_BP_FN) {
                 isBPDrag = true;
                 console.info("Matched BP Drag !");
             }
@@ -909,12 +909,12 @@ var BP_MOD_CS = (function(g_win)
                 // Save an ERecord.
                 var eRec = newERecord(e.target.ownerDocument.location,
                                       Date.now(),
-                                      e.dataTransfer.getData(CT_BP_DT), // fieldType
+                                      e.dataTransfer.getData(CT_BP_FN), // fieldName
                                       e.target.tagName,
                                       e.target.id,
                                       e.target.name,
                                       e.target.type);
-                // eRec.tagName = e.target.tagName;                // eRec.id = e.target.id;                // eRec.name = e.target.name;                // eRec.type = e.target.type;                // eRec.fieldType = e.dataTransfer.getData(CT_BP_DT);                // //could this lead to a security issue? should we use g_doc instead?                // eRec.loc = e.target.ownerDocument.location;
+                // eRec.tagName = e.target.tagName;                // eRec.id = e.target.id;                // eRec.name = e.target.name;                // eRec.type = e.target.type;                // eRec.fieldName = e.dataTransfer.getData(CT_BP_FN);                // //could this lead to a security issue? should we use g_doc instead?                // eRec.loc = e.target.ownerDocument.location;
                 saveRecord(eRec);
 
                 data = e.dataTransfer.getData(CT_TEXT_PLAIN);
@@ -945,12 +945,12 @@ var BP_MOD_CS = (function(g_win)
             {
                 eRec = newERecord(g_doc.location,
                                  Date.now(),
-                                 $(dragged_el).data(prop_dataType),//fieldType
+                                 $(dragged_el).data(prop_dataType),//fieldName
                                  e.target.tagName,
                                  e.target.id,
                                  e.target.name,
                                  e.target.type);
-                // eRec.tagName = e.target.tagName;                // eRec.id = e.target.id;                // eRec.name = e.target.name;                // eRec.type = e.target.type;                // eRec.fieldType = $(dragged_el).data(prop_dataType);                // eRec.loc = g_doc.location;
+                // eRec.tagName = e.target.tagName;                // eRec.id = e.target.id;                // eRec.name = e.target.name;                // eRec.type = e.target.type;                // eRec.fieldName = $(dragged_el).data(prop_dataType);                // eRec.loc = g_doc.location;
                                 
                 saveRecord(eRec);
                 
@@ -972,9 +972,9 @@ var BP_MOD_CS = (function(g_win)
                 addEventListener(el, "dragover", dragoverHandler);
                 addEventListener(el, "drop", dropHandler);
                 if (u) {
-                    $(el).data(prop_dataType, ft_userid);
+                    $(el).data(prop_dataType, fn_userid);
                 } else {
-                    $(el).data(prop_dataType, ft_pass);
+                    $(el).data(prop_dataType, fn_pass);
                 }
                 // console.log("Added event listener for element " + el.id +
                 // "/" + el.name);

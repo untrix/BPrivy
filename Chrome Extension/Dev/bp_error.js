@@ -241,10 +241,11 @@ var BP_MOD_ERROR = (function()
         window.alert(msg);
     }
     
-    function log (str)
+    function log (arg)
     {
+        var be = new BPError(arg);
         //console.log(str);
-        alert(str);
+        alert(be.toString());
     }
     
     var iface = {
