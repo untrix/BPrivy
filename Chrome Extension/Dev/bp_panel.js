@@ -29,8 +29,7 @@ var BP_MOD_WDL = (function ()
         newInherited = IMPORT(m.newInherited);
     /** @import-module-begin W$ */
     m = IMPORT(BP_MOD_W$);
-    var w$get = IMPORT(m.w$get),
-        w$exec = IMPORT(m.w$exec),
+    var w$exec = IMPORT(m.w$exec),
         w$defineProto = IMPORT(m.w$defineProto),
         Widget = IMPORT(m.Widget);
     /** @import-module-begin CSPlatform */
@@ -95,13 +94,13 @@ var BP_MOD_WDL = (function ()
     // with jQuery. Hence they are placed here so that they maybe easily
     // changed if needed.
     var prop_value = "bpValue";
-    var prop_dataType = "bpDataType";
+    var prop_fieldName = "bpDataType";
     var prop_peerID = 'bpPeerID';
     var prop_panelID = 'bpPanelID';
     var prop_ctx = 'bpPanelCtx';
     var CT_TEXT_PLAIN = 'text/plain';
     var CT_BP_PREFIX = 'application/x-bprivy-';
-    var CT_BP_FN = CT_BP_PREFIX + 'dt';
+    var CT_BP_FN = CT_BP_PREFIX + 'fn';
     var CT_BP_PASS = CT_BP_PREFIX + fn_pass;
     var CT_BP_USERID = CT_BP_PREFIX + fn_userid;
 
@@ -140,11 +139,15 @@ var BP_MOD_WDL = (function ()
     function image_wdt(ctx)
     {
         var imgPath = ctx.imgPath;
-        return {tag:"img", attrs:{ src:getURL(imgPath) }};
+        return {
+            tag:"img", 
+            attrs:{ src:getURL(imgPath) }};
     }
     
     var cs_panelTitleText_wdl = {
-        tag:"div", attr:{ id: eid_panelTitleText }, text:"BPrivy"
+        tag:"div",
+        attr:{ id: eid_panelTitleText },
+        text:"BPrivy"
     };
 
     var NButton = 
@@ -171,137 +174,52 @@ var BP_MOD_WDL = (function ()
  
     };
 
-    function xButton_wdt(w$ctx)
+    var XButton = 
     {
-        // make sure panel is captured into private closure, so we won't lose it.
-        // values inside ctx will get changed as other wdls and wdts are executed.
-        var panel = w$ctx.panel;
-        function click (e)
-        {
-            if (panel) {               
-                e.stopPropagation(); // We don't want the enclosing web-page to interefere
-                e.preventDefault(); // Causes event to get cancelled if cancellable
-                panel.die();
-                return false; // Causes the event to be cancelled (except mouseover event).
-            }
-        }
-
-        return {
-        html:'<button type="button">', attr:{ class:css_class_xButton, accesskey:'q'},
-        text:u_cir_X, on:{ click:click }
-        };
-    }
-
-    function isValidInput(str) {return Boolean(str);}
-        
-    // var Item = {        // wdi: function (w$ctx)        // {            // var k={}, v=[],                 // rec = w$ctx.w$rec?UI_TRAITS.imbue(w$ctx.w$rec.curr):undefined,                // i, n, f, traits;            // if (rec && rec.uiTraits) {                // traits = rec.uiTraits;                // k.name = traits.key.uiName;                // k.val = rec[traits.key.apiName];                // for (i=0, f=traits.fields, n=f.length; i<n; i++) {                    // v[i].name = f[i].uiName;                    // v[i].val = rec[f[i].apiName];                // }            // }            // return {            // proto: IItem.proto,            // tag:'div', addClass:css_class_ioFields,            // ctx:{ w$:{iItem:'w$el'} },                // children: [                // {tag:'input',                 // attr:{ type:'text', value:u, placeholder:'Username'},                 // addClass:css_class_field+" "+css_class_userIn,                 // ctx:{ w$:{u:'w$el' } },                 // _iface:{ value: u }                 // },                // {tag:'input',                 // attr:{ type:'text', value:"*****", placeholder:'Password'},                 // addClass:css_class_field+" "+css_class_userIn,                 // ctx:{ w$:{p:'w$el'} },                 // _iface:{ value: p },                 // }                // ],            // _iface:{ id:w$ctx.w$i, rec:w$ctx.w$rec, w$ctx:{ u:'u', p:'p' } },            // _final:{show:w$ctx.io_bInp}            // };        // },        // proto: w$defineProto(        // {            // saveInput: {value: function()             // {                // var nU = this.u.el.value,                    // oU = this.rec? this.rec.userid: undefined,                    // nP = encrypt(this.p.el.value),                    // oP = this.rec? this.rec.pass: undefined;//                                 // if (!isValidInput(nU) || !isValidInput(nP)) {return false;}//                                 // if ((nU !== oU) || (nP !== oP))                 // {                    // // save to db                    // var pRec = newPRecord(g_loc, Date.now(), this.u.el.value, this.p.el.value);                    // saveRecord(pRec);                    // if (nU !== oU) {                        // this.deleteRecord(dt_pRecord, oU);                    // }                // }            // }},            // deleteRecord: {value: function(dt, key)            // {                // if (dt === dt_pRecord) {                    // deleteRecord({loc:g_loc, userid:key});                // }            // }},            // show: {value: function()            // {                // this.u.el.value = this.rec? this.rec.userid: undefined;                // this.p.el.value = this.rec? "***": undefined;                // Widget.prototype.show.apply(this);            // }},            // hide: {value: function()            // {                // this.u.el.value = undefined;                // this.p.el.value = undefined;                // Widget.prototype.hide.apply(this);                            // }}        // })    // };
-
-
-    var IItemP = {
-        wdi: function (w$ctx)
-        {
-            var u, p, pRec = w$ctx.w$rec ? UI_TRAITS.imbue(w$ctx.w$rec.curr) : undefined;
-            if (pRec && pRec.uiTraits.dt === dt_pRecord)
-            {
-                u = pRec.userid;
-                p = pRec.pass;
-            }
-            else {
-                pRec = newPRecord(w$ctx.loc);
-            }
-            return {
-            proto: IItemP.proto,
-            tag:'div', addClass:css_class_ioFields,
-            ctx:{ w$:{iItem:'w$el'} },
-                children: [
-                {tag:'input',
-                 attr:{ type:'text', value:u, placeholder:'Username' },
-                 addClass:css_class_field+" "+css_class_userIn,
-                 ctx:{ w$:{u:'w$el' } },
-                 _iface:{ value: u } 
-                },
-                {tag:'input',
-                 attr:{ type:'text', value:"*****", placeholder:'Password' },
-                 addClass:css_class_field+" "+css_class_userIn,
-                 ctx:{ w$:{p:'w$el'} },
-                 _iface:{ value: p },
-                 }
-                ],
-            _iface:{ acn:w$ctx.w$rec, pRec:pRec, w$ctx:{ u:'u', p:'p' } },
-            _final:{show:true}
-            };
-        },
         proto: w$defineProto (
         {
-            saveInput: {value: function() 
+            x: {value: function click (e)
             {
-                var nU = this.u.el.value,
-                    oU = this.pRec? this.pRec.userid: undefined,
-                    nP = encrypt(this.p.el.value),
-                    oP = this.pRec? this.pRec.pass: undefined;
-                
-                if (!isValidInput(nU) || !isValidInput(nP)) {return false;}
-                
-                if ((nU !== oU) || (nP !== oP)) 
-                {
-                    // save to db
-                    var pRec = newPRecord(w$ctx.loc, Date.now(), this.u.el.value, this.p.el.value);
-                    saveRecord(pRec);
-                    if (nU !== oU) {
-                        this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
-                    }
-                }
-            }},
-            deleteRecord: {value: function(dt, key)
-            {
-                if (dt === dt_pRecord) {
-                    deleteRecord({loc:g_loc, userid:key});
+                if (this.panel) {               
+                    e.stopPropagation(); // We don't want the enclosing web-page to interefere
+                    e.preventDefault(); // Causes event to get cancelled if cancellable
+                    this.panel.die();
+                    return false; // Causes the event to be cancelled (except mouseover event).
                 }
             }}
-        })
-    };
-    
-    var OItemP = 
-    {
-        wdi: function (w$ctx)
+        }),
+        wdt: function (w$ctx)
         {
-            var u, p, pRec = w$ctx.w$rec?UI_TRAITS.imbue(w$ctx.w$rec.curr):undefined;
-            if (pRec && pRec.uiTraits.dt === dt_pRecord) {
-                u = pRec.userid;
-                p = pRec.pass;
+            // make sure panel is captured into private closure, so we won't lose it.
+            // values inside ctx will get changed as other wdls and wdts are executed.
+            var panel = w$ctx.panel;
+    
+            return {
+            proto: XButton.proto,
+            html:'<button type="button">', 
+            attr:{ class:css_class_xButton, accesskey:'q'},
+            text:u_cir_X,
+            on:{ click:XButton.proto.x },
+            iface:{ panel:panel }
+            };
+        }
+    };
 
-                return {
-                //proto: OItemP.proto,
-                tag:'div', addClass:css_class_ioFields,
-                ctx:{ w$:{ oItem:'w$el' } },
-                    children:[
-                    {tag:'span',
-                     attr:{ draggable:true },
-                     addClass:css_class_field+" "+css_class_userOut,
-                     text:u,
-                     ctx:{ w$:{ u:'w$el' } },
-                     _iface:{ dt:fn_userid, value:u }
-                    },
-                    {tag:'span',
-                     attr:{ draggable:true },
-                     addClass:css_class_field+" "+css_class_passOut,
-                     text:'*****',
-                     ctx:{ w$:{p:'w$el' } },
-                     _iface:{ dt:fn_pass, value:p }
-                    }],
-                _iface:{ acn:w$ctx.w$rec, w$ctx:{ u:'u', p:'p' } },
-                _final:{show:true}
-                };
-            }
-        },
-        proto: w$defineProto(
-        {
-            // show: {value: function()             // {                // this.u.el.text = this.pRec? this.pRec.userid: undefined;                // this.p.el.text = this.pRec? "***": undefined;                // Widget.prototype.show.apply(this);            // }}
-        })
-    };
-    
+    function isValidInput(str) {return Boolean(str);}
     
     var TButton = {
+        wdt: function (w$ctx)
+        {
+            var bInp = w$ctx.io_bInp;
+            return {
+             proto: TButton.proto,
+             html:'<button type="button">',
+             attr:{ class:css_class_tButton, /*id:eid_tButton+w$i*/ },
+             text:bInp?u_cir_S:u_cir_E,
+             on:{ click:TButton.proto.toggleIO },
+             _iface:{ w$ctx:{ ioItem:"ioItem" } }
+            };
+        },
         proto: w$defineProto(
         {
             toggleIO: {value: function (ev) 
@@ -314,17 +232,115 @@ var BP_MOD_WDL = (function ()
                     this.$el.text(u_cir_E);
                 }
             }}
-        }),
-        wdi: function (w$ctx)
+        })
+    };
+    
+    var IItemP = {
+        wdt: function (w$ctx)
         {
+            var u, p, 
+            ioItem = w$ctx.ioItem,
+            pRec = ioItem.rec;
+            
+            if (pRec)
+            {
+                u = pRec.userid;
+                p = pRec.pass;
+            }
+            else { // create a new pRec and save it back to ioItem.
+                pRec = newPRecord(ioItem.loc);
+                ioItem.rec = pRec; // Save this back to ioItem.
+            }
             return {
-             proto: TButton.proto,
-             html:'<button type="button">',
-             attr:{ class:css_class_tButton, /*id:eid_tButton+w$i*/ },
-             text:w$ctx.io_bInp?u_cir_S:u_cir_E,
-             on:{ click:TButton.proto.toggleIO },
-             _iface:{ w$ctx:{ ioItem:"ioItem" } }
+            proto: IItemP.proto,
+            tag:'div', addClass:css_class_ioFields,
+            ctx:{ w$:{iItem:'w$el'} },
+            iface:{ ioItem:ioItem },
+                children: [
+                {tag:'input',
+                 attr:{ type:'text', value:u, placeholder:'Username' },
+                 prop:{ disabled:u?true:false },
+                 addClass:css_class_field+" "+css_class_userIn,
+                 ctx:{ w$:{u:'w$el' } },
+                 _iface:{ value: u } 
+                },
+                {tag:'input',
+                 attr:{ type:'text', value:"*****", placeholder:'Password' },
+                 addClass:css_class_field+" "+css_class_userIn,
+                 ctx:{ w$:{p:'w$el'} },
+                 _iface:{ value: p },
+                 }
+                ],
+            _iface:{ w$ctx:{ u:'u', p:'p' } },
+            _final:{show:true}
             };
+        },
+        proto: w$defineProto (
+        {
+            saveInput: {value: function() 
+            {
+                var ioItem = this.ioItem,
+                    nU = this.u.el.value,
+                    oU = ioItem.rec? ioItem.rec.userid: undefined,
+                    nP = encrypt(this.p.el.value),
+                    oP = ioItem.rec? ioItem.rec.pass: undefined;
+                
+                if (!isValidInput(nU) || !isValidInput(nP)) {return false;}
+                
+                if ((nU !== oU) || (nP !== oP)) 
+                {
+                    // save to db
+                    var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
+                    saveRecord(pRec);
+                    if (nU !== oU) {
+                        this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
+                    }
+                }
+                
+                return true;
+            }},
+            deleteRecord: {value: function(dt, key)
+            {
+                if (dt === dt_pRecord) {
+                    deleteRecord({loc:ioItem.loc, userid:key});
+                }
+            }}
+        })
+    };
+    
+    var OItemP = 
+    {
+        wdt: function (w$ctx)
+        {
+            var u, p, 
+                ioItem = w$ctx.ioItem,
+                pRec = (ioItem && ioItem.rec) ? ioItem.rec:undefined;
+            if (pRec) {
+                u = pRec.userid;
+                p = pRec.pass;
+
+                return {
+                tag:'div', addClass:css_class_ioFields,
+                ctx:{ w$:{ oItem:'w$el' } },
+                    children:[
+                    {tag:'span',
+                     attr:{ draggable:true },
+                     addClass:css_class_field+" "+css_class_userOut,
+                     text:u,
+                     ctx:{ w$:{ u:'w$el' } },
+                     _iface:{ fn:fn_userid, value:u }
+                    },
+                    {tag:'span',
+                     attr:{ draggable:true },
+                     addClass:css_class_field+" "+css_class_passOut,
+                     text:'*****',
+                     ctx:{ w$:{p:'w$el' } },
+                     _iface:{ fn:fn_pass, value:p }
+                    }],
+                _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } },
+                _final:{show:true}
+                };
+            }
         }
     };
     
@@ -332,24 +348,28 @@ var BP_MOD_WDL = (function ()
     {
         wdi: function (w$ctx)
         {
-            var w$i=w$ctx.w$i;
+            var acns=w$ctx.w$rec,
+                rec = acns? acns.curr: undefined,
+                loc = w$ctx.loc,
+                bInp = w$ctx.io_bInp;
             return {
             proto: IoItem.proto,
-            tag:'div', attr:{id:eid_ioItem+w$i, class:css_class_li},
-            ctx:{ w$:{ioItem:'w$el'} },
+            tag:'div', 
+            attr:{ class:css_class_li },
+            ctx:{ w$:{ ioItem:'w$el' } },
+            iface: { acns:acns, rec:rec, loc:loc },
             on: {mousedown:stopPropagation},
                 children:[
                 {html:'<button type="button">',
-                 attr:{class:css_class_tButton,id:eid_fButton+w$i},
+                 attr:{class:css_class_tButton },
                  text:u_cir_F,
                  on:{ click:wdl_f.autoFill },
                 },
-                TButton.wdi,
-                w$ctx.io_bInp ? IItemP.wdi : OItemP.wdi
+                TButton.wdt,
+                bInp ? IItemP.wdt : OItemP.wdt
                 ],
-             // save references to o and i item objects. Will be used by toggleIO
-             _iface:{ id:w$ctx.w$i, rec:w$ctx.w$rec, bInp: w$ctx.io_bInp,
-                      w$ctx:{oItem:"oItem", iItem:"iItem"} }
+             // save references to relevant objects.
+             _iface:{ w$ctx:{oItem:"oItem", iItem:"iItem"} }
             };
         },
         
@@ -359,27 +379,22 @@ var BP_MOD_WDL = (function ()
             {
                 var iI = this.iItem, 
                     oI = this.oItem,
-                    wctx={w$rec:this.rec};
+                    ctx={ioItem:this};
                 if (iI) 
                 { // Create output element
-                    if (this.iI.saveInput()) {
-                        this.oItem = w$exec(OItemP.wdi, wctx);
+                    if (iI.saveInput()) {
+                        this.oItem = w$exec(OItemP.wdt, ctx);
                         if (this.oItem) {
-                            iI.destroy();
-                            this.iItem = null;
+                            delete this.iItem; iI.die();
                             this.append(this.oItem);
                         }
                     }
                 }
                 else if (oI)
                 { // Create input element, destroy output element
-                    //iI.show(); 
-                    //oI.hide();
-                    //iI.enable();
-                    this.iItem = w$exec(IItemP.wdi, wctx);
+                    this.iItem = w$exec(IItemP.wdt, ctx);
                     if (this.iItem) {
-                        oI.destroy();
-                        this.oItem = null;
+                        delete this.oItem; oI.die();
                         this.append(this.iItem);
                     }
                 }
@@ -394,29 +409,31 @@ var BP_MOD_WDL = (function ()
         proto: w$defineProto(
         {
             handleDragStart: {value: function handleDragStart (e)
-            {
+            {   // 'this' is bound to e.target
+                
                 //console.info("DragStartHandler entered");
                 e.dataTransfer.effectAllowed = "copy";
                 var data = this.value;
-                if (this.dt === fn_pass) {
+                if (this.fn === fn_pass) {
                     data = decrypt(this.value);
                 }
                 
-                e.dataTransfer.items.add('', CT_BP_PREFIX + this.dt); // Keep this on top for quick matching later
-                e.dataTransfer.items.add(this.dt, CT_BP_FN); // Keep this second for quick matching later
+                e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
+                e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
                 e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
                 e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"icon16.png"}).el, 0, 0);
                 e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
+                //console.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
                 //return true;
             }},
             handleDrag: {value: function handleDrag(e)
-            {
+            {   // 'this' is bound to e.target
                 //console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
                 //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
                 e.stopImmediatePropagation();
             }},
             handleDragEnd: {value: function handleDragEnd(e)
-            {
+            {   // 'this' is bound to e.target
                 //console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
                 e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
                 //return true;
@@ -431,9 +448,9 @@ var BP_MOD_WDL = (function ()
             return {
             proto: PanelList.proto,
             tag:'div', attr:{ id:eid_panelList },
-            on:{ dragstart:PanelList.handleDragStart,
-                 drag:PanelList.handleDrag, 
-                 dragend:PanelList.handleDragEnd },
+            on:{ dragstart:PanelList.proto.handleDragStart,
+                 drag:PanelList.proto.handleDrag, 
+                 dragend:PanelList.proto.handleDragEnd },
             ctx:{ io_bInp:false, w$:{ itemList:'w$el' } },
                  iterate:{ it:ctx.it, wdi:IoItem.wdi }
             };
@@ -454,20 +471,20 @@ var BP_MOD_WDL = (function ()
         //    the value of the prop defined below should be name of the prop in the wdl-runtime.
         // 3. Props listed under w$ctx are copied over from the context object - ctx - only makes
         //    sence when you're copying into something other than the context itself.
-        ctx:{ w$:{ panel:"w$el" }, loc:ctx.loc?ctx.loc:g_loc },
+        ctx:{ w$:{ panel:"w$el" }, loc:ctx.loc || g_loc },
 
             // Create children
             children:[
             {tag:"div", attr:{ id:eid_panelTitle },
                 children:[                cs_panelTitleText_wdl,
                 NButton.wdt,
-                xButton_wdt]
+                XButton.wdt]
             },
             PanelList.wdt],
 
         // Post processing steps
         _data:{ w$ctx:{}, w$:{} }, // props to be copied to w$el.data after creating children
-        _iface:{ die:function(){this.$el.remove();}, w$:{id:"id"}, w$ctx:{itemList:'itemList'} },
+        _iface:{ w$:{id:"id"}, w$ctx:{itemList:'itemList'} },
         _final:{ appendTo:document.body, show:true, exec:function(ctx, w$){w$.w$el.$el.draggable();} }
         };
     }
@@ -475,6 +492,15 @@ var BP_MOD_WDL = (function ()
     var iface = 
     {
        cs_panel_wdt: cs_panel_wdt,
+       prop_value: prop_value,
+       prop_fieldName: prop_fieldName,
+       prop_peerID: prop_peerID,
+       CT_BP_FN: CT_BP_FN,
+       CT_TEXT_PLAIN: CT_TEXT_PLAIN,
+       CT_BP_PREFIX: CT_BP_PREFIX,
+       CT_BP_USERID: CT_BP_USERID,
+       CT_BP_PASS: CT_BP_PASS
     };
-   return Object.freeze(iface);
+    
+    return Object.freeze(iface);
 }());

@@ -266,14 +266,15 @@ var BP_MOD_MEMSTORE = (function ()
      * For an argument, it expects an Action Record or an Object object created from a
      * JSON serialized Action Record.
      */
-    function Actions(jo)
+    function Actions(dt, jo)
     {
+        var tr = DT_TRAITS.getTraits(dt);
         if (jo)
         {
             Object.defineProperties(this,
                 {
                     curr: {value: jo.curr, writable: true, enumerable: true},
-                    arecs: {value: jo.arecs, enumerable: true}
+                    arecs: {value: jo.arecs, enumerable:tr.actions.transfer_arecs}
                 }
             );
         }
@@ -281,7 +282,7 @@ var BP_MOD_MEMSTORE = (function ()
             Object.defineProperties(this,
                 {
                     curr: {writable: true, enumerable: true},
-                    arecs: {value: [], enumerable: true}
+                    arecs: {value: [], enumerable:tr.actions.transfer_arecs}
                 }
             );
         }
@@ -333,8 +334,8 @@ var BP_MOD_MEMSTORE = (function ()
         }        
     };
     
-    function newActions(jo) {
-        return new Actions(jo);
+    function newActions(dt, jo) {
+        return new Actions(dt, jo);
     }
     /** @end-class-defn **/
 
@@ -578,7 +579,7 @@ var BP_MOD_MEMSTORE = (function ()
          */
     }
     DNode.prototype.hasData = function() {return this.data;};
-    DNode.prototype.getData = function(dt) {return this.data?this.data[dt]:null;};
+    DNode.prototype.getData = function(dt) {return this.data? this.data[dt] : null;};
     DNode.prototype.putData = function(drec)
     {
         var r, ki, 
@@ -597,7 +598,7 @@ var BP_MOD_MEMSTORE = (function ()
             r.insert(drec);
         }
         else {
-            (recsMap[ki] = newActions()).insert(drec);
+            (recsMap[ki] = newActions(dt)).insert(drec);
         }
                 
     };

@@ -36,15 +36,17 @@ var BP_MOD_W$ = (function ()
     WidgetElement.prototype.cons = function($el) 
     {
         Object.defineProperties(this,
-        {
-            el: {value: $el[0]}, // pointer to DOM element object
-            $el: {value: $el}, // pointer to jquery wrapped DOM element object
-            w$: {value: {}},
-            //children: {value: []}, // A set of children, parallel to their DOM elements
-            data: {value: {}}
+        {   // Properties are kept configurable so that they may be deleted by the
+            // destructor. This is necessary in order to remove circular references.
+            el: {value: $el[0], configurable:true}, // pointer to DOM element object
+            $el: {value: $el, configurable:true}, // pointer to jquery wrapped DOM element object
+            w$: {value: {}, configurable:true}, //Meant for saving event handlers
             // Other properties and functions will be inserted here through wdl.
             // That will serve as the JS-interface of the WidgetElement
-        });        
+        });
+        // point $el back to w$el. Hopefully this won't be a cyclic reference between w$el
+        // jQuery. We'll try to remove this everywhere before destruction.
+        $el.data('w$el', this);
     };
     WidgetElement.prototype.append = function(w)
     {
@@ -54,6 +56,13 @@ var BP_MOD_W$ = (function ()
     WidgetElement.prototype.appendTo = function(w) {w.append(this);};
     WidgetElement.prototype.show = function() {this.el.style.removeProperty('display');};
     WidgetElement.prototype.hide = function() {this.el.style.display = 'none';};
+    WidgetElement.prototype.die = function()
+    {   // Props are being deleted below in order to prevent circular references.
+        delete this.el;
+        delete this.w$;
+        this.$el.remove();
+        delete this.$el;
+    };
    
     // Returns an object to be used as a prototype for a widget element.
     function w$defineProto (props) // props has same syntax as Object.defineProperties
@@ -99,29 +108,27 @@ var BP_MOD_W$ = (function ()
         }
     }
     
-    function w$get (arg) // arg should be an element-id or an event
+    function w$get (sel) 
     {
-        var w$el;
-        switch (typeof arg)
-        {
-            case 'string':
-                w$el = $('#'+arg).data('w$el');
-                break;
-            case 'object':
-                w$el = $(arg.currentTarget).data('w$el');
-                break;
+        return $(sel).data('w$el');
+    }
+    function w$set (sel) // arg should be anything that can be given to jQuery
+    {
+        var w$el = $(sel).data('w$el');
+        if (!w$el) {
+            w$el = new WidgetElement($(sel));
         }
         return w$el;
     }
     
     function w$eventProxy (e)
     {
-        var wel = w$get(e), func, wel2;
+        var wel = w$get(e.currentTarget), func, wel2;
         if (wel) {
-            func = wel.w$.on[e.type];
+            func = wel.w$.on? wel.w$.on[e.type] :undefined;
         }
         if (func) {
-            wel2 = $(e.target).data('w$el');
+            wel2 = w$get(e.target);
             func.apply(wel2, [e]);
         }
     }
@@ -156,7 +163,7 @@ var BP_MOD_W$ = (function ()
         var el, $el, i=0, w$el, _final, wcld, keys, key, val, w$ ={},
             n=0;
 
-        // Create the element
+        // Create the DOM element
         if (wdl.tag) {
             el = document.createElement(wdl.tag);
             $el = $(el);
@@ -178,8 +185,7 @@ var BP_MOD_W$ = (function ()
             .text(wdl.text || "")
             .prop(wdl.prop || {})
             .css(wdl.css || {})
-            .addClass(wdl.addClass || {})
-            .data('w$el', w$el); // point el back to w$el. jQuery ensures no cyclic references.
+            .addClass(wdl.addClass || {});
         w$on(w$el, wdl.on); // Didn't want to use jQuery.on for fear of bad performance.
 
         // Update w$ runtime env.
@@ -192,6 +198,9 @@ var BP_MOD_W$ = (function ()
             w$evalProps(wdl.ctx, w$, ctx, ctx);
         }
         
+        // Populate element's interface pre-children
+        if (wdl.iface) { w$evalProps(wdl.iface, w$, ctx, w$el); }
+
         // Process and insert child widgets
         for (i=0, n=wdl.children? wdl.children.length:0; i<n; i++) {
             w$el.append(w$exec(wdl.children[i], ctx, true)); // insert children
@@ -217,9 +226,9 @@ var BP_MOD_W$ = (function ()
         }
         
         // Now update w$el.data after ctx has been populated by children
-        if (wdl._data) { w$evalProps(wdl._data, w$, ctx, w$el.data); }
+        //if (wdl._data) { w$evalProps(wdl._data, w$, ctx, w$el.data); }
         
-        // Make w$el interface.
+        // Populate w$el's interface post-children
         if (wdl._iface) { w$evalProps(wdl._iface, w$, ctx, w$el); }
 
         // Finally, post Creation steps
@@ -248,6 +257,7 @@ var BP_MOD_W$ = (function ()
     {
        w$exec: w$exec,
        w$get: w$get,
+       w$set: w$set,
        w$defineProto: w$defineProto,
        Widget: WidgetElement
    };
