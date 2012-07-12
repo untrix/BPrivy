@@ -292,7 +292,7 @@ var BP_MOD_WDL = (function ()
                     // save to db
                     var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
                     saveRecord(pRec);
-                    if (nU !== oU) {
+                    if (oU && (nU !== oU)) {
                         this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
                     }
                 }
@@ -302,7 +302,7 @@ var BP_MOD_WDL = (function ()
             deleteRecord: {value: function(dt, key)
             {
                 if (dt === dt_pRecord) {
-                    deleteRecord({loc:ioItem.loc, userid:key});
+                    deleteRecord({loc:this.ioItem.loc, userid:key});
                 }
             }}
         })
@@ -440,11 +440,12 @@ var BP_MOD_WDL = (function ()
             }},
             newItem: {value: function()
             {
-                w$exec(IoItem.wdi, {io_bInp:true}).appendTo(this);
+                w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc}).appendTo(this);
             }}
         }),   
         wdt: function (ctx)
         {
+            var loc = ctx.loc || g_loc;
             return {
             proto: PanelList.proto,
             tag:'div', attr:{ id:eid_panelList },
@@ -452,6 +453,7 @@ var BP_MOD_WDL = (function ()
                  drag:PanelList.proto.handleDrag, 
                  dragend:PanelList.proto.handleDragEnd },
             ctx:{ io_bInp:false, w$:{ itemList:'w$el' } },
+            iface:{ loc:loc },
                  iterate:{ it:ctx.it, wdi:IoItem.wdi }
             };
         }
