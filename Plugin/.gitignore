@@ -2,6 +2,5 @@ plugin-win-build*
 *.dll
 firebreath*
 firebreath1.7/
-plugin-win-build-dynamic/
-plugin-win-build-static/
+plugin-*/*
 boost*/*

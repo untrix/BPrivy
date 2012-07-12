@@ -1,0 +1,270 @@
+The following list is a list of files available with Microsoft Visual Studio 2010 for redistribution under the Visual Studio 2010 license.  If the Microsoft software you have licensed is not Visual Studio 2010, only the files that are installed by the Microsoft software may be redistributed under such license.
+
+_____________________________________________________________
+
+Visual Basic PowerPacks 
+
+Subject to the license terms for the software, the following file may be redistributed unmodified:
+
+VisualBasicPowerPacksSetup.exe
+
+_____________________________________________________________
+
+Visual C++ Runtime files
+
+Subject to the license terms for the software, you may redistribute the .EXE files (unmodified) listed below. 
+These files can be run as prerequisites during installation.
+
+vcredist_x86.exe
+vcredist_x64.exe 
+vcredist_IA64.exe
+
+Subject to the license terms for the software, you may redistribute MSM files listed below unmodified as a part of your installation package:
+
+Microsoft_VC100_ATL_x86.msm
+Microsoft_VC100_ATL_ia64.msm
+Microsoft_VC100_ATL_x64.msm
+
+Microsoft_VC100_CRT_x86.msm
+Microsoft_VC100_CRT_ia64.msm
+Microsoft_VC100_CRT_x64.msm
+
+Microsoft_VC100_MFC_x86.msm
+Microsoft_VC100_MFC_x64.msm
+
+Microsoft_VC100_MFCLOC_x86.msm
+Microsoft_VC100_MFCLOC_x64.msm
+
+Microsoft_VC100_OpenMP_x86.msm
+Microsoft_VC100_OpenMP_ia64.msm
+Microsoft_VC100_OpenMP_x64.msm
+
+For your convenience, we have provided the following folders for use when redistributing VC++ runtime files. Subject to the license terms for the software, you may redistribute the folder (unmodified) in the application local folder as a sub-folder with no change to the folder name. You may also redistribute all the files within a folder, listed below the folder for your convenience, as an entire set. 
+
+\VC\redist\x86\Microsoft.VC100.ATL\
+ atl100.dll
+
+\VC\redist\ia64\Microsoft.VC100.ATL\
+ atl100.dll
+
+\VC\redist\amd64\Microsoft.VC100.ATL\
+ atl100.dll
+
+\VC\redist\x86\Microsoft.VC100.CRT\
+ msvcp100.dll
+ msvcr100.dll
+
+\VC\redist\ia64\Microsoft.VC100.CRT\
+ msvcp100.dll
+ msvcr100.dll
+
+\VC\redist\amd64\Microsoft.VC100.CRT\
+ msvcp100.dll
+ msvcr100.dll
+
+\VC\redist\x86\Microsoft.VC100.MFC\
+ mfc100.dll
+ mfc100u.dll
+ mfcm100.dll
+ mfcm100u.dll
+
+\VC\redist\amd64\Microsoft.VC100.MFC\
+ mfc100.dll
+ mfc100u.dll
+ mfcm100.dll
+ mfcm100u.dll
+
+\VC\redist\x86\Microsoft.VC100.MFCLOC\
+ mfc100chs.dll
+ mfc100cht.dll
+ mfc100enu.dll
+ mfc100esp.dll
+ mfc100deu.dll
+ mfc100fra.dll
+ mfc100ita.dll
+ mfc100jpn.dll
+ mfc100kor.dll
+ mfc100rus.dll
+
+\VC\redist\amd64\Microsoft.VC100.MFCLOC\
+ mfc100chs.dll
+ mfc100cht.dll
+ mfc100enu.dll
+ mfc100esp.dll
+ mfc100deu.dll
+ mfc100fra.dll
+ mfc100ita.dll
+ mfc100jpn.dll
+ mfc100kor.dll
+ mfc100rus.dll
+
+\VC\redist\x86\Microsoft.VC100.OpenMP\
+ vcomp100.dll
+
+\VC\redist\amd64\Microsoft.VC100.OpenMP\
+ vcomp100.dll
+
+\VC\redist\ia64\Microsoft.VC100.OpenMP\
+ vcomp100.dll
+
+Subject to the license terms for the software, the following files can be redistributed with your application in your application local folder or by deploying into the Global Assembly Cache (GAC):
+
+mfcmifc80.dll
+
+Subject to the license terms of the software, one or more of the *.*.pdb files listed below may be redistributed for the sole purpose of debugging your applications. 
+
+atl100.i386.pdb
+atl100.AMD64.pdb
+atl100.IA64.pdb
+
+msvcp100.i386.pdb
+msvcp100.AMD64.pdb
+msvcp100.IA64.pdb
+
+msvcr100.i386.pdb
+msvcr100.AMD64.pdb
+msvcr100.IA64.pdb
+
+mfc100.i386.pdb
+mfc100.AMD64.pdb
+
+mfc100u.i386.pdb
+mfc100u.AMD64.pdb
+
+mfcm100.i386.pdb
+mfcm100.AMD64.pdb
+
+mfcm100u.i386.pdb
+mfcm100u.AMD64.pdb
+
+vcomp100.i386.pdb
+vcomp100.AMD64.pdb
+vcomp100.IA64.pdb
+      
+_____________________________________________________________
+
+Visual F# Runtime Files
+
+Subject to the license terms for the software, the following files may be redistributed unmodified:
+
+FSharpRedist.exe
+FSharp.Core.dll
+
+_____________________________________________________________
+
+.NET Framework 4
+
+Subject to the license terms for the software, the following .EXE files may be redistributed unmodified:
+
+dotNetFx40_Client_x86_x64.exe
+dotNetFx40_Full_x86_x64.exe
+
+dotNetFx40_Client_x86.exe
+
+dotNetFx40_Full_x86.exe
+dotNetFx40_Full_x86_ia64.exe
+
+dotNetFx40_Client_setup.exe
+dotNetFx40_Full_setup.exe
+
+Please note that the last 5 files listed above are not included with the software. You can obtain copies of those files from http://go.microsoft.com/fwlink/?LinkId=185911.
+
+Please note that the Language Packs listed below are not included with the software. However, you may  redistribute, unmodified, the individual language pack versions of the following files: You may obtain copies of those files from http://go.microsoft.com/fwlink/?LinkId=185911.
+
+dotNetFx40LP_Full_x86_x64<Culture>.exe
+dotNetFx40LP_Full_x86_ia64<Culture>.exe
+dotNetFx40LP_Full_x86<Culture>.exe
+
+dotNetFx40LP_Client_x86_x64<Culture>.exe
+dotNetFx40LP_Client_x86<Culture>.exe
+
+Note: <Culture> represents the specific language identifier.  Language Packs are available for the following (listed here with their associated identifier code):
+
+Arabic (ar), Chinese-Taiwan (zh-cht), Czech (cs), Danish (da), German (de), Greek (el), Finnish (fi), French (fr), Hebrew (he), Hungarian (hu), Italian (it), Japanese (ja), Korean (ko), Dutch-Netherlands (nl), Norwegian (no), Polish (pl), Portuguese-Brazil (pt-BR), Russian (ru), Swedish (sv), Turkish (tr), Chinese (zh-chs), Portuguese-Portugal (pt-PT), Spanish (es)
+
+
+_____________________________________________________________
+
+Visual Studio Tools for Office Files
+
+Subject to the license terms for the software, the following files may be redistributed unmodified:
+
+vstor40_x86.exe
+vstor40_x86.msi
+
+vstor40_x64.exe
+vstor40_x64.msi
+
+vstor40_lp_x86_ARA.msi
+vstor40_lp_x64_ARA.msi
+
+vstor40_lp_x86_CHS.msi
+vstor40_lp_x64_CHS.msi
+
+vstor40_lp_x86_CHT.msi
+vstor40_lp_x64_CHT.msi
+
+vstor40_lp_x86_DAN.msi
+vstor40_lp_x64_DAN.msi
+
+vstor40_lp_x86_DEU.msi
+vstor40_lp_x64_DEU.msi
+
+vstor40_lp_x86_ESN.msi
+vstor40_lp_x64_ESN.msi
+
+vstor40_lp_x86_FIN.msi
+vstor40_lp_x64_FIN.msi
+
+vstor40_lp_x86_FRA.msi
+vstor40_lp_x64_FRA.msi
+
+vstor40_lp_x86_HEB.msi
+vstor40_lp_x64_HEB.msi
+
+vstor40_lp_x86_ITA.msi
+vstor40_lp_x64_ITA.msi
+
+vstor40_lp_x86_JPN.msi
+vstor40_lp_x64_JPN.msi
+
+vstor40_lp_x86_KOR.msi
+vstor40_lp_x64_KOR.msi
+
+vstor40_lp_x86_NLD.msi
+vstor40_lp_x64_NLD.msi
+
+vstor40_lp_x86_NOR.msi
+vstor40_lp_x64_NOR.msi
+
+vstor40_lp_x86_PLK.msi
+vstor40_lp_x64_PLK.msi
+
+vstor40_lp_x86_PTB.msi
+vstor40_lp_x64_PTB.msi
+
+vstor40_lp_x86_RUS.msi
+vstor40_lp_x64_RUS.msi
+
+vstor40_lp_x86_SVE.msi
+vstor40_lp_x64_SVE.msi
+
+_____________________________________________________________
+
+Microsoft Office 2007 Primary Interop Assemblies (PIA)
+
+Subject to the license terms for the software, the following files may be redistributed unmodified:
+
+o2007pia.msi
+
+_____________________________________________________________
+
+Windows SDK Files
+
+Subject to the license terms for the software, the following files may be redistributed unmodified:
+
+Mage.exe
+MageUI.exe
+ResGen.exe
+
+_____________________________________________________________

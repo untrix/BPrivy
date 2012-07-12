@@ -6,8 +6,8 @@
 #\**********************************************************/
 
 set(PLUGIN_NAME "BPrivy")
-set(PLUGIN_PREFIX "BPV")
-set(COMPANY_NAME "Untrix (untrix.com)")
+set(PLUGIN_PREFIX "BP")
+set(COMPANY_NAME "Untrix Soft")
 
 # ActiveX constants:
 set(FBTYPELIB_NAME BPrivyLib)
@@ -28,17 +28,17 @@ set(FBComJavascriptObject_GUID 85b7a40f-4a56-5daf-b63f-4b9c1cf85d4b)
 set(IFBComEventSource_GUID 0f8ba12f-b626-5759-870d-70b77f2a2c45)
 
 # these are the pieces that are relevant to using it from Javascript
-set(ACTIVEX_PROGID "Untrix.BPrivy")
+set(ACTIVEX_PROGID "untrix.com/BPrivy")
 set(MOZILLA_PLUGINID "untrix.com/BPrivy")
 
 # strings
-set(FBSTRING_CompanyName "Untrix (untrix.com)")
+set(FBSTRING_CompanyName "Untrix Soft")
 set(FBSTRING_PluginDescription "BPrivy Password Manager")
 set(FBSTRING_PLUGIN_VERSION "1.0.0.0")
 set(FBSTRING_LegalCopyright "Copyright 2012 Sumeet Singh sumeet@untrix.com")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
 set(FBSTRING_ProductName "BPrivy")
-set(FBSTRING_FileExtents "")
+set(FBSTRING_FileExtents "3ab|3ac|3ad|3am|3ao|3at")
 set(FBSTRING_PluginName "BPrivy")
 set(FBSTRING_MIMEType "application/x-bprivy")
 
