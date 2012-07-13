@@ -5839,6 +5839,7 @@ div#com-bprivy-panel {
   display: block;
   text-align: center;
   vertical-align: middle;
+  cursor: move;
 }
 
 #com-bprivy-panel #com-bprivy-TitleText {
@@ -5872,7 +5873,7 @@ div#com-bprivy-panel {
   display: none;
 }
 
-#com-bprivy-panel #com-bprivy-panelList .com-bprivy-field {
+#com-bprivy-panelList .com-bprivy-field {
   display: inline-block;
   width: 125px;
   padding: 1px;
@@ -5912,11 +5913,13 @@ div#com-bprivy-panel {
 }
 
 #com-bprivy-panelList .com-bprivy-user-out {
+  cursor: move;
   background-color: light-gray;
   border: 1px solid;
 }
 
 #com-bprivy-panelList .com-bprivy-pass-out {
+  cursor: move;
   background-color: light-gray;
   border: 1px solid;
 }

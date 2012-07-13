@@ -282,7 +282,7 @@ var BP_MOD_CS = (function(g_win)
         else
         {
             var exc = new BPError(resp.err);
-            BP_MOD_ERROR.warn("bp_cs.js@init " + exc.toString() + "]");
+            BP_MOD_ERROR.logdebug("bp_cs.js@init " + exc.toString() + "]");
         }        
     }
     
@@ -302,7 +302,7 @@ var BP_MOD_CS = (function(g_win)
         {
             g_db.clear();
             var exc = new BPError(resp.err);
-            BP_MOD_ERROR.warn("bp_cs.js@showPanel " + exc.toString() + "]");
+            BP_MOD_ERROR.logdebug("bp_cs.js@showPanel " + exc.toString() + "]");
         }
 
         // TODO: Since this is async, maybe we should check if the panel already exists?

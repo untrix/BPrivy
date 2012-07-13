@@ -325,14 +325,16 @@ var BP_MOD_WDL = (function ()
                     children:[
                     {tag:'span',
                      attr:{ draggable:true },
-                     addClass:css_class_field+" "+css_class_userOut,
+                     addClass:css_class_field+" "+css_class_userOut + " input-small",
+                     //addClass:" input-small uneditable-input",
                      text:u,
                      ctx:{ w$:{ u:'w$el' } },
                      _iface:{ fn:fn_userid, value:u }
                     },
                     {tag:'span',
                      attr:{ draggable:true },
-                     addClass:css_class_field+" "+css_class_passOut,
+                     //addClass:css_class_field+" "+css_class_passOut,
+                     addClass:css_class_field+" "+css_class_passOut+" input-small",
                      text:'*****',
                      ctx:{ w$:{p:'w$el' } },
                      _iface:{ fn:fn_pass, value:p }

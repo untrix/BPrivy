@@ -10,7 +10,7 @@
   "background_page": "bp_Main.html",
   "content_scripts": [
 	{
-	"matches": ["http://*/*", "https://*/*"],
+	"matches": ["<all_urls>", "http://*/*", "https://*/*"],
 	"js": ["tp/json2.js", "tp/jquery.js", "tp/jquery-ui.js", "bp_error.js", "bp_common.js", "bp_cs_platform_chrome.js", "bp_connector.js", "bp_traits.js", "bp_w$.js", "bp_panel.js", "bp_cs.js"],
 	"css": ["build/bp.css"]
 ///	"all_frames": true

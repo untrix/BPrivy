@@ -89,9 +89,8 @@
             }
         } 
         catch (err) {
-            var exc = new BPError(err);
-            BP_MOD_ERROR.logwarn("onRequest@bp_main.js " + exc.toString());
-            funcSendResponse({result:false, err:exc});
+            BPError.logwarn(err);
+            funcSendResponse({result:false, err:err});
         }
     }
     

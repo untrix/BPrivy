@@ -120,10 +120,15 @@ var BP_MOD_ERROR = (function()
    /*
     * More codes
     */
-    var ac = {}, bc={}, msg={};
-    ac.BadPathArgument = 'BadPathArgument';
-    bc.ExistingStore = 'ExistingStore';
-    msg[bc.ExistingStore] = "The selected folder seems to already be part of another Privy Wallet"; 
+    var msg = Object.freeze(
+    {
+        /***********Action Codes****************/
+        BadPathArgument:"Bad Path Argument",
+        Unsupported:'Unsupported Feature', //Unsupported URL etc.
+        Diag:'', // Diagnostic Message 
+        /*********** 'G-Codes' **************/
+        ExistingStore: "The selected folder seems to already be part of another Privy Wallet"
+    });
 
    function Activity(arg)
    {
@@ -161,21 +166,23 @@ var BP_MOD_ERROR = (function()
    
    // err is either o.err returned from the plugin or a message string. BPError.atvt is
    // always used to derive the activity when created from a throw statement.
-    function BPError(_err)
+    function BPError(_err, acode, gcode)
     {
         Object.defineProperties(this,
         {// name and message are standard in ECmascript Error prototype.
             name: {writable: true, enumerable: true},
             message: {writable:true, enumerable: true},
             atvt: {writable:true, enumerable:true},
-            err: {value:{}, writable:true, enumerable:true},
+            err: {value:{}, writable:true, enumerable:true}
         });
 
         if (_err && (typeof _err === "string"))
         {
             this.atvt = BPError.atvt; // Take value of page atvt
             this.message = _err;
-            this.name = "BPError";
+            this.name = "BPDiags";
+            this.err.acode = acode || 'Diag';
+            this.err.gcode = gcode;
         }
         else if (_err && (typeof _err === "object"))
         {
@@ -186,10 +193,11 @@ var BP_MOD_ERROR = (function()
             if (_err.name === "PluginError" || _err.acode) {
                 this.message = _err.gmsg || _err.smsg || _err.acode || _err.gcode || _err.scode;
             }
-            else if (_err.name === "BPError") {
+            else if (_err.name === "BPDiags") {
                 // Copy Construct
                 this.atvt = new Activity(_err.atvt);
-                this.message = _err.message;        
+                this.message = _err.message;
+                this.err = _err.err;
             }
             else { // System error
                 switch (_err.constructor) {
@@ -213,12 +221,17 @@ var BP_MOD_ERROR = (function()
     BPError.atvt = undefined; // Global object for storing current activity. 
     BPError.prototype.toString = function()
     {
-        //return JSON.stringify(this);
-        return this.name + "://" + (this.message || "") +
-               (this.atvt? "?activity=" + this.atvt.toString() : "") +
-               (this.acd? "&acd="+this.acd : "") +
-               (this.gcd? "&gcd="+this.gcd : "") + (this.scd? "&scd="+this.scd : "") +
-               (this.smg? "&smg="+this.smg : "");
+        var msg = (this.message || "Something went wrong :(" ),
+            diags =((this.err.acode==='Diag') ? '' :  (
+                   "\n" + this.name + "://" + 
+                   (this.atvt? "?activity=" + this.atvt.toString() : "") +
+                   (this.err.acode? "&acode="+this.err.acode : "") +
+                   (this.err.gcode? "&gcode="+this.err.gcode : "") + 
+                   (this.err.scode? "&scode="+this.err.scode : "") +
+                   (this.err.smsg? "&smsg="+this.err.smsg : "")
+               ));
+               
+        return msg + diags;
     };
     BPError.push = function (actn)
     {
@@ -227,6 +240,7 @@ var BP_MOD_ERROR = (function()
         }
         BPError.atvt.push(actn);
     };
+
     
     function alert (arg) 
     {
@@ -244,8 +258,19 @@ var BP_MOD_ERROR = (function()
     function log (arg)
     {
         var be = new BPError(arg);
-        //console.log(str);
-        alert(be.toString());
+        console.log(be.toString());
+        //alert(be.toString());
+    }
+    
+    function logwarn (arg)
+    {
+        var be = new BPError(arg);
+        if (be.err.acode === 'Unsupported') {
+            console.log(be.toString());
+        }
+        else {
+            alert(be.toString());
+        }
     }
     
     var iface = {
@@ -256,10 +281,8 @@ var BP_MOD_ERROR = (function()
         success: alert,
         log: log,
         loginfo: log,
-        logwarn: log,
         logdebug: log,
-        ac: ac,
-        bc: bc,
+        logwarn: logwarn,
         msg: msg
     };
     Object.freeze(iface);

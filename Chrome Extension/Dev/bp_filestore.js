@@ -179,7 +179,8 @@ var BP_MOD_FILESTORE = (function()
     
     function loadDB(dbPath)
     {
-        var o = {}, file_names, i, f, path_dir_p, path_dir_k;
+        var o = {}, file_names, path_dir_p, path_dir_k,
+            i, f, num=0;
         console.log("loadingDB " + dbPath);
         g_dbPath = dbPath;
         g_path_k = g_dbPath + path_sep + dir_k + path_sep + file_k;
@@ -194,9 +195,10 @@ var BP_MOD_FILESTORE = (function()
                 if (f[ file_names[i] ].ext === ext_Open) {
                     try {
                         loadFile(path_dir_p + file_names[i]);
+                        num ++;
                     } catch (e) {
                         var bpe = new BPError(e);
-                        BP_MOD_ERROR.logwarn("loadFile@bp_filestore.js " + bpe.toString());
+                        BP_MOD_ERROR.logwarn(bpe);
                         BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_p + file_names[i]);
                     }
                 }
@@ -212,17 +214,24 @@ var BP_MOD_FILESTORE = (function()
                 if (f[ file_names[i] ].ext === ext_Open) {
                     try {
                         loadFile(path_dir_k + file_names[i]);
+                        num++;
                     } catch (e) {
                         var bpe = new BPError(e);
-                        BP_MOD_ERROR.logwarn("loadFile@bp_filestore.js " + bpe.toString());
+                        BP_MOD_ERROR.logwarn(bpe);
                         BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_k + file_names[i]);
                     }
                 }
             }
         }
         
-        MOD_ERROR.log("Loaded DB " + dbPath);
-        return g_dbPath;
+        if (num) {
+            MOD_ERROR.log("Loaded DB " + dbPath);
+            return g_dbPath;
+        }
+        else {
+            MOD_ERROR.alert("Sorry, " + g_dbPath + " could not be opened. Please check the file-path and re-try from the options/settings page");
+            return null;
+        }
     }
     
     function createDB(name, dir) // throws
@@ -238,9 +247,9 @@ var BP_MOD_FILESTORE = (function()
         }
         if (badPath) {
             var err = {
-                acode: BP_MOD_ERROR.ac.BadPathArgument,
-                gcode: BP_MOD_ERROR.bc.ExistingStore,
-                gmsg: BP_MOD_ERROR.msg[BP_MOD_ERROR.bc.ExistingStore]
+                acode: 'BadPathArgument',
+                gcode: 'ExistingStore',
+                gmsg: BP_MOD_ERROR.msg.ExistingStore
             };
             throw new BPError(err);
         }
