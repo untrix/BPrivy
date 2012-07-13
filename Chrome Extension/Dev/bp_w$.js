@@ -5,6 +5,7 @@
  * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 
+
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR,
   BP_MOD_MEMSTORE, BP_MOD_TRAITS */
@@ -53,7 +54,9 @@ var BP_MOD_W$ = (function ()
         this.$el.append(w.el); 
         //this.children.push(wgt);
     };
+    WidgetElement.prototype.prepend = function(w) {this.$el.prepend(w.el);};
     WidgetElement.prototype.appendTo = function(w) {w.append(this);};
+    WidgetElement.prototype.prependTo = function(w) {w.prepend(this);};
     WidgetElement.prototype.show = function() {this.el.style.removeProperty('display');};
     WidgetElement.prototype.hide = function() {this.el.style.display = 'none';};
     WidgetElement.prototype.die = function()
@@ -190,7 +193,7 @@ var BP_MOD_W$ = (function ()
 
         // Update w$ runtime env.
         w$.w$el = w$el;
-        w$.id = $el.attr('id');
+        //w$.id = $el.attr('id'); // This does not make sense.
         
         // Update the context now that the element is created
         if (!ctx) {ctx={};} // setup a new context if one is not provided
@@ -240,7 +243,7 @@ var BP_MOD_W$ = (function ()
             }
             
             if (_final.exec) { // execute functions dictated by wdl
-                _final.exec(ctx, w$);
+                _final.exec.apply(w$el, [ctx, w$]);
             }
             
             // Inserting element into DOM should be done last and only for the top

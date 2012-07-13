@@ -51,7 +51,7 @@ div#com-bprivy-panel	{
                 margin: 1px;
                 padding: 2px;
                 border: 2px;
-                cursor: default;
+                cursor: move;
                 background-color: none;
                 color: black;
                 -moz-user-select: none;
@@ -74,22 +74,22 @@ div#com-bprivy-panel	{
                 display:none;
             }
 
-
-}
-
-#com-bprivy-panelList {
-    
-.com-bprivy-field {
+// Keep this under #com-bprivy-panel in order to force two IDs in the selector.
+// Otherwise this rule gets overridden by others.
+#com-bprivy-panelList .com-bprivy-field {
                 display: inline-block;
                 width: 125px;
-                // height: 16px;
+                height: 16px;
                 overflow: hidden;
                 margin: 1px;
                 padding: 1px;
                 text-align: justify;
                 vertical-align: middle;
             }
+}
 
+#com-bprivy-panelList {
+    
 .com-bprivy-li {
                 display: block;
                 border-collapse:collapse;
@@ -111,24 +111,24 @@ div#com-bprivy-panel	{
 }
 
 .com-bprivy-user-in {
-                border: 2px inset;
+                border: 1px;
                 background-color: white;
 }
 
 .com-bprivy-pass-in {
-                border: 2px inset;
+                border: 1px;
                 background-color: white;
 }
 
 .com-bprivy-user-out{
                 border: 1px solid;
-                background-color: light-gray;
+                //background-color: light-gray;
                 cursor: move;
  		 	}
 
 .com-bprivy-pass-out {
                 border: 1px solid;
-                background-color: light-gray;
+                //background-color: light-gray;
                 cursor: move;
 			}
 }

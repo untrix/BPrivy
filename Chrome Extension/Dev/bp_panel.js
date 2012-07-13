@@ -260,13 +260,13 @@ var BP_MOD_WDL = (function ()
                 {tag:'input',
                  attr:{ type:'text', value:u, placeholder:'Username' },
                  prop:{ disabled:u?true:false },
-                 addClass:css_class_field+" "+css_class_userIn,
+                 addClass:css_class_field+css_class_userIn,
                  ctx:{ w$:{u:'w$el' } },
                  _iface:{ value: u } 
                 },
                 {tag:'input',
-                 attr:{ type:'text', value:"*****", placeholder:'Password' },
-                 addClass:css_class_field+" "+css_class_userIn,
+                 attr:{ type:'text', value:p, placeholder:'Password' },
+                 addClass:css_class_field+css_class_passIn,
                  ctx:{ w$:{p:'w$el'} },
                  _iface:{ value: p },
                  }
@@ -285,19 +285,22 @@ var BP_MOD_WDL = (function ()
                     nP = encrypt(this.p.el.value),
                     oP = ioItem.rec? ioItem.rec.pass: undefined;
                 
-                if (!isValidInput(nU) || !isValidInput(nP)) {return false;}
+                if (!isValidInput(nU) || !isValidInput(nP)) {
+                    return false;
+                }
                 
                 if ((nU !== oU) || (nP !== oP)) 
                 {
                     // save to db
                     var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
                     saveRecord(pRec);
+                    //ioItem.rec = pRec;
                     if (oU && (nU !== oU)) {
                         this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
                     }
+                    return true;
                 }
-                
-                return true;
+                // else return undefined;
             }},
             deleteRecord: {value: function(dt, key)
             {
@@ -325,16 +328,14 @@ var BP_MOD_WDL = (function ()
                     children:[
                     {tag:'span',
                      attr:{ draggable:true },
-                     addClass:css_class_field+" "+css_class_userOut + " input-small",
-                     //addClass:" input-small uneditable-input",
+                     addClass:css_class_field+css_class_userOut,
                      text:u,
                      ctx:{ w$:{ u:'w$el' } },
                      _iface:{ fn:fn_userid, value:u }
                     },
                     {tag:'span',
                      attr:{ draggable:true },
-                     //addClass:css_class_field+" "+css_class_passOut,
-                     addClass:css_class_field+" "+css_class_passOut+" input-small",
+                     addClass:css_class_field+css_class_passOut,
                      text:'*****',
                      ctx:{ w$:{p:'w$el' } },
                      _iface:{ fn:fn_pass, value:p }
@@ -353,13 +354,14 @@ var BP_MOD_WDL = (function ()
             var acns=w$ctx.w$rec,
                 rec = acns? acns.curr: undefined,
                 loc = w$ctx.loc,
+                panel = w$ctx.panel,
                 bInp = w$ctx.io_bInp;
             return {
             proto: IoItem.proto,
             tag:'div', 
             attr:{ class:css_class_li },
             ctx:{ w$:{ ioItem:'w$el' } },
-            iface: { acns:acns, rec:rec, loc:loc },
+            iface: { acns:acns, rec:rec, loc:loc, panel:panel },
             on: {mousedown:stopPropagation},
                 children:[
                 {html:'<button type="button">',
@@ -381,15 +383,22 @@ var BP_MOD_WDL = (function ()
             {
                 var iI = this.iItem, 
                     oI = this.oItem,
-                    ctx={ioItem:this};
+                    ctx={ioItem:this},
+                    res;
                 if (iI) 
                 { // Create output element
-                    if (iI.saveInput()) {
+                    res = iI.saveInput();
+                    if (res===undefined)
+                    {
                         this.oItem = w$exec(OItemP.wdt, ctx);
                         if (this.oItem) {
-                            delete this.iItem; iI.die();
+                            delete this.iItem; 
+                            iI.die();
                             this.append(this.oItem);
                         }
+                    }
+                    else if (res === true) {
+                        this.panel.reload();
                     }
                 }
                 else if (oI)
@@ -442,12 +451,17 @@ var BP_MOD_WDL = (function ()
             }},
             newItem: {value: function()
             {
-                w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc}).appendTo(this);
+                if (!this.newItemCreated) {
+                    w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc, panel:this.panel }).prependTo(this);
+                    this.newItemCreated = true;    
+                }
+                
             }}
         }),   
         wdt: function (ctx)
         {
-            var loc = ctx.loc || g_loc;
+            var loc = ctx.loc || g_loc,
+                panel = ctx.panel;
             return {
             proto: PanelList.proto,
             tag:'div', attr:{ id:eid_panelList },
@@ -455,47 +469,71 @@ var BP_MOD_WDL = (function ()
                  drag:PanelList.proto.handleDrag, 
                  dragend:PanelList.proto.handleDragEnd },
             ctx:{ io_bInp:false, w$:{ itemList:'w$el' } },
-            iface:{ loc:loc },
+            iface:{ loc:loc, panel:panel },
                  iterate:{ it:ctx.it, wdi:IoItem.wdi }
             };
         }
     };
         
-    function cs_panel_wdt (ctx)
+    var Panel =
     {
-        return {
-        tag:"div",
-        attr:{ id:eid_panel },
-        css:{ position:'fixed', top:'0px', 'right':"0px" },
-         
-        // Post w$el creation steps
-        // Copy props to ctx with values:
-        // 1. Directly from the javascript runtime.
-        // 2. For the props under w$, copy them from the wdl-interpretor runtime. In this case
-        //    the value of the prop defined below should be name of the prop in the wdl-runtime.
-        // 3. Props listed under w$ctx are copied over from the context object - ctx - only makes
-        //    sence when you're copying into something other than the context itself.
-        ctx:{ w$:{ panel:"w$el" }, loc:ctx.loc || g_loc },
-
-            // Create children
-            children:[
-            {tag:"div", attr:{ id:eid_panelTitle },
-                children:[                cs_panelTitleText_wdl,
-                NButton.wdt,
-                XButton.wdt]
-            },
-            PanelList.wdt],
-
-        // Post processing steps
-        _data:{ w$ctx:{}, w$:{} }, // props to be copied to w$el.data after creating children
-        _iface:{ w$:{id:"id"}, w$ctx:{itemList:'itemList'} },
-        _final:{ appendTo:document.body, show:true, exec:function(ctx, w$){w$.w$el.$el.draggable();} }
-        };
-    }
-   
+        wdt: function(ctx) 
+        {
+            var loc = ctx.loc || g_loc,
+                reload = ctx.reload;
+            return {
+            proto:Panel.proto, // static prototype object.
+            tag:"div",
+            attr:{ id:eid_panel },
+            css:{ position:'fixed', top:'0px', 'right':"0px" },
+             
+            // Post w$el creation steps
+            // Copy props to ctx with values:
+            // 1. Directly from the javascript runtime.
+            // 2. For the props under w$, copy them from the wdl-interpretor runtime. In this case
+            //    the value of the prop defined below should be name of the prop in the wdl-runtime.
+            // 3. Props listed under w$ctx are copied over from the context object - ctx - only makes
+            //    sence when you're copying into something other than the context itself.
+            ctx:{ w$:{ panel:"w$el" }, loc:loc },
+            iface:{ _reload:reload, id:eid_panel },
+    
+                // Create children
+                children:[
+                {tag:"div", attr:{ id:eid_panelTitle },
+                    children:[
+                    cs_panelTitleText_wdl,
+                    NButton.wdt,
+                    XButton.wdt]
+                },
+                PanelList.wdt],
+    
+            // Post processing steps
+            _data:{ w$ctx:{}, w$:{} }, // props to be copied to w$el.data after creating children
+            _iface:{ w$:{}, w$ctx:{itemList:'itemList'} },
+            _final:{ 
+                appendTo:document.body, 
+                show:true, 
+                exec:Panel.proto.makeDraggable }
+            };
+        },
+        
+        proto: w$defineProto( // same syntax as Object.defineProperties
+        {
+            makeDraggable: {value: function(ctx, w$)
+            {
+                this.$el.draggable();
+            }},
+            reload: {value: function() 
+            { //TODO: Implement this
+                this.die();
+                this._reload();
+            }}
+        })        
+    };
+      
     var iface = 
     {
-       cs_panel_wdt: cs_panel_wdt,
+       cs_panel_wdt: Panel.wdt,
        prop_value: prop_value,
        prop_fieldName: prop_fieldName,
        prop_peerID: prop_peerID,

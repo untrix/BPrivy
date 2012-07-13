@@ -254,7 +254,12 @@ var BP_MOD_CS = (function(g_win)
             return true;
         }
     }
-       
+    
+    function getRecsCallback () 
+    {
+        getRecs(g_win.location, asyncShowPanel);
+    }
+    
     /** 
      * Invoked upon receipt of DB records from the MemStore module.
      * @param {db}  Holds DB records relevant to this page. 
@@ -272,7 +277,7 @@ var BP_MOD_CS = (function(g_win)
             if (settings.AutoFill) {
                 if ((filled===false) && g_db.numUserids && settings.ShowPanelIfNoFill)
                 {
-                    var ctx = {it: new RecsIterator(g_db.pRecsMap)},
+                    var ctx = {it: new RecsIterator(g_db.pRecsMap), reload:getRecsCallback },
                         panel = w$exec(cs_panel_wdt, ctx);
                     gid_panel = panel.data.id;
                     //createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
@@ -307,7 +312,7 @@ var BP_MOD_CS = (function(g_win)
 
         // TODO: Since this is async, maybe we should check if the panel already exists?
         //createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill, autoFillable: g_autoFillable}).show();
-        var ctx = {it: new RecsIterator(g_db.pRecsMap)};
+        var ctx = {it: new RecsIterator(g_db.pRecsMap), reload:getRecsCallback };
         var    panel = w$exec(cs_panel_wdt, ctx);
         gid_panel = panel.id;
     }

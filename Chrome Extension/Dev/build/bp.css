@@ -5851,7 +5851,7 @@ div#com-bprivy-panel {
   color: black;
   text-align: center;
   vertical-align: middle;
-  cursor: default;
+  cursor: move;
   background-color: none;
   border: 2px;
   -webkit-user-select: none;
@@ -5873,9 +5873,10 @@ div#com-bprivy-panel {
   display: none;
 }
 
-#com-bprivy-panelList .com-bprivy-field {
+#com-bprivy-panel #com-bprivy-panelList .com-bprivy-field {
   display: inline-block;
   width: 125px;
+  height: 16px;
   padding: 1px;
   margin: 1px;
   overflow: hidden;
@@ -5904,22 +5905,20 @@ div#com-bprivy-panel {
 
 #com-bprivy-panelList .com-bprivy-user-in {
   background-color: white;
-  border: 2px inset;
+  border: 1px;
 }
 
 #com-bprivy-panelList .com-bprivy-pass-in {
   background-color: white;
-  border: 2px inset;
+  border: 1px;
 }
 
 #com-bprivy-panelList .com-bprivy-user-out {
   cursor: move;
-  background-color: light-gray;
   border: 1px solid;
 }
 
 #com-bprivy-panelList .com-bprivy-pass-out {
   cursor: move;
-  background-color: light-gray;
   border: 1px solid;
 }
