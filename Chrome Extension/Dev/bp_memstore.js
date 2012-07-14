@@ -349,6 +349,8 @@ var BP_MOD_MEMSTORE = (function ()
      */
     function DURL (l, dt) // throws BPError
     {
+        // TODO: Need to support I18N domainnames / IDN / punycode. We probably already do, but make sure.
+        // TODO: Also, ensure that internationalized TLDs are included in TLD list.
         var ha, pa, pr, pn, urla = [], i, s,
         dictTraits = DT_TRAITS.getDictTraits(dt);
 

@@ -188,6 +188,7 @@ var BP_MOD_FILESTORE = (function()
         // Load P-Records
         if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_p, o) && o.lsd && o.lsd.f)
         {
+            num++;
             path_dir_p = g_dbPath + path_sep + dir_p + path_sep;
             f = o.lsd.f; file_names = Object.keys(f);
             for (i=file_names.length-1; i>=0; --i)
@@ -207,6 +208,7 @@ var BP_MOD_FILESTORE = (function()
         // Load K-Records
         if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_k, o) && o.lsd && o.lsd.f)
         {
+            num++;
             path_dir_k = g_dbPath + path_sep + dir_k + path_sep;
             f = o.lsd.f; file_names = Object.keys(f);
             for (i=file_names.length-1; i>=0; --i)
@@ -341,11 +343,18 @@ var BP_MOD_FILESTORE = (function()
     };
     
     /** @end-class-def **/
+   
     /** 
-     *@begin-class-def CSVFile
+     * @begin-class-def CSVFile
+     * @param props Optional. An array of property names to be provided only when the props are
+     *              not embedded within the csv file.
+     *              Currently, properties are mapped to pRec properties and if a prop can't be
+     *              mapped, then an exception is thrown. Providing a props array from outside
+     *              will prevent such a mapping attempt and subsequent exception. That also
+     *              means, that this.pidx will stay undefined.
      *  
      */
-    function CSVFile(path) // throws BPError
+    function CSVFile(path, _props) // throws BPError
     {
         var n, err = {};
         err.gcode = "InvalidFileContents";
@@ -365,7 +374,12 @@ var BP_MOD_FILESTORE = (function()
         {throw new BPError(err);}// line is undefined || null || !empty
         
         // Parse the first data-line for property names
-        this.props = line.split(this.csvex);// split by space-comma-space
+        if (!_props) {
+           this.props = line.split(this.csvex);// split by space-comma-space
+        } else { // Props array was provided.
+            this.props = _props;            
+        }
+        
         if (!this.props || !this.props.length) { throw new BPError(err);}
         else 
         { // Remove leading quotes
@@ -376,9 +390,11 @@ var BP_MOD_FILESTORE = (function()
             }
         }
 
-        // Map the property names to P-Rec properties.
-        this.pidx = findPPropsIdx(this.props);
-        if (!this.pidx) { throw new BPError(err);}
+        // Map the property names to P-Rec properties if the props derived from the file.
+        if (!_props) {
+            this.pidx = findPPropsIdx(this.props);
+            if (!this.pidx) { throw new BPError(err);}
+        }
 
         // Finally, generate a regular expression for data parsing
         // Make a regexp with props.length capture groups
