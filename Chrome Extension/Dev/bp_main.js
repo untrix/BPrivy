@@ -68,7 +68,7 @@
                 case cm_loadDB:
                     BPError.push("LoadDB");
                     dbPath = FILE_STORE.loadDB(rq.dbPath);
-                    funcSendResponse({result:true, dbPath:dbPath});
+                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath});
                     break;
                 case cm_createDB:
                     BPError.push("CreateDB");
@@ -101,8 +101,11 @@
         var dbPath = localStorage["db.path"];
         if (dbPath)
         {
-            FILE_STORE.loadDB(dbPath);
+            dbPath = FILE_STORE.loadDB(dbPath);
             //FILE_STORE.createDB("C:/Users/sumeet/Documents/", "Keys");
+            if (!dbPath) { // db-load failed, remove the stored dbPath value.
+                delete localStorage['db.path'];
+            }
         }
     } catch (e)
     {

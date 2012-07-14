@@ -180,53 +180,58 @@ var BP_MOD_FILESTORE = (function()
     function loadDB(dbPath)
     {
         var o = {}, file_names, path_dir_p, path_dir_k,
-            i, f, num=0;
+            i, f, numFiles=0;
         console.log("loadingDB " + dbPath);
         g_dbPath = dbPath;
         g_path_k = g_dbPath + path_sep + dir_k + path_sep + file_k;
         g_path_p = g_dbPath + path_sep + dir_p + path_sep + file_p;
-        // Load P-Records
-        if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_p, o) && o.lsd && o.lsd.f)
+        // First determine if this DB exists
+        o={};
+        if (BP_PLUGIN.ls(g_dbPath, o))
         {
-            num++;
-            path_dir_p = g_dbPath + path_sep + dir_p + path_sep;
-            f = o.lsd.f; file_names = Object.keys(f);
-            for (i=file_names.length-1; i>=0; --i)
+            numFiles++;
+            // Load P-Records
+            o={};
+            if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_p, o) && o.lsd && o.lsd.f)
             {
-                if (f[ file_names[i] ].ext === ext_Open) {
-                    try {
-                        loadFile(path_dir_p + file_names[i]);
-                        num ++;
-                    } catch (e) {
-                        var bpe = new BPError(e);
-                        BP_MOD_ERROR.logwarn(bpe);
-                        BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_p + file_names[i]);
+                path_dir_p = g_dbPath + path_sep + dir_p + path_sep;
+                f = o.lsd.f; file_names = Object.keys(f);
+                for (i=file_names.length-1; i>=0; --i)
+                {
+                    if (f[ file_names[i] ].ext === ext_Open) {
+                        try {
+                            loadFile(path_dir_p + file_names[i]);
+                            numFiles ++;
+                        } catch (e) {
+                            var bpe = new BPError(e);
+                            BP_MOD_ERROR.logwarn(bpe);
+                            BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_p + file_names[i]);
+                        }
+                    }
+                }
+            }
+            // Load K-Records
+            o={};
+            if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_k, o) && o.lsd && o.lsd.f)
+            {
+                path_dir_k = g_dbPath + path_sep + dir_k + path_sep;
+                f = o.lsd.f; file_names = Object.keys(f);
+                for (i=file_names.length-1; i>=0; --i)
+                {
+                    if (f[ file_names[i] ].ext === ext_Open) {
+                        try {
+                            loadFile(path_dir_k + file_names[i]);
+                            numFiles++;
+                        } catch (e) {
+                            var bpe = new BPError(e);
+                            BP_MOD_ERROR.logwarn(bpe);
+                            BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_k + file_names[i]);
+                        }
                     }
                 }
             }
         }
-        // Load K-Records
-        if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_k, o) && o.lsd && o.lsd.f)
-        {
-            num++;
-            path_dir_k = g_dbPath + path_sep + dir_k + path_sep;
-            f = o.lsd.f; file_names = Object.keys(f);
-            for (i=file_names.length-1; i>=0; --i)
-            {
-                if (f[ file_names[i] ].ext === ext_Open) {
-                    try {
-                        loadFile(path_dir_k + file_names[i]);
-                        num++;
-                    } catch (e) {
-                        var bpe = new BPError(e);
-                        BP_MOD_ERROR.logwarn(bpe);
-                        BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_k + file_names[i]);
-                    }
-                }
-            }
-        }
-        
-        if (num) {
+        if (numFiles) {
             MOD_ERROR.log("Loaded DB " + dbPath);
             return g_dbPath;
         }

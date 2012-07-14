@@ -251,8 +251,9 @@ var BP_MOD_ERROR = (function()
         else if (arg && (typeof arg === 'object')) {
             msg = arg.message;
         }
-        
-        window.alert(msg);
+        if (msg) {
+            window.alert(msg);
+        }
     }
     
     function log (arg)
