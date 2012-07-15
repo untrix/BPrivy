@@ -64,6 +64,7 @@
                     BPError.push("GetRecs");
                     recs = MEM_STORE.getRecs(rq.loc);
                     recs.dbName = FILE_STORE.getDBName();
+                    recs.dbPath = FILE_STORE.getDBPath();
                     funcSendResponse({result:true, db:recs});
                     break;
                 case cm_loadDB:

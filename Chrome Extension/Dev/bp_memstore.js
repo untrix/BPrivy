@@ -218,6 +218,12 @@ var BP_MOD_MEMSTORE = (function ()
     Object.defineProperty(DT_TRAITS, dt_default, {value: DEFAULT_TRAITS});
     Object.defineProperties(DT_TRAITS,
     {
+        dtList: {
+            value: [
+                dt_eRecord, 
+                dt_pRecord
+            ]
+        },
         getTraits: {
             value: function (dt) {
                 var n = this[dt];
@@ -771,8 +777,15 @@ var BP_MOD_MEMSTORE = (function ()
 
     DNode.insertRec = function (rec)
     {
-        return DNode[rec.dt].insert(new DRecord(rec));        
+        return DNode[rec.dt].insert(new DRecord(rec));
     };
+    
+    var i;
+    for (i=0; i<DT_TRAITS.dtList.length; i++)
+    {
+        DNode[DT_TRAITS.dtList[i]] = newDNode();
+    }
+    
     /** @end-class-def DNode **/
 
     function DNodeIterator (root) // Walks dictionary and returns DNodes that have data.
@@ -795,10 +808,18 @@ var BP_MOD_MEMSTORE = (function ()
         Object.freeze(this);
     }
 
-    DNode[dt_eRecord] = newDNode();
-    DNode[dt_pRecord] = newDNode();
-    
     /** @end-class-def DRecord **/
+    
+    function clear ()
+    {
+        var i, dt, n = DT_TRAITS.dtList.length;
+        for (i=0; i<n; i++)
+        {
+            dt = DT_TRAITS.dtList[i];
+            DNode[dt] = newDNode();
+        }
+    }
+    clear();
     
     //Assemble the interface    
     var iface = {};
@@ -808,7 +829,8 @@ var BP_MOD_MEMSTORE = (function ()
         getRecs: {value: DNode.getRecs},
         DT_TRAITS: {value: DT_TRAITS},
         PREC_TRAITS: {value: PREC_TRAITS},
-        EREC_TRAITS: {value: EREC_TRAITS}
+        EREC_TRAITS: {value: EREC_TRAITS},
+        clear: {value: clear}
     });
     Object.freeze(iface);
 

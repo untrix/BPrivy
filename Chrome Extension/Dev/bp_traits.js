@@ -93,7 +93,7 @@ var BP_MOD_TRAITS = (function ()
     
     function RecsIterator (recsMap)
     {
-        var k = recsMap? Object.keys(recsMap) : EMPTY_OBJECT;
+        var k = recsMap ? Object.keys(recsMap).sort() : EMPTY_OBJECT;
         Object.defineProperties(this,
         {
             _o: {value: recsMap},

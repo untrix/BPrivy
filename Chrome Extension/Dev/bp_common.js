@@ -153,6 +153,15 @@ var BP_MOD_COMMON = (function()
         return new Inheritor();
     }
 
+    function copy (src, dst)
+    {
+        var keys = Object.keys(src),
+            n;
+        for (n=keys.length-1; n>=0; n--) {
+            dst[keys[n]] = src[keys[n]];
+        }
+    }
+    
     var iface = {};
     Object.defineProperties(iface, 
     {
@@ -171,7 +180,8 @@ var BP_MOD_COMMON = (function()
         decrypt: {value: decrypt},
         stopPropagation: {value: stopPropagation},
         preventDefault: {value: preventDefault},
-        newInherited: {value: newInherited}
+        newInherited: {value: newInherited},
+        copy: {value: copy}
     });
     Object.freeze(iface);
 

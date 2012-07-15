@@ -187,6 +187,7 @@ var BP_MOD_FILESTORE = (function()
         var o = {}, file_names, path_dir_p, path_dir_k,
             i, f, numFiles=0;
         console.log("loadingDB " + dbPath);
+        MEM_STORE.clear(); // unload the previous DB.
         g_dbPath = dbPath;
         g_path_k = g_dbPath + path_sep + dir_k + path_sep + file_k;
         g_path_p = g_dbPath + path_sep + dir_p + path_sep + file_p;

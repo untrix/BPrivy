@@ -139,9 +139,10 @@ var BP_MOD_WDL = (function ()
     
     function cs_panelTitleText_wdt (ctx)
     {
+        // uses ctx.dbName and ctx.dbPath
         return {
             tag:"div",
-            attr:{ id: eid_panelTitleText },
+            attr:{ id: eid_panelTitleText, title:ctx.dbPath },
             text:ctx.dbName || "BPrivy"
         };
     }

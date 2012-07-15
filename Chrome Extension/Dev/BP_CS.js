@@ -23,11 +23,14 @@ var BP_MOD_CS = (function(g_win)
     var g_dnd = {};
     var g_db = {
         ingest: function(db) {
-            if (db) {
-                this.pRecsMap = db.pRecsMap; 
-                this.eRecsMapArray = db.eRecsMapArray;
-                this.dbName = db.dbName;
-                delete this.numUserids;
+            if (db) 
+            {
+                BP_MOD_COMMON.copy(db, this);
+                //this.pRecsMap = db.pRecsMap; 
+                //this.eRecsMapArray = db.eRecsMapArray;
+                //this.dbName = db.dbName;
+                // this.dbPath = db.dbPath;
+                delete this.numUserids; // requird because the property is unmodifiable.
                 if (this.pRecsMap) {
                     this.numUserids = Object.keys(this.pRecsMap).length;
                 }
@@ -37,7 +40,8 @@ var BP_MOD_CS = (function(g_win)
                 Object.defineProperty(this, "numUserids", {writable: false, configurable:true, enumerable:true});
             }
         },
-        clear: function() {
+        clear: function() 
+        {
             var keys = Object.keys(this), n;
             for (n=keys.length-1; n > 0; n--) {
                 delete this[keys[n]];
@@ -114,10 +118,9 @@ var BP_MOD_CS = (function(g_win)
     /** @globals-begin */
     var g_loc = IMPORT(g_win.location);
     var g_doc = IMPORT(g_win.document);
-    var g_bFillable; // Boolean value indicates whether we have the knowledge to autofill this specific page.
     var gid_panel; // id of created panel if any
     var settings = {AutoFill:true, ShowPanelIfNoFill: false}; // User Settings
-    var g_autoFillable; // Indicates that the page was found to be autofillable.
+    var g_bFillable; // Indicates that the page was found to be autofillable.
     /** @globals-end **/
 
     /**
@@ -178,7 +181,7 @@ var BP_MOD_CS = (function(g_win)
 
     function autoFill(userid, pass) // if arguments are not supplied, takes them from global
     {
-        var eRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone, pRecsMap;
+        var eRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone, pRecsMap, test;
         // auto-fill
         // if we don't have a stored username/password, then there is nothing
         // to autofill.
@@ -199,6 +202,7 @@ var BP_MOD_CS = (function(g_win)
                     // try to determine if autofilling is possible.
                     u = "";
                     p = "";
+                    test = true;
                 }
             }
         }
@@ -254,8 +258,10 @@ var BP_MOD_CS = (function(g_win)
         }  
 
         if (uDone || pDone) {
-            g_autoFillable = true;
-            return true;
+            g_bFillable = true;
+            if (!test) {
+                return true;
+            }
         }
     }
     
@@ -275,16 +281,26 @@ var BP_MOD_CS = (function(g_win)
             var db = resp.db;
             console.info("bp_cs retrieved DB-Records\n" /*+ JSON.stringify(db)*/);
             g_db.ingest(db);
-            g_bFillable = autoFill();
+            var filled = autoFill();
         
             if (settings.AutoFill) {
-                if ((g_bFillable===false) && g_db.numUserids && settings.ShowPanelIfNoFill)
+                if ((filled===false) && g_db.numUserids && settings.ShowPanelIfNoFill)
                 {
-                    var ctx = {it: new RecsIterator(g_db.pRecsMap), reload:getRecsCallback, dbName:g_db.dbName },
+                    var ctx = {
+                        it: new RecsIterator(g_db.pRecsMap), 
+                        reload:getRecsCallback, 
+                        autoFill:g_bFillable?autoFill:undefined, 
+                        dbName:g_db.dbName,
+                        dbPath:g_db.dbPath
+                        },
                         panel = w$exec(cs_panel_wdt, ctx);
                     gid_panel = panel.data.id;
                 }
             }
+
+            // Remember to not keep any data lingering around ! Delete data the moment we're done
+            // using it. Data should not be stored in the page if it is not visible to the user.
+            g_db.clear();
         }
         else
         {
@@ -313,7 +329,13 @@ var BP_MOD_CS = (function(g_win)
         }
 
         // TODO: Since this is async, maybe we should check if the panel already exists?
-        var ctx = {it: new RecsIterator(g_db.pRecsMap), reload:getRecsCallback, autoFill:g_bFillable?autoFill:undefined, dbName:g_db.dbName };
+        var ctx = {
+            it: new RecsIterator(g_db.pRecsMap), 
+            reload:getRecsCallback, 
+            autoFill:g_bFillable?autoFill:undefined, 
+            dbName:g_db.dbName, 
+            dbPath:g_db.dbPath
+            };
         var    panel = w$exec(cs_panel_wdt, ctx);
         gid_panel = panel.id;
     }
@@ -327,6 +349,9 @@ var BP_MOD_CS = (function(g_win)
             if (gid_panel && (panel = w$get('#'+gid_panel))) {
                 panel.die();
                 gid_panel = null;
+                // Remember to not keep any data lingering around ! Delete data the moment we're done
+                // using it. Data should not be stored in the page if it is not visible to the user.
+                g_db.clear();
             }
             else {
                 // Post a message to MemStore to retrieve the set of recs afresh.
