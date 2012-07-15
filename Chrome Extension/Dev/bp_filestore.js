@@ -90,7 +90,7 @@ var BP_MOD_FILESTORE = (function()
         return o;
     }
         
-    function parseDBName(dbPath, path_sep)
+    function parseDBName(dbPath)
     {
         var regex, array;
         if (path_sep === "/") {
@@ -134,6 +134,11 @@ var BP_MOD_FILESTORE = (function()
     function getDBPath ()
     {
         return g_dbPath;
+    }
+    
+    function getDBName () 
+    {
+        return parseDBName(g_dbPath);
     }
     
     function insertRec(rec)
@@ -516,6 +521,7 @@ var BP_MOD_FILESTORE = (function()
         loadDB: {value: loadDB},
         getDBPath: {value: getDBPath},
         parseDBName: {value: parseDBName},
+        getDBName: {value: getDBName},
         insertRec: {value: insertRec}
     });
     Object.freeze(iface);

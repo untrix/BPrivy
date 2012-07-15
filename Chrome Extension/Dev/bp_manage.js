@@ -23,7 +23,6 @@ var BP_MOD_MANAGE = (function ()
     m = BP_MOD_FILESTORE;
     var parseDBName = IMPORT(m.parseDBName);
     /** @import-module-end **/ m = null;
-    var path_sep;
                
     function fillOptions(eid, dir)
     {
@@ -49,9 +48,7 @@ var BP_MOD_MANAGE = (function ()
     }
     
     function onload()
-    {
-         path_sep = BP_PLUGIN.pathSeparator();
-                
+    {               
         //$("#nav-list a[data-nav]").click(function (e)
         addEventListeners("#nav-list a[data-nav]", "click", function(e)
         {
@@ -111,7 +108,7 @@ var BP_MOD_MANAGE = (function ()
                         if ($('#dbSaveLocation:checked').length) {
                             localStorage['db.path'] = resp.dbPath;
                         }
-                        $('#dbPath').text(parseDBName(resp.dbPath, path_sep)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+                        $('#dbPath').text(parseDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
                         BP_MOD_ERROR.success('Opened password wallet at ' + resp.dbPath);
                     }
                     else {
@@ -141,7 +138,7 @@ var BP_MOD_MANAGE = (function ()
                         if ($('#dbSaveLocation:checked').length) {
                             localStorage['db.path'] = resp.dbPath;
                         }
-                        $('#dbPath').text(parseDBName(resp.dbPath, path_sep)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+                        $('#dbPath').text(parseDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
                         BP_MOD_ERROR.success('Password store created at ' + resp.dbPath);
                     }
                     else {
@@ -182,10 +179,10 @@ var BP_MOD_MANAGE = (function ()
             $('#dbSaveLocation')[0].checked = false;
         }
 
-        BP_MOD_CONNECT.getDBPath(function(resp) 
+        BP_MOD_CONNECT.getDBPath(function(resp)
         {
             if (resp.result) {
-                $('#dbPath').text(parseDBName(resp.dbPath, path_sep)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+                $('#dbPath').text(parseDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
             }
             else {
                 $('#dbPath').text(null).attr('data-original-title', '').attr('data-path', null);

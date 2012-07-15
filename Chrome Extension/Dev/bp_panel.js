@@ -31,7 +31,8 @@ var BP_MOD_WDL = (function ()
     m = IMPORT(BP_MOD_W$);
     var w$exec = IMPORT(m.w$exec),
         w$defineProto = IMPORT(m.w$defineProto),
-        Widget = IMPORT(m.Widget);
+        Widget = IMPORT(m.Widget),
+        w$undefined = IMPORT(m.w$undefined);
     /** @import-module-begin CSPlatform */
     m = BP_MOD_CS_PLAT;
     var getURL = IMPORT(m.getURL),
@@ -127,15 +128,7 @@ var BP_MOD_WDL = (function ()
      *       then w$el elements are laid out on a parallel plane, with the same hierarchy
      *       as the DOM elements and with cross-links between each pair of DOM and w$ element.
      */
-
-    var wdl_f =
-    {
-        autoFill: function (ev) 
-        {
-            BP_MOD_ERROR.loginfo('autoFill invoked');
-        },
-    };
-    
+   
     function image_wdt(ctx)
     {
         var imgPath = ctx.imgPath;
@@ -144,11 +137,14 @@ var BP_MOD_WDL = (function ()
             attrs:{ src:getURL(imgPath) }};
     }
     
-    var cs_panelTitleText_wdl = {
-        tag:"div",
-        attr:{ id: eid_panelTitleText },
-        text:"BPrivy"
-    };
+    function cs_panelTitleText_wdt (ctx)
+    {
+        return {
+            tag:"div",
+            attr:{ id: eid_panelTitleText },
+            text:ctx.dbName || "BPrivy"
+        };
+    }
 
     var NButton = 
     {
@@ -205,6 +201,30 @@ var BP_MOD_WDL = (function ()
         }
     };
 
+    var FButton =
+    {
+        wdt: function(w$ctx)
+        {
+            var autoFill = w$ctx.autoFill;
+            return {
+                proto: FButton.proto,
+                html:'<button type="button">',
+                attr:{class:css_class_tButton },
+                text:u_cir_F,
+                on:{ click:FButton.proto.onClick },
+                iface:{ ioItem:w$ctx.ioItem, _autoFill:autoFill }
+            };
+        },
+        
+        proto: w$defineProto(
+        {
+            onClick: {value: function(ev)
+            {
+                this._autoFill(this.ioItem.oItem.u.value, this.ioItem.oItem.p.value);
+            }}
+        })
+    };
+    
     function isValidInput(str) {return Boolean(str);}
     
     var TButton = {
@@ -323,7 +343,8 @@ var BP_MOD_WDL = (function ()
                 p = pRec.pass;
 
                 return {
-                tag:'div', addClass:css_class_ioFields,
+                tag:'div', 
+                addClass:css_class_ioFields,
                 ctx:{ w$:{ oItem:'w$el' } },
                     children:[
                     {tag:'span',
@@ -355,7 +376,8 @@ var BP_MOD_WDL = (function ()
                 rec = acns? acns.curr: undefined,
                 loc = w$ctx.loc,
                 panel = w$ctx.panel,
-                bInp = w$ctx.io_bInp;
+                bInp = w$ctx.io_bInp,
+                autoFill = w$ctx.autoFill;
             return {
             proto: IoItem.proto,
             tag:'div', 
@@ -364,11 +386,7 @@ var BP_MOD_WDL = (function ()
             iface: { acns:acns, rec:rec, loc:loc, panel:panel },
             on: {mousedown:stopPropagation},
                 children:[
-                {html:'<button type="button">',
-                 attr:{class:css_class_tButton },
-                 text:u_cir_F,
-                 on:{ click:wdl_f.autoFill },
-                },
+                autoFill ? FButton.wdt : w$undefined,
                 TButton.wdt,
                 bInp ? IItemP.wdt : OItemP.wdt
                 ],
@@ -452,7 +470,7 @@ var BP_MOD_WDL = (function ()
             newItem: {value: function()
             {
                 if (!this.newItemCreated) {
-                    w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc, panel:this.panel }).prependTo(this);
+                    w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc, panel:this.panel }).appendTo(this);
                     this.newItemCreated = true;    
                 }
                 
@@ -501,7 +519,7 @@ var BP_MOD_WDL = (function ()
                 children:[
                 {tag:"div", attr:{ id:eid_panelTitle },
                     children:[
-                    cs_panelTitleText_wdl,
+                    cs_panelTitleText_wdt,
                     NButton.wdt,
                     XButton.wdt]
                 },

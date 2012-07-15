@@ -26,6 +26,7 @@ var BP_MOD_CS = (function(g_win)
             if (db) {
                 this.pRecsMap = db.pRecsMap; 
                 this.eRecsMapArray = db.eRecsMapArray;
+                this.dbName = db.dbName;
                 delete this.numUserids;
                 if (this.pRecsMap) {
                     this.numUserids = Object.keys(this.pRecsMap).length;
@@ -109,9 +110,11 @@ var BP_MOD_CS = (function(g_win)
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
     /** @import-module-end **/ m = null;
+    
     /** @globals-begin */
     var g_loc = IMPORT(g_win.location);
     var g_doc = IMPORT(g_win.document);
+    var g_bFillable; // Boolean value indicates whether we have the knowledge to autofill this specific page.
     var gid_panel; // id of created panel if any
     var settings = {AutoFill:true, ShowPanelIfNoFill: false}; // User Settings
     var g_autoFillable; // Indicates that the page was found to be autofillable.
@@ -205,8 +208,9 @@ var BP_MOD_CS = (function(g_win)
             // Cycle through eRecords starting with the
             // best URL matching node.
             l = g_db.eRecsMapArray.length; uDone=false; pDone=false;
-            for (i=0; (i<l) && (!pDone) && (!uDone); ++i) {
-                eRecsMap = g_db.eRecsMapArray.pop();
+            for (i=0, j=l-1; (i<l) && (!pDone) && (!uDone); ++i, j--)
+            {
+                eRecsMap = g_db.eRecsMapArray[j];
                 
                 if (eRecsMap[fn_userid]) { uer = eRecsMap[fn_userid].curr;}
                 if (eRecsMap[fn_pass]) {per = eRecsMap[fn_pass].curr;}
@@ -266,21 +270,19 @@ var BP_MOD_CS = (function(g_win)
      */
     function initialGetDB (resp)
     {   
-        var filled;
         if (resp.result === true) 
         {
             var db = resp.db;
             console.info("bp_cs retrieved DB-Records\n" /*+ JSON.stringify(db)*/);
             g_db.ingest(db);
-            filled = autoFill();
+            g_bFillable = autoFill();
         
             if (settings.AutoFill) {
-                if ((filled===false) && g_db.numUserids && settings.ShowPanelIfNoFill)
+                if ((g_bFillable===false) && g_db.numUserids && settings.ShowPanelIfNoFill)
                 {
-                    var ctx = {it: new RecsIterator(g_db.pRecsMap), reload:getRecsCallback },
+                    var ctx = {it: new RecsIterator(g_db.pRecsMap), reload:getRecsCallback, dbName:g_db.dbName },
                         panel = w$exec(cs_panel_wdt, ctx);
                     gid_panel = panel.data.id;
-                    //createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db}).show();
                 }
             }
         }
@@ -311,8 +313,7 @@ var BP_MOD_CS = (function(g_win)
         }
 
         // TODO: Since this is async, maybe we should check if the panel already exists?
-        //createPanel({doc: g_doc, id_panel: gid_panel, dnd: g_dnd, db: g_db, autoFill: autoFill, autoFillable: g_autoFillable}).show();
-        var ctx = {it: new RecsIterator(g_db.pRecsMap), reload:getRecsCallback };
+        var ctx = {it: new RecsIterator(g_db.pRecsMap), reload:getRecsCallback, autoFill:g_bFillable?autoFill:undefined, dbName:g_db.dbName };
         var    panel = w$exec(cs_panel_wdt, ctx);
         gid_panel = panel.id;
     }

@@ -63,6 +63,7 @@
                 case cm_getRecs:
                     BPError.push("GetRecs");
                     recs = MEM_STORE.getRecs(rq.loc);
+                    recs.dbName = FILE_STORE.getDBName();
                     funcSendResponse({result:true, db:recs});
                     break;
                 case cm_loadDB:

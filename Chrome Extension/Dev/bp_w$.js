@@ -30,6 +30,7 @@ var BP_MOD_W$ = (function ()
     /** @import-module-end **/    m = null;
 
     /********************** WDL Interpretor ************************/
+    var w$undefined = Object.freeze({});
     function WidgetElement($el)
     {
         this.cons($el);
@@ -164,7 +165,7 @@ var BP_MOD_W$ = (function ()
         }
         
         var el, $el, i=0, w$el, _final, wcld, keys, key, val, w$ ={},
-            n=0;
+            n=0, cwdl;
 
         // Create the DOM element
         if (wdl.tag) {
@@ -206,17 +207,20 @@ var BP_MOD_W$ = (function ()
 
         // Process and insert child widgets
         for (i=0, n=wdl.children? wdl.children.length:0; i<n; i++) {
-            w$el.append(w$exec(wdl.children[i], ctx, true)); // insert children
+            cwdl = wdl.children[i];
+            if (cwdl !== w$undefined) {
+                w$el.append(w$exec(cwdl, ctx, true));
+            }
         }
         // now the iterative children
         if (wdl.iterate && wdl.iterate.it && wdl.iterate.wdi) 
         {
-            var rec, it=wdl.iterate.it, wdi = wdl.iterate.wdi, cwdl, isFunc=false;
+            var rec, it=wdl.iterate.it, wdi = wdl.iterate.wdi, isFunc=false;
 
             if (typeof wdi === 'function') { isFunc = true; }
 
             for (i=0, cwdl=wdi; ((rec = it.next())); i++, cwdl=wdi) 
-            try {
+            {try {
                 if (isFunc) {
                     ctx.w$rec = rec; ctx.w$i = i;
                     cwdl = cwdl(ctx);
@@ -225,7 +229,7 @@ var BP_MOD_W$ = (function ()
                 w$el.append(w$exec(cwdl, ctx, true));
             } catch (e) {
                 logwarn(e);
-            }
+            }}
         }
         
         // Now update w$el.data after ctx has been populated by children
@@ -258,6 +262,7 @@ var BP_MOD_W$ = (function ()
 
     var iface = 
     {
+       w$undefined: w$undefined,
        w$exec: w$exec,
        w$get: w$get,
        w$set: w$set,
