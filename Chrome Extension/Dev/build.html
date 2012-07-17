@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+    Remove this if you use the .htaccess -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>Privy&trade; build script</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Privy&trade; build scripts">
+    <meta name="author" content="sumeet@untrix.com" />
+    <!-- Stylesheets -->
+    <link href="tp/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+        .sidebar-nav {
+            padding: 9px 0;
+        }
+    </style>
+    <link href="tp/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="span2">
+          <!--Sidebar content-->
+          <button id="buildETLD" type="button">Build ETLD</button>
+        </div>
+      </div>
+      <hr>
+      <footer>
+        <p>
+          &copy; Copyright 2012 Sumeet Singh (http://www.untrix.com)
+        </p>
+      </footer>
+    </div>
+    <embed type="application/x-bprivy" style="visibility: none" width="0" height="0" id="com-untrix-bpplugin"></embed>
+    <!-- Javascript -->
+    <script src="tp/json2.js"></script>
+    <script src="tp/jquery.js"></script>
+    <script src="tp/bootstrap/js/bootstrap.min.js"></script>
+    <script src="bp_error.js"></script>
+    <script src="bp_common.js"></script>
+    <script src="bp_cs_platform_chrome.js"></script>
+    <script src="bp_connector.js"></script>
+    <script src="bp_memstore.js"></script>
+    <script src="bp_filestore.js"></script>
+    <script type="text/javascript">
+    var BP_PLUGIN;
+    function bpPluginLoaded ()
+    {
+      var FILESTORE = IMPORT(BP_MOD_FILESTORE),
+          MEM_STORE  = IMPORT(BP_MOD_MEMSTORE),
+          ETLDRec = IMPORT(MEM_STORE.ETLDRec),
+          ETLDDict;
+
+      BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
+      console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+      FILESTORE.init();
+          
+      function loadETLD(path, dnode)
+      {
+          var props = ['rule'], csv, etld,
+              csvf = new FILESTORE.CSVFile(path, props);
+              while ((csv = csvf.getcsv2()) !== undefined)
+              {
+                  if (!csv) {continue;} // unparsable line
+                  
+                  etld = new ETLDRec(csv[0]);
+                  MEM_STORE.insertRec(etld, dnode);
+              }
+      }
+      
+      function buildETLD ()
+      {
+          // var dir = document.location.pathname;          // dir = dir.slice(1, dir.lastIndexOf("/"));
+          var o={filter:['TXT','*.txt'],
+                 dtitle: "Privy&trade; Build ETLD",
+                 dbutton: "Input"};
+          if (BP_PLUGIN.chooseFile(o))
+          {
+            console.log("ChooseFile returned:" + o.path);
+            ETLDDict = MEM_STORE.newDNode();
+            loadETLD(o.path, ETLDDict);
+          }
+          
+          var i = o.path.lastIndexOf('.txt');
+          var path = o.path.slice(0, i) + ".js";
+          o={};
+          BP_PLUGIN.rm(path, o);
+          o={};
+          BP_PLUGIN.appendFile(path, 'var ETLDDict=\'', o);
+          BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o);
+          BP_PLUGIN.appendFile(path, '\';', o);
+      }
+      
+      BP_MOD_CS_PLAT.addEventListeners('#buildETLD', 'click', buildETLD);
+    }
+    $(document).ready(function (e)
+      {
+        bpPluginLoaded();
+        BP_MOD_FILESTORE.init();
+      });
+    </script>
+
+  </body>
+</html>

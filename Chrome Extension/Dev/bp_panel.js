@@ -286,7 +286,7 @@ var BP_MOD_WDL = (function ()
                  _iface:{ value: u } 
                 },
                 {tag:'input',
-                 attr:{ type:'text', value:p, placeholder:'Password' },
+                 attr:{ type:'password', value:p, placeholder:'Password' },
                  addClass:css_class_field+css_class_passIn,
                  ctx:{ w$:{p:'w$el'} },
                  _iface:{ value: p },
@@ -521,10 +521,11 @@ var BP_MOD_WDL = (function ()
                 {tag:"div", attr:{ id:eid_panelTitle },
                     children:[
                     cs_panelTitleText_wdt,
-                    NButton.wdt,
-                    XButton.wdt]
+                    XButton.wdt,
+                    UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)?NButton.wdt: w$undefined
+                    ]
                 },
-                PanelList.wdt],
+                UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt : w$undefined],
     
             // Post processing steps
             _data:{ w$ctx:{}, w$:{} }, // props to be copied to w$el.data after creating children

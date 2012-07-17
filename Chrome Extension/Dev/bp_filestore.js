@@ -35,13 +35,13 @@ var BP_MOD_FILESTORE = (function()
     m = BP_MOD_CONNECT; 
     var newPRecord = IMPORT(m.newPRecord);
     /** @import-module-begin MemStore **/
-    var MEM_STORE = BP_MOD_MEMSTORE;
+    var MEM_STORE = IMPORT(BP_MOD_MEMSTORE);
     /** @import-module-end **/    m = null;
 
     /** @constant ID of BP-Plugin HtmlEmbedElement*/
     var eid_bp = "com-untrix-bpplugin",
     // Points to the bp-plugin
-        BP_PLUGIN = document.getElementById(eid_bp),
+        BP_PLUGIN,
         /** File/Dirname extenstions */
         ext_Root = ".3ab",
         ext_Dict = ".3ad",
@@ -50,7 +50,7 @@ var BP_MOD_FILESTORE = (function()
         ext_MMap = ".3am",
         ext_Temp = ".3at",
         ext_Csv  = ".csv",
-        path_sep = BP_PLUGIN.pathSeparator(),
+        path_sep,
         /** Record Separator in the files */
         rec_sep = '\r\n\r\n,',
         /**
@@ -336,7 +336,9 @@ var BP_MOD_FILESTORE = (function()
             path: {value: pth, writable:false, configurable:false, enumerable:true},
             buf: {writable:true, configurable:false, enumerable:false},
             siz: {writable: true, configurable:false, enumerable:true},
-            regex: {value: new RegExp('(?:^([^#\\r\\n]+[^\\r\\n]*)[\\r\\n]*$){1,1}?', 'mg'), writable: false, enumerable: false, configurable: false}
+            // Skips comment lines (beginning with # or //) and empty lines (only whitespace)
+            //regex: {value: new RegExp('(?:^([^#\\/][^\\/].*[^\\s]+.*)$){1,1}?', 'mg'),
+            regex: {value: new RegExp('^(?!#)(?!\\/\\/)(.*[^\\s]+.*)$', 'mg'),             writable: false, enumerable: false, configurable: false}
         });
         Object.seal(this);
     }
@@ -350,7 +352,10 @@ var BP_MOD_FILESTORE = (function()
             this.siz = o.siz;
         }
         var rval = this.regex.exec(this.buf);
-        if (rval!==null) {return rval[1];}
+        if (rval!==null) {
+            //console.log("getDataLine-->" + rval[1]);
+            return rval[1];
+        }
     };
     
     /** @end-class-def **/
@@ -380,12 +385,13 @@ var BP_MOD_FILESTORE = (function()
             pidx: {writable:true, enumerable:false, configurable:false}
         });
         // Load and Initialize.
-        var line = this.fstrm.getDataLine();
-        if (!line)
-        {throw new BPError(err);}// line is undefined || null || !empty
-        
-        // Parse the first data-line for property names
-        if (!_props) {
+        if (!_props) 
+        {
+            var line = this.fstrm.getDataLine();
+            if (!line)
+            {throw new BPError(err);}// line is undefined || null || !empty
+            
+            // Parse the first data-line for property names
            this.props = line.split(this.csvex);// split by space-comma-space
         } else { // Props array was provided.
             this.props = _props;            
@@ -427,6 +433,7 @@ var BP_MOD_FILESTORE = (function()
     // returns undefined. If Line is found, but can't be parsed, then returns null. THis
     // function may get confused by embedded commas (within quotes). getcsv2 handles that
     // case.
+    // Returns an  zero-based array of CSV fields.
     CSVFile.prototype.getcsv = function()
     {
         var line = this.fstrm.getDataLine();
@@ -443,6 +450,7 @@ var BP_MOD_FILESTORE = (function()
     };
     // Same semantics as getcsv but better implementation. This function will identify
     // quoted fields with embedded commas.
+    // Returns an  zero-based array of CSV fields.
     CSVFile.prototype.getcsv2 = function()
     {
         var regex = /\s*(?:"([^"]*)"|'([^']*)'|([^"',]*))\s*,/g;
@@ -513,11 +521,54 @@ var BP_MOD_FILESTORE = (function()
         }
     }
     
+    function init (p_sep) 
+    {
+        BP_PLUGIN = document.getElementById(eid_bp);
+        path_sep = p_sep || (BP_PLUGIN && BP_PLUGIN.pathSeparator) ? BP_PLUGIN.pathSeparator() : undefined;
+    }
+    
+      function loadETLD(path, dnode)
+      {
+          var props = ['rule'], csv, etld,
+              csvf = new FILESTORE.CSVFile(path, props);
+              while ((csv = csvf.getcsv2()) !== undefined)
+              {
+                  if (!csv) {continue;} // unparsable line
+                  
+                  etld = new ETLDRec(csv[0]);
+                  MEM_STORE.insertRec(etld, dnode);
+              }
+      }
+      
+      function buildETLD ()
+      {
+          // var dir = document.location.pathname;
+          // dir = dir.slice(1, dir.lastIndexOf("/"));
+          var o={filter:['TXT','*.txt'],
+                 dtitle: "Privy&trade; Build ETLD",
+                 dbutton: "Input"};
+          if (BP_PLUGIN.chooseFile(o)) 
+          {
+            console.log("ChooseFile returned:" + o.path);
+            ETLDDict = MEM_STORE.newDNode();
+            loadETLD(o.path, ETLDDict);
+          }
+          
+          var i = o.path.lastIndexOf('.txt');
+          var path = o.path.slice(0, i) + ".json";
+          o={};
+          BP_PLUGIN.rm(path, o);
+          o={};
+          BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o);
+      }
+      
     //Assemble the interface    
     var iface = {};
     Object.defineProperties(iface, 
     {
+        init: {value: init},
         importCSV: {value: importCSV},
+        CSVFile: {value: CSVFile},
         createDB: {value: createDB},
         loadDB: {value: loadDB},
         getDBPath: {value: getDBPath},

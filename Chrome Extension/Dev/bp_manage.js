@@ -99,7 +99,7 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#dbChooseLoad', 'click', function (e)
         {
             var o={dtitle:"BPrivy: Select Store Folder",
-                   dbutton: "Open Password Store"};
+                   dbutton: "Select Existing Wallet"};
             if (BP_PLUGIN.chooseFolder(o)) {
                 console.log("ChooseFolder returned:" + o.path);
                 BP_MOD_CONNECT.loadDB(o.path, function (resp)
@@ -128,8 +128,8 @@ var BP_MOD_MANAGE = (function ()
                 BP_MOD_ERROR.alert("Please first enter a name for the new Wallet");
                 return;
             }
-            var o={dtitle:"BPrivy: Select Folder to Store Passwords In",
-                   dbutton: "Create Password Store"};
+            var o={dtitle:"BPrivy: Select a Folder to contain the Wallet",
+                   dbutton: "Select Folder"};
             if (BP_PLUGIN.chooseFolder(o)) {
                 console.log("ChooseFolder returned:" + o.path);
                 BP_MOD_CONNECT.createDB(dbName, o.path, function (resp)

@@ -144,6 +144,15 @@
           </div>
         </div>
       </div>
+      <hr>
+      <footer>
+        <p>
+          &copy; Copyright 2012 Sumeet Singh (http://www.untrix.com)
+        </p>
+        <p>
+          Privy&trade;, Privy Wallet&trade;, UWallet&trade;, UMerge&trade; and UTeach&trade; are trademarks of Untrix Soft (http://www.untrix.com)
+        </p>
+      </footer>    
     </div>
     <embed type="application/x-bprivy" style="visibility: none" width="0" height="0" id="com-untrix-bpplugin"></embed>
     <!-- Javascript -->
@@ -162,6 +171,7 @@
       $(document).ready(function (e)
         {
           bpPluginLoaded();
+          BP_MOD_FILESTORE.init();
           BP_MOD_MANAGE.onload();
         });
 
@@ -169,13 +179,7 @@
       {
         BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
         console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
-        var o={};
-        if (BP_PLUGIN.ls("", o) && (o.lsd) && o.lsd.d)
-        {
-          //o = Object.keys(o.lsd.d);
-          //$("#csvPath").typeahead({source: o});
-          BP_MOD_MANAGE.fillOptions("csvPathSelect", "");
-        }
+        // var o={};        // if (BP_PLUGIN.ls("", o) && (o.lsd) && o.lsd.d)        // {          // //o = Object.keys(o.lsd.d);          // //$("#csvPath").typeahead({source: o});          // //BP_MOD_MANAGE.fillOptions("csvPathSelect", "");        // }
       }        
     </script>
   </body>

@@ -24,7 +24,8 @@ var BP_MOD_TRAITS = (function ()
         PROTO_HTTPS = IMPORT(m.PROTO_HTTPS),
         dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord),
-        dt_default = "DefaultDT";
+        dt_default = "DefaultDT",
+        newInherited=IMPORT(m.newInherited);
     /** @import-module-begin Connect */
     m = IMPORT(BP_MOD_CONNECT);        
     var newPRecord = IMPORT(m.newPRecord),
@@ -36,17 +37,31 @@ var BP_MOD_TRAITS = (function ()
         text: 1,
         pass: 2
     });
-    var UI_TRAITS={}, P_UI_TRAITS={}, E_UI_TRAITS={}, DEFAULT_UI_TRAITS={};
-    var EMPTY_OBJECT = {}; Object.freeze(EMPTY_OBJECT);
+    var UI_TRAITS={};
+    var EMPTY_OBJECT = Object.freeze({});
     /** @globals-end **/
    
+    var DEFAULT_UI_TRAITS = Object.freeze(
+    {
+        dt: dt_default,
+        key: {uiName:'key', apiName:'key'},
+        fields: [{uiName:'value', apiName:'value'}],
+        showRecs: function(loc) {return true;}
+    });
+    
+    var P_UI_TRAITS = newInherited(DEFAULT_UI_TRAITS);
     Object.freeze(
     Object.defineProperties(P_UI_TRAITS,
     {
         dt: {value: dt_pRecord},
         key: {value: {uiName:"Username", apiName:"userid", ft:FT.text}},
-        fields: {value: [{uiName:"Password", apiName:"pass", ft:FT.pass}]}
+        fields: {value: [{uiName:"Password", apiName:"pass", ft:FT.pass}]},
+        protocols: {value: ['http:', 'https:']},
+        showRecs: {value: function(loc) {if (loc) {
+            return this.protocols.indexOf(loc.protocol.toLowerCase())!==-1;}}}
     }));
+    
+    var E_UI_TRAITS = newInherited(DEFAULT_UI_TRAITS);    
     Object.freeze(
     Object.defineProperties(E_UI_TRAITS,
     {
@@ -57,13 +72,7 @@ var BP_MOD_TRAITS = (function ()
                          {uiName:'name', apiName:'name', ft:FT.text},
                          {uiName:'type', apiName:'type', ft:FT.text}]}
     }));
-    Object.freeze(
-    Object.defineProperties(DEFAULT_UI_TRAITS,
-    {
-        dt: {value: dt_default},
-        key: {value: {uiName:'key', apiName:'key'} },
-        fields: {value: [{uiName:'value', apiName:'value'}]}
-    }));
+
     
     Object.defineProperty(UI_TRAITS, dt_eRecord, {value: E_UI_TRAITS});
     Object.defineProperty(UI_TRAITS, dt_pRecord, {value: P_UI_TRAITS});

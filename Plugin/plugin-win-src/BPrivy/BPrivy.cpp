@@ -115,6 +115,7 @@ FB::JSAPIPtr BPrivy::createJSAPI()
 {
 	FB::DOM::WindowPtr pWin = m_host->getDOMWindow();
 	std::string loc = pWin->getLocation();
+#ifndef DEBUG
 	std::string allowed("chrome-extension://");
 	if (loc.compare(0, allowed.size(), allowed) != 0)
 	{
@@ -125,6 +126,7 @@ FB::JSAPIPtr BPrivy::createJSAPI()
 		return boost::shared_ptr<BPrivyAPI>((BPrivyAPI*)NULL);
 	}
 	else
+#endif // DEBUG
 	{
 		// m_host is the BrowserHost
 		return boost::make_shared<BPrivyAPI>(FB::ptr_cast<BPrivy>(shared_from_this()), m_host);

@@ -24,7 +24,8 @@ var BP_MOD_MEMSTORE = (function ()
         PROTO_HTTPS = IMPORT(m.PROTO_HTTPS),
         dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord),
-        dt_default = "DefaultDT";
+        dt_default = "DefaultDT",
+        dt_etld    = IMPORT(m.dt_etld);
     /** @import-module-begin Connector */
     m = IMPORT(BP_MOD_CONNECT);
     var cm_getRecs = IMPORT(m.cm_getRecs),
@@ -58,26 +59,28 @@ var BP_MOD_MEMSTORE = (function ()
      * copies of the tries will get created.
      */
         g_pd, g_kd,
-        DNODE_TAG = {};
-    Object.defineProperties(DNODE_TAG,
+        DNODE_TAG =  Object.freeze(
         {
             //DATA: {value: 'data' /*"{dt}"*/},// writable, enumerable and configurable=false by default.
             // tag is a property name that should never clash withe a URL
             // segment. Hence the bracket
             // characters are being used because they are excluded in rfc
             // 3986.
-            TLD: {value:"{t}"},
-            HOST: {value:"{h}"},
-            DOMAIN: {value:"{d}"},
-            PORT: {value:"{o}"},
-            PATH: {value:"{p}"},
+            SCHEME: 's}',
+            TLD: 't}',
+            HOST: 'h}',
+            DOMAIN: 'd}',
+            PORT: 'o}',
+            PATH: 'p}',
+            HTTP: 's}http',
+            HTTPS: 's}https'
             // getDataTag: {value: function (dt) {
                 // if(dt) {
                     // return /*DNODE_TAG.DATA +*/ dt;
                 // }
             // }},
         }
-    );    
+        );    
 
     function isValidLocation(loc)
     {
@@ -97,10 +100,19 @@ var BP_MOD_MEMSTORE = (function ()
         else {return false;}
     }
 
-    var PREC_TRAITS ={}, EREC_TRAITS={}, DEFAULT_TRAITS={},
+    function ETLDRec (str)
+    {
+        Object.defineProperties(this,
+        {
+            dt: {value: dt_etld, enumerable:true},
+            date: {value: 0, enumerable:true},
+            loc: {value: {protocol:PROTO_HTTP, hostname:str}, configurable:true, enumerable:true}
+        });
+    }
+    /** @begin-static-class-defn DEFAULT_TRAITS */
+    var PREC_TRAITS ={}, EREC_TRAITS={}, DEFAULT_TRAITS={}, ETLD_TRAITS,
         DT_TRAITS = {};
         
-    /** @begin-static-class-defn DEFAULT_TRAITS */
     // Top-Level properties defined in DEFAULT_TRAITS are mandatory for any TRAITS object.
     // Omitting second-level properties (e.g. dict.url_scheme) is okay - implies false for
     // boolean properties.
@@ -108,7 +120,7 @@ var BP_MOD_MEMSTORE = (function ()
     {
         // dict: Properties referenced by dictionary/trie/URLA.
         // dict.url_xyz=true implies that xyz will be matched in insertions and lookups from dictionary.
-        dict: {value: {url_scheme: false, url_host:true, url_port:true, url_path:true}},
+        dict: {value: {url_scheme: false, url_host:true, url_port:true, url_path:true}, delete_loc:false},
         // action: properties referenced by the Actions class.
         actions: {
             value: {
@@ -129,7 +141,7 @@ var BP_MOD_MEMSTORE = (function ()
                 persist_asserts: false
             },
         },
-        ui: {value: {fields: ["key", "value"]}},
+        // ui: {value: {fields: ["key", "value"]}},
         // Returns record key
         getKey: {value: function (rec) {return rec.key;}},
         isValid: {value: function (rec){return isValidARec(rec) && rec.key!==undefined && rec.key!==null && rec.key !== "";}},
@@ -146,12 +158,26 @@ var BP_MOD_MEMSTORE = (function ()
             }}
     }); Object.freeze(DEFAULT_TRAITS);
     /** @end-static-class-defn DEFAULT_TRAITS **/
+
+    /** @begin-static-class-defn ETLD_TRAITS */
+    ETLD_TRAITS = Object.freeze(
+    {
+        dict: {url_host:true, delete_loc:true},
+        actions: {history:0},
+        getKey: function(rec) {return "";},
+        compareVals: function(rec1, rec2) {
+            if (rec1.isOverride===rec2.isOverride) {return EQUAL;}
+            else {return DIFFRNT;}
+        }
+    });
+    /** @end-static-class-defn ETLD_TRAITS **/
+
     /** @begin-static-class-defn PREC_TRAITS */
     Object.defineProperties(PREC_TRAITS,
     {
         dict: {value: {url_host:true, url_port:true}},
         actions: {value: {history:2, persist_asserts: true}},
-        ui: {value: {fields: Object.keys(newPRecord())}},
+        //ui: {value: {fields: Object.keys(newPRecord())}},
         getKey: {value: function(rec)
             {
                 return rec.userid;
@@ -176,12 +202,13 @@ var BP_MOD_MEMSTORE = (function ()
             }}
     }); Object.freeze(PREC_TRAITS);
     /** @end-static-class-defn PREC_TRAITS **/
+
     /** @begin-static-class-defn EREC_TRAITS */
     Object.defineProperties(EREC_TRAITS,
     {
         dict: {value: {url_host:true, url_port:true, url_path:true}},
         actions: {value: {history: 0, persist_asserts:false}},
-        ui: {value: {fields: Object.keys(newERecord())}},
+        //ui: {value: {fields: Object.keys(newERecord())}},
         getKey: {value: function(rec)
             {
                 return rec.fieldName;
@@ -221,7 +248,8 @@ var BP_MOD_MEMSTORE = (function ()
         dtList: {
             value: [
                 dt_eRecord, 
-                dt_pRecord
+                dt_pRecord,
+                dt_etld
             ]
         },
         getTraits: {
@@ -366,7 +394,7 @@ var BP_MOD_MEMSTORE = (function ()
         if (! (l && 
                 (typeof l.protocol=== "string") && (l.protocol.length > 0) &&
                 (typeof l.hostname === "string") && (l.hostname.length > 0) ) )
-            {throw new BPError("Unsupported Page (only http/https websites are supported): "+ JSON.stringify(l));}
+            {throw new BPError(JSON.stringify(l), "Unsupported");}
         
         pr = l.protocol.toLowerCase();
 
@@ -413,13 +441,13 @@ var BP_MOD_MEMSTORE = (function ()
         if (dictTraits.url_scheme && pr) {
             switch(pr) {
                 case PROTO_HTTP:
-                    urla.push('{s}http');
+                    urla.push(DNODE_TAG.HTTP);
                     break;
                 case PROTO_HTTPS:
-                    urla.push('{s}https');
+                    urla.push(DNODE_TAG.HTTPS);
                     break;
                 default:
-                    urla.push('{s}' + pr);
+                    urla.push(DNODE_TAG.SCHEME + pr);
             }
         }
 
@@ -586,20 +614,20 @@ var BP_MOD_MEMSTORE = (function ()
          *    object as well.
          */
     }
-    DNode.prototype.hasData = function() {return this.data;};
-    DNode.prototype.getData = function(dt) {return this.data? this.data[dt] : null;};
+    DNode.prototype.hasData = function() {return this.d;};
+    DNode.prototype.getData = function(dt) {return this.d? this.d[dt] : null;};
     DNode.prototype.putData = function(drec)
     {
         var r, ki, 
             rec = drec.rec, 
             dt = rec.dt;
             
-        if (!this.data) { // ensure that a data node has been allocated
-            this.data = {};
+        if (!this.d) { // ensure that a data node has been allocated
+            this.d = {};
         }
-        var recsMap = this.data[dt];
+        var recsMap = this.d[dt];
         if (!recsMap) {
-            this.data[dt] = (recsMap = {});
+            this.d[dt] = (recsMap = {});
         }
         r = recsMap[ki=DT_TRAITS.getKey(rec)];
         if (r) {
@@ -775,9 +803,12 @@ var BP_MOD_MEMSTORE = (function ()
         return r;
     };
 
-    DNode.insertRec = function (rec)
+    // _dnode is optional and is only expected to be used at build-time by buildETLD.
+    // At runtime, don't pass _dnode
+    DNode.insertRec = function (rec, _dnode)
     {
-        return DNode[rec.dt].insert(new DRecord(rec));
+        if (!_dnode) {_dnode = DNode[rec.dt];}
+        return _dnode.insert(new DRecord(rec));
     };
     
     var i;
@@ -803,6 +834,7 @@ var BP_MOD_MEMSTORE = (function ()
         this.urli = new DURL(rec.loc, rec.dt);
         this.rec = rec;
         DT_TRAITS.imbue(rec);
+        delete rec.loc;
         Object.defineProperty(this, "notes", {value: {}});//By default, writable, enumerable, configurable = false
                 
         Object.freeze(this);
@@ -830,7 +862,9 @@ var BP_MOD_MEMSTORE = (function ()
         DT_TRAITS: {value: DT_TRAITS},
         PREC_TRAITS: {value: PREC_TRAITS},
         EREC_TRAITS: {value: EREC_TRAITS},
-        clear: {value: clear}
+        clear: {value: clear},
+        newDNode: {value: newDNode}, // used by buildETLD
+        ETLDRec: {value: ETLDRec}
     });
     Object.freeze(iface);
 

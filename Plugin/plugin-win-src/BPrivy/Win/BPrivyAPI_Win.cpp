@@ -653,8 +653,8 @@ bool BPrivyAPI::_chooseFileXP(bp::JSObject* p)
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
-	ofn.lpstrInitialDir = NULL;
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_DONTADDTORECENT | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_SHAREAWARE;
+	ofn.lpstrInitialDir = NULL; // We're not specifying any initial directory. Let the system decide.
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_SHAREAWARE | OFN_DONTADDTORECENT;
 	std::wstring filter;
 	std::wstring title;
 
@@ -713,7 +713,7 @@ bool BPrivyAPI::_chooseFolderXP(bp::JSObject* p)
 	BROWSEINFOW bi;
 	wchar_t name[MAX_PATH];
 	ZeroMemory(&bi, sizeof(bi));
-	bi.pidlRoot = NULL;
+	bi.pidlRoot = NULL; // // We're not specifying any initial directory. Let the system decide. (Desktop by default).
 	bi.pszDisplayName = name;
 	if (p->HasProperty(PROP_DIALOG_TITLE))
 	try {
@@ -770,7 +770,11 @@ bool BPrivyAPI::_choose(bp::JSObject* p, bool chooseFile)
 
 			if (SUCCEEDED(hr))
 			{
-				pfd->ClearClientData();
+				if (p->HasProperty(PROP_CLEAR_HISTORY))
+				{
+					pfd->ClearClientData();
+				}
+				
 				std::wstring prop;
 				if (p->HasProperty(PROP_FILE_FILTER))
 				try {

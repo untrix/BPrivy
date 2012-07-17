@@ -30,8 +30,9 @@ var BP_MOD_COMMON = (function()
      *    that they are all valid JSON property names (e.g. no backslash or quotes).
      * 5. To represent the data-type in general at other places in the code ...
      */
-    var dt_eRecord = "E-Rec";  // Represents a E-Record (html-element record)
-    var dt_pRecord = "P-Rec";  // Represents a P-Record (password record)
+    var dt_eRecord = "E-Rec";  // Represents a E-Record (html-element record). Value is persisted.
+    var dt_pRecord = "P-Rec";  // Represents a P-Record (password record). Value is persisted.
+    var dt_etld    = "ETLD";   // Represents a ETLD (Public Suffix) record. Value is persisted.
     /** 
      * Tagname for dt_eRecords in the in-memory and file stores.
      * @constant
@@ -168,6 +169,7 @@ var BP_MOD_COMMON = (function()
         CSS_HIDDEN: {value: CSS_HIDDEN},
         dt_eRecord: {value: dt_eRecord},
         dt_pRecord: {value: dt_pRecord},
+        dt_etld:    {value: dt_etld},
         PROTO_HTTP: {value: PROTO_HTTP},
         PROTO_HTTPS: {value: PROTO_HTTPS},
         uid_aliases: {value: uid_aliases},

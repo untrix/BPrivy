@@ -91,15 +91,16 @@
             }
         } 
         catch (err) {
-            BPError.logwarn(err);
+            BP_MOD_ERROR.logwarn(err);
             funcSendResponse({result:false, err:err});
         }
     }
     
-    try 
+    try
     {
         initScaffolding(doc);
         registerMsgListener(onRequest);
+        FILE_STORE.init();
         var dbPath = localStorage["db.path"];
         if (dbPath)
         {
