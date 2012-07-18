@@ -4,5 +4,5 @@
 	2. publicsuffix.org/list
 * Name it etld.txt
 * Load ../tools.html and press the button Build ETLD, select the file (etld.txt).
-  It will create and write a file called etld.js which will eventually get loaded into the extension
+  It will create and write a file called etld.json which will eventually get loaded into the extension
   at runtime.

@@ -23,7 +23,7 @@
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1342478349114</id>
+			<id>1342592778799</id>
 			<name>Dev</name>
 			<type>21</type>
 			<matcher>
@@ -32,7 +32,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342478349117</id>
+			<id>1342592778801</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -41,7 +41,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342478349119</id>
+			<id>1342592778804</id>
 			<name>Dev</name>
 			<type>9</type>
 			<matcher>
@@ -50,7 +50,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342478349121</id>
+			<id>1342592778807</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -59,7 +59,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342478349125</id>
+			<id>1342592778809</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -68,12 +68,21 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342478349127</id>
+			<id>1342592778812</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-build*</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1342592778814</id>
+			<name>Dev</name>
+			<type>9</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-data</arguments>
 			</matcher>
 		</filter>
 		<filter>
@@ -83,6 +92,24 @@
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-build*</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1342592730627</id>
+			<name>Dev/data</name>
+			<type>5</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-Readme.txt</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1342592730629</id>
+			<name>Dev/data</name>
+			<type>5</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>
