@@ -21,7 +21,7 @@ var BP_MOD_MANAGE = (function ()
     var DIR_SEP = IMPORT(m.DIR_SEP);
     /** @import-module-begin Common */
     m = BP_MOD_FILESTORE;
-    var parseDBName = IMPORT(m.parseDBName);
+    var cullDBName = IMPORT(m.cullDBName);
     /** @import-module-end **/ m = null;
                
     function fillOptions(eid, dir)
@@ -108,7 +108,7 @@ var BP_MOD_MANAGE = (function ()
                         if ($('#dbSaveLocation:checked').length) {
                             localStorage['db.path'] = resp.dbPath;
                         }
-                        $('#dbPath').text(parseDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+                        $('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
                         BP_MOD_ERROR.success('Opened password wallet at ' + resp.dbPath);
                     }
                     else {
@@ -138,7 +138,7 @@ var BP_MOD_MANAGE = (function ()
                         if ($('#dbSaveLocation:checked').length) {
                             localStorage['db.path'] = resp.dbPath;
                         }
-                        $('#dbPath').text(parseDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+                        $('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
                         BP_MOD_ERROR.success('Password store created at ' + resp.dbPath);
                     }
                     else {
@@ -182,7 +182,7 @@ var BP_MOD_MANAGE = (function ()
         BP_MOD_CONNECT.getDBPath(function(resp)
         {
             if (resp.result) {
-                $('#dbPath').text(parseDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+                $('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
             }
             else {
                 $('#dbPath').text(null).attr('data-original-title', '').attr('data-path', null);

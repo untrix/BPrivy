@@ -25,7 +25,8 @@ var BP_MOD_MEMSTORE = (function ()
         dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord),
         dt_default = "DefaultDT",
-        dt_etld    = IMPORT(m.dt_etld);
+        dt_etld    = IMPORT(m.dt_etld),
+        stripLoc = IMPORT(m.stripLoc);
     /** @import-module-begin Connector */
     m = IMPORT(BP_MOD_CONNECT);
     var cm_getRecs = IMPORT(m.cm_getRecs),
@@ -86,9 +87,9 @@ var BP_MOD_MEMSTORE = (function ()
     function isValidLocation(loc)
     {
         return (loc && 
-                (typeof loc.protocol=== "string") && (loc.protocol.length > 0) &&
-                (typeof loc.hostname === "string") && (loc.hostname.length > 0) &&
-                (typeof loc.pathname === "string") && (loc.pathname.length > 0));
+                (typeof loc.S=== "string") && (loc.S.length > 0) &&
+                (typeof loc.H === "string") && (loc.H.length > 0) &&
+                (typeof loc.P === "string") && (loc.P.length > 0));
     }
 
     function isValidARec(that)
@@ -107,59 +108,51 @@ var BP_MOD_MEMSTORE = (function ()
         {
             dt: {value: dt_etld, enumerable:true},
             date: {value: 0, enumerable:true},
-            loc: {value: {protocol:PROTO_HTTP, hostname:str}, configurable:true, enumerable:true}
+            loc: {value: {H:str}, configurable:true, enumerable:true},
+            val: {value: str[str.length-1]==='!'?1:0, enumerable: true}
         });
     }
-    var PREC_TRAITS ={}, EREC_TRAITS={}, DEFAULT_TRAITS={}, ETLD_TRAITS,
-        DT_TRAITS = {};
 
     /** @begin-static-class-defn DT_TRAITS */
-    Object.defineProperties(DT_TRAITS,
+    var DT_TRAITS = 
     {
-        traits: {value: {}}, // Various traits objects defined below.
-        getTraits: {
-            value: function (dt) {
-                var n = this.traits[dt];
-                if (!n) {
-                    n = this.traits[dt_default];
-                }
-                return n;
+        traits: {}, // Various traits objects defined below.
+        getTraits: function (dt) {
+            var n = this.traits[dt];
+            if (!n) {
+                n = this.traits[dt_default];
+            }
+            return n;
+        },
+        getDictTraits: function (dt) {
+            return this.getTraits(dt).dict;
+        },
+        getKey: function (rec) {
+            var t = this.traits[rec.dt];
+            if (t && t.getKey) {
+                return t.getKey(rec);
             }
         },
-        getDictTraits: {
-            value: function (dt) {
-                return this.getTraits(dt).dict;
-            }
-        },
-        getKey: {
-            value: function (rec) {
-                var t = this.traits[rec.dt];
-                if (t && t.getKey) {
-                    return t.getKey(rec);
-                }
-            }
-        },
-        imbue: {
-            value: function (rec) {
-                Object.defineProperty(rec, "traits",
-                {
-                    value: this.getTraits(rec.dt) // enumerable, writable, configurable=false.
-                });
-                return rec;
-            }
+        imbue: function (rec) {
+            Object.defineProperty(rec, "traits",
+            {
+                value: this.getTraits(rec.dt) // enumerable, writable, configurable=false.
+            });
+            return rec;
         }
-    });
+    };
     
-    // Top-Level properties defined in DEFAULT_TRAITS are mandatory for any TRAITS object.
-    // Omitting second-level properties (e.g. dict.url_scheme) is okay - implies false for
+    // Most properties defined in DEFAULT_TRAITS are optional for urlMap type dictionaries.
+    // Omitting second-level properties (e.g. dict.url_scheme) implies false for
     // boolean properties.
     DT_TRAITS.traits[dt_default] = Object.freeze(
     {
         // dict: Properties referenced by dictionary/trie/URLA.
         // dict.url_xyz=true implies that xyz will be matched in insertions and lookups from dictionary.
-        dict: {url_scheme: false, url_host:true, url_port:true, url_path:true, delete_loc:false},
+        dict: {url_scheme: false, url_host:true, url_port:true, 
+                url_path:true, deleteLoc:false, isUrlMap:false},
         // action: properties referenced by the Actions class.
-        actions: {
+        actions: { // not needed if isUrlMap===true
             // history=true asserts we're interested in maintaining history.
             // Will cause Actions class to keep history in memory
             // A value of false asserts the opposite. Will
@@ -178,33 +171,18 @@ var BP_MOD_MEMSTORE = (function ()
         },
         // ui: {fields: ["key", "value"]},
         // Returns record key
-        getKey: function (rec) {return rec.key;},
-        isValid: function (rec){return isValidARec(rec) && rec.key!==undefined && rec.key!==null && rec.key !== "";},
-        compareVals: function(rec1, rec2) 
-        {
-          if (rec1 && rec2) {
-              if (rec1.value === rec2.value) {return EQUAL;}
-              else {return DIFFRNT;}
-          }
-          else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
-              return EQUAL;
-          }
-          else { return DIFFRNT;}
-        }
+        getKey: function (rec) {},// not needed if isUrlMap===true
+        compareVals: function(rec1, rec2) // not needed if isUrlMap===true
+        {},
+        isValid: function(rec) {} // only needed for some types.
     });
 
     DT_TRAITS.traits[dt_etld] = Object.freeze(
     {
-        dict: {url_host:true, delete_loc:true},
-        actions: {history:0},
-        getKey: function(rec) {return "k";},
-        compareVals: function(rec1, rec2) {
-        if (rec1.isOverride===rec2.isOverride) {return EQUAL;}
-        else {return DIFFRNT;}
-        }
+        dict: {url_host:true, isUrlMap:true, deleteLoc:true},
     });
 
-    DT_TRAITS.traits[dt_pRecord] = Object.freeze(
+    var PREC_TRAITS = DT_TRAITS.traits[dt_pRecord] = Object.freeze(
     {
         dict: {url_host:true, url_port:true},
         actions: {history:2, persist_asserts: true},
@@ -233,7 +211,7 @@ var BP_MOD_MEMSTORE = (function ()
         }
     });
 
-    DT_TRAITS.traits[dt_eRecord] = Object.freeze(
+    var EREC_TRAITS = DT_TRAITS.traits[dt_eRecord] = Object.freeze(
     {
         dict: {url_host:true, url_port:true, url_path:true},
         actions: {history: 0, persist_asserts:false},
@@ -370,30 +348,29 @@ var BP_MOD_MEMSTORE = (function ()
      */
     function DURL (l, dt) // throws BPError
     {
-        var ha, pa, pr, pn, urla = [], i, s,
+        var ha, pa, scm, pn, urla = [], i, s,
         dictTraits = DT_TRAITS.getDictTraits(dt);
 
         // Note: We need scheme and hostname at a minimum for a valid URL. We also need
         // pathname before we insert into TRIE, hence we'll append a "/" if path is missing.
         // But first ensure that this is indeed a URL.
         if (! (l && 
-                (typeof l.protocol=== "string") && (l.protocol.length > 0) &&
-                (typeof l.hostname === "string") && (l.hostname.length > 0) ) )
+                (typeof l.H === "string") && (l.H.length > 0) ) )
             {throw new BPError(JSON.stringify(l), "Unsupported");}
         
-        pr = l.protocol.toLowerCase();
+        scm = (l.S?l.S.toLowerCase():null);
 
         if (dictTraits.url_host)
         {
             // Split hostname into an array of strings.       
-            ha = l.hostname.split('.');
+            ha = l.H.split('.');
             ha.reverse();
         }
         
         if (dictTraits.url_path)
         {
-            if (!l.pathname) {s = "/";} // In practice, all code tacks-on a "/" if missing in a valid URL.
-            else {s = l.pathname;}
+            if (!l.P) {s = "/";} // In practice, all code tacks-on a "/" if missing in a valid URL.
+            else {s = l.P;}
             // Split pathname into path segments.
             // First remove leading slashes
             s = s.replace(/^\/+/,'');
@@ -408,8 +385,8 @@ var BP_MOD_MEMSTORE = (function ()
         
         if (l.port && dictTraits.url_port)
         {
-            i = Number(l.port);
-            switch(pr) {
+            i = Number(l.O);
+            switch(scm) {
                 case PROTO_HTTP:
                     if(i !== 80) {pn = i;}
                 break;
@@ -423,8 +400,8 @@ var BP_MOD_MEMSTORE = (function ()
         
         // Construct the url segment array
         
-        if (dictTraits.url_scheme && pr) {
-            switch(pr) {
+        if (dictTraits.url_scheme && scm) {
+            switch(scm) {
                 case PROTO_HTTP:
                     urla.push(DNODE_TAG.HTTP);
                     break;
@@ -432,7 +409,7 @@ var BP_MOD_MEMSTORE = (function ()
                     urla.push(DNODE_TAG.HTTPS);
                     break;
                 default:
-                    urla.push(DNODE_TAG.SCHEME + pr);
+                    urla.push(DNODE_TAG.SCHEME + scm);
             }
         }
 
@@ -603,10 +580,10 @@ var BP_MOD_MEMSTORE = (function ()
     DNode.prototype.getData = function(dt) {return this.d? this.d[dt] : null;};
     DNode.prototype.putData = function(drec)
     {
-        var r, ki, 
+        var r, ki,
             rec = drec.rec, 
             dt = rec.dt;
-            
+
         if (!this.d) { // ensure that a data node has been allocated
             this.d = {};
         }
@@ -621,7 +598,12 @@ var BP_MOD_MEMSTORE = (function ()
         else {
             (recsMap[ki] = newActions(dt)).insert(drec);
         }
-                
+    };
+    DNode.prototype.putData2 = function(drec)
+    {
+        // Used for a simple map with URL as the key and record as value.
+        // Simple struct for ETLD
+        this.d = drec.rec.val;
     };
     
     function newDNode () {return new DNode();}
@@ -631,10 +613,15 @@ var BP_MOD_MEMSTORE = (function ()
     {
         var rec = drec.rec,
             k = drec.urli.incr(),
-            r, t, ki;
+            t = rec.traits;
         if (!k) 
         {
-            this.putData(drec);
+            if (t.dict.isUrlMap) {
+                this.putData2(drec);
+            }
+            else {
+                this.putData(drec);
+            }
         }
         else 
         {   // continue walking down the trie
@@ -704,7 +691,7 @@ var BP_MOD_MEMSTORE = (function ()
      * The segments before urli.count() matched. The matched node however, may not
      * have a value in it though. You will need to walk either up or down the tree
      * to find values depending on your use case.
-    */
+    *
     DNode.prototype.findBestNode = function (urli, dt) 
     {
         var n, r = this;
@@ -716,6 +703,7 @@ var BP_MOD_MEMSTORE = (function ()
         
         return n;
     };
+    */
     /**
      * Returns dt_eRecord records that best match urli.
      */
@@ -779,8 +767,8 @@ var BP_MOD_MEMSTORE = (function ()
      */
     DNode.getRecs = function  (loc)
     {
-        var kdb, pdb, r;
-
+        var kdb, pdb, r; 
+        loc = stripLoc(loc);
         r = {};
         r.eRecsMapArray = DNode[dt_eRecord].findERecsMapArray(loc);
         r.pRecsMap = DNode[dt_pRecord].findPRecsMap(loc);
@@ -813,18 +801,33 @@ var BP_MOD_MEMSTORE = (function ()
         this.urli = new DURL(rec.loc, rec.dt);
         this.rec = rec;
         DT_TRAITS.imbue(rec);
-        delete rec.loc;
+        if (rec.traits.dict.deleteLoc) {
+            delete rec.loc;
+        }
         Object.defineProperty(this, "notes", {value: {}});//By default, writable, enumerable, configurable = false
                 
         Object.freeze(this);
     }
-
     /** @end-class-def DRecord **/
-    
+
+    function loadETLD () 
+    {
+        function onload (e)
+        {
+            DNode[dt_etld] = JSON.parse(e.target.response);
+        }
+        var xhr = new XMLHttpRequest();
+        xhr.onloadend = onload; // Implemented elsewhere.
+        xhr.open("GET", chrome.extension.getURL('/data/etld.json'), true);
+        xhr.send();
+        
+        //loadETLD(BP_MOD_CS_PLAT.getAbsPath("data/etld.txt"));
+    }
+        
     function clear ()
     {
         var i, dt,
-            dtList = Object.keys(DT_TRAITS.traits), 
+            dtList = Object.keys(DT_TRAITS.traits),
             n = dtList.length;
         for (i=0; i<n; i++)
         {
@@ -845,7 +848,8 @@ var BP_MOD_MEMSTORE = (function ()
         EREC_TRAITS: {value: EREC_TRAITS},
         clear: {value: clear},
         newDNode: {value: newDNode}, // used by buildETLD
-        ETLDRec: {value: ETLDRec}
+        ETLDRec: {value: ETLDRec},
+        loadETLD: {value: loadETLD}
     });
     Object.freeze(iface);
 

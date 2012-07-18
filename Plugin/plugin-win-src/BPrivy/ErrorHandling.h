@@ -18,6 +18,7 @@ namespace bp
 	//const std::string SCodeToPCode(std::uint32_t err);
 
 	// String Constants (make sure they're all UTF8 encoded)
+	extern const bp::ustring PROP_ERRNAME;
 	extern const bp::ustring PROP_SYSTEM_MESSAGE;
 	extern const bp::ustring PROP_GENERIC_MESSAGE;
 	extern const bp::ustring PROP_SYSTEM_CODE;
@@ -75,6 +76,7 @@ namespace bp
  	extern const bp::ustring ACODE_CANT_PROCEED;
  	// Unmapped System Code
  	extern const bp::ustring ACODE_UNMAPPED;
+	extern const bp::ustring ACODE_UNKNOWN;
 
 	//typedef enum _ACODE
 	//{

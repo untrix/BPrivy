@@ -67,9 +67,9 @@
           
       function loadETLD(path, dnode)
       {
-          var props = ['rule'], csv, etld,
+          var props = ['rule'], csv, etld, i,
               csvf = new FILESTORE.CSVFile(path, props);
-              while ((csv = csvf.getcsv2()) !== undefined)
+              while ( (csv = csvf.getcsv2()) !== undefined)
               {
                   if (!csv) {continue;} // unparsable line
                   
@@ -92,13 +92,13 @@
           }
           
           var i = o.path.lastIndexOf('.txt');
-          var path = o.path.slice(0, i) + ".js";
+          var path = o.path.slice(0, i) + ".json";
           o={};
           BP_PLUGIN.rm(path, o);
           o={};
-          if (BP_PLUGIN.appendFile(path, "var ETLDDict=JSON.parse('", o) &&
-          BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o) &&
-          BP_PLUGIN.appendFile(path, "');", o)) {
+          // if (BP_PLUGIN.appendFile(path, "var ETLDDict=JSON.parse('", o) &&          // BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o) &&          // BP_PLUGIN.appendFile(path, "');", o)) {
+          if (BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o))
+          {
             window.alert("Done");
           }
           else {

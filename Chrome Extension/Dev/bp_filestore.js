@@ -6,7 +6,8 @@
  */
 
 /* JSLint directives */
-/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR, BP_MOD_MEMSTORE */
+/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
+  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_PLAT, chrome */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -57,14 +58,14 @@ var BP_MOD_FILESTORE = (function()
          * Name of knowledge-dict directory on filesystem. Should be case insensitive
          * since not all filesystems will honor case.
          */
-        dir_k = "k" + ext_Dict,
-        file_k = "k" + ext_Open,
+        dir_k = ".k" + ext_Dict,
+        file_k = ".k" + ext_Open,
         /**
          * Name of passwords-dict directory on filesystem. Should be case insensitive
          * since not all filesystems will honor case.
          */
-        dir_p = "p" + ext_Dict,
-        file_p = "p" + ext_Open,
+        dir_p = ".p" + ext_Dict,
+        file_p = ".p" + ext_Open,
         g_dbPath, // Currently opened DB's root path. Will be set at runtime.
         g_path_k, // File to write e/k-records to. Will be set at runtime.
         g_path_p; // File to write p-records to. Will be set at runtime.
@@ -90,14 +91,14 @@ var BP_MOD_FILESTORE = (function()
         return o;
     }
         
-    function parseDBName(dbPath)
+    function cullDBName(dbPath)
     {
         var regex, array;
         if (path_sep === "/") {
-            regex = /^.*\/(.+)$/;
+            regex = /^.*\/([^\/]+)$/;
         }
         else {
-            regex = /^.*\\(.+)$/;
+            regex = /^.*\\([^\\]+)$/;
         }
         
         array = regex.exec(dbPath);
@@ -130,15 +131,38 @@ var BP_MOD_FILESTORE = (function()
             return vals.length ? vals : null;
         }
     }
-    
+
+    function insideDB (dbPath, out)
+    {
+        var pathArray = parsePath(dbPath), 
+            i, j, inDB=false;
+        
+        for (i = pathArray.length - 1; i >= 0; i--)
+        {
+            if (pathArray[i] && (pathArray[i].ext === ext_Root)) {
+                inDB = true;
+                break;
+            }
+        }
+        
+        if (inDB && out) 
+        {
+            for (out.dbPath='',j=0; j<=i; j++) {
+                out.dbPath += (j>0 ? path_sep : '') + pathArray[j].name;
+            }
+        }
+        
+        return inDB;
+    }
+        
     function getDBPath ()
     {
         return g_dbPath;
     }
     
-    function getDBName () 
+    function getDBName ()
     {
-        return parseDBName(g_dbPath);
+        return cullDBName(g_dbPath);
     }
     
     function insertRec(rec)
@@ -172,7 +196,7 @@ var BP_MOD_FILESTORE = (function()
                     MEM_STORE.insertRec(recs[i]);
                 } catch (e) {
                     var bpe = new BPError(e);
-                    BP_MOD_ERROR.logwarn("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
+                    BP_MOD_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
                 }
             }
             MOD_ERROR.log("Loaded file " + filePath);
@@ -182,89 +206,94 @@ var BP_MOD_FILESTORE = (function()
         }
     }
     
+    function verifyDBForLoad (dbPath) 
+    {
+        var o={}, goodPath;
+
+        if (!insideDB(dbPath, o)) {
+            goodPath = false;
+        }
+        else {
+            dbPath = o.dbPath;
+            goodPath = true;
+        }
+
+        var path_k = dbPath + path_sep + dir_k,
+            path_p = dbPath + path_sep + dir_p;
+        
+        if (!(goodPath && BP_PLUGIN.ls(dbPath, o) && BP_PLUGIN.ls(path_k, o) && BP_PLUGIN.ls(path_p, o))) {
+            throw new BPError("", 'BadPathArgument');
+        }
+        
+        return dbPath;
+    }
+    
     function loadDB(dbPath)
     {
         var o = {}, file_names, path_dir_p, path_dir_k,
-            i, f, numFiles=0;
+            i, f, dbBad=false;
+
+        // First determine if this DB exists and is good.
+        dbPath = verifyDBForLoad(dbPath);
+        
         console.log("loadingDB " + dbPath);
         MEM_STORE.clear(); // unload the previous DB.
+
         g_dbPath = dbPath;
         g_path_k = g_dbPath + path_sep + dir_k + path_sep + file_k;
         g_path_p = g_dbPath + path_sep + dir_p + path_sep + file_p;
-        // First determine if this DB exists
+
+        // Load P-Records
         o={};
-        if (BP_PLUGIN.ls(g_dbPath, o))
+        if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_p, o) && o.lsd && o.lsd.f)
         {
-            numFiles++;
-            // Load P-Records
-            o={};
-            if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_p, o) && o.lsd && o.lsd.f)
+            path_dir_p = g_dbPath + path_sep + dir_p + path_sep;
+            f = o.lsd.f; file_names = Object.keys(f);
+            for (i=file_names.length-1; i>=0; --i)
             {
-                path_dir_p = g_dbPath + path_sep + dir_p + path_sep;
-                f = o.lsd.f; file_names = Object.keys(f);
-                for (i=file_names.length-1; i>=0; --i)
-                {
-                    if (f[ file_names[i] ].ext === ext_Open) {
-                        try {
-                            loadFile(path_dir_p + file_names[i]);
-                            numFiles ++;
-                        } catch (e) {
-                            var bpe = new BPError(e);
-                            BP_MOD_ERROR.logwarn(bpe);
-                            BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_p + file_names[i]);
-                        }
-                    }
-                }
-            }
-            // Load K-Records
-            o={};
-            if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_k, o) && o.lsd && o.lsd.f)
-            {
-                path_dir_k = g_dbPath + path_sep + dir_k + path_sep;
-                f = o.lsd.f; file_names = Object.keys(f);
-                for (i=file_names.length-1; i>=0; --i)
-                {
-                    if (f[ file_names[i] ].ext === ext_Open) {
-                        try {
-                            loadFile(path_dir_k + file_names[i]);
-                            numFiles++;
-                        } catch (e) {
-                            var bpe = new BPError(e);
-                            BP_MOD_ERROR.logwarn(bpe);
-                            BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_k + file_names[i]);
-                        }
+                if (f[ file_names[i] ].ext === ext_Open) {
+                    try {
+                        loadFile(path_dir_p + file_names[i]);
+                    } catch (e) {
+                        var bpe = new BPError(e);
+                        BP_MOD_ERROR.warn(bpe);
+                        BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_p + file_names[i]);
                     }
                 }
             }
         }
-        if (numFiles) {
-            MOD_ERROR.log("Loaded DB " + dbPath);
-            return g_dbPath;
+        // Load K-Records
+        o={};
+        if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_k, o) && o.lsd && o.lsd.f)
+        {
+            path_dir_k = g_dbPath + path_sep + dir_k + path_sep;
+            f = o.lsd.f; file_names = Object.keys(f);
+            for (i=file_names.length-1; i>=0; --i)
+            {
+                if (f[ file_names[i] ].ext === ext_Open) {
+                    try {
+                        loadFile(path_dir_k + file_names[i]);
+                    } 
+                    catch (e) {
+                        var bpe = new BPError(e);
+                        BP_MOD_ERROR.warn(bpe);
+                        BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_k + file_names[i]);
+                    }
+                }
+            }
         }
-        else {
-            MOD_ERROR.alert("Sorry, " + g_dbPath + " could not be opened. Please check the file-path and re-try from the options/settings page");
-            return null;
-        }
+        
+        MOD_ERROR.log("Loaded DB " + dbPath);
+        return g_dbPath;
     }
     
     function createDB(name, dir) // throws
     {
-        var o={}, root, pathArray = parsePath(dir), i, badPath=false;
-        
-        for (i = pathArray.length - 1; i >= 0; i--)
-        {
-            if (pathArray[i] && (pathArray[i].ext === ext_Root)) {
-                badPath = true;
-                break;
-            }
-        }
-        if (badPath) {
-            var err = {
-                acode: 'BadPathArgument',
-                gcode: 'ExistingStore',
-                gmsg: BP_MOD_ERROR.msg.ExistingStore
-            };
-            throw new BPError(err);
+        var root, i, 
+            o = {};
+            
+        if (insideDB(dir)) {
+            throw new BPError(BP_MOD_ERROR.msg.ExistingStore, 'BadPathArgument', 'ExistingStore');
         }
         if (name.slice(name.slice.length - ext_Root.length) !== ext_Root) {
             root = dir + path_sep + name + ext_Root;
@@ -503,7 +532,7 @@ var BP_MOD_FILESTORE = (function()
                                 insertRec(prec);                                
                             } catch (e) {
                                 var bpe = new BPError(e);
-                                BP_MOD_ERROR.logwarn("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());
+                                BP_MOD_ERROR.log("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());
                             }
                         }
                     }
@@ -514,54 +543,16 @@ var BP_MOD_FILESTORE = (function()
         }
         else
         {
-            var err = o.err.gmsg + "(" + o.err.gcode + "). " + o.err.smsg;
-            console.error(err);
-            document.defaultView.alert(err);
-            return false;
+            throw new BPError(o.err);
         }
     }
-    
-    function init (p_sep) 
+       
+    function init (p_sep)
     {
         BP_PLUGIN = document.getElementById(eid_bp);
-        path_sep = p_sep || (BP_PLUGIN && BP_PLUGIN.pathSeparator) ? BP_PLUGIN.pathSeparator() : undefined;
+        path_sep = p_sep || (BP_PLUGIN && BP_PLUGIN.pathSeparator) ? BP_PLUGIN.pathSeparator() : undefined;        
     }
-    
-      function loadETLD(path, dnode)
-      {
-          var props = ['rule'], csv, etld,
-              csvf = new FILESTORE.CSVFile(path, props);
-              while ((csv = csvf.getcsv2()) !== undefined)
-              {
-                  if (!csv) {continue;} // unparsable line
                   
-                  etld = new ETLDRec(csv[0]);
-                  MEM_STORE.insertRec(etld, dnode);
-              }
-      }
-      
-      function buildETLD ()
-      {
-          // var dir = document.location.pathname;
-          // dir = dir.slice(1, dir.lastIndexOf("/"));
-          var o={filter:['TXT','*.txt'],
-                 dtitle: "Privy&trade; Build ETLD",
-                 dbutton: "Input"};
-          if (BP_PLUGIN.chooseFile(o)) 
-          {
-            console.log("ChooseFile returned:" + o.path);
-            ETLDDict = MEM_STORE.newDNode();
-            loadETLD(o.path, ETLDDict);
-          }
-          
-          var i = o.path.lastIndexOf('.txt');
-          var path = o.path.slice(0, i) + ".json";
-          o={};
-          BP_PLUGIN.rm(path, o);
-          o={};
-          BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o);
-      }
-      
     //Assemble the interface    
     var iface = {};
     Object.defineProperties(iface, 
@@ -572,7 +563,7 @@ var BP_MOD_FILESTORE = (function()
         createDB: {value: createDB},
         loadDB: {value: loadDB},
         getDBPath: {value: getDBPath},
-        parseDBName: {value: parseDBName},
+        cullDBName: {value: cullDBName},
         getDBName: {value: getDBName},
         insertRec: {value: insertRec}
     });

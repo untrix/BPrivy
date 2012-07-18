@@ -13,7 +13,7 @@
 /**
  * @ModuleBegin GoogleChrome
  */
-var  BP_MOD_MAIN_PLAT = (function() 
+var  BP_MOD_PLAT = (function() 
 {
     "use strict"; //TODO: Remove this from prod. build
     
@@ -28,7 +28,7 @@ var  BP_MOD_MAIN_PLAT = (function()
     {
         if (info.menuItemId === g.ContextMenuID)
         {
-            console.info("BPMenuItem was clicked on page " + info.pageUrl);
+            //console.info("BPMenuItem was clicked on page " + info.pageUrl);
             bpClick(tab);
         }
     }
@@ -37,13 +37,13 @@ var  BP_MOD_MAIN_PLAT = (function()
     {          
         var menuProperties = {"type": "normal", "title": "BPrivy", "contexts": ["all"], "onclick": bpMenuClick, "documentUrlPatterns": document.url};
         var menu_id = chrome.contextMenus.create(menuProperties);
-        console.info("Menu Item ID " + menu_id + " Created");
+        //console.info("Menu Item ID " + menu_id + " Created");
     
         chrome.browserAction.onClicked.addListener(bpClick);
         doc.designMode = 'on';// enables saving the document
        
         g.ContextMenuID = menu_id;
-        console.info("Menu Item ID = " + g.ContextMenuID);
+        //console.info("Menu Item ID = " + g.ContextMenuID);
     }
 
     var module =

@@ -16,6 +16,7 @@ namespace bp
 	// Error properties (names) returned to javascript. These represent an interface
 	// with javascript and therefore are unchangeable.
 	const bp::ustring PROP_ERROR				(L"err");
+	const bp::ustring PROP_ERRNAME				(L"name");
 	const bp::ustring PROP_SYSTEM_MESSAGE		(L"smsg");
 	const bp::ustring PROP_GENERIC_MESSAGE		(L"gmsg");
 	const bp::ustring PROP_SYSTEM_CODE			(L"scode");
@@ -44,6 +45,7 @@ namespace bp
 	const bp::ustring PROP_DATA					(L"dat");
 	const bp::ustring PROP_PASS					(L"pass");
 
+	const bp::ustring ACODE_UNKNOWN				(L"Unknown");
  	const bp::ustring ACODE_UNMAPPED			(L"Unmapped");
  	const bp::ustring ACODE_CANT_PROCEED		(L"CantProceed");
  	const bp::ustring ACODE_AUTORETRY			(L"AutoRetry");
@@ -66,6 +68,7 @@ namespace bp
 	const bp::ustring BPCODE_WOULD_CLOBBER		(L"WouldClobber");
 	const bp::ustring BPCODE_PATH_NOT_EXIST	(L"PathNotExist");
 
+	const bp::ustring EXCEPTION_NAME			(L"PluginDiags");
 	const bp::ustring& PCodeToACodeW(int ev)
 	{
 		switch(ev)
@@ -183,6 +186,7 @@ namespace bp
 	{
 		int ev = e.code().value();
 		bs::error_code ec = e.code();
+		m.insert(PROP_ERRNAME, EXCEPTION_NAME);
 		m.insert(PROP_SYSTEM_MESSAGE, ec);
 		m.insert(PROP_SYSTEM_CODE, SCodeToSCodeW(ev));
 		//m.insert(VT(PROP_GENERIC_MESSAGE, ec.default_error_condition()));
@@ -229,12 +233,18 @@ namespace bp
 	// NOTE: All strings must be utf8/unicode
 	void HandleUnknownException (bp::JSObject* p)
 	{
-		p->SetProperty(PROP_ERROR, L"Unknown");
+		bp::VariantMap m;
+		m.insert(PROP_ERRNAME, EXCEPTION_NAME);
+		m.insert(PROP_A_CODE, ACODE_UNKNOWN);
+		p->SetProperty(PROP_ERROR, m);
 	}
 
 	void HandleUnknownException (bp::VariantMap& me)
 	{
-		me.insert(PROP_ERROR, L"Unknown");
+		bp::VariantMap m;
+		m.insert(PROP_ERRNAME, EXCEPTION_NAME);
+		m.insert(PROP_A_CODE, ACODE_UNKNOWN);
+		me.insert(PROP_ERROR, m);
 	}
 
 
@@ -242,6 +252,7 @@ namespace bp
 	void HandleBPError(const BPError& e, bp::JSObject* p)
 	{
 		bp::VariantMap m;
+		m.insert(PROP_ERRNAME, EXCEPTION_NAME);
 		m.insert(PROP_A_CODE, e.acode);
 		if (!e.gcode.empty()) {
 			m.insert(PROP_GENERIC_CODE, (e.gcode));

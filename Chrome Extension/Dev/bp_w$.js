@@ -157,11 +157,11 @@ var BP_MOD_W$ = (function ()
             wdl = wdl(ctx); // compile wdt to wdl
         }
         if (!wdl || (typeof wdl !== 'object')) {
-            throw new BPError("Bad WDL: not JS object");
+            throw new BPError("Bad WDL: not a JS object", 'BadWDL', 'NotJSObject');
         }
         else if (!wdl.tag && !wdl.html)
         {
-            throw new BPError("Bad WDL: " + JSON.stringify(wdl));
+            throw new BPError("Bad WDL: " + JSON.stringify(wdl), 'BadWDL');
         }
         
         var el, $el, i=0, w$el, _final, wcld, keys, key, val, w$ ={},

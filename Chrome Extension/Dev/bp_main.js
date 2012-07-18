@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global $, document, BP_MOD_MAIN_PLAT, BP_MOD_CONNECT, BP_MOD_COMMON, IMPORT, localStorage,
+/*global $, document, BP_MOD_PLAT, BP_MOD_CONNECT, BP_MOD_COMMON, IMPORT, localStorage,
   BP_MOD_MEMSTORE, BP_MOD_FILESTORE, BP_MOD_ERROR */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -16,7 +16,7 @@
     "use strict"; // TODO: @remove Only used in debug builds
     
     /** @import-module-begin MainPlatform */
-    var m = BP_MOD_MAIN_PLAT;
+    var m = BP_MOD_PLAT;
     var registerMsgListener = IMPORT(m.registerMsgListener);
     var initScaffolding = IMPORT(m.init);
     /** @import-module-begin Connector */
@@ -95,25 +95,31 @@
             funcSendResponse({result:false, err:err});
         }
     }
-    
-    try
-    {
-        initScaffolding(doc);
-        registerMsgListener(onRequest);
-        FILE_STORE.init();
-        var dbPath = localStorage["db.path"];
-        if (dbPath)
-        {
-            dbPath = FILE_STORE.loadDB(dbPath);
-            //FILE_STORE.createDB("C:/Users/sumeet/Documents/", "Keys");
-            if (!dbPath) { // db-load failed, remove the stored dbPath value.
-                delete localStorage['db.path'];
-            }
-        }
-    } catch (e)
-    {
-        var exc = new BPError(e);
-        BP_MOD_ERROR.logwarn("init@bp_main.js = " + exc.toString());
-    }
 
+    // function onload ()     // {
+        var dbPath = localStorage["db.path"];
+        try
+        {
+            initScaffolding(doc);
+            registerMsgListener(onRequest);
+            FILE_STORE.init();
+            MEM_STORE.loadETLD();
+            if (dbPath)
+            {
+                BPError.atvt = new Activity('LoadDBAtInit');
+                dbPath = FILE_STORE.loadDB(dbPath);
+    
+                if (!dbPath) { // db-load failed, remove the stored dbPath value.
+                    throw new BPError("DB Load Failed");
+                }
+            }
+        } catch (e)
+        {
+            
+            delete localStorage['db.path'];
+            MEM_STORE.clear();
+            BP_MOD_ERROR.logwarn(e);
+        }
+    // }    // $(document).ready(onload);
+      
 }(document));

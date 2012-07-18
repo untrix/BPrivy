@@ -58,6 +58,12 @@ var BP_MOD_CS_PLAT = (function()
             return chrome.extension.getURL(path);
         },
         
+        getAbsPath: function(path)
+        {
+            // get url and then remove the leading file:///
+            return chrome.extension.getURL(path).slice(8);
+        },
+        
         addEventListener: function(el, ev, fn)
         {
             el.addEventListener(ev, fn);

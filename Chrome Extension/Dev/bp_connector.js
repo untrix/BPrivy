@@ -25,8 +25,9 @@ var BP_MOD_CONNECT = (function ()
     var rpcToMothership = IMPORT(m.rpcToMothership);
     /** @import-module-begin Common **/
     m = BP_MOD_COMMON; 
-    var dt_eRecord = IMPORT(m.dt_eRecord);
-    var dt_pRecord = IMPORT(m.dt_pRecord);
+    var dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord),
+        stripLoc = IMPORT(m.stripLoc);
     /** @import-module-end **/    m = null;
     
     // 'enumerated' values used internally only. We need these here in order
@@ -59,7 +60,10 @@ var BP_MOD_CONNECT = (function ()
             dt: {value: type, enumerable: true},
             date: {value: date, enumerable: true},
             // URL that this record pertains to. Determines where the record will sit within the URL-trie.
-            loc: {value: loc, enumerable: true}
+            // We're stripping extra data and shortening property names so as to conserve space in memory
+            // as well as on disk and processing cycles as well. This becomes important when one has to
+            // ingest thousands of records (ETLD has about 7K records)
+            loc: {value: stripLoc(loc), enumerable: true}
         });
     }
     

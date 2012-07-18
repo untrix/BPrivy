@@ -123,11 +123,14 @@ var BP_MOD_ERROR = (function()
     var msg = Object.freeze(
     {
         /***********Action Codes****************/
-        BadPathArgument:"Bad Path Argument",
-        Unsupported:'Unsupported Feature', //Unsupported URL etc.
-        Diag:'', // Diagnostic Message 
+        BadPathArgument:"Bad Path Argument.",
+        Unsupported:'Unsupported Feature.', //Unsupported URL etc.
+        Diag:'', // Diagnostic Message
+        BadWDL: 'Bad WDL argument.',
         /*********** 'G-Codes' **************/
-        ExistingStore: "The selected folder seems to already be part of another Privy Wallet"
+        ETLDLoadFailed: 'ETLD Load Failed',
+        ExistingStore: "The selected folder seems to already be part of an existing DB.",
+        NotJSObject: "Argument is not a javascript object."
     });
 
    function Activity(arg)
@@ -170,36 +173,39 @@ var BP_MOD_ERROR = (function()
     {
         Object.defineProperties(this,
         {// name and message are standard in ECmascript Error prototype.
-            name: {writable: true, enumerable: true},
+            name: {value:"BPDiags", enumerable: true},
             message: {writable:true, enumerable: true},
             atvt: {writable:true, enumerable:true},
             err: {value:{}, writable:true, enumerable:true}
         });
 
-        if (_err && (typeof _err === "string"))
+        if (_err!==undefined && _err!==null && (typeof _err === "string"))
         {
             this.atvt = BPError.atvt; // Take value of page atvt
-            this.message = _err;
-            this.name = "BPDiags";
+            this.message = _err || (acode ? msg[acode] : "" + gcode?msg[gcode]:'');
+            this.err.name = "BPDiags";
             this.err.acode = acode || 'Diag';
             this.err.gcode = gcode;
         }
         else if (_err && (typeof _err === "object"))
         {
-            this.name = _err.name;
-            this.atvt = BPError.atvt;
-            this.err = _err;
-            
-            if (_err.name === "PluginError" || _err.acode) {
+            if (_err.name === "PluginDiags") 
+            {
+                this.atvt = BPError.atvt;
+                this.err = _err;
                 this.message = _err.gmsg || _err.smsg || _err.acode || _err.gcode || _err.scode;
             }
-            else if (_err.name === "BPDiags") {
+            else if (_err.name === "BPDiags") 
+            {
                 // Copy Construct
+                //_err.atvt may be a json object hence need to wrap it with Activity object
                 this.atvt = new Activity(_err.atvt);
                 this.message = _err.message;
                 this.err = _err.err;
             }
             else { // System error
+                this.err = _err;
+                this.atvt = BPError.atvt;
                 switch (_err.constructor) {
                     case Error:
                     case RangeError:
@@ -223,7 +229,7 @@ var BP_MOD_ERROR = (function()
     {
         var msg = (this.message || "Something went wrong :(" ),
             diags =((this.err.acode==='Diag') ? '' :  (
-                   "\n" + this.name + "://" + 
+                   "\n" + this.err.name + "://" + 
                    (this.atvt? "?activity=" + this.atvt.toString() : "") +
                    (this.err.acode? "&acode="+this.err.acode : "") +
                    (this.err.gcode? "&gcode="+this.err.gcode : "") + 
@@ -244,16 +250,8 @@ var BP_MOD_ERROR = (function()
     
     function alert (arg) 
     {
-        var msg;
-        if (arg && (typeof arg === 'string')) {
-            msg = arg;
-        }
-        else if (arg && (typeof arg === 'object')) {
-            msg = arg.message;
-        }
-        if (msg) {
-            window.alert(msg);
-        }
+        var be = new BPError(arg);
+        window.alert(be.toString());
     }
     
     function log (arg)
@@ -270,7 +268,7 @@ var BP_MOD_ERROR = (function()
             console.log(be.toString());
         }
         else {
-            alert(be.toString());
+            console.log(be.toString());
         }
     }
     

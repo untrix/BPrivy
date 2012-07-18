@@ -115,6 +115,25 @@ var BP_MOD_COMMON = (function()
         return loc;
     }
     
+    function stripLoc (loc)
+    {
+        var out = {};
+        if (loc.protocol) {
+            out.S = loc.protocol;
+        }
+        if (loc.hostname) {
+            out.H = loc.hostname;
+        }
+        if (loc.port) {
+            out.O = Number(loc.port);
+        }
+        if (loc.pathname && loc.pathname != "/") {
+            out.P = loc.pathname;
+        }
+        
+        return out;
+    }
+
     function stripQuotes(s)
     {
         var a = s.match(/^[\s\"\']*([^\s\"\']*)[\s\"\']*$/);
@@ -183,7 +202,8 @@ var BP_MOD_COMMON = (function()
         stopPropagation: {value: stopPropagation},
         preventDefault: {value: preventDefault},
         newInherited: {value: newInherited},
-        copy: {value: copy}
+        copy: {value: copy},
+        stripLoc: {value: stripLoc}
     });
     Object.freeze(iface);
 
