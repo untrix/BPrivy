@@ -22,16 +22,16 @@ var BP_MOD_TRAITS = (function ()
     m = IMPORT(BP_MOD_COMMON);
     var PROTO_HTTP = IMPORT(m.PROTO_HTTP),
         PROTO_HTTPS = IMPORT(m.PROTO_HTTPS),
-        dt_eRecord = IMPORT(m.dt_eRecord),
-        dt_pRecord = IMPORT(m.dt_pRecord),
-        dt_default = "DefaultDT",
         newInherited=IMPORT(m.newInherited);
     /** @import-module-begin Connect */
     m = IMPORT(BP_MOD_CONNECT);        
     var newPRecord = IMPORT(m.newPRecord),
-        newERecord = IMPORT(m.newERecord);
-
+        newERecord = IMPORT(m.newERecord),
+        dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord),
+        dt_default = "DefaultDT";
     /** @import-module-end **/    m = null;
+    
     /** @globals-begin */
     var FT = Object.freeze({
         text: 1,
@@ -54,8 +54,8 @@ var BP_MOD_TRAITS = (function ()
     Object.defineProperties(P_UI_TRAITS,
     {
         dt: {value: dt_pRecord},
-        key: {value: {uiName:"Username", apiName:"userid", ft:FT.text}},
-        fields: {value: [{uiName:"Password", apiName:"pass", ft:FT.pass}]},
+        key: {value: {uiName:"Username", apiName:"u", ft:FT.text}},
+        fields: {value: [{uiName:"Password", apiName:"p", ft:FT.pass}]},
         protocols: {value: ['http:', 'https:']},
         showRecs: {value: function(loc) {if (loc) {
             return this.protocols.indexOf(loc.protocol.toLowerCase())!==-1;}}}
@@ -90,10 +90,10 @@ var BP_MOD_TRAITS = (function ()
             }
         },
         imbue: {
-            value: function (rec) {
+            value: function (rec, dt) {
                 Object.defineProperty(rec, "uiTraits", 
                 {
-                    value: this.getTraits(rec.dt) // enumerable, writable, configurable=false.
+                    value: this.getTraits(dt) // enumerable, writable, configurable=false.
                 });
                 return rec;
             }
@@ -159,5 +159,7 @@ var BP_MOD_TRAITS = (function ()
         RecsIterator: {value: RecsIterator},
         DTIterator: {value: DTIterator}
     }); Object.freeze(iface);
+    
+    console.log("loaded traits");
     return iface;
 }());

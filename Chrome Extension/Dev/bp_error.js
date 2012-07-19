@@ -285,6 +285,7 @@ var BP_MOD_ERROR = (function()
         msg: msg
     };
     Object.freeze(iface);
+    console.log("loaded error");
     return iface;
     /** @end-class-def BPError **/
 }());

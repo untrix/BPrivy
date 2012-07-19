@@ -24,11 +24,14 @@ namespace bp
 	const bp::ustring PROP_A_CODE				(L"acode");
 	const bp::ustring PROP_PATH					(L"path");
 	const bp::ustring PROP_PATH2				(L"path2");
+
 	const bp::ustring PROP_HIDE					(L"hide");
 	const bp::ustring PROP_FILE_FILTER			(L"filter");
 	const bp::ustring PROP_DIALOG_TITLE			(L"dtitle");
 	const bp::ustring PROP_DIALOG_BUTTON		(L"dbutton");
 	const bp::ustring PROP_CLEAR_HISTORY		(L"clrHist");
+	const bp::ustring PROP_PREFIX				(L"prefix");
+	const bp::ustring PROP_SUFFIX				(L"suffix");
 
 	const bp::ustring PROP_INFO					(L"inf");
 	const bp::ustring PROP_LSDIR				(L"lsd");
@@ -67,6 +70,8 @@ namespace bp
 	// Action would've resulted in clobbering
 	const bp::ustring BPCODE_WOULD_CLOBBER		(L"WouldClobber");
 	const bp::ustring BPCODE_PATH_NOT_EXIST	(L"PathNotExist");
+	const bp::ustring BPCODE_FILE_TOO_BIG		(L"FileTooBig");
+	const bp::ustring BPCODE_INVALID_COPY_ARGS	(L"InvalidCopyArgs");
 
 	const bp::ustring EXCEPTION_NAME			(L"PluginDiags");
 	const bp::ustring& PCodeToACodeW(int ev)

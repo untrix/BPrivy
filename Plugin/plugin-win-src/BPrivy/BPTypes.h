@@ -30,6 +30,7 @@ namespace bp
 		operator T* ()	{
 			return m_P;
 		}
+		void		Copy		(bp::msize32_t pos, const T* p, bp::msize32_t siz);
 		T*					m_P;
 		bp::msize32_t		m_Siz;
 	};
@@ -58,6 +59,21 @@ namespace bp
 		m_P[siz>=m_Siz?m_Siz-1:siz] = 0;
 	}
 
+	template <typename T> void
+	MemGuard<T>::Copy(bp::msize32_t pos, const T* buf, bp::msize32_t siz)
+	{
+		if (siz>0)
+		{
+			if ((pos>=0) && (pos+siz<m_Siz) && buf)
+			{
+				memcpy((void*)(m_P+pos), (const void*)buf, siz*sizeof(T));
+			}
+			else 
+			{
+				throw BPError(ACODE_CANT_PROCEED, BPCODE_INVALID_COPY_ARGS);
+			}
+		}
+	}
 } // end namespace bp
 
 #endif // H_BP_TYPES

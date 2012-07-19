@@ -446,6 +446,19 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 	return false;
 }
 
+bool GetDataProperty(bp::JSObject* p, const bp::ustring& name, bp::utf8& val)
+{
+	if (p->HasProperty(name))
+	try {
+		FB::variant t_var = p->GetProperty(name);
+		val = t_var.convert_cast<bp::utf8>();
+		return true;	
+	} catch (...) {}
+
+	return false;
+}
+
+
 bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* out, const boost::optional<unsigned long long>& o_pos)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ".csv", ""};
@@ -471,26 +484,42 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* out, const boost::optio
 		
 		LARGE_INTEGER fsiz;
 		BOOL rval = GetFileSizeEx(h.m_Handle, &fsiz);
-		THROW_IF (rval == 0)
+		THROW_IF (rval == 0);
 
-		msize32_t siz = ((fsiz.QuadPart-pos) > bp::MAX_READ_BYTES) ? bp::MAX_READ_BYTES : static_cast<msize32_t>(fsiz.QuadPart);
+		bp::utf8 pfx, sfx;
+		msize32_t bsiz = 0, siz = 0;
+
+		if ((fsiz.QuadPart-pos) > bp::MAX_READ_BYTES)
+		{
+			//siz = bp::MAX_READ_BYTES;
+			throw BPError(ACODE_RESOURCE_UNAVAILABLE, BPCODE_FILE_TOO_BIG);
+		}
+		else 
+		{
+			siz = static_cast<msize32_t>(fsiz.QuadPart);
+			GetDataProperty(out, PROP_PREFIX, pfx);
+			GetDataProperty(out, PROP_SUFFIX, sfx);
+			bsiz = siz + (pfx.length() + sfx.length());
+		}
 
 		h.PrepareForRead(pos, siz); // throws
 
 		// Allocates memory for UTF8 bytes plus null-terminator.
-		MemGuard<char> buf((siz+1));
+		MemGuard<char> buf((bsiz+1));
 		DWORD nread=0;
-		rval = ReadFile(h.m_Handle, (char*)buf, siz, &nread, NULL);
+		rval = ReadFile(h.m_Handle, ((char*)buf)+pfx.length(), siz, &nread, NULL);
 		THROW_IF (rval==0); // throws
 		CHECK((siz==nread)); // throws
 
-		buf.NullTerm(siz);
+		buf.Copy(0, pfx.data(), pfx.length());
+		buf.Copy(siz+pfx.length(), sfx.data(), sfx.length());
+		buf.NullTerm(bsiz);
 		//FB::VariantMap m;
 		//m.insert(VT(PROP_DATA, static_cast<char*>(buf.m_P)));
 		//m.insert(VT(PROP_FILESIZE, siz));
 		//out->SetProperty(PROP_READFILE, m);
 		out->SetProperty(PROP_DATA, buf);
-		out->SetProperty(PROP_FILESIZE, siz);
+		out->SetProperty(PROP_FILESIZE, bsiz);
 		return true;
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(out)

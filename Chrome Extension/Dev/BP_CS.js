@@ -69,22 +69,23 @@ var BP_MOD_CS = (function(g_win)
     var m;
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
-    var encrypt = IMPORT(m.encrypt);
-    var decrypt = IMPORT(m.decrypt);
-    var stopPropagation = IMPORT(m.stopPropagation);
-    var preventDefault = IMPORT(m.preventDefault);    
+    var encrypt = IMPORT(m.encrypt),
+        decrypt = IMPORT(m.decrypt),
+        stopPropagation = IMPORT(m.stopPropagation),
+        preventDefault = IMPORT(m.preventDefault);
     /** @import-module-begin CSPlatform */
     m = BP_MOD_CS_PLAT;
     var registerMsgListener = IMPORT(m.registerMsgListener);
     var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
-    var getRecs = IMPORT(m.getRecs);
-    var deleteRecord = IMPORT(m.deleteRecord);
-    var saveRecord = IMPORT(m.saveRecord);
-    var newERecord = IMPORT(m.newERecord);
-    var fn_userid = IMPORT(m.fn_userid);   // Represents data-type userid
-    var fn_pass = IMPORT(m.fn_pass);        // Represents data-type password
+    var getRecs = IMPORT(m.getRecs),
+        dt_eRecord = IMPORT(m.dt_eRecord),
+        deleteRecord = IMPORT(m.deleteRecord),
+        saveRecord = IMPORT(m.saveRecord),
+        newERecord = IMPORT(m.newERecord),
+        fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
+        fn_pass = IMPORT(m.fn_pass);        // Represents data-type password
     /** @import-module-begin Panel */
     //m = BP_MOD_PANEL;
     //var createPanel = IMPORT(m.createPanel);
@@ -134,17 +135,17 @@ var BP_MOD_CS = (function(g_win)
             el = doc.getElementById(er.id);
             if (!el) {el = null;}
         }
-        if((el === undefined) && er.name) // (!er.id), therefore search based on field name
+        if((el === undefined) && er.n) // (!er.id), therefore search based on field name
         {
-            nl = doc.getElementsByName(er.name);
+            nl = doc.getElementsByName(er.n);
 
             for (i=0; i<nl.length; i++) 
             {
-                if (nl.item(i).tagName !== er.tagName) {
+                if (nl.item(i).tagName !== er.t) {
                         continue;
                 }
-                if ((er.type) && 
-                    (nl.item(i).type !== er.type)) {
+                if ((er.y) && 
+                    (nl.item(i).type !== er.y)) {
                         continue;
                 }
                 ell.push(nl.item(i));
@@ -195,7 +196,7 @@ var BP_MOD_CS = (function(g_win)
             if (ua) {
                 if (ua.length === 1) {
                     u = ua[0];
-                    p = pRecsMap[ua[0]].curr.pass;
+                    p = pRecsMap[ua[0]].curr.p;
                 }
                 else if (ua.length > 1) {
                     // if there is more than one username, do not autofill, but
@@ -225,11 +226,6 @@ var BP_MOD_CS = (function(g_win)
                         // yet, it has been shown to be not useful.
                         // Therefore purge it form the K-DB.
                       
-                        // Location gets deleted from e-rec when it is
-                        // inserted into the DB. Therefore we'll need to
-                        // put it back in.
-                        uer.loc = g_loc; // TODO: This may not be required anymore.
-
                         // TODO: Can't assume that i===0 implies full url match.
                         // Need to construct a URLA from uer.loc and compare it with
                         // g_loc. Commenting out for the time being.
@@ -242,11 +238,6 @@ var BP_MOD_CS = (function(g_win)
                         // The data in the E-Record was an exact URL match
                         // yet, it has been shown to be not useful.
                         // Therefore purge it form the K-DB.
-
-                        // Location gets deleted from e-rec when it is
-                        // inserted into the DB. Therefore we'll need to
-                        // put it back in.
-                        per.loc = g_loc; // TODO: This may not be required anymore.
 
                         // TODO: Can't assume that i===0 implies full url match.
                         // Need to construct a URLA from uer.loc and compare it with
@@ -487,7 +478,7 @@ var BP_MOD_CS = (function(g_win)
                                       e.target.id,
                                       e.target.name,
                                       e.target.type);
-                saveRecord(eRec);
+                saveRecord(eRec, dt_eRecord);
 
                 data = e.dataTransfer.getData(CT_TEXT_PLAIN);
                 if (data) {
@@ -531,6 +522,7 @@ var BP_MOD_CS = (function(g_win)
         }
     }
     
+    console.log("loaded CS");
     return main();
     
 }(window));

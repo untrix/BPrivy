@@ -1,7 +1,7 @@
 {
   "name": "BPrivy",
   "version": "0.5",
-  "description":"BPrivy: Password Wallet. Pluggable and Detachable Password Store. Stay in full control of your passwords. Store, move,copy and merge them wherever and whenever you like - in memory cards, in your smart-phone(s)/tablets, on your computers, on your favorite cloud-drives. Autofill in all major browsers.",
+  "description":"BPrivy: Password Wallet. Pluggable and Detachable Password Store. Stay in full control of your passwords. Store, move,copy and merge them wherever and whenever you like - in memory cards, on computer drives, or your favorite cloud-drives (drop-box etc.) and enjoy automatic sync! Autofill passwords in Google Chrome.",
   "icons": {
 	     "128": "icons/icon128.png",
   	     "16": "icons/icon16.png"

@@ -24,9 +24,7 @@ var BP_MOD_FILESTORE = (function()
         MOD_ERROR = m;
     /** @import-module-begin common **/
     m = BP_MOD_COMMON;
-    var dt_eRecord = IMPORT(m.dt_eRecord),
-        dt_pRecord = IMPORT(m.dt_pRecord),
-        toJson = IMPORT(m.toJson),
+    var toJson = IMPORT(m.toJson),
         uid_aliases = IMPORT(m.uid_aliases),
         pass_aliases= IMPORT(m.pass_aliases),
         url_aliases = IMPORT(m.url_aliases),
@@ -34,7 +32,9 @@ var BP_MOD_FILESTORE = (function()
         stripQuotes = IMPORT(m.stripQuotes);
     /** @import-module-begin connector **/
     m = BP_MOD_CONNECT; 
-    var newPRecord = IMPORT(m.newPRecord);
+    var dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord),
+        newPRecord = IMPORT(m.newPRecord);
     /** @import-module-begin MemStore **/
     var MEM_STORE = IMPORT(BP_MOD_MEMSTORE);
     /** @import-module-end **/    m = null;
@@ -165,10 +165,10 @@ var BP_MOD_FILESTORE = (function()
         return cullDBName(g_dbPath);
     }
     
-    function insertRec(rec)
+    function insertRec(rec, dt)
     {
         var result = false, o={};
-        switch (rec.dt) {
+        switch (dt) {
             case dt_eRecord:
                 result = BP_PLUGIN.appendFile(g_path_k, rec_sep+JSON.stringify(rec), o);
                 break;
@@ -184,16 +184,15 @@ var BP_MOD_FILESTORE = (function()
         return result;
     }
     
-    function loadFile(filePath)
+    function loadFile(filePath, dt)
     {
-        var i, o={prepend: '[{"header":true}', append: "]"}; // Format the return data like a JSON array.
+        var i, o={prefix: '[{"header":true}', suffix: "]"}; // Format the return data like a JSON array.
         BP_PLUGIN.readFile(filePath, o);
-        var data = '[{"header":true}' + o.dat + "]";
-        var recs = JSON.parse(data);
+        var recs = JSON.parse(o.dat);
         if (recs && (typeof recs === 'object') && recs.constructor === Array) {
             for (i=recs.length-1; i>0; i--) {
                 try {
-                    MEM_STORE.insertRec(recs[i]);
+                    MEM_STORE.insertRec(recs[i], dt);
                 } catch (e) {
                     var bpe = new BPError(e);
                     BP_MOD_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
@@ -253,7 +252,7 @@ var BP_MOD_FILESTORE = (function()
             {
                 if (f[ file_names[i] ].ext === ext_Open) {
                     try {
-                        loadFile(path_dir_p + file_names[i]);
+                        loadFile(path_dir_p + file_names[i], dt_pRecord);
                     } catch (e) {
                         var bpe = new BPError(e);
                         BP_MOD_ERROR.warn(bpe);
@@ -272,7 +271,7 @@ var BP_MOD_FILESTORE = (function()
             {
                 if (f[ file_names[i] ].ext === ext_Open) {
                     try {
-                        loadFile(path_dir_k + file_names[i]);
+                        loadFile(path_dir_k + file_names[i], dt_eRecord);
                     } 
                     catch (e) {
                         var bpe = new BPError(e);
@@ -522,14 +521,15 @@ var BP_MOD_FILESTORE = (function()
                         prec = newPRecord(parseURL(csv[pidx.url]), Date.now(), 
                                           csv[pidx.userid],
                                           csv[pidx.pass]);
-                        // prec.userid = csv[pidx.userid];                        // prec.pass = csv[pidx.pass];                        // prec.loc = parseURL(csv[pidx.url]);
+                        // prec.u = csv[pidx.userid];                        // prec.p = csv[pidx.pass];                        // prec.l = parseURL(csv[pidx.url]);
                         if (!MEM_STORE.PREC_TRAITS.isValid(prec)) {
                             console.log("Discarding invalid csv record - " + JSON.stringify(csv));
                             prec = null; continue;
                         }
-                        if (MEM_STORE.insertRec(prec)) {
+                        if (MEM_STORE.insertRec(prec, dt_pRecord)) {
                             try {
-                                insertRec(prec);                                
+                                //TODO: Process rec.notes here.
+                                insertRec(prec, dt_pRecord);                                
                             } catch (e) {
                                 var bpe = new BPError(e);
                                 BP_MOD_ERROR.log("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());
@@ -569,6 +569,7 @@ var BP_MOD_FILESTORE = (function()
     });
     Object.freeze(iface);
 
+    console.log("loaded filestore");
     return iface;
 
 }());

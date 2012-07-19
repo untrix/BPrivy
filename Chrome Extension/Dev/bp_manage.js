@@ -200,5 +200,6 @@ var BP_MOD_MANAGE = (function ()
     });
     Object.freeze(iface);
 
-    return iface;    
+    console.log("loaded manage");
+    return iface;
 }());

@@ -45,6 +45,8 @@ namespace bp
 	extern const bp::ustring PROP_DIALOG_TITLE;
 	extern const bp::ustring PROP_DIALOG_BUTTON;
 	extern const bp::ustring PROP_CLEAR_HISTORY;
+	extern const bp::ustring PROP_PREFIX;
+	extern const bp::ustring PROP_SUFFIX;
 
 	/***** Actionable Codes. GENERIC & System Error Codes are mapped to one of these *****/
  	// User Actionable. User should resolve the situation
@@ -163,6 +165,8 @@ namespace bp
 	extern const bp::ustring BPCODE_REPARSE_POINT;
 	extern const bp::ustring BPCODE_IS_SYMLINK;
 	extern const bp::ustring BPCODE_WOULD_CLOBBER;//Exception thrown to prevent clobbering
+	extern const bp::ustring BPCODE_FILE_TOO_BIG;
+	extern const bp::ustring BPCODE_INVALID_COPY_ARGS;
 
 	// Integer constants
 	extern const msize32_t MAX_READ_BYTES;

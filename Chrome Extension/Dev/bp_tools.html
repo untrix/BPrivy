@@ -58,13 +58,67 @@
     {
       var FILESTORE = IMPORT(BP_MOD_FILESTORE),
           MEM_STORE  = IMPORT(BP_MOD_MEMSTORE),
-          ETLDRec = IMPORT(MEM_STORE.ETLDRec),
+          dt_etld = IMPORT(BP_MOD_CONNECT.dt_etld),
           ETLDDict;
 
       BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
       console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
       FILESTORE.init();
-          
+
+    // Pretends to be MEM_STORE.DURL
+    function DURL2 (l) // host.domain
+    {
+        var ha;
+
+        // Split hostname into an array of strings.       
+        ha = l.H.split('.');
+        ha.reverse();
+        
+        // Object structure definition
+        Object.defineProperties(this,
+        {
+            _a      : {value: ha, enumerable: true}, //writable=false, configurable=false
+            _i      : {value: 0, writable: true, enumerable: true}, //configurable=false
+        });
+        Object.seal(this);
+    }
+    DURL2.prototype = MEM_STORE.DURL.prototype;
+      
+ 
+    // Pretends to be MEM_STORE.DRecord
+    function DRecord2(rec, dt)
+    {
+        // Construct url segment iterator.
+        this.urli = new DURL2(rec.l, dt);
+        this.rec = rec;
+        this.dt = dt;
+        //DT_TRAITS.imbue(rec, dt);
+        Object.defineProperty(this, "notes", {value: {}});//By default, writable, enumerable, configurable = false
+                
+        Object.freeze(this);
+    }
+
+
+    function ETLDMark (str)
+    {
+        if (str.charCodeAt(0)===33) // exclaimation point
+        {
+            str = str.slice(1);
+            Object.defineProperties(this,
+            {
+                l: {value: {H:str}, configurable:true, enumerable:true},
+                val: {value: 2, enumerable: true}
+            });
+        }
+        else {
+            Object.defineProperties(this,
+            {
+                l: {value: {H:str}, configurable:true, enumerable:true},
+                val: {value: 1, enumerable: true}
+            });            
+        }
+    }
+             
       function loadETLD(path, dnode)
       {
           var props = ['rule'], csv, etld, i,
@@ -73,8 +127,9 @@
               {
                   if (!csv) {continue;} // unparsable line
                   
-                  etld = new ETLDRec(csv[0]);
-                  MEM_STORE.insertRec(etld, dnode);
+                  etld = new ETLDMark(csv[0]);
+                  dnode.insert(new DRecord2(etld, dt_etld));
+                  //MEM_STORE.insertRec(etld, dt_etld, dnode);
               }
       }
       
@@ -99,7 +154,7 @@
           // if (BP_PLUGIN.appendFile(path, "var ETLDDict=JSON.parse('", o) &&          // BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o) &&          // BP_PLUGIN.appendFile(path, "');", o)) {
           if (BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o))
           {
-            window.alert("Done");
+              window.alert("Done");
           }
           else {
             window.alert("Failed");

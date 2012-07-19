@@ -90,5 +90,6 @@ var BP_MOD_CS_PLAT = (function()
         }
     };
     
+    console.log("loaded cs_plat");    
     return module;
 }());

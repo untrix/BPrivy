@@ -61,5 +61,6 @@ var  BP_MOD_PLAT = (function()
     };
     
     Object.seal(module);
+    console.log("loaded main_plat");
     return module;
 }());

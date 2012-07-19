@@ -25,8 +25,6 @@
     var cm_loadDB = IMPORT(m.cm_loadDB);
     var cm_createDB = IMPORT(m.cm_createDB);
     var cm_getDBPath = IMPORT(m.cm_getDBPath);
-    /** @import-module-begin COMMON */
-    m = BP_MOD_COMMON;
     var dt_eRecord = IMPORT(m.dt_eRecord);
     var dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin MemStore */
@@ -41,23 +39,25 @@
 
     function onRequest(rq, sender, funcSendResponse)
     {
-        var result, recs, dbPath;
-        console.info("Mothership Received object of type " + rq.dt);
+        var result, recs, dbPath,
+            cm = rq.cm;
+        delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
+        console.info("Mothership Received object of type " + cm);
         
         rq.atvt ? (BPError.atvt = new Activity(rq.atvt)) : (BPError.atvt = new Activity("BPMain::OnRequest"));
         
         try  {
-            switch (rq.dt) {
+            switch (cm) {
                 case dt_eRecord:
                     BPError.push("SaveERecord");
-                    result = MEM_STORE.insertRec(rq) &&
-                             FILE_STORE.insertRec(rq);
+                    result = MEM_STORE.insertRec(rq, dt_eRecord) &&
+                             FILE_STORE.insertRec(rq, dt_eRecord);
                     funcSendResponse({result:result});
                     break;
                 case dt_pRecord:
                     BPError.push("SavePRecord");
-                    result = MEM_STORE.insertRec(rq) &&
-                             FILE_STORE.insertRec(rq);
+                    result = MEM_STORE.insertRec(rq, dt_pRecord) &&
+                             FILE_STORE.insertRec(rq, dt_pRecord);
                     funcSendResponse({result:result});
                     break;
                 case cm_getRecs:
@@ -96,30 +96,29 @@
         }
     }
 
-    // function onload ()     // {
+    try
+    {
         var dbPath = localStorage["db.path"];
-        try
+        initScaffolding(doc);
+        registerMsgListener(onRequest);
+        FILE_STORE.init();
+        MEM_STORE.loadETLD();
+        MEM_STORE.clear();
+        if (dbPath)
         {
-            initScaffolding(doc);
-            registerMsgListener(onRequest);
-            FILE_STORE.init();
-            MEM_STORE.loadETLD();
-            if (dbPath)
-            {
-                BPError.atvt = new Activity('LoadDBAtInit');
-                dbPath = FILE_STORE.loadDB(dbPath);
-    
-                if (!dbPath) { // db-load failed, remove the stored dbPath value.
-                    throw new BPError("DB Load Failed");
-                }
+            BPError.atvt = new Activity('LoadDBAtInit');
+            dbPath = FILE_STORE.loadDB(dbPath);
+
+            if (!dbPath) { // db-load failed, remove the stored dbPath value.
+                throw new BPError("DB Load Failed");
             }
-        } catch (e)
-        {
-            
-            delete localStorage['db.path'];
-            MEM_STORE.clear();
-            BP_MOD_ERROR.logwarn(e);
         }
-    // }    // $(document).ready(onload);
-      
+    } catch (e)
+    {
+        
+        delete localStorage['db.path'];
+        MEM_STORE.clear();
+        BP_MOD_ERROR.logwarn(e);
+    }
+    console.log("loaded main");
 }(document));

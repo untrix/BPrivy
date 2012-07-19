@@ -8,6 +8,7 @@
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
   BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_W$, BP_MOD_TRAITS */
+ 
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -24,8 +25,6 @@ var BP_MOD_WDL = (function ()
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
         preventDefault = IMPORT(m.preventDefault),
-        dt_eRecord = IMPORT(m.dt_eRecord),
-        dt_pRecord = IMPORT(m.dt_pRecord),
         newInherited = IMPORT(m.newInherited);
     /** @import-module-begin W$ */
     m = IMPORT(BP_MOD_W$);
@@ -40,10 +39,12 @@ var BP_MOD_WDL = (function ()
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
     var fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
-        fn_pass = IMPORT(m.fn_pass);        // Represents data-type password
-    var newPRecord = IMPORT(m.newPRecord);
-    var saveRecord = IMPORT(m.saveRecord);
-    var deleteRecord = IMPORT(m.deleteRecord);
+        fn_pass = IMPORT(m.fn_pass),        // Represents data-type password
+        dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord),
+        newPRecord = IMPORT(m.newPRecord),
+        saveRecord = IMPORT(m.saveRecord),
+        deleteRecord = IMPORT(m.deleteRecord);
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
@@ -265,8 +266,8 @@ var BP_MOD_WDL = (function ()
             
             if (pRec)
             {
-                u = pRec.userid;
-                p = pRec.pass;
+                u = pRec.u;
+                p = pRec.p;
             }
             else { // create a new pRec and save it back to ioItem.
                 pRec = newPRecord(ioItem.loc);
@@ -302,9 +303,9 @@ var BP_MOD_WDL = (function ()
             {
                 var ioItem = this.ioItem,
                     nU = this.u.el.value,
-                    oU = ioItem.rec? ioItem.rec.userid: undefined,
+                    oU = ioItem.rec? ioItem.rec.u: undefined,
                     nP = encrypt(this.p.el.value),
-                    oP = ioItem.rec? ioItem.rec.pass: undefined;
+                    oP = ioItem.rec? ioItem.rec.p: undefined;
                 
                 if (!isValidInput(nU) || !isValidInput(nP)) {
                     return false;
@@ -314,7 +315,7 @@ var BP_MOD_WDL = (function ()
                 {
                     // save to db
                     var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
-                    saveRecord(pRec);
+                    saveRecord(pRec, dt_pRecord);
                     //ioItem.rec = pRec;
                     if (oU && (nU !== oU)) {
                         this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
@@ -326,7 +327,7 @@ var BP_MOD_WDL = (function ()
             deleteRecord: {value: function(dt, key)
             {
                 if (dt === dt_pRecord) {
-                    deleteRecord({loc:this.ioItem.loc, userid:key});
+                    deleteRecord({loc:this.ioItem.loc, u:key});
                 }
             }}
         })
@@ -340,8 +341,8 @@ var BP_MOD_WDL = (function ()
                 ioItem = w$ctx.ioItem,
                 pRec = (ioItem && ioItem.rec) ? ioItem.rec:undefined;
             if (pRec) {
-                u = pRec.userid;
-                p = pRec.pass;
+                u = pRec.u;
+                p = pRec.p;
 
                 return {
                 tag:'div', 
@@ -564,5 +565,6 @@ var BP_MOD_WDL = (function ()
        CT_BP_PASS: CT_BP_PASS
     };
     
+    console.log("loaded wdl");
     return Object.freeze(iface);
 }());

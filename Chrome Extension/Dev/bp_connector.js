@@ -23,47 +23,99 @@ var BP_MOD_CONNECT = (function ()
     var m = BP_MOD_CS_PLAT;
     var postMsgToMothership = IMPORT(m.postMsgToMothership);
     var rpcToMothership = IMPORT(m.rpcToMothership);
-    /** @import-module-begin Common **/
-    m = BP_MOD_COMMON; 
-    var dt_eRecord = IMPORT(m.dt_eRecord),
-        dt_pRecord = IMPORT(m.dt_pRecord),
-        stripLoc = IMPORT(m.stripLoc);
     /** @import-module-end **/    m = null;
     
+    /** 
+     * @constant Used for multiple purposes. Therefore be careful of what chars
+     * you use in the string.
+     * 1. As a data-type (class) identifier within in-memory objects.
+     * 2. As a component of filesystem directory/filenames of ADB. Therefore
+     *    name should be short and lowercase. NTFS and FAT ignores case. Do not
+     *    use any chars that are disallowed in any filesystem (NTFS, NFS, FAT,
+     *    ext1,2,3&4, CIFS/SMB, WebDAV, GFS, any FS on which a customer may want to store
+     *    their ADB).
+     * 3. As a component of tag-names inside DNodes. Hence keep it short. Do not
+     *    use any chars that are disallowed as Javascript properties.
+     * 4. These values will get marshalled into JSON files, therefore make sure
+     *    that they are all valid JSON property names (e.g. no backslash or quotes).
+     * 5. To represent the data-type in general at other places in the code ...
+     */
+    var dt_eRecord = "e";  // Represents a E-Record (html-element record). Value is persisted.
+    var dt_pRecord = "p";  // Represents a P-Record (password record). Value is persisted.
+    var dt_etld    = "m";   // Represents a ETLD (Public Suffix) record. Value is persisted.
+
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
     /** @constant */
-    var fn_userid = "userid";   // Represents field userid. Copy value from P_UI_TRAITS.
+    var fn_userid = "u";   // Represents field userid. Copy value from P_UI_TRAITS.
     /** @constant */
-    var fn_pass = "pass";       // Represents field password. Copy value from P_UI_TRAITS.
+    var fn_pass = "p";       // Represents field password. Copy value from P_UI_TRAITS.
     /** @constant */
     var cm_getRecs = "cm_getRecs";     // Represents a getDB command
     var cm_loadDB = "cm_loadDB";
     var cm_createDB = "cm_createDB";
     var cm_getDBPath = "cm_getDBPath";
     var cm_importCSV = "cm_importCSV";
+
+    var DICT_TRAITS={}, generic=undefined;
+    DICT_TRAITS[generic] = Object.freeze(
+    {
+        url_host:true,
+        url_path:true
+    });
+    
+    DICT_TRAITS[dt_pRecord] = Object.freeze(
+    {
+        url_host:true,
+        domain_only:true // Store records agains domain only - e.g. facebook.com
+        // instead of apps.facebook.com.
+    });
+
+    DICT_TRAITS[dt_eRecord] = Object.freeze(
+    {
+        url_host:true,
+        url_path:true,
+    });
+
+    DICT_TRAITS[dt_etld] = Object.freeze(
+    {
+        url_host:true        
+    });
+    
+    function newL (loc, dt)
+    {
+        var out = {};
+        if (loc.hostname) {
+            out.H = loc.hostname;
+        }
+        if (DICT_TRAITS[dt].url_path && loc.pathname && loc.pathname !== "/") 
+        {
+            out.P = loc.pathname;
+        }
+
+        return out;
+    }
     
     /** Pseudo Inheritance */
-    function imbueARec(that, type, loc, date) // TODO: Make everything unwritable
+    function imbueARec(that, dt, loc, date) // TODO: Make everything unwritable
     {
         // date is number of milliseconds since midnight Jan 1, 1970.
         if (date !== undefined && date !== null)
         {
             date = Number(date); 
         }
-        // else {            // date = Date.now(); // returns a Number        // }
         
         Object.defineProperties(that,
         {
             // Record Type. Determines which dictionary this record belongs to and a bunch
             // of other logic based on DT_TRAITS
-            dt: {value: type, enumerable: true},
-            date: {value: date, enumerable: true},
+            //dt: {value: dt, enumerable: true},
+            tm: {value: date, enumerable: true},
             // URL that this record pertains to. Determines where the record will sit within the URL-trie.
             // We're stripping extra data and shortening property names so as to conserve space in memory
             // as well as on disk and processing cycles as well. This becomes important when one has to
             // ingest thousands of records (ETLD has about 7K records)
-            loc: {value: stripLoc(loc), enumerable: true}
+            l: {value: newL(loc, dt), enumerable: true}
         });
     }
     
@@ -72,11 +124,11 @@ var BP_MOD_CONNECT = (function ()
         imbueARec(this, dt_eRecord, loc, date);
         Object.defineProperties(this, 
         {
-            fieldName: {value: fieldName, enumerable: true},
-            tagName: {value: tagName, enumerable: true},
+            f: {value: fieldName, enumerable: true},
+            t: {value: tagName, enumerable: true},
             id: {value: id, enumerable: true},
-            name: {value: name, enumerable: true},
-            type: {value: type, enumerable: true}
+            n: {value: name, enumerable: true},
+            y: {value: type, enumerable: true}
         });
     }
     ERecord.prototype.toJson = function ()
@@ -92,8 +144,8 @@ var BP_MOD_CONNECT = (function ()
         imbueARec(this, dt_pRecord, loc, date);
         Object.defineProperties(this,
             {
-                userid: {value: userid, enumerable: true},
-                pass: {value: pass, enumerable: true}
+                u: {value: userid, enumerable: true},
+                p: {value: pass, enumerable: true}
             }
         );
     }
@@ -103,48 +155,54 @@ var BP_MOD_CONNECT = (function ()
         return new PRecord(loc, date, userid, pass);
     }
     
-    function createDB (dbName, dbDir, callbackFunc) 
+    function createDB (dbName, dbDir, callbackFunc)
     {
-        rpcToMothership({dt: cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
+        rpcToMothership({cm: cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
     }
 
-    function loadDB (dbPath, callbackFunc) 
+    function loadDB (dbPath, callbackFunc)
     {
-        rpcToMothership({dt: cm_loadDB, dbPath:dbPath}, callbackFunc);
+        rpcToMothership({cm: cm_loadDB, dbPath:dbPath}, callbackFunc);
     }
 
     function importCSV (dbPath, obfuscated, callbackFunc) 
     {
-        rpcToMothership({dt: cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
+        rpcToMothership({cm: cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
     }
 
     /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
-        var saveRecord = function (eRec)
+        var saveRecord = function (rec, dt)
         {
-            postMsgToMothership(eRec);
+            rec.cm = dt;
+            postMsgToMothership(rec);
         };
         
-        var deleteRecord = function (erec)
+        var deleteRecord = function (erec, dt)
         {
             console.log('Deleting Record ' + JSON.stringify(erec));
         };
         
         var getRecs = function(loc, callback)
         {
-            return rpcToMothership({dt:cm_getRecs, loc: loc}, callback);
+            return rpcToMothership({cm:cm_getRecs, loc: loc}, callback);
         };
         
         var getDBPath = function (callback)
         {
-            return rpcToMothership({dt:cm_getDBPath}, callback);
+            return rpcToMothership({cm:cm_getDBPath}, callback);
         };
 
         //Assemble the interface    
         var iface = {};
         Object.defineProperties(iface, 
         {
+            dt_eRecord: {value: dt_eRecord},
+            dt_pRecord: {value: dt_pRecord},
+            dt_etld:    {value: dt_etld},
+            DICT_TRAITS: {value: DICT_TRAITS},
+            newL: {value: newL},
             fn_userid: {value: fn_userid},
             fn_pass: {value: fn_pass},
             cm_getRecs: {value: cm_getRecs},
@@ -167,6 +225,7 @@ var BP_MOD_CONNECT = (function ()
         return iface;
     }
     
+    console.log("loaded connector");
     return getModuleInterface();
 
 }());

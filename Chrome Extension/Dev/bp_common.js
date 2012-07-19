@@ -16,24 +16,6 @@ var BP_MOD_COMMON = (function()
     /** @globals-begin */      
     var CSS_HIDDEN = "com-bprivy-hidden";
     /** 
-     * @constant Used for multiple purposes. Therefore be careful of what chars
-     * you use in the string.
-     * 1. As a data-type (class) identifier within in-memory objects.
-     * 2. As a component of filesystem directory/filenames of ADB. Therefore
-     *    name should be short and lowercase. NTFS and FAT ignores case. Do not
-     *    use any chars that are disallowed in any filesystem (NTFS, NFS, FAT,
-     *    ext1,2,3&4, CIFS/SMB, WebDAV, GFS, any FS on which a customer may want to store
-     *    their ADB).
-     * 3. As a component of tag-names inside DNodes. Hence keep it short. Do not
-     *    use any chars that are disallowed as Javascript properties.
-     * 4. These values will get marshalled into JSON files, therefore make sure
-     *    that they are all valid JSON property names (e.g. no backslash or quotes).
-     * 5. To represent the data-type in general at other places in the code ...
-     */
-    var dt_eRecord = "E-Rec";  // Represents a E-Record (html-element record). Value is persisted.
-    var dt_pRecord = "P-Rec";  // Represents a P-Record (password record). Value is persisted.
-    var dt_etld    = "ETLD";   // Represents a ETLD (Public Suffix) record. Value is persisted.
-    /** 
      * Tagname for dt_eRecords in the in-memory and file stores.
      * @constant
      * tag_eRecs is a property name that should never clash withe a URL segment. Hence the bracket
@@ -115,25 +97,6 @@ var BP_MOD_COMMON = (function()
         return loc;
     }
     
-    function stripLoc (loc)
-    {
-        var out = {};
-        if (loc.protocol) {
-            out.S = loc.protocol;
-        }
-        if (loc.hostname) {
-            out.H = loc.hostname;
-        }
-        if (loc.port) {
-            out.O = Number(loc.port);
-        }
-        if (loc.pathname && loc.pathname != "/") {
-            out.P = loc.pathname;
-        }
-        
-        return out;
-    }
-
     function stripQuotes(s)
     {
         var a = s.match(/^[\s\"\']*([^\s\"\']*)[\s\"\']*$/);
@@ -186,9 +149,6 @@ var BP_MOD_COMMON = (function()
     Object.defineProperties(iface, 
     {
         CSS_HIDDEN: {value: CSS_HIDDEN},
-        dt_eRecord: {value: dt_eRecord},
-        dt_pRecord: {value: dt_pRecord},
-        dt_etld:    {value: dt_etld},
         PROTO_HTTP: {value: PROTO_HTTP},
         PROTO_HTTPS: {value: PROTO_HTTPS},
         uid_aliases: {value: uid_aliases},
@@ -203,10 +163,10 @@ var BP_MOD_COMMON = (function()
         preventDefault: {value: preventDefault},
         newInherited: {value: newInherited},
         copy: {value: copy},
-        stripLoc: {value: stripLoc}
     });
     Object.freeze(iface);
 
+    console.log("loaded common");
     return iface;
         
 }());

@@ -260,7 +260,7 @@ var BP_MOD_W$ = (function ()
         return w$el;
     }
 
-    var iface = 
+    var iface = Object.freeze(
     {
        w$undefined: w$undefined,
        w$exec: w$exec,
@@ -268,6 +268,7 @@ var BP_MOD_W$ = (function ()
        w$set: w$set,
        w$defineProto: w$defineProto,
        Widget: WidgetElement
-   };
-   return Object.freeze(iface);
+   });
+   console.log("loaded w$");
+   return iface;
 }());
