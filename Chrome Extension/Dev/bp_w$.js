@@ -125,7 +125,7 @@ var BP_MOD_W$ = (function ()
         return w$el;
     }
     
-    function w$eventProxy (e)
+    function w$eTargetProxy (e)
     {
         var wel = w$get(e.currentTarget), func, wel2;
         if (wel) {
@@ -137,13 +137,24 @@ var BP_MOD_W$ = (function ()
         }
     }
     
-    function w$on (wel, on)
+    function w$eventProxy (e)
+    {
+        var wel = w$get(e.currentTarget), func;
+        if (wel) {
+            func = wel.w$.on? wel.w$.on[e.type] :undefined;
+        }
+        if (func) {
+            func.apply(wel, [e]);
+        }
+    }
+    
+    function w$on (wel, on, proxy)
     {
         if (wel && on) {
             wel.w$.on = on;
             var _on = {}, keys = Object.keys(on), i;
             for (i=keys.length-1; i>=0; i--) {
-                _on[keys[i]] = w$eventProxy;
+                _on[keys[i]] = proxy; //w$eventProxy;
             }
             addHandlers(wel.el, _on);    
         }
@@ -172,7 +183,7 @@ var BP_MOD_W$ = (function ()
             el = document.createElement(wdl.tag);
             $el = $(el);
         }
-        else {
+        else { // html
             $el = $(wdl.html); 
             el = $el[0];
         }
@@ -190,7 +201,9 @@ var BP_MOD_W$ = (function ()
             .prop(wdl.prop || {})
             .css(wdl.css || {})
             .addClass(wdl.addClass || {});
-        w$on(w$el, wdl.on); // Didn't want to use jQuery.on for fear of bad performance.
+
+        w$on(w$el, wdl.on, w$eventProxy); // will bind this to e.currentTarget
+        w$on(w$el, wdl.onTarget, w$eTargetProxy); // will bind this to e.target
 
         // Update w$ runtime env.
         w$.w$el = w$el;

@@ -55,7 +55,9 @@ var BP_MOD_CS_PLAT = (function()
         
         getURL: function(path)
         {
-            return chrome.extension.getURL(path);
+            var url = chrome.extension.getURL(path);
+            console.log("geturl returned "+url); 
+            return url;
         },
         
         getAbsPath: function(path)
