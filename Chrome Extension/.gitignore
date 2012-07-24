@@ -1,4 +1,4 @@
-*
-!.gitignore
-!Dev/*
-!README.txt
+*.zip
+*.pem
+*.crx
+Prod/*
