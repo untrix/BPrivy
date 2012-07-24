@@ -1,4 +1,6 @@
-*.zip
-*.pem
-*.crx
-Prod/*
+/*
+!Dev/
+#*.zip
+#*.pem
+#*.crx
+#Prod/*

@@ -49,7 +49,7 @@ function cat(src, dest, BASE)
 
 // cat([SRC+'dev_header.less', SRC+'bp_bootstrap.less', SRC+'bp_bootstrap-responsive.less', SRC+'bp.less'], 'bp.dev.less');// cat([SRC+'prod_header.less', SRC+'bp_bootstrap.less', SRC+'bp_bootstrap-responsive.less', SRC+'bp.less'], 'bp.prod.less');
 if (!fs.existsSync(path.resolve('dev_header.less'))) {
-    throw Error("You need to create a dev_header.less file based on dev_header.sample.less");
+    throw new Error("You need to create a dev_header.less file based on dev_header.sample.less");
 }
 cat(['dev_header.less', SRC+'bp_bootstrap.less'], 'bp.dev.less');
 cat(['prod_header.less', SRC+'bp_bootstrap.less'], 'bp.prod.less');

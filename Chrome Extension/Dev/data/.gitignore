@@ -1,4 +1,4 @@
-etld.*
-!etld.json
-!etld.txt
-!Readme.txt
+/etld.*
+!/etld.json
+!/etld.txt
+!/Readme.txt
