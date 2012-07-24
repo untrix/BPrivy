@@ -23,7 +23,7 @@
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1343156018944</id>
+			<id>1343162442747</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -32,7 +32,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343156018947</id>
+			<id>1343162442749</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -41,7 +41,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343156018949</id>
+			<id>1343162442751</id>
 			<name>Dev</name>
 			<type>9</type>
 			<matcher>
@@ -50,7 +50,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343156018952</id>
+			<id>1343162442753</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -59,7 +59,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343156018954</id>
+			<id>1343162442756</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -68,7 +68,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343156018957</id>
+			<id>1343162442758</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -77,7 +77,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343156018959</id>
+			<id>1343162442760</id>
 			<name>Dev</name>
 			<type>9</type>
 			<matcher>
@@ -86,7 +86,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343156018962</id>
+			<id>1343162442762</id>
 			<name>Dev</name>
 			<type>21</type>
 			<matcher>
@@ -95,12 +95,30 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342464413996</id>
+			<id>1343162442764</id>
+			<name>Dev</name>
+			<type>5</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-.gitignore</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1343162416238</id>
 			<name>Dev/build</name>
 			<type>5</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-build*</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1343162416240</id>
+			<name>Dev/build</name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-node_modules</arguments>
 			</matcher>
 		</filter>
 		<filter>

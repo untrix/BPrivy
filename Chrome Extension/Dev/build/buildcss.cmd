@@ -1,1 +1,1 @@
-recess --compile --compress ..\bp.less ..\bp_bootstrap-responsive.less ..\bp_bootstrap.less > ..\bp.css
+node buildcss.js ..
