@@ -8,15 +8,7 @@
     <meta name="author" content="sumeet@untrix.com">
     <!-- Stylesheets -->
     <link href="tp/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <style type="text/css">
-        body {
-            padding-top: 60px;
-            padding-bottom: 40px;
-        }
-        .sidebar-nav {
-            padding: 9px 0;
-        }
-    </style>
+    <style type="text/css">        body {            padding-top: 60px;            padding-bottom: 40px;        }        .sidebar-nav {            padding: 9px 0;        }    </style>
     <link href="tp/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
     <!-- Icons -->
     <link rel="shortcut icon" href="icons/icon16.png">
@@ -166,21 +158,5 @@
     <script src="bp_memstore.js"></script>
     <script src="bp_filestore.js"></script>
     <script src="bp_manage.js"></script>
-    <script type="text/javascript">
-      var BP_PLUGIN;
-      $(document).ready(function (e)
-        {
-          bpPluginLoaded();
-          BP_MOD_FILESTORE.init();
-          BP_MOD_MANAGE.onload();
-        });
-
-      function bpPluginLoaded ()
-      {
-        BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
-        console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
-        // var o={};        // if (BP_PLUGIN.ls("", o) && (o.lsd) && o.lsd.d)        // {          // //o = Object.keys(o.lsd.d);          // //$("#csvPath").typeahead({source: o});          // //BP_MOD_MANAGE.fillOptions("csvPathSelect", "");        // }
-      }        
-    </script>
   </body>
 </html>

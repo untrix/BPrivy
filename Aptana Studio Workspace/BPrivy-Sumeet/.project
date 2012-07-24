@@ -23,16 +23,16 @@
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1342592778799</id>
+			<id>1343156018944</id>
 			<name>Dev</name>
-			<type>21</type>
+			<type>5</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-bp*.js</arguments>
+				<arguments>1.0-name-matches-false-false-*.js</arguments>
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342592778801</id>
+			<id>1343156018947</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -41,7 +41,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342592778804</id>
+			<id>1343156018949</id>
 			<name>Dev</name>
 			<type>9</type>
 			<matcher>
@@ -50,25 +50,25 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342592778807</id>
+			<id>1343156018952</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-bp*.html</arguments>
+				<arguments>1.0-name-matches-false-false-*.html</arguments>
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342592778809</id>
+			<id>1343156018954</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-bp*.less</arguments>
+				<arguments>1.0-name-matches-false-false-*.less</arguments>
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342592778812</id>
+			<id>1343156018957</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -77,12 +77,21 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1342592778814</id>
+			<id>1343156018959</id>
 			<name>Dev</name>
 			<type>9</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-data</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1343156018962</id>
+			<name>Dev</name>
+			<type>21</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-Readme.*</arguments>
 			</matcher>
 		</filter>
 		<filter>

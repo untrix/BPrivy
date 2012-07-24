@@ -135,7 +135,8 @@ var BP_MOD_WDL = (function ()
         var imgPath = ctx.imgPath;
         return {
             tag:"img", 
-            attrs:{ src:getURL(imgPath) }};
+            attrs:{ src:getURL(imgPath) }
+        };
     }
     
     function cs_panelTitleText_wdt (ctx)
@@ -164,12 +165,16 @@ var BP_MOD_WDL = (function ()
             proto: NButton.proto,
             html:'<button type="button"></button>', 
             attr:{ class:css_class_xButton},
-            text:u_cir_N, 
+            //text:u_cir_N, 
             on:{ click:NButton.proto.newItem },
+                children:[
+                {tag:"i",
+                css:{ 'vertical-align':'middle' },
+                addClass:'icon-plus'
+                }],
             _iface:{ w$ctx:{ panel:'panel' } }
             };
         }
- 
     };
 
     var XButton = 
@@ -225,7 +230,7 @@ var BP_MOD_WDL = (function ()
                 children:[
                 {tag:"i",
                 css:{ 'vertical-align':'middle' },
-                addClass:"icon-share",
+                addClass:"icon-arrow-left",
                 }]
             };
         },
@@ -286,7 +291,7 @@ var BP_MOD_WDL = (function ()
                 children:[
                 {tag:"i",
                 css:{ 'vertical-align':'middle' },
-                addClass:bInp? "icon-check" :"icon-edit",
+                addClass:bInp? "icon-ok" :"icon-pencil",
                 ctx:{ w$:{icon:'w$el'} }
                 }],
              _iface:{ w$ctx:{ ioItem:"ioItem", icon:'icon' } }
@@ -299,12 +304,12 @@ var BP_MOD_WDL = (function ()
             {
                 var bInp = this.ioItem.toggleIO();
                 if (bInp) {
-                    this.icon.$el.removeClass('icon-edit');
-                    this.icon.$el.addClass('icon-check');
+                    this.icon.$el.removeClass('icon-pencil');
+                    this.icon.$el.addClass('icon-ok');
                 }
                 else {
-                    this.icon.$el.removeClass('icon-check');
-                    this.icon.$el.addClass('icon-edit');                    
+                    this.icon.$el.removeClass('icon-ok');
+                    this.icon.$el.addClass('icon-pencil');                    
                 }
             }}
         })
@@ -526,7 +531,7 @@ var BP_MOD_WDL = (function ()
                 e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
                 e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
                 e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
-                e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"icons/icon16.png"}).el, 0, 0);
+                e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon16.png"}).el, 0, 0);
                 e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
                 //console.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
                 //return true;

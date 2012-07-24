@@ -23,7 +23,7 @@ var BP_MOD_MANAGE = (function ()
     m = BP_MOD_FILESTORE;
     var cullDBName = IMPORT(m.cullDBName);
     /** @import-module-end **/ m = null;
-               
+
     function fillOptions(eid, dir)
     {
         var o={hide:true}, d, i=0, n=0;
@@ -188,7 +188,6 @@ var BP_MOD_MANAGE = (function ()
                 $('#dbPath').text(null).attr('data-original-title', '').attr('data-path', null);
             }
         });
-
     }
    
     //Assemble the interface    
@@ -203,3 +202,21 @@ var BP_MOD_MANAGE = (function ()
     console.log("loaded manage");
     return iface;
 }());
+
+    /** @globals-begin */
+    var BP_PLUGIN;
+    /** @globals-end */
+             
+
+        function bpPluginLoaded ()
+        {
+          BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
+          console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+        }        
+
+        $(document).ready(function (e)
+        {
+          bpPluginLoaded();
+          BP_MOD_FILESTORE.init();
+          BP_MOD_MANAGE.onload();
+        });

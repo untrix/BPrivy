@@ -1,7 +1,9 @@
 {
   "name": "BPrivy",
-  "version": "0.5",
-  "description":"BPrivy: Password Wallet. Pluggable and Detachable Password Store. Stay in full control of your passwords. Store, move,copy and merge them wherever and whenever you like - in memory cards, on computer drives, or your favorite cloud-drives (drop-box etc.) and enjoy automatic sync! Autofill passwords in Google Chrome.",
+  "version": "0.5.3",
+  "manifest-version": 1,
+  "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
+  "description":"BPrivy: Password Wallet. Keep encrypted-password files in your control. Autofill, store, move, copy, merge and sync!",
   "icons": {
 	     "128": "icons/icon128.png",
   	     "16": "icons/icon16.png"
@@ -12,13 +14,16 @@
 	{
 	"matches": ["<all_urls>", "http://*/*", "https://*/*"],
 	"js": ["tp/json2.js", "tp/jquery.js", "tp/jquery-ui.js", "bp_error.js", "bp_common.js", "bp_cs_platform_chrome.js", "bp_connector.js", "bp_traits.js", "bp_w$.js", "bp_panel.js", "bp_cs.js"],
-	"css": ["build/bp.css"]
-///	"all_frames": true
+	"css": ["bp.css"]
 	}
   ],
   "browser_action": {
 	"default_icon": "icons/icon16.png"
   },
   "options_page": "bp_manage.html",
-  "offline_enabled": true
+  "offline_enabled": true,
+  "web_accessible_resources": [
+    "icons/icon16.png",
+    "tp/bootstrap/img/glyphicons-halflings.png",
+    "tp/bootstrap/img/glyphicons-halflings-white.png"]
 }

@@ -71,7 +71,7 @@ var BP_MOD_MEMSTORE = (function ()
                 // }
             // }},
         }),
-        ETLD,
+        ETLD = {}, // in case loading the ETLD file fails
         ETLDProto =
         {
             // truncates supplied hostname array to its domain part - i.e. one more than ETLD.
@@ -760,8 +760,8 @@ var BP_MOD_MEMSTORE = (function ()
     {
         var xhr = new XMLHttpRequest();
         
-        // xhr.onloadend = function (e)        // {            // ETLD = JSON.parse(e.target.response);        // };
-        xhr.open("GET", chrome.extension.getURL('/data/etld.json'), false);
+        // xhr.onloadend = function (e)        // {             // ETLD = JSON.parse(e.target.response);        // };
+        xhr.open("GET", BP_MOD_CS_PLAT.getURL('/data/etld.json'), false);
         xhr.send();
         var resp = xhr.response;        ETLD = JSON.parse(resp);
     }
