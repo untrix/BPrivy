@@ -75,10 +75,10 @@ if (argv.length < 2)
  
 var src = abs(argv[0]),
     bld = abs(argv[1]),
-    prod = abs(bld, 'prod'),
+    release = abs(bld, 'release'),
     minjs = abs(bld, 'minjs'),
     doneFlags = [],
-    prod_js = [
+    release_js = [
     'bp_common.js',
     'bp_connector.js',
     'bp_CS.js',
@@ -93,7 +93,7 @@ var src = abs(argv[0]),
     'bp_traits.js',
     'bp_w$.js'    
     ],
-    prod_others = [
+    release_others = [
     'manifest.json',
     'bp_manage.html',
     'BP_Main.html'].
@@ -117,15 +117,6 @@ ch1.on('exit', function (code, signal)
 });
 ch1.disconnect();
 
-var ch2 = child.fork('buildminify.js', [src, minjs]);
-ch2.on('exit', function childExit(code, signal)
-{
-    doneFlags[2] = true;
-    if (done()) {
-        process.exit(code);
-    }
-});
-ch2.disconnect();
 
 function throwErr(err){ if (err) {doneFlags[3]=true; throw err;}}
 function copy(srcDir, dstDir, files)
@@ -139,12 +130,11 @@ function copy(srcDir, dstDir, files)
         if ((!fs.existsSync(fdst)) ||
             (fs.lstatSync(fsrc).mtime > fs.lstatSync(fdst).mtime))
         {
+            console.log("Copying " + fdst);
             fs.copy(fsrc, fdst, throwErr);
         }
     });
 }
-
-console.log("Processing files " + JSON.stringify(prod_js)+JSON.stringify(prod_others));
 
 function mkdirp(dirs)
 {
@@ -153,10 +143,21 @@ function mkdirp(dirs)
         fs.mkdirpSync(dir);
     });
 }
-// ensure that all internal directories exist
-mkdirp(Object.keys(lsSkel(prod, prod_others)));
-copy(minjs, prod, prod_js);
-copy(src, prod, prod_others);
 
-doneFlags[3] = true;
-if (done()) {process.exit(0);}
+var ch2 = child.fork('buildminify.js', [src, minjs]);
+ch2.on('exit', function childExit(code, signal)
+{
+    doneFlags[2] = true;
+    
+    // ensure that all internal directories exist
+    mkdirp(Object.keys(lsSkel(release, release_others)));
+    copy(minjs, release, release_js);
+    copy(src, release, release_others);
+
+    doneFlags[3] = true;
+    if (done()) {process.exit(0);}
+    
+});
+ch2.disconnect();
+
+

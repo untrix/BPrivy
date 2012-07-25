@@ -26,9 +26,6 @@ var fs = require('fs.extra'),
         BLD = abs(argv[1]) + path.sep,
         TMPDIR = abs(BLD, 'tmp') + path.sep;
 
-console.log('Source directory ' + SRC);
-console.log('Temp directory ' + TMPDIR);
-
 function zero(path)
 {   'use strict';
     var fd = fs.openSync(path, 'w'); // truncate the file.
@@ -64,23 +61,24 @@ function catIfNeeded(srcFiles, dest)
         zero(dest); // truncate the file.
     }
     
+    console.log('Cating ' + dest);
     srcFiles.forEach(function (f, i, srcFiles)
     {
-        console.log('Processing file ' + f);
+        //console.log('Processing file ' + f);
         data = fs.readFileSync(f);
         fs.appendFileSync(dest, data);
     });
 }
 
-// cat([SRC+'dev_header.less', SRC+'bp_bootstrap.less', SRC+'bp_bootstrap-responsive.less', SRC+'bp.less'], 'bp.dev.less');// cat([SRC+'prod_header.less', SRC+'bp_bootstrap.less', SRC+'bp_bootstrap-responsive.less', SRC+'bp.less'], 'bp.prod.less');
-if (!fs.existsSync(abs('dev_header.less')) || !fs.existsSync(abs('prod_header.less'))) {
-    throw new Error("You need to create a dev_header.less and prod_header.less files based on dev_header.sample.less."+
+// cat([SRC+'dev_header.less', SRC+'bp_bootstrap.less', SRC+'bp_bootstrap-responsive.less', SRC+'bp.less'], 'bp.dev.less');// cat([SRC+'release_header.less', SRC+'bp_bootstrap.less', SRC+'bp_bootstrap-responsive.less', SRC+'bp.less'], 'bp.release.less');
+if (!fs.existsSync(abs('dev_header.less')) || !fs.existsSync(abs('release_header.less'))) {
+    throw new Error("You need to create a dev_header.less and release_header.less files based on dev_header.sample.less."+
         " Replace extension-id with whatever you see in your local Google Chrome instance.");
 }
 // Ensure that the tmp dir exists.
 fs.mkdirp(TMPDIR);
 catIfNeeded(['dev_header.less', SRC+'bp_bootstrap.less'], TMPDIR+'bp.dev.less');
-catIfNeeded(['prod_header.less', SRC+'bp_bootstrap.less'], TMPDIR+'bp.prod.less');
+catIfNeeded(['release_header.less', SRC+'bp_bootstrap.less'], TMPDIR+'bp.release.less');
 catIfNeeded(['dist_header.less', SRC+'bp_bootstrap.less'], TMPDIR+'bp.dist.less');
 /*
  var recess = require('recess')
@@ -107,6 +105,7 @@ function getRecessFunc (fpath)
     {   var i, n;
         if (err) {throw err;}
         zero(abs(fpath));
+        console.log('Compiling ' + fpath);
         for (i=0, n=obj.length; i<n; i++) {
             fs.appendFileSync(abs(fpath), obj[i].output);
         }
@@ -119,12 +118,12 @@ function getRecessFunc (fpath)
 }
 //recess --compile ..\bp.less ..\bp_bootstrap-responsive.less ..\bp_bootstrap.less > ..\bp.css
 var devTarget = abs(SRC, 'bp.css'), 
-    prodTarget = abs(BLD, 'prod', 'bp.css'),
+    releaseTarget = abs(BLD, 'release', 'bp.css'),
     distTarget = abs(BLD, 'dist', 'bp.css'),
     srcFiles=[];
     
 // Ensure that the build dirs exist.
-fs.mkdirp(abs(BLD, 'prod'));
+fs.mkdirp(abs(BLD, 'release'));
 fs.mkdirp(abs(BLD, 'dist'));
 
 srcFiles=[SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dev.less'];
@@ -132,9 +131,9 @@ if (doBuild(srcFiles, devTarget)) {
     recess(srcFiles, {compile:true, compress:false}, getRecessFunc(zero(devTarget)));
 }
 
-srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.prod.less'];
-if (doBuild(srcFiles, prodTarget)) { 
-    recess(srcFiles, {compile:true, compress:true}, getRecessFunc(zero(prodTarget)));
+srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.release.less'];
+if (doBuild(srcFiles, releaseTarget)) { 
+    recess(srcFiles, {compile:true, compress:true}, getRecessFunc(zero(releaseTarget)));
 }
 
 srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dist.less'];
