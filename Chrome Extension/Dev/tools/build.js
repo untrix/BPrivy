@@ -77,6 +77,7 @@ var src = abs(argv[0]),
     bld = abs(argv[1]),
     release = abs(bld, 'release'),
     minjs = abs(bld, 'minjs'),
+    dist = abs(bld, 'dist'),
     doneFlags = [],
     release_js = [
     'bp_common.js',
@@ -131,6 +132,9 @@ function copy(srcDir, dstDir, files)
             (fs.lstatSync(fsrc).mtime > fs.lstatSync(fdst).mtime))
         {
             console.log("Copying " + fdst);
+            if (fs.existsSync(fdst)) {
+                fs.unlinkSync(fdst); // truncate the file.
+            }
             fs.copy(fsrc, fdst, throwErr);
         }
     });
@@ -151,8 +155,13 @@ ch2.on('exit', function childExit(code, signal)
     
     // ensure that all internal directories exist
     mkdirp(Object.keys(lsSkel(release, release_others)));
+    mkdirp(Object.keys(lsSkel(dist, release_others)));
     copy(minjs, release, release_js);
     copy(src, release, release_others);
+    copy(minjs, dist, release_js);
+    copy(src, dist, release_others);
+    var pem_dir = path.dirname(bld);
+    copy(pem_dir, dist, ['key.pem']);
 
     doneFlags[3] = true;
     if (done()) {process.exit(0);}

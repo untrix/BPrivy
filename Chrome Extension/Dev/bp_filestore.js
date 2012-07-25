@@ -65,10 +65,8 @@ var BP_MOD_FILESTORE = (function()
          * since not all filesystems will honor case.
          */
         dir_p = ".p" + ext_Dict,
-        file_p = ".p" + ext_Open,
-        g_dbPath, // Currently opened DB's root path. Will be set at runtime.
-        g_path_k, // File to write e/k-records to. Will be set at runtime.
-        g_path_p; // File to write p-records to. Will be set at runtime.
+        file_p = ".p" + ext_Open;
+        // g_dbPath, // Currently opened DB's root path. Will be set at runtime.        // g_path_k, // File to write e/k-records to. Will be set at runtime.        // g_path_p; // File to write p-records to. Will be set at runtime.
        
     function parseSegment (sgmnt)
     {
@@ -154,26 +152,59 @@ var BP_MOD_FILESTORE = (function()
         
         return inDB;
     }
-        
-    function getDBPath ()
+     
+    var MOD_DB = (function ()
     {
-        return g_dbPath;
-    }
+        var g_dbPath, // Currently opened DB's root path. Will be set at runtime.
+            g_path_k, // File to write e/k-records to. Will be set at runtime.
+            g_path_p, // File to write p-records to. Will be set at runtime.
+            module = {};
     
-    function getDBName ()
-    {
-        return cullDBName(g_dbPath);
-    }
+        module.setDBPath = function  (dbPath)
+        {
+            if (dbPath) {
+                g_dbPath = dbPath;
+                g_path_k = g_dbPath + path_sep + dir_k + path_sep + file_k;
+                g_path_p = g_dbPath + path_sep + dir_p + path_sep + file_p;
+            }
+            else {
+                g_dbPath = g_path_k = g_path_p = null;
+            }
+        };
+        
+        module.getDTPath = function  (dt)
+        {
+            switch (dt)
+            {
+                case dt_pRecord:
+                    return g_path_p;
+                case dt_eRecord:
+                    return g_path_k;
+            }
+        };
+        
+        module.getDBPath = function  ()
+        {
+            return g_dbPath;
+        };
+        
+        module.getDBName = function ()
+        {
+            return cullDBName(g_dbPath);
+        };
+        
+        return Object.freeze(module);
+    }());
     
     function insertRec(rec, dt)
     {
         var result = false, o={};
         switch (dt) {
             case dt_eRecord:
-                result = BP_PLUGIN.appendFile(g_path_k, rec_sep+JSON.stringify(rec), o);
+                result = BP_PLUGIN.appendFile(MOD_DB.getDTPath(dt_eRecord), rec_sep+JSON.stringify(rec), o);
                 break;
             case dt_pRecord:
-                result = BP_PLUGIN.appendFile(g_path_p, rec_sep+JSON.stringify(rec), o);                
+                result = BP_PLUGIN.appendFile(MOD_DB.getDTPath(dt_pRecord), rec_sep+JSON.stringify(rec), o);
                 break;
         }
         
@@ -238,15 +269,14 @@ var BP_MOD_FILESTORE = (function()
         console.log("loadingDB " + dbPath);
         MEM_STORE.clear(); // unload the previous DB.
 
-        g_dbPath = dbPath;
-        g_path_k = g_dbPath + path_sep + dir_k + path_sep + file_k;
-        g_path_p = g_dbPath + path_sep + dir_p + path_sep + file_p;
+        MOD_DB.setDBPath(dbPath);
+        // g_dbPath = dbPath;        // g_path_k = g_dbPath + path_sep + dir_k + path_sep + file_k;        // g_path_p = g_dbPath + path_sep + dir_p + path_sep + file_p;
 
         // Load P-Records
         o={};
-        if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_p, o) && o.lsd && o.lsd.f)
+        if (BP_PLUGIN.ls(MOD_DB.getDBPath() + path_sep + dir_p, o) && o.lsd && o.lsd.f)
         {
-            path_dir_p = g_dbPath + path_sep + dir_p + path_sep;
+            path_dir_p = MOD_DB.getDBPath() + path_sep + dir_p + path_sep;
             f = o.lsd.f; file_names = Object.keys(f);
             for (i=file_names.length-1; i>=0; --i)
             {
@@ -263,9 +293,9 @@ var BP_MOD_FILESTORE = (function()
         }
         // Load K-Records
         o={};
-        if (BP_PLUGIN.ls(g_dbPath + path_sep + dir_k, o) && o.lsd && o.lsd.f)
+        if (BP_PLUGIN.ls(MOD_DB.getDBPath() + path_sep + dir_k, o) && o.lsd && o.lsd.f)
         {
-            path_dir_k = g_dbPath + path_sep + dir_k + path_sep;
+            path_dir_k = MOD_DB.getDBPath() + path_sep + dir_k + path_sep;
             f = o.lsd.f; file_names = Object.keys(f);
             for (i=file_names.length-1; i>=0; --i)
             {
@@ -283,7 +313,7 @@ var BP_MOD_FILESTORE = (function()
         }
         
         MOD_ERROR.log("Loaded DB " + dbPath);
-        return g_dbPath;
+        return MOD_DB.getDBPath();
     }
     
     function createDB(name, dir) // throws
@@ -316,8 +346,9 @@ var BP_MOD_FILESTORE = (function()
             throw new BPError(o.err);
         }
         
-        g_dbPath = root; // The DB is deemed loaded (though it is empty)
-        return root;
+        MEM_STORE.clear(); // unload the previous DB.
+        MOD_DB.setDBPath(root); // The DB is deemed loaded (though it is empty)
+        return root; // same as return MOD_DB.getDBPath();
     }
 
     function findPPropsIdx(keys)
@@ -562,9 +593,9 @@ var BP_MOD_FILESTORE = (function()
         CSVFile: {value: CSVFile},
         createDB: {value: createDB},
         loadDB: {value: loadDB},
-        getDBPath: {value: getDBPath},
+        getDBPath: {value: MOD_DB.getDBPath},
         cullDBName: {value: cullDBName},
-        getDBName: {value: getDBName},
+        getDBName: {value: MOD_DB.getDBName},
         insertRec: {value: insertRec}
     });
     Object.freeze(iface);

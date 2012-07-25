@@ -30,19 +30,20 @@ function uglify(orig_code)
 function minify(SRC, DST)
 {   'use strict';
     var files = fs.readdirSync(SRC),
-        i, n, d, f, df;
+        i, n, d, f, df, sf;
         
     for (i=0,n=files.length; i<n; i++)
     {
         if (files[i].slice(-3).toLowerCase()===".js")
         {
-            f = files[i];
-            if ((!fs.existsSync(DST+f)) || 
-                (fs.lstatSync(SRC+f).mtime > fs.lstatSync(DST+f)))
+            f = files[i]; 
+            df = DST + f;
+            sf = SRC + f;
+            if ((!fs.existsSync(df)) ||
+                (fs.lstatSync(sf).mtime > fs.lstatSync(df).mtime))
             {
-                df = path.resolve(DST, f);
                 console.log('Minifying ' + df);
-                d = fs.readFileSync(path.resolve(SRC, f));
+                d = fs.readFileSync(sf);
                 d = uglify(d.toString());
                 fs.writeFileSync(df, d);
             }
