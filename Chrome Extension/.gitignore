@@ -1,6 +1,4 @@
 /*
-!Dev/
-#*.zip
-#*.pem
-#*.crx
-#Prod/*
+/*/
+!/Dev/
+!/README.*

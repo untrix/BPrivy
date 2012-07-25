@@ -10,6 +10,20 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
+		<buildCommand>
+			<name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
+			<triggers>full,incremental,</triggers>
+			<arguments>
+				<dictionary>
+					<key>LaunchConfigHandle</key>
+					<value>&lt;project&gt;/.externalToolBuilders/build.js.launch</value>
+				</dictionary>
+				<dictionary>
+					<key>incclean</key>
+					<value>true</value>
+				</dictionary>
+			</arguments>
+		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>com.aptana.projects.webnature</nature>
@@ -23,7 +37,7 @@
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1343162442747</id>
+			<id>1343191004555</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -32,7 +46,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343162442749</id>
+			<id>1343191004564</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -41,16 +55,16 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343162442751</id>
+			<id>1343191004573</id>
 			<name>Dev</name>
 			<type>9</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-build</arguments>
+				<arguments>1.0-name-matches-false-false-tools</arguments>
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343162442753</id>
+			<id>1343191004582</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -59,7 +73,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343162442756</id>
+			<id>1343191004590</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -68,16 +82,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343162442758</id>
-			<name>Dev</name>
-			<type>5</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-build*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1343162442760</id>
+			<id>1343191004600</id>
 			<name>Dev</name>
 			<type>9</type>
 			<matcher>
@@ -86,7 +91,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343162442762</id>
+			<id>1343191004609</id>
 			<name>Dev</name>
 			<type>21</type>
 			<matcher>
@@ -95,30 +100,12 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343162442764</id>
+			<id>1343191004618</id>
 			<name>Dev</name>
-			<type>5</type>
+			<type>21</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-.gitignore</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1343162416238</id>
-			<name>Dev/build</name>
-			<type>5</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-build*</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1343162416240</id>
-			<name>Dev/build</name>
-			<type>10</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-node_modules</arguments>
 			</matcher>
 		</filter>
 		<filter>
@@ -137,6 +124,42 @@
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1343190910984</id>
+			<name>Dev/tools</name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-node_modules</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1343190910994</id>
+			<name>Dev/tools</name>
+			<type>5</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.less</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1343190911004</id>
+			<name>Dev/tools</name>
+			<type>5</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.js</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1343190911014</id>
+			<name>Dev/tools</name>
+			<type>5</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.cmd</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>

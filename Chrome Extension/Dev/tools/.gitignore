@@ -1,4 +1,6 @@
 /bp.dev.less
 /bp.prod.less
 /dev_header.less
+/prod_header.less
 /node_modules/
+/tmp/*

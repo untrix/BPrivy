@@ -12,8 +12,9 @@
 
 var jsp = require("uglify-js").parser,
     pro = require("uglify-js").uglify,
-    fs  = require('fs'),
+    fs  = require('fs.extra'),
     path = require('path'),
+    abs  = path.resolve,
     argv = process.argv.slice(2);
 
 function uglify(orig_code)
@@ -36,16 +37,23 @@ function minify(SRC, DST)
         if (files[i].slice(-3).toLowerCase()===".js")
         {
             f = files[i];
-            d = fs.readFileSync(path.resolve(SRC, f));
-            d = uglify(d.toString());
-            fs.writeFileSync(path.resolve(DST, f), d);
+            if ((!fs.existsSync(DST+f)) || 
+                (fs.lstatSync(SRC+f).mtime > fs.lstatSync(DST+f)))
+            {
+                d = fs.readFileSync(path.resolve(SRC, f));
+                d = uglify(d.toString());
+                fs.writeFileSync(path.resolve(DST, f), d);
+            }
         }
     }
 }
 
-if (argv.length < 2) {
-    throw new Error("Usage: " + __filename + " <src dir> <dest dir>");
+if (argv.length < 2) 
+{
+    console.error("Usage: node " + path.basename(__filename) + " <src dir> <dest dir>");
+    process.exit(1);
 }
 else {
-    minify(argv[0], argv[1]);
+    fs.mkdirp(argv[1]);
+    minify(abs(argv[0])+path.sep, abs(argv[1])+path.sep);
 }
