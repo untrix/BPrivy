@@ -173,10 +173,15 @@ var BP_MOD_CONNECT = (function ()
     /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
-        var saveRecord = function (rec, dt)
+        var saveRecord = function (rec, dt, callbackFunc)
         {
             rec.cm = dt;
-            postMsgToMothership(rec);
+            if (callbackFunc) {
+                rpcToMothership(rec, callbackFunc);
+            }
+            else {
+                postMsgToMothership(rec);
+            }
         };
         
         var deleteRecord = function (erec, dt)

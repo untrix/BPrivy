@@ -42,10 +42,7 @@ var BP_MOD_CS = (function(g_win)
         },
         clear: function() 
         {
-            var keys = Object.keys(this), n;
-            for (n=keys.length-1; n > 0; n--) {
-                delete this[keys[n]];
-            }
+            BP_MOD_COMMON.clear(this);
         }
     };
     Object.defineProperties(g_db,

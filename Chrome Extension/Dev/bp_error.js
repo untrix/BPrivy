@@ -235,9 +235,10 @@ var BP_MOD_ERROR = (function()
                    (this.err.gcode? "&gcode="+this.err.gcode : "") + 
                    (this.err.scode? "&scode="+this.err.scode : "") +
                    (this.err.smsg? "&smsg="+this.err.smsg : "")
-               ));
+               )),
+           str = msg+diags;
                
-        return msg + diags;
+        return str.length<=200? str : str.slice(0,200);
     };
     BPError.push = function (actn)
     {
@@ -258,7 +259,6 @@ var BP_MOD_ERROR = (function()
     {
         var be = new BPError(arg);
         console.log(be.toString());
-        //alert(be.toString());
     }
     
     function logwarn (arg)

@@ -1,6 +1,6 @@
 {
   "name": "BPrivy",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "manifest-version": 2,
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
   "description":"BPrivy: Password Wallet. Keep encrypted-password files in your control. Autofill, store, move, copy, merge and sync!",

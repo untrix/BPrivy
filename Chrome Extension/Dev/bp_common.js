@@ -136,8 +136,17 @@ var BP_MOD_COMMON = (function()
         return new Inheritor();
     }
 
+    function clear(obj) 
+    {
+        var keys = Object.keys(obj), n;
+        for (n=keys.length-1; n >= 0; n--) {
+            delete obj[keys[n]];
+        }
+    }
+    
     function copy (src, dst)
     {
+        clear(dst);
         var keys = Object.keys(src),
             n;
         for (n=keys.length-1; n>=0; n--) {

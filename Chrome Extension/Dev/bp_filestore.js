@@ -196,6 +196,12 @@ var BP_MOD_FILESTORE = (function()
         return Object.freeze(module);
     }());
     
+    function unloadDB()
+    {
+        MEM_STORE.clear(); // unload the previous DB.
+        MOD_DB.setDBPath(null);
+    }
+    
     function insertRec(rec, dt)
     {
         var result = false, o={};
@@ -209,6 +215,7 @@ var BP_MOD_FILESTORE = (function()
         }
         
         if (!result) {
+            unloadDB();
             throw new BPError(o.err);
         }
         
@@ -268,9 +275,7 @@ var BP_MOD_FILESTORE = (function()
         
         console.log("loadingDB " + dbPath);
         MEM_STORE.clear(); // unload the previous DB.
-
         MOD_DB.setDBPath(dbPath);
-        // g_dbPath = dbPath;        // g_path_k = g_dbPath + path_sep + dir_k + path_sep + file_k;        // g_path_p = g_dbPath + path_sep + dir_p + path_sep + file_p;
 
         // Load P-Records
         o={};

@@ -145,7 +145,7 @@ var BP_MOD_WDL = (function ()
         return {
             tag:"div",
             attr:{ id: eid_panelTitleText, title:ctx.dbPath },
-            text:ctx.dbName || "BPrivy"
+            text:ctx.dbName || "No wallet open"
         };
     }
 
@@ -358,7 +358,7 @@ var BP_MOD_WDL = (function ()
         },
         proto: w$defineProto (
         {
-            saveInput: {value: function() 
+            checkInput: {value: function() 
             {
                 var ioItem = this.ioItem,
                     nU = this.u.el.value,
@@ -367,21 +367,29 @@ var BP_MOD_WDL = (function ()
                     oP = ioItem.rec? ioItem.rec.p: undefined;
                 
                 if (!isValidInput(nU) || !isValidInput(nP)) {
-                    return false;
+                    return false; // inputs are invalid
                 }
                 
-                if ((nU !== oU) || (nP !== oP)) 
-                {
-                    // save to db
-                    var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
-                    saveRecord(pRec, dt_pRecord);
-                    //ioItem.rec = pRec;
-                    if (oU && (nU !== oU)) {
-                        this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
-                    }
-                    return true;
+                if ((nU !== oU) || (nP !== oP)) {
+                    return true; // inputs are valid and different
                 }
-                // else return undefined;
+                // else return undefined; inputs are valid but same.
+            }},
+            saveInput: {value: function(callback)
+            {
+                var ioItem = this.ioItem,
+                    nU = this.u.el.value,
+                    oU = ioItem.rec? ioItem.rec.u: undefined,
+                    nP = encrypt(this.p.el.value),
+                    oP = ioItem.rec? ioItem.rec.p: undefined;
+
+                // save to db
+                var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
+                saveRecord(pRec, dt_pRecord, callback);
+                //ioItem.rec = pRec;
+                if (oU && (nU !== oU)) {
+                    this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
+                }                
             }},
             deleteRecord: {value: function(dt, key)
             {
@@ -466,11 +474,12 @@ var BP_MOD_WDL = (function ()
                 var iI = this.iItem, 
                     oI = this.oItem,
                     ctx={ioItem:this, autoFill:this.panel.autoFill},
-                    res;
-                if (iI) 
+                    res,
+                    self = this;
+                if (iI)
                 { // Create output element
-                    res = iI.saveInput();
-                    if (res===undefined)
+                    res = iI.checkInput();
+                    if (res===undefined) 
                     {
                         this.oItem = w$exec(OItemP.wdt, ctx);
                         if (this.oItem) {
@@ -480,8 +489,18 @@ var BP_MOD_WDL = (function ()
                             this.bInp = false;
                         }
                     }
-                    else if (res === true) {
-                        this.panel.reload();
+                    else if (res === true) 
+                    {
+                        iI.saveInput(function(resp)
+                        {
+                            if (resp.result===true) {
+                                self.panel.reload();
+                            }
+                            else {
+                                BP_MOD_ERROR.warn(resp.err);
+                                self.panel.reload();
+                            }
+                        });
                     }
                 }
                 else if (oI)

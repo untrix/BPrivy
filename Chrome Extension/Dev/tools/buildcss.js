@@ -23,8 +23,9 @@ var fs = require('fs.extra'),
         process.exit(1);
     }
     var SRC = abs(argv[0]) + path.sep,
-        BLD = abs(argv[1]) + path.sep,
-        TMPDIR = abs(BLD, 'tmp') + path.sep;
+        DST = abs(argv[1]) + path.sep,
+        TMPDIR = abs(DST, 'tmp') + path.sep,
+        TYPE = argv[2];
 
 function zero(path)
 {   'use strict';
@@ -116,15 +117,15 @@ function getRecessFunc (fpath)
         }
     };
 }
-//recess --compile ..\bp.less ..\bp_bootstrap-responsive.less ..\bp_bootstrap.less > ..\bp.css
+
 var devTarget = abs(SRC, 'bp.css'), 
-    releaseTarget = abs(BLD, 'release', 'bp.css'),
-    distTarget = abs(BLD, 'dist', 'bp.css'),
+    releaseTarget = abs(DST, 'release', 'bp.css'),
+    distTarget = abs(DST, 'dist', 'bp.css'),
     srcFiles=[];
     
 // Ensure that the build dirs exist.
-fs.mkdirp(abs(BLD, 'release'));
-fs.mkdirp(abs(BLD, 'dist'));
+fs.mkdirp(abs(DST, 'release'));
+fs.mkdirp(abs(DST, 'dist'));
 
 srcFiles=[SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dev.less'];
 if (doBuild(srcFiles, devTarget)) {
