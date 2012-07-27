@@ -117,7 +117,7 @@ var BP_MOD_CS = (function(g_win)
     var g_loc = IMPORT(g_win.location);
     var g_doc = IMPORT(g_win.document);
     var gid_panel; // id of created panel if any
-    var settings = {AutoFill:true, ShowPanelIfNoFill: false}; // User Settings
+    var settings = {AutoFill:true, ShowPanelIfNoFill: true}; // User Settings
     var g_bFillable; // Indicates that the page was found to be autofillable.
     /** @globals-end **/
 
@@ -195,7 +195,7 @@ var BP_MOD_CS = (function(g_win)
                     u = ua[0];
                     p = pRecsMap[ua[0]].curr.p;
                 }
-                else if (ua.length > 1) {
+                else /*if (ua.length > 1)*/ {
                     // if there is more than one username, do not autofill, but
                     // try to determine if autofilling is possible.
                     u = "";
@@ -229,7 +229,8 @@ var BP_MOD_CS = (function(g_win)
                         //deleteRecord(uer); // TODO: implement deleteRecord
                     }
                 }
-                if ((!pDone) && per) {
+                if ((!pDone) && per) 
+                {
                     pDone = autoFillEl(per, p, true);
                     if (!pDone && (i===0)) {
                         // The data in the E-Record was an exact URL match
@@ -271,24 +272,23 @@ var BP_MOD_CS = (function(g_win)
             g_db.ingest(db);
             var filled = autoFill();
         
-            if (settings.AutoFill) {
-                if ((filled===false) && g_db.numUserids && settings.ShowPanelIfNoFill)
-                {
-                    var ctx = {
-                        it: new RecsIterator(g_db.pRecsMap), 
-                        reload:getRecsCallback, 
-                        autoFill:g_bFillable?autoFill:undefined, 
-                        dbName:g_db.dbName,
-                        dbPath:g_db.dbPath
-                        },
-                        panel = w$exec(cs_panel_wdt, ctx);
-                    gid_panel = panel.data.id;
-                }
+            if ((!filled) && g_db.numUserids && settings.ShowPanelIfNoFill)
+            {
+                var ctx = {
+                    it: new RecsIterator(g_db.pRecsMap), 
+                    reload:getRecsCallback, 
+                    autoFill:g_bFillable?autoFill:undefined, 
+                    dbName:g_db.dbName,
+                    dbPath:g_db.dbPath
+                    },
+                    panel = w$exec(cs_panel_wdt, ctx);
+                gid_panel = panel.id;
             }
-
-            // Remember to not keep any data lingering around ! Delete data the moment we're done
-            // using it. Data should not be stored in the page if it is not visible to the user.
-            g_db.clear();
+            else {
+                // Remember to not keep any data lingering around ! Delete data the moment we're done
+                // using it. Data should not be stored in the page if it is not visible to the user.
+                g_db.clear();
+            }
         }
         else
         {

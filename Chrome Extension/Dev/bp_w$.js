@@ -71,9 +71,8 @@ var BP_MOD_W$ = (function ()
     // Returns an object to be used as a prototype for a widget element.
     function w$defineProto (props) // props has same syntax as Object.defineProperties
     {
-        var proto = newInherited(WidgetElement.prototype);
-        Object.defineProperties(proto, props);
-        return proto;
+        // var proto = newInherited(WidgetElement.prototype);        // Object.defineProperties(proto, props);        // return proto;
+        return Object.create(WidgetElement.prototype, props);
     }
     
     function copyIndirect (sk, sv, dst) 
@@ -189,7 +188,11 @@ var BP_MOD_W$ = (function ()
         }
         // Create the widget element
         if (wdl.proto) {
-            w$el = newInherited(wdl.proto);
+            w$el = wdl.proto();
+            w$el.cons($el);
+        }
+        else if (wdl.cons) {
+            w$el = new wdl.cons();
             w$el.cons($el);
         }
         else {

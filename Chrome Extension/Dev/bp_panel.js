@@ -149,132 +149,125 @@ var BP_MOD_WDL = (function ()
         };
     }
 
-    var NButton = 
+    function NButton () {}
+    NButton.prototype = w$defineProto(
     {
-        proto: w$defineProto(
+        newItem: {value: function ()
         {
-            newItem: {value: function ()
-            {
-                this.panel.itemList.newItem();
-            }}
-        }),
-        
-        wdt: function (w$ctx)
+            this.panel.itemList.newItem();
+        }}
+    });
+    NButton.wdt = function (w$ctx)
+    {
+        return {
+        cons: NButton,
+        html:'<button type="button"></button>', 
+        attr:{ class:css_class_xButton},
+        //text:u_cir_N, 
+        on:{ click:NButton.prototype.newItem },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle' },
+            addClass:'icon-plus'
+            }],
+        _iface:{ w$ctx:{ panel:'panel' } }
+        };
+    };
+    
+
+    function XButton () {}
+    XButton.prototype = w$defineProto (
+    {
+        x: {value: function click (e)
         {
-            return {
-            proto: NButton.proto,
-            html:'<button type="button"></button>', 
-            attr:{ class:css_class_xButton},
-            //text:u_cir_N, 
-            on:{ click:NButton.proto.newItem },
-                children:[
-                {tag:"i",
-                css:{ 'vertical-align':'middle' },
-                addClass:'icon-plus'
-                }],
-            _iface:{ w$ctx:{ panel:'panel' } }
-            };
-        }
+            if (this.panel) {               
+                e.stopPropagation(); // We don't want the enclosing web-page to interefere
+                e.preventDefault(); // Causes event to get cancelled if cancellable
+                this.panel.die();
+                return false; // Causes the event to be cancelled (except mouseover event).
+            }
+        }}
+    });
+    XButton.wdt = function (w$ctx)
+    {
+        // make sure panel is captured into private closure, so we won't lose it.
+        // values inside ctx will get changed as other wdls and wdts are executed.
+        var panel = w$ctx.panel;
+
+        return {
+        cons: XButton,
+        html:'<button type="button"></button>',
+        css:{ float:'right' },
+        attr:{ /*class:css_class_xButton,*/ accesskey:'q'},
+        //text:u_cir_X,
+        on:{ click:XButton.prototype.x },
+        iface:{ panel:panel },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle' },
+            addClass:'icon-remove'
+            }]
+        };
     };
 
-    var XButton = 
+    function FButton () {}
+    FButton.prototype =  w$defineProto(
     {
-        proto: w$defineProto (
+        onClick: {value: function(ev)
         {
-            x: {value: function click (e)
-            {
-                if (this.panel) {               
-                    e.stopPropagation(); // We don't want the enclosing web-page to interefere
-                    e.preventDefault(); // Causes event to get cancelled if cancellable
-                    this.panel.die();
-                    return false; // Causes the event to be cancelled (except mouseover event).
-                }
-            }}
-        }),
-        wdt: function (w$ctx)
-        {
-            // make sure panel is captured into private closure, so we won't lose it.
-            // values inside ctx will get changed as other wdls and wdts are executed.
-            var panel = w$ctx.panel;
+            if (!this.ioItem.bInp) { 
+                this._autoFill(this.ioItem.oItem.u.value, this.ioItem.oItem.p.value);
+            }
+            else {
+                this._autoFill(this.ioItem.iItem.u.value, this.ioItem.iItem.p.value);
+            }
+        }}
+    });
+    FButton.wdt = function(w$ctx)
+    {
+        var autoFill = w$ctx.autoFill;
+        return {
+        cons: FButton,
+        html:'<button type="button"></button>',
+        attr:{class:css_class_tButton, title:'auto fill' },
+        ctx:{ w$:{ fButton:"w$el" } },
+        //text:u_cir_F,
+        on:{ click:FButton.prototype.onClick },
+        iface:{ ioItem:w$ctx.ioItem, _autoFill:autoFill },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle' },
+            addClass:"icon-arrow-left",
+            }]
+        };
+    };   
     
-            return {
-            proto: XButton.proto,
-            html:'<button type="button"></button>',
-            css:{ float:'right' },
-            attr:{ /*class:css_class_xButton,*/ accesskey:'q'},
-            //text:u_cir_X,
-            on:{ click:XButton.proto.x },
-            iface:{ panel:panel },
-                children:[
-                {tag:"i",
-                css:{ 'vertical-align':'middle' },
-                addClass:'icon-remove'
-                }]
-            };
-        }
-    };
-
-    var FButton =
+    function DButton () {}
+    DButton.wdt = function(w$ctx)
     {
-        wdt: function(w$ctx)
+        var ioItem = w$ctx.ioItem;
+        return {
+        cons: DButton,
+        //html:'<button type="button"><i class="icon-trash"></i></button>',
+        html:'<button type="button"></button>',
+        css:{ float:'right' },
+        on:{ click:DButton.prototype.onClick },
+        _iface:{ ioItem:ioItem },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle' },
+            addClass:"icon-trash",
+            }]
+        };
+    };
+    DButton.prototype = w$defineProto(
+    {
+        onClick: {value: function(ev)
         {
-            var autoFill = w$ctx.autoFill;
-            return {
-            proto: FButton.proto,
-            html:'<button type="button"></button>',
-            attr:{class:css_class_tButton, title:'auto fill' },
-            ctx:{ w$:{ fButton:"w$el" } },
-            //text:u_cir_F,
-            on:{ click:FButton.proto.onClick },
-            iface:{ ioItem:w$ctx.ioItem, _autoFill:autoFill },
-                children:[
-                {tag:"i",
-                css:{ 'vertical-align':'middle' },
-                addClass:"icon-arrow-left",
-                }]
-            };
-        },
+            this.ioItem.die();
+        }}
+    });
         
-        proto: w$defineProto(
-        {
-            onClick: {value: function(ev)
-            {
-                if (!this.ioItem.bInp) { 
-                    this._autoFill(this.ioItem.oItem.u.value, this.ioItem.oItem.p.value);
-                }
-                else {
-                    this._autoFill(this.ioItem.iItem.u.value, this.ioItem.iItem.p.value);
-                }
-            }}
-        })
-    };
-    
-    var DButton =
-    {
-        wdt: function(w$ctx)
-        {
-            var ioItem = w$ctx.ioItem;
-            return {
-            proto: DButton.proto,
-            //html:'<button type="button"><i class="icon-trash"></i></button>',
-            html:'<button type="button"></button>',
-            css:{ float:'right' },
-            on:{ click:DButton.proto.onClick },
-            _iface:{ ioItem:ioItem },
-                children:[                {tag:"i",                css:{ 'vertical-align':'middle' },
-                addClass:"icon-trash",                }]
-            };
-        },
-        
-        proto: w$defineProto(
-        {
-            onClick: {value: function(ev)
-            {
-                this.ioItem.die();
-            }}
-        })
-    };
-    
     function isValidInput(str) {return Boolean(str);}
     
     var TButton = 
@@ -283,7 +276,7 @@ var BP_MOD_WDL = (function ()
         {
             var bInp = w$ctx.io_bInp;
             return {
-             proto: TButton.proto,
+             proto: TButton.TButton,
              html:'<button type="button">',
              attr:{ class:css_class_tButton, /*id:eid_tButton+w$i*/ },
              //text:bInp?u_cir_S:u_cir_E,
@@ -312,7 +305,15 @@ var BP_MOD_WDL = (function ()
                     this.icon.$el.addClass('icon-pencil');                    
                 }
             }}
-        })
+        }),
+        
+        TButton: function () 
+        {
+            return Object.create(TButton.proto,
+            {
+                constructor: {value: TButton.TButton}
+            });  
+        },
     };
     
     var IItemP = 
@@ -333,7 +334,7 @@ var BP_MOD_WDL = (function ()
                 ioItem.rec = pRec; // Save this back to ioItem.
             }
             return {
-            proto: IItemP.proto,
+            proto: IItemP.IItemP,
             tag:'div', addClass:css_class_ioFields,
             ctx:{ w$:{iItem:'w$el'} },
             iface:{ ioItem:ioItem },
@@ -397,7 +398,14 @@ var BP_MOD_WDL = (function ()
                     deleteRecord({loc:this.ioItem.loc, u:key});
                 }
             }}
-        })
+        }),
+        IItemP: function () 
+        {
+            return Object.create(IItemP.proto,
+            {
+                constructor: {value: IItemP.IItemP}
+            });  
+        }    
     };
     
     var OItemP = 
@@ -413,6 +421,7 @@ var BP_MOD_WDL = (function ()
                 p = pRec.p;
 
                 return {
+                proto: OItemP.OItemP,
                 tag:'div', 
                 addClass:css_class_ioFields,
                 ctx:{ w$:{ oItem:'w$el' } },
@@ -436,6 +445,14 @@ var BP_MOD_WDL = (function ()
                 _final:{show:true}
                 };
             }
+        },
+        proto: w$defineProto ({}),
+        OItemP: function () 
+        {
+            return Object.create(OItemP.proto,
+            {
+                constructor: {value: OItemP.OItemP}
+            });  
         }
     };
     
@@ -450,7 +467,7 @@ var BP_MOD_WDL = (function ()
                 bInp = w$ctx.io_bInp,
                 autoFill = panel.autoFill;
             return {
-            proto: IoItem.proto,
+            proto: IoItem.IoItem,
             tag:'div', 
             attr:{ class:css_class_li },
             ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.proto.toggleIO },
@@ -515,7 +532,15 @@ var BP_MOD_WDL = (function ()
                 
                 return Boolean(this.iItem);
             }}
-        })
+        }),
+
+        IoItem: function () 
+        {
+            return Object.create(IoItem.proto,
+            {
+                constructor: {value: IoItem.IoItem}
+            });  
+        }
     };
     
     var PanelList = 
@@ -525,7 +550,7 @@ var BP_MOD_WDL = (function ()
             var loc = ctx.loc || g_loc,
                 panel = ctx.panel;
             return {
-            proto: PanelList.proto,
+            proto: PanelList.PanelList,
             tag:'div', attr:{ id:eid_panelList },
             onTarget:{ dragstart:PanelList.proto.handleDragStart,
             drag:PanelList.proto.handleDrag, 
@@ -575,7 +600,15 @@ var BP_MOD_WDL = (function ()
                 }
                 
             }}
-        })
+        }),
+
+        PanelList: function () 
+        {
+            return Object.create(PanelList.proto,
+            {
+                constructor: {value: PanelList.PanelList}
+            });  
+        }    
     };
         
     var Panel =
@@ -586,7 +619,7 @@ var BP_MOD_WDL = (function ()
                 reload = ctx.reload,
                 autoFill = ctx.autoFill;
             return {
-            proto:Panel.proto, // static prototype object.
+            proto:Panel.Panel, // static prototype object.
             tag:"div",
             attr:{ id:eid_panel },
             css:{ position:'fixed', top:'0px', 'right':"0px" },
@@ -637,8 +670,15 @@ var BP_MOD_WDL = (function ()
                 this.die();
                 this._reload();
             }},
-        })        
-    };
+        }),
+
+        Panel: function () 
+        {
+            return Object.create(Panel.proto,
+            {
+                constructor: {value: Panel.Panel}
+            });  
+        }    };
       
     var iface = 
     {

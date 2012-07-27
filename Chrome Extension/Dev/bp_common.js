@@ -172,6 +172,7 @@ var BP_MOD_COMMON = (function()
         preventDefault: {value: preventDefault},
         newInherited: {value: newInherited},
         copy: {value: copy},
+        clear: {value: clear}
     });
     Object.freeze(iface);
 
