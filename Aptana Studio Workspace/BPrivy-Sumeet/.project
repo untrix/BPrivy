@@ -37,7 +37,7 @@
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1343258947526</id>
+			<id>1343382185378</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -46,7 +46,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343258947578</id>
+			<id>1343382185388</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -55,7 +55,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343258947588</id>
+			<id>1343382185397</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -64,7 +64,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343258947599</id>
+			<id>1343382185407</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -73,7 +73,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343258947609</id>
+			<id>1343382185416</id>
 			<name>Dev</name>
 			<type>9</type>
 			<matcher>
@@ -82,7 +82,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343258947619</id>
+			<id>1343382185425</id>
 			<name>Dev</name>
 			<type>21</type>
 			<matcher>
@@ -91,12 +91,21 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1343258947629</id>
+			<id>1343382185435</id>
 			<name>Dev</name>
 			<type>21</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-.gitignore</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1343382185445</id>
+			<name>Dev</name>
+			<type>5</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.xml</arguments>
 			</matcher>
 		</filter>
 		<filter>

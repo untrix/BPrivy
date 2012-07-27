@@ -12,7 +12,11 @@
 
 'use strict';
 
-var events = require('events');
+var events = require('events'),
+    path = require('path'),
+    abs = path.resolve,
+    fs = require('fs.extra');
+
 
 var ProtoJobTracker = Object.create(events.EventEmitter.prototype,{
     done: {value: function () 
@@ -73,4 +77,29 @@ function throwErr(err)
     if (err) { throw err; }
 }
 
-module.exports = {newAsync:Async, throwErr:throwErr};
+function copy(srcDir, dstDir, files, async)
+{
+    var i, n, 
+        fsrc, fdst;
+    files.forEach(function (f, i, files)
+    {
+        fsrc = abs(srcDir, f);
+        fdst = abs(dstDir, f);
+        if ((!fs.existsSync(fdst)) ||
+            (fs.lstatSync(fsrc).mtime > fs.lstatSync(fdst).mtime))
+        {
+            console.log("Copying " + fdst);
+            if (fs.existsSync(fdst)) {
+                fs.unlinkSync(fdst); // truncate the file.
+            }
+            fs.copy(fsrc, fdst, async.runHere(throwErr));
+        }
+    });
+}
+
+function buildPackage(src, bld, async)
+{
+    copy(src, bld, ['updates.xml'], async);
+}
+
+module.exports = {newAsync:Async, throwErr:throwErr, buildPackage:buildPackage};

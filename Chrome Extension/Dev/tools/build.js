@@ -153,5 +153,7 @@ ch2.on('exit', async.runHere(function childExit(code, signal)
 }));
 ch2.disconnect();
 
+var async2 = bp.newAsync('package');
+async.on('done', async2.runHere(function() {bp.buildPackage(src, bld, async2);}));
 async.end();
-
+async2.end();
