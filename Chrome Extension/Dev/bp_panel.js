@@ -270,415 +270,359 @@ var BP_MOD_WDL = (function ()
         
     function isValidInput(str) {return Boolean(str);}
     
-    var TButton = 
+    function TButton () {}
+    TButton.wdt = function (w$ctx)
     {
-        wdt: function (w$ctx)
-        {
-            var bInp = w$ctx.io_bInp;
-            return {
-             proto: TButton.TButton,
-             html:'<button type="button">',
-             attr:{ class:css_class_tButton, /*id:eid_tButton+w$i*/ },
-             //text:bInp?u_cir_S:u_cir_E,
-             on:{ click:TButton.proto.toggleIO2 },
-                children:[
-                {tag:"i",
-                css:{ 'vertical-align':'middle' },
-                addClass:bInp? "icon-ok" :"icon-pencil",
-                ctx:{ w$:{icon:'w$el'} }
-                }],
-             _iface:{ w$ctx:{ ioItem:"ioItem", icon:'icon' } }
-            };
-        },
-        proto: w$defineProto(
-        {
-            // toggleIO: {value: function (ev)             // {                // var bInp = this.ioItem.toggleIO();                // if (bInp) {                    // this.$el.text(u_cir_S);                // }                // else {                    // this.$el.text(u_cir_E);                // }            // }},
-            toggleIO2: {value: function (ev) 
-            {
-                var bInp = this.ioItem.toggleIO();
-                if (bInp) {
-                    this.icon.$el.removeClass('icon-pencil');
-                    this.icon.$el.addClass('icon-ok');
-                }
-                else {
-                    this.icon.$el.removeClass('icon-ok');
-                    this.icon.$el.addClass('icon-pencil');                    
-                }
-            }}
-        }),
-        
-        TButton: function () 
-        {
-            return Object.create(TButton.proto,
-            {
-                constructor: {value: TButton.TButton}
-            });  
-        },
+        var bInp = w$ctx.io_bInp;
+        return {
+         cons: TButton,
+         html:'<button type="button">',
+         attr:{ class:css_class_tButton, /*id:eid_tButton+w$i*/ },
+         //text:bInp?u_cir_S:u_cir_E,
+         on:{ click:TButton.prototype.toggleIO2 },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle' },
+            addClass:bInp? "icon-ok" :"icon-pencil",
+            ctx:{ w$:{icon:'w$el'} }
+            }],
+         _iface:{ w$ctx:{ ioItem:"ioItem", icon:'icon' } }
+        };
     };
-    
-    var IItemP = 
+    TButton.prototype = w$defineProto(
     {
-        wdt: function (w$ctx)
+        toggleIO2: {value: function (ev) 
         {
-            var u, p, 
-            ioItem = w$ctx.ioItem,
-            pRec = ioItem.rec;
+            var bInp = this.ioItem.toggleIO();
+            if (bInp) {
+                this.icon.$el.removeClass('icon-pencil');
+                this.icon.$el.addClass('icon-ok');
+            }
+            else {
+                this.icon.$el.removeClass('icon-ok');
+                this.icon.$el.addClass('icon-pencil');                    
+            }
+        }}
+    });
+    
+    function IItemP () {}
+    IItemP.wdt = function (w$ctx)
+    {
+        var u, p, 
+        ioItem = w$ctx.ioItem,
+        pRec = ioItem.rec;
+        
+        if (pRec)
+        {
+            u = pRec.u;
+            p = pRec.p;
+        }
+        else { // create a new pRec and save it back to ioItem.
+            pRec = newPRecord(ioItem.loc);
+            ioItem.rec = pRec; // Save this back to ioItem.
+        }
+        return {
+        cons: IItemP,
+        tag:'div', addClass:css_class_ioFields,
+        ctx:{ w$:{iItem:'w$el'} },
+        iface:{ ioItem:ioItem },
+            children: [
+            {tag:'input',
+             attr:{ type:'text', value:u, placeholder:'Username' },
+             prop:{ disabled:u?true:false },
+             addClass:css_class_field+css_class_userIn,
+             ctx:{ w$:{u:'w$el' } },
+             _iface:{ value: u } 
+            },
+            {tag:'input',
+             attr:{ type:'password', value:p, placeholder:'Password' },
+             addClass:css_class_field+css_class_passIn,
+             ctx:{ w$:{p:'w$el'} },
+             _iface:{ value: p },
+             }
+            ],
+        _iface:{ w$ctx:{ u:'u', p:'p' } },
+        _final:{show:true}
+        };
+    };
+    IItemP.prototype = w$defineProto (
+    {
+        checkInput: {value: function() 
+        {
+            var ioItem = this.ioItem,
+                nU = this.u.el.value,
+                oU = ioItem.rec? ioItem.rec.u: undefined,
+                nP = encrypt(this.p.el.value),
+                oP = ioItem.rec? ioItem.rec.p: undefined;
             
-            if (pRec)
-            {
-                u = pRec.u;
-                p = pRec.p;
+            if (!isValidInput(nU) || !isValidInput(nP)) {
+                return false; // inputs are invalid
             }
-            else { // create a new pRec and save it back to ioItem.
-                pRec = newPRecord(ioItem.loc);
-                ioItem.rec = pRec; // Save this back to ioItem.
+            
+            if ((nU !== oU) || (nP !== oP)) {
+                return true; // inputs are valid and different
             }
+            // else return undefined; inputs are valid but same.
+        }},
+        saveInput: {value: function(callback)
+        {
+            var ioItem = this.ioItem,
+                nU = this.u.el.value,
+                oU = ioItem.rec? ioItem.rec.u: undefined,
+                nP = encrypt(this.p.el.value),
+                oP = ioItem.rec? ioItem.rec.p: undefined;
+
+            // save to db
+            var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
+            saveRecord(pRec, dt_pRecord, callback);
+            //ioItem.rec = pRec;
+            if (oU && (nU !== oU)) {
+                this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
+            }                
+        }},
+        deleteRecord: {value: function(dt, key)
+        {
+            if (dt === dt_pRecord) {
+                deleteRecord({loc:this.ioItem.loc, u:key});
+            }
+        }}
+    });
+    
+    function OItemP () {}
+    OItemP.wdt = function (w$ctx)
+    {
+        var u, p, 
+            autoFill = w$ctx.autoFill,
+            ioItem = w$ctx.ioItem,
+            pRec = (ioItem && ioItem.rec) ? ioItem.rec:undefined;
+        if (pRec) {
+            u = pRec.u;
+            p = pRec.p;
+
             return {
-            proto: IItemP.IItemP,
-            tag:'div', addClass:css_class_ioFields,
-            ctx:{ w$:{iItem:'w$el'} },
-            iface:{ ioItem:ioItem },
-                children: [
-                {tag:'input',
-                 attr:{ type:'text', value:u, placeholder:'Username' },
-                 prop:{ disabled:u?true:false },
-                 addClass:css_class_field+css_class_userIn,
-                 ctx:{ w$:{u:'w$el' } },
-                 _iface:{ value: u } 
+            cons: OItemP,
+            tag:'div', 
+            addClass:css_class_ioFields,
+            ctx:{ w$:{ oItem:'w$el' } },
+                children:[
+                //autoFill ? FButton.wdt : w$undefined,
+                {tag:'span',
+                 attr:{ draggable:true },
+                 addClass:css_class_field+css_class_userOut,
+                 text:u,
+                 ctx:{ w$:{ u:'w$el' } },
+                 _iface:{ fn:fn_userid, value:u }
                 },
-                {tag:'input',
-                 attr:{ type:'password', value:p, placeholder:'Password' },
-                 addClass:css_class_field+css_class_passIn,
-                 ctx:{ w$:{p:'w$el'} },
-                 _iface:{ value: p },
-                 }
-                ],
-            _iface:{ w$ctx:{ u:'u', p:'p' } },
+                {tag:'span',
+                 attr:{ draggable:true },
+                 addClass:css_class_field+css_class_passOut,
+                 text:'*****',
+                 ctx:{ w$:{p:'w$el' } },
+                 _iface:{ fn:fn_pass, value:p }
+                }],
+            _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } },
             _final:{show:true}
             };
-        },
-        proto: w$defineProto (
-        {
-            checkInput: {value: function() 
-            {
-                var ioItem = this.ioItem,
-                    nU = this.u.el.value,
-                    oU = ioItem.rec? ioItem.rec.u: undefined,
-                    nP = encrypt(this.p.el.value),
-                    oP = ioItem.rec? ioItem.rec.p: undefined;
-                
-                if (!isValidInput(nU) || !isValidInput(nP)) {
-                    return false; // inputs are invalid
-                }
-                
-                if ((nU !== oU) || (nP !== oP)) {
-                    return true; // inputs are valid and different
-                }
-                // else return undefined; inputs are valid but same.
-            }},
-            saveInput: {value: function(callback)
-            {
-                var ioItem = this.ioItem,
-                    nU = this.u.el.value,
-                    oU = ioItem.rec? ioItem.rec.u: undefined,
-                    nP = encrypt(this.p.el.value),
-                    oP = ioItem.rec? ioItem.rec.p: undefined;
-
-                // save to db
-                var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
-                saveRecord(pRec, dt_pRecord, callback);
-                //ioItem.rec = pRec;
-                if (oU && (nU !== oU)) {
-                    this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
-                }                
-            }},
-            deleteRecord: {value: function(dt, key)
-            {
-                if (dt === dt_pRecord) {
-                    deleteRecord({loc:this.ioItem.loc, u:key});
-                }
-            }}
-        }),
-        IItemP: function () 
-        {
-            return Object.create(IItemP.proto,
-            {
-                constructor: {value: IItemP.IItemP}
-            });  
-        }    
-    };
-    
-    var OItemP = 
-    {
-        wdt: function (w$ctx)
-        {
-            var u, p, 
-                autoFill = w$ctx.autoFill,
-                ioItem = w$ctx.ioItem,
-                pRec = (ioItem && ioItem.rec) ? ioItem.rec:undefined;
-            if (pRec) {
-                u = pRec.u;
-                p = pRec.p;
-
-                return {
-                proto: OItemP.OItemP,
-                tag:'div', 
-                addClass:css_class_ioFields,
-                ctx:{ w$:{ oItem:'w$el' } },
-                    children:[
-                    //autoFill ? FButton.wdt : w$undefined,
-                    {tag:'span',
-                     attr:{ draggable:true },
-                     addClass:css_class_field+css_class_userOut,
-                     text:u,
-                     ctx:{ w$:{ u:'w$el' } },
-                     _iface:{ fn:fn_userid, value:u }
-                    },
-                    {tag:'span',
-                     attr:{ draggable:true },
-                     addClass:css_class_field+css_class_passOut,
-                     text:'*****',
-                     ctx:{ w$:{p:'w$el' } },
-                     _iface:{ fn:fn_pass, value:p }
-                    }],
-                _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } },
-                _final:{show:true}
-                };
-            }
-        },
-        proto: w$defineProto ({}),
-        OItemP: function () 
-        {
-            return Object.create(OItemP.proto,
-            {
-                constructor: {value: OItemP.OItemP}
-            });  
         }
     };
+    OItemP.prototype = w$defineProto ({});
     
-    var IoItem = 
+    function IoItem () {}
+    IoItem.wdi = function (w$ctx)
     {
-        wdi: function (w$ctx)
+        var acns=w$ctx.w$rec,
+            rec = acns? acns.curr: undefined,
+            loc = w$ctx.loc,
+            panel = w$ctx.panel,
+            bInp = w$ctx.io_bInp,
+            autoFill = panel.autoFill;
+        return {
+        cons: IoItem,
+        tag:'div', 
+        attr:{ class:css_class_li },
+        ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.prototype.toggleIO },
+        iface: { acns:acns, rec:rec, loc:loc, panel:panel, bInp:bInp },
+        on: {mousedown:stopPropagation},
+            children:[
+            autoFill ? FButton.wdt : w$undefined,
+            TButton.wdt,
+            bInp ? IItemP.wdt : OItemP.wdt,
+            DButton.wdt
+            ],
+         // save references to relevant objects.
+         _iface:{ w$ctx:{oItem:"oItem", iItem:"iItem"} }
+        };
+    };
+    IoItem.prototype = w$defineProto( // same syntax as Object.defineProperties
+    {
+        toggleIO: {value: function() 
         {
-            var acns=w$ctx.w$rec,
-                rec = acns? acns.curr: undefined,
-                loc = w$ctx.loc,
-                panel = w$ctx.panel,
-                bInp = w$ctx.io_bInp,
-                autoFill = panel.autoFill;
-            return {
-            proto: IoItem.IoItem,
-            tag:'div', 
-            attr:{ class:css_class_li },
-            ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.proto.toggleIO },
-            iface: { acns:acns, rec:rec, loc:loc, panel:panel, bInp:bInp },
-            on: {mousedown:stopPropagation},
-                children:[
-                autoFill ? FButton.wdt : w$undefined,
-                TButton.wdt,
-                bInp ? IItemP.wdt : OItemP.wdt,
-                DButton.wdt
-                ],
-             // save references to relevant objects.
-             _iface:{ w$ctx:{oItem:"oItem", iItem:"iItem"} }
-            };
-        },
-        
-        proto: w$defineProto( // same syntax as Object.defineProperties
-        {
-            toggleIO: {value: function() 
-            {
-                var iI = this.iItem, 
-                    oI = this.oItem,
-                    ctx={ioItem:this, autoFill:this.panel.autoFill},
-                    res,
-                    self = this;
-                if (iI)
-                { // Create output element
-                    res = iI.checkInput();
-                    if (res===undefined) 
+            var iI = this.iItem, 
+                oI = this.oItem,
+                ctx={ioItem:this, autoFill:this.panel.autoFill},
+                res,
+                self = this;
+            if (iI)
+            { // Create output element
+                res = iI.checkInput();
+                if (res===undefined) 
+                {
+                    this.oItem = w$exec(OItemP.wdt, ctx);
+                    if (this.oItem) {
+                        delete this.iItem; 
+                        iI.die();
+                        this.append(this.oItem);
+                        this.bInp = false;
+                    }
+                }
+                else if (res === true) 
+                {
+                    iI.saveInput(function(resp)
                     {
-                        this.oItem = w$exec(OItemP.wdt, ctx);
-                        if (this.oItem) {
-                            delete this.iItem; 
-                            iI.die();
-                            this.append(this.oItem);
-                            this.bInp = false;
+                        if (resp.result===true) {
+                            self.panel.reload();
                         }
-                    }
-                    else if (res === true) 
-                    {
-                        iI.saveInput(function(resp)
-                        {
-                            if (resp.result===true) {
-                                self.panel.reload();
-                            }
-                            else {
-                                BP_MOD_ERROR.warn(resp.err);
-                                self.panel.reload();
-                            }
-                        });
-                    }
+                        else {
+                            BP_MOD_ERROR.warn(resp.err);
+                            self.panel.reload();
+                        }
+                    });
                 }
-                else if (oI)
-                { // Create input element, destroy output element
-                    this.iItem = w$exec(IItemP.wdt, ctx);
-                    if (this.iItem) {
-                        delete this.oItem; oI.die();
-                        this.append(this.iItem);
-                        this.bInp = true;
-                    }
+            }
+            else if (oI)
+            { // Create input element, destroy output element
+                this.iItem = w$exec(IItemP.wdt, ctx);
+                if (this.iItem) {
+                    delete this.oItem; oI.die();
+                    this.append(this.iItem);
+                    this.bInp = true;
                 }
-                
-                return Boolean(this.iItem);
-            }}
-        }),
-
-        IoItem: function () 
-        {
-            return Object.create(IoItem.proto,
-            {
-                constructor: {value: IoItem.IoItem}
-            });  
-        }
-    };
+            }
+            
+            return Boolean(this.iItem);
+        }}
+    });
     
-    var PanelList = 
+    function PanelList () {}
+    PanelList.wdt = function (ctx)
     {
-        wdt: function (ctx)
-        {
-            var loc = ctx.loc || g_loc,
-                panel = ctx.panel;
-            return {
-            proto: PanelList.PanelList,
-            tag:'div', attr:{ id:eid_panelList },
-            onTarget:{ dragstart:PanelList.proto.handleDragStart,
-            drag:PanelList.proto.handleDrag, 
-            dragend:PanelList.proto.handleDragEnd },
-            ctx:{ io_bInp:false, w$:{ itemList:'w$el' } },
-            iface:{ loc:loc, panel:panel },
-                 iterate:{ it:ctx.it, wdi:IoItem.wdi }
-            };
-        },
-        proto: w$defineProto(
-        {
-            handleDragStart: {value: function handleDragStart (e)
-            {   // 'this' is bound to e.target
-                
-                //console.info("DragStartHandler entered");
-                e.dataTransfer.effectAllowed = "copy";
-                var data = this.value;
-                if (this.fn === fn_pass) {
-                    data = decrypt(this.value);
-                }
-                
-                e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
-                e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
-                e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
-                e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon16.png"}).el, 0, 0);
-                e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
-                //console.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
-                //return true;
-            }},
-            handleDrag: {value: function handleDrag(e)
-            {   // 'this' is bound to e.target
-                //console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
-                //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
-                e.stopImmediatePropagation();
-            }},
-            handleDragEnd: {value: function handleDragEnd(e)
-            {   // 'this' is bound to e.target
-                //console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
-                e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
-                //return true;
-            }},
-            newItem: {value: function()
-            {
-                if (!this.newItemCreated) {
-                    w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc, panel:this.panel }).appendTo(this);
-                    this.newItemCreated = true;    
-                }
-                
-            }}
-        }),
-
-        PanelList: function () 
-        {
-            return Object.create(PanelList.proto,
-            {
-                constructor: {value: PanelList.PanelList}
-            });  
-        }    
+        var loc = ctx.loc || g_loc,
+            panel = ctx.panel;
+        return {
+        cons: PanelList,
+        tag:'div', attr:{ id:eid_panelList },
+        onTarget:{ dragstart:PanelList.prototype.handleDragStart,
+        drag:PanelList.prototype.handleDrag, 
+        dragend:PanelList.prototype.handleDragEnd },
+        ctx:{ io_bInp:false, w$:{ itemList:'w$el' } },
+        iface:{ loc:loc, panel:panel },
+             iterate:{ it:ctx.it, wdi:IoItem.wdi }
+        };
     };
-        
-    var Panel =
+    PanelList.prototype = w$defineProto(
     {
-        wdt: function(ctx) 
+        handleDragStart: {value: function handleDragStart (e)
+        {   // 'this' is bound to e.target
+            
+            //console.info("DragStartHandler entered");
+            e.dataTransfer.effectAllowed = "copy";
+            var data = this.value;
+            if (this.fn === fn_pass) {
+                data = decrypt(this.value);
+            }
+            
+            e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
+            e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
+            e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
+            e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon16.png"}).el, 0, 0);
+            e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
+            //console.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+            //return true;
+        }},
+        handleDrag: {value: function handleDrag(e)
+        {   // 'this' is bound to e.target
+            //console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
+            e.stopImmediatePropagation();
+        }},
+        handleDragEnd: {value: function handleDragEnd(e)
+        {   // 'this' is bound to e.target
+            //console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
+            //return true;
+        }},
+        newItem: {value: function()
         {
-            var loc = ctx.loc || g_loc,
-                reload = ctx.reload,
-                autoFill = ctx.autoFill;
-            return {
-            proto:Panel.Panel, // static prototype object.
-            tag:"div",
-            attr:{ id:eid_panel },
-            css:{ position:'fixed', top:'0px', 'right':"0px" },
-             
-            // Post w$el creation steps
-            // Copy props to ctx with values:
-            // 1. Directly from the javascript runtime.
-            // 2. For the props under w$, copy them from the wdl-interpretor runtime. In this case
-            //    the value of the prop defined below should be name of the prop in the wdl-runtime.
-            // 3. Props listed under w$ctx are copied over from the context object - ctx - only makes
-            //    sence when you're copying into something other than the context itself.
-            ctx:{ w$:{ panel:"w$el" }, loc:loc },
-            iface:{ _reload:reload, id:eid_panel, autoFill:autoFill },
+            if (!this.newItemCreated) {
+                w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc, panel:this.panel }).appendTo(this);
+                this.newItemCreated = true;    
+            }
+            
+        }}
+    });
     
-                // Create children
+    function Panel () {}
+    Panel.wdt = function(ctx) 
+    {
+        var loc = ctx.loc || g_loc,
+            reload = ctx.reload,
+            autoFill = ctx.autoFill;
+        return {
+        cons:Panel, // static prototype object.
+        tag:"div",
+        attr:{ id:eid_panel },
+        css:{ position:'fixed', top:'0px', 'right':"0px" },
+         
+        // Post w$el creation steps
+        // Copy props to ctx with values:
+        // 1. Directly from the javascript runtime.
+        // 2. For the props under w$, copy them from the wdl-interpretor runtime. In this case
+        //    the value of the prop defined below should be name of the prop in the wdl-runtime.
+        // 3. Props listed under w$ctx are copied over from the context object - ctx - only makes
+        //    sence when you're copying into something other than the context itself.
+        ctx:{ w$:{ panel:"w$el" }, loc:loc },
+        iface:{ _reload:reload, id:eid_panel, autoFill:autoFill },
+
+            // Create children
+            children:[
+            {tag:"div", attr:{ id:eid_panelTitle },
                 children:[
-                {tag:"div", attr:{ id:eid_panelTitle },
-                    children:[
-                    cs_panelTitleText_wdt,
-                    XButton.wdt,
-                    UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)?NButton.wdt: w$undefined
-                    ]
-                },
-                UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt : w$undefined],
-    
-            // Post processing steps
-            _data:{ w$ctx:{}, w$:{} }, // props to be copied to w$el.data after creating children
-            _iface:{ w$:{}, w$ctx:{itemList:'itemList'} },
-            _final:{ 
-                appendTo:document.body, 
-                show:true, 
-                exec:Panel.proto.makeDraggable }
-            };
-        },
-        
-        proto: w$defineProto( // same syntax as Object.defineProperties
-        {
-            makeDraggable: {value: function(ctx, w$)
-            {
-                // Make sure that postion:fixed is supplied at element level otherwise draggable() overrides it
-                // by setting position:relative. Also we can use right:0px here because draggable() does not like it.
-                // Hence we need to calculate the left value :(  
-                // var panelW = this.$el.outerWidth() || 300;                // var winW = g_doc.body.clientWidth || $(g_doc.body).innerWidth();                // var left = (winW-panelW);                // left = (left>0)? left: 0;                // this.$el.css({position: 'fixed', top: '0px', 'left': left + "px"});               
-                this.$el.draggable();
-            }},
-            reload: {value: function() 
-            { //TODO: Implement this
-                this.die();
-                this._reload();
-            }},
-        }),
+                cs_panelTitleText_wdt,
+                XButton.wdt,
+                UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)?NButton.wdt: w$undefined
+                ]
+            },
+            UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt : w$undefined],
 
-        Panel: function () 
+        // Post processing steps
+        _data:{ w$ctx:{}, w$:{} }, // props to be copied to w$el.data after creating children
+        _iface:{ w$:{}, w$ctx:{itemList:'itemList'} },
+        _final:{ 
+            appendTo:document.body, 
+            show:true, 
+            exec:Panel.prototype.makeDraggable }
+        };
+    };
+    Panel.prototype = w$defineProto( // same syntax as Object.defineProperties
+    {
+        makeDraggable: {value: function(ctx, w$)
         {
-            return Object.create(Panel.proto,
-            {
-                constructor: {value: Panel.Panel}
-            });  
-        }    };
+            // Make sure that postion:fixed is supplied at element level otherwise draggable() overrides it
+            // by setting position:relative. Also we can use right:0px here because draggable() does not like it.
+            // Hence we need to calculate the left value :(  
+            // var panelW = this.$el.outerWidth() || 300;
+            // var winW = g_doc.body.clientWidth || $(g_doc.body).innerWidth();
+            // var left = (winW-panelW);
+            // left = (left>0)? left: 0;
+            // this.$el.css({position: 'fixed', top: '0px', 'left': left + "px"});               
+            this.$el.draggable();
+        }},
+        reload: {value: function() 
+        { //TODO: Implement this
+            this.die();
+            this._reload();
+        }},
+    });
       
     var iface = 
     {

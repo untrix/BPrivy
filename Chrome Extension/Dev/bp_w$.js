@@ -187,12 +187,12 @@ var BP_MOD_W$ = (function ()
             el = $el[0];
         }
         // Create the widget element
-        if (wdl.proto) {
-            w$el = wdl.proto();
+        if (wdl.cons) {
+            w$el = new wdl.cons();
             w$el.cons($el);
         }
-        else if (wdl.cons) {
-            w$el = new wdl.cons();
+        else if (wdl.proto) {
+            w$el = wdl.proto();
             w$el.cons($el);
         }
         else {
