@@ -15,7 +15,9 @@ var fs = require('fs.extra'),
     abs  = path.resolve,
     argv = process.argv.slice(2),
     recess = require('recess'),
-    doneItems=0;
+    events = require('events'),
+    bp = require('./bp.js'),
+    pendingItems=1;
     
     if (argv.length < 2) 
     {
@@ -94,26 +96,18 @@ recess('./js/fat.css', { compile: true }, function (err, obj) {
 })
 */
 
-function done()
-{
-    return doneItems===3;
-}
+var async = bp.newAsync('buildcss');
 
-function getRecessFunc (fpath) 
+function makeRecessCback (fpath) 
 {
     'use strict';
     return function (err, obj)
     {   var i, n;
         if (err) {throw err;}
-        zero(abs(fpath));
+        zero(fpath);
         console.log('Compiling ' + fpath);
-        for (i=0, n=obj.length; i<n; i++) {
-            fs.appendFileSync(abs(fpath), obj[i].output);
-        }
-
-        doneItems++;
-        if (done()) {
-            process.exit();
+        for (i=0, n=obj.length; i<n; i++) {//TODO: convert this to a forEach loop
+            fs.appendFile(fpath, obj[i].output, async.runHere(bp.throwErr));
         }
     };
 }
@@ -128,18 +122,16 @@ fs.mkdirp(abs(DST, 'release'));
 fs.mkdirp(abs(DST, 'dist'));
 
 srcFiles=[SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dev.less'];
-if (doBuild(srcFiles, devTarget)) {
-    recess(srcFiles, {compile:true, compress:false}, getRecessFunc(zero(devTarget)));
-}
+if (doBuild(srcFiles, devTarget)) {    recess(srcFiles, {compile:true, compress:false}, async.runHere(makeRecessCback(devTarget)));}
 
 srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.release.less'];
 if (doBuild(srcFiles, releaseTarget)) { 
-    recess(srcFiles, {compile:true, compress:true}, getRecessFunc(zero(releaseTarget)));
+    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(releaseTarget)));
 }
 
 srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dist.less'];
 if (doBuild(srcFiles, distTarget)) {
-    recess(srcFiles, {compile:true, compress:true}, getRecessFunc(zero(distTarget)));
+    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(distTarget)));
 }
 
-if (done()) {process.exit();}
+async.end();

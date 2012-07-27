@@ -15,10 +15,13 @@
 var fs = require('fs.extra'),
     rimraf = require('rimraf'),
     rmrf = rimraf.sync,
+    events = require('events'),
     path = require('path'),
     abs = path.resolve,
     argv = process.argv.slice(2),
     child = require('child_process'),
+    bp = require('./bp.js'),
+    async = bp.newAsync('build'),
     qualify = function (relDir, varFileNames) // takes relDir & variable number of files
     {   'use strict';
         var files = [], i, n;
@@ -72,13 +75,12 @@ if (argv.length < 2)
     console.error("Usage: node " + path.basename(__filename) + " <src dir> <build dir>");
     process.exit(1);
 }
- 
+
 var src = abs(argv[0]),
     bld = abs(argv[1]),
     release = abs(bld, 'release'),
     minjs = abs(bld, 'minjs'),
     dist = abs(bld, 'dist'),
-    doneFlags = [],
     release_js = [
     'bp_common.js',
     'bp_connector.js',
@@ -103,23 +105,10 @@ var src = abs(argv[0]),
 
 fs.mkdirpSync(bld);
 
-function done()
-{
-    return (doneFlags[1] && doneFlags[2] && doneFlags[3]);
-}
-
 var ch1 = child.fork('buildcss.js', [src,bld]);
-ch1.on('exit', function (code, signal)
-{
-    doneFlags[1] = true;
-    if (done()) {
-        process.exit(code);
-    }
-});
+ch1.on('exit', async.track());
 ch1.disconnect();
 
-
-function throwErr(err){ if (err) {doneFlags[3]=true; throw err;}}
 function copy(srcDir, dstDir, files)
 {
     var i, n, 
@@ -135,7 +124,7 @@ function copy(srcDir, dstDir, files)
             if (fs.existsSync(fdst)) {
                 fs.unlinkSync(fdst); // truncate the file.
             }
-            fs.copy(fsrc, fdst, throwErr);
+            fs.copy(fsrc, fdst, async.runHere(bp.throwErr));
         }
     });
 }
@@ -149,10 +138,8 @@ function mkdirp(dirs)
 }
 
 var ch2 = child.fork('buildminify.js', [src, minjs]);
-ch2.on('exit', function childExit(code, signal)
+ch2.on('exit', async.runHere(function childExit(code, signal)
 {
-    doneFlags[2] = true;
-    
     // ensure that all internal directories exist
     mkdirp(Object.keys(lsSkel(release, release_others)));
     mkdirp(Object.keys(lsSkel(dist, release_others)));
@@ -163,10 +150,8 @@ ch2.on('exit', function childExit(code, signal)
     var pem_dir = path.dirname(bld);
     copy(pem_dir, dist, ['key.pem']);
 
-    doneFlags[3] = true;
-    if (done()) {process.exit(0);}
-    
-});
+}));
 ch2.disconnect();
 
+async.end();
 

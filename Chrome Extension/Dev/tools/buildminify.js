@@ -10,15 +10,19 @@
   regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true, stupid:true */
 /*global require, process, __filename */
 
+'use strict';
+
 var jsp = require("uglify-js").parser,
     pro = require("uglify-js").uglify,
     fs  = require('fs.extra'),
     path = require('path'),
+    bp   = require('./bp.js'),
+    async = bp.newAsync('buildminify'),
     abs  = path.resolve,
     argv = process.argv.slice(2);
 
 function uglify(orig_code)
-{   'use strict';
+{
     
     var ast = jsp.parse(orig_code); // parse code and get the initial AST
     ast = pro.ast_lift_variables(ast);
@@ -27,8 +31,14 @@ function uglify(orig_code)
     return pro.gen_code(ast); // compressed code here
 }
 
+function readFileCallback(err, data, ctx)
+{
+    data = uglify(data.toString());
+    fs.writeFile(ctx.df, data, async.runHere(bp.throwErr));
+}
+
 function minify(SRC, DST)
-{   'use strict';
+{
     var files = fs.readdirSync(SRC),
         i, n, d, f, df, sf;
         
@@ -43,9 +53,7 @@ function minify(SRC, DST)
                 (fs.lstatSync(sf).mtime > fs.lstatSync(df).mtime))
             {
                 console.log('Minifying ' + df);
-                d = fs.readFileSync(sf);
-                d = uglify(d.toString());
-                fs.writeFileSync(df, d);
+                d = fs.readFile(sf, async.runHere(readFileCallback, {df:df}));
             }
         }
     }
@@ -60,3 +68,5 @@ else {
     fs.mkdirp(argv[1]);
     minify(abs(argv[0])+path.sep, abs(argv[1])+path.sep);
 }
+
+async.end();
