@@ -124,10 +124,59 @@ var BP_MOD_WDL = (function ()
      * WDL = Widget Description Language. WDL objects are evaluated by wdl-interpretor
      * WDT = WDL Template. Functions that produce WDL objects. These may be executed either
      *       directly by javascript or by the wdl-interpretor.
+     * WDI = WDL Template invoked inside an iteration. Gets additional w$i and w$rec properties
+     *       in its (w$)ctx argument.
      * W$EL = Widget Element. This is the element finally produced by the wdl-interpretor.
      *       It is a proxy to the DOM element. If the DOM is laid on a two-dimensional plane
      *       then w$el elements are laid out on a parallel plane, with the same hierarchy
      *       as the DOM elements and with cross-links between each pair of DOM and w$ element.
+     * Set of WDL Properties in order of processing:
+     * wdl = 
+     * {
+     *     'tag' or 'html' are mandatory
+     *     'cons' or 'proto' maybe be optionally present. But not both.
+     *     cons == widget element constructor. It should construct descendants of WidgetElement.prototype
+     *     proto== Prototype object. If this is specified, then it should be a descendant of
+     *             WidgetElement.proto. w$exec will construct an object inherited from proto.
+     *             If neither of cons or proto are present, then a simple WidgetElement will be constructed.
+     *     attr == same as in jquery
+     *     text == same as in jquery
+     *     prop == same as in jquery
+     *     css  == same as in jquery
+     *     addClass == same as in jquery
+     *     on   ==  same syntax as jQuery. Will bind 'this' to this element (i.e. currentTarget).
+     *                In this case 'this' is bound to the same element as the one catching the event.
+     *     onTarget = same syntax as jQuery. However, will bind 'this' to the target element
+     *                which may be different than the handling/catching element.
+     *     ctx == Object that holds name:value pairs to be populated into the context (ctx/w$ctx).
+     *            Meant for passing properties down to descendants, back up to parents or onto
+     *            elements further down the time-line. The elements will catch these properties
+     *            using iface and _iface properties. These properties are inserted into ctx
+     *            before children are processed. The property values may be directly specified
+     *            in the wdl (maybe dynamically created by a wdt or wdi function but ultimately
+     *            hard-bound into the resulting wdl object), or w$exec may be instructed to pick
+     *            them up from the context of from the lexical-environment denoted by 'w$'.
+     *            e.g. ctx:{ prop1:hard-boundvalue, w$:{ element:'w$el' }, w$ctx:{ prop3:'prop-from-ctx' } }
+     *     iface == Set of name:value pairs to insert into the WidgetElement before processing children. This
+     *            allows descendants and later elements to take values directly from the WidgetElement instead
+     *            of from the context. Value sources are same as described above for ctx.
+     *     children == children wdls, inserted in order of appearence.
+     *              As a special case, an undefined value of a child-wdl is an indication to skip that
+     *              child element instead of throwing an exception (exception will be thrown if wdl === null)
+     *     iterate:{ it:iterator, wdi:wdl-template-func-or-plain-object }
+     *              Insert children iteratively. Iterator should have a next() function that returns a 'record'
+     *              object to be fed into the wdi function. The wdi property shoudl hold a wdl-template function
+     *              that is expected to be executed at runtime and with each iteration w$ctx.w$rec property is
+     *              populated with the record obtained by iterator.next(). The iteration number (starting with 0)
+     *              is populated into w$ctx.w$i.
+     *     _iface: Same as iface, except that this directive is processed after children are created. Meant
+     *              to catch values thrown by children.
+     *     _final: Can have three properties {show:true/false/other, exec:func, appendTo:DOM-element}
+     *     _final.show: true=>show the element, false=>hide the element, other value or absent=> do nothing 
+     *     _final.exec: a function to execute
+     *     _final.appendTo: instructs w$exec to append the created element to a DOM element.
+     *     
+     * }
      */
    
     function image_wdt(ctx)
@@ -162,15 +211,30 @@ var BP_MOD_WDL = (function ()
         return {
         cons: NButton,
         html:'<button type="button"></button>', 
-        attr:{ class:css_class_xButton},
-        //text:u_cir_N, 
+        attr:{ class:css_class_tButton},
         on:{ click:NButton.prototype.newItem },
+        css:{ width:'20px', float:'left' },
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
             addClass:'icon-plus'
             }],
         _iface:{ w$ctx:{ panel:'panel' } }
+        };
+    };
+    
+    function SButton(){}
+    SButton.wdt = function (w$ctx)
+    {
+        return {
+        tag: 'a',
+        attr:{ class:css_class_xButton, href:BP_MOD_CS_PLAT.getURL("bp_manage.html") },
+        css:{ width:'20px' },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle', cursor:'auto' },
+            addClass:'icon-cog'
+            }]
         };
     };
     
@@ -210,7 +274,7 @@ var BP_MOD_WDL = (function ()
         };
     };
 
-    function FButton () {}
+    function FButton(){}
     FButton.prototype =  w$defineProto(
     {
         onClick: {value: function(ev)
@@ -231,13 +295,13 @@ var BP_MOD_WDL = (function ()
         html:'<button type="button"></button>',
         attr:{class:css_class_tButton, title:'auto fill' },
         ctx:{ w$:{ fButton:"w$el" } },
-        //text:u_cir_F,
         on:{ click:FButton.prototype.onClick },
+        css:{ width:'20px' },
         iface:{ ioItem:w$ctx.ioItem, _autoFill:autoFill },
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
-            addClass:"icon-arrow-left",
+            addClass:"icon-arrow-left"
             }]
         };
     };   
@@ -250,7 +314,7 @@ var BP_MOD_WDL = (function ()
         cons: DButton,
         //html:'<button type="button"><i class="icon-trash"></i></button>',
         html:'<button type="button"></button>',
-        css:{ float:'right' },
+        css:{ float:'right', width:'20px' },
         on:{ click:DButton.prototype.onClick },
         _iface:{ ioItem:ioItem },
             children:[
@@ -278,8 +342,8 @@ var BP_MOD_WDL = (function ()
          cons: TButton,
          html:'<button type="button">',
          attr:{ class:css_class_tButton, /*id:eid_tButton+w$i*/ },
-         //text:bInp?u_cir_S:u_cir_E,
          on:{ click:TButton.prototype.toggleIO2 },
+         css:{ width:'20px' },
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
@@ -325,6 +389,7 @@ var BP_MOD_WDL = (function ()
         cons: IItemP,
         tag:'div', addClass:css_class_ioFields,
         ctx:{ w$:{iItem:'w$el'} },
+        //on:{ 'submit':ioItem.toggleIO },
         iface:{ ioItem:ioItem },
             children: [
             {tag:'input',
@@ -587,15 +652,15 @@ var BP_MOD_WDL = (function ()
             children:[
             {tag:"div", attr:{ id:eid_panelTitle },
                 children:[
+                UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)?NButton.wdt: w$undefined,
                 cs_panelTitleText_wdt,
                 XButton.wdt,
-                UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)?NButton.wdt: w$undefined
+                SButton.wdt
                 ]
             },
             UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt : w$undefined],
 
         // Post processing steps
-        _data:{ w$ctx:{}, w$:{} }, // props to be copied to w$el.data after creating children
         _iface:{ w$:{}, w$ctx:{itemList:'itemList'} },
         _final:{ 
             appendTo:document.body, 

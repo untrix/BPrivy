@@ -199,6 +199,8 @@ var BP_MOD_W$ = (function ()
             w$el = new WidgetElement($el);
         }
         
+        var txt1 = wdl.text || "";
+        
         $el.attr(wdl.attr || {})
             .text(wdl.text || "")
             .prop(wdl.prop || {})
@@ -208,9 +210,8 @@ var BP_MOD_W$ = (function ()
         w$on(w$el, wdl.on, w$eventProxy); // will bind this to e.currentTarget
         w$on(w$el, wdl.onTarget, w$eTargetProxy); // will bind this to e.target
 
-        // Update w$ runtime env.
+        // Update w$ - the 'lexical env'.
         w$.w$el = w$el;
-        //w$.id = $el.attr('id'); // This does not make sense.
         
         // Update the context now that the element is created
         if (!ctx) {ctx={};} // setup a new context if one is not provided
@@ -238,7 +239,8 @@ var BP_MOD_W$ = (function ()
             for (i=0, cwdl=wdi; ((rec = it.next())); i++, cwdl=wdi) 
             {try {
                 if (isFunc) {
-                    ctx.w$rec = rec; ctx.w$i = i;
+                    ctx.w$rec = rec;
+                    ctx.w$i = i;
                     cwdl = cwdl(ctx);
                 } // compile wdi to wdl
                 
@@ -247,9 +249,6 @@ var BP_MOD_W$ = (function ()
                 logwarn(e);
             }}
         }
-        
-        // Now update w$el.data after ctx has been populated by children
-        //if (wdl._data) { w$evalProps(wdl._data, w$, ctx, w$el.data); }
         
         // Populate w$el's interface post-children
         if (wdl._iface) { w$evalProps(wdl._iface, w$, ctx, w$el); }
