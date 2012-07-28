@@ -50,7 +50,7 @@ var BP_MOD_CS_PLAT = (function()
         
         registerMsgListener: function(foo)
         {
-            chrome.extension.onRequest.addListener(foo);
+            chrome.extension.onMessage.addListener(foo);
         },
         
         getURL: function(path)

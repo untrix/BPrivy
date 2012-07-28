@@ -74,15 +74,18 @@ var BP_MOD_CS = (function(g_win)
     m = BP_MOD_CS_PLAT;
     var registerMsgListener = IMPORT(m.registerMsgListener);
     var addEventListener = IMPORT(m.addEventListener); // Compatibility function
+    /** @import-module-begin Traits */
+    m = IMPORT(BP_MOD_TRAITS);
+    var RecsIterator = IMPORT(m.RecsIterator),
+        dt_eRecord = IMPORT(m.dt_eRecord),
+        fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
+        fn_pass = IMPORT(m.fn_pass);        // Represents data-type password
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
     var getRecs = IMPORT(m.getRecs),
-        dt_eRecord = IMPORT(m.dt_eRecord),
         deleteRecord = IMPORT(m.deleteRecord),
         saveRecord = IMPORT(m.saveRecord),
-        newERecord = IMPORT(m.newERecord),
-        fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
-        fn_pass = IMPORT(m.fn_pass);        // Represents data-type password
+        newERecord = IMPORT(m.newERecord);
     /** @import-module-begin Panel */
     //m = BP_MOD_PANEL;
     //var createPanel = IMPORT(m.createPanel);
@@ -96,18 +99,13 @@ var BP_MOD_CS = (function(g_win)
         CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN),
         CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX),
         CT_BP_USERID = IMPORT(m.CT_BP_USERID),
-        CT_BP_PASS = IMPORT(m.CT_BP_PASS);
+        CT_BP_PASS = IMPORT(m.CT_BP_PASS),
+        cs_panel_wdt = IMPORT(m.cs_panel_wdt);
     /** @import-module-begin W$ */
         m = IMPORT(BP_MOD_W$);
     var w$exec = IMPORT(m.w$exec),
         w$get = IMPORT(m.w$get),
         w$set = IMPORT(m.w$set);
-    /** @import-module-begin WDL */
-    m = BP_MOD_WDL;
-    var cs_panel_wdt = IMPORT(m.cs_panel_wdt);
-    /** @import-module-begin Traits */
-    m = IMPORT(BP_MOD_TRAITS);
-    var RecsIterator = IMPORT(m.RecsIterator);
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
@@ -347,7 +345,7 @@ var BP_MOD_CS = (function(g_win)
             }
         }
         
-        sendResponse({});
+        sendResponse({ack:true});
     }
 
     function findPeerElement(el)

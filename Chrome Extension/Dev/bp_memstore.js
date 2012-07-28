@@ -7,7 +7,7 @@
 
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, chrome */
+  BP_MOD_ERROR, chrome, BP_MOD_TRAITS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -23,15 +23,17 @@ var BP_MOD_MEMSTORE = (function ()
     m = BP_MOD_COMMON;
     var PROTO_HTTP = IMPORT(m.PROTO_HTTP),
         PROTO_HTTPS = IMPORT(m.PROTO_HTTPS);
+    /** @import-module-begin **/
+    m = BP_MOD_TRAITS;
+    var dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord),
+        dt_default = IMPORT(m.dt_default),
+        dt_etld    = IMPORT(m.dt_etld);
     /** @import-module-begin Connector */
     m = IMPORT(BP_MOD_CONNECT);
     var cm_getRecs = IMPORT(m.cm_getRecs),
         newPRecord = IMPORT(m.newPRecord),
         newERecord = IMPORT(m.newERecord),
-        dt_eRecord = IMPORT(m.dt_eRecord),
-        dt_pRecord = IMPORT(m.dt_pRecord),
-        dt_default = "DefaultDT",
-        dt_etld    = IMPORT(m.dt_etld),
         newL = IMPORT(m.newL),
         DICT_TRAITS = IMPORT(m.DICT_TRAITS);
     /** @import-module-end **/    m = null;

@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global chrome  */
+/*global chrome, BP_MOD_ERROR, BP_MOD_COMMON  */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -21,7 +21,28 @@ var  BP_MOD_PLAT = (function()
 
     function bpClick(tab)
     {
-        chrome.tabs.sendRequest(tab.id, {click: true});
+        chrome.tabs.sendMessage(tab.id, {click: true}, 
+        function(resp)
+        {
+            if (!resp) 
+            { // Set badge text
+                chrome.browserAction.setBadgeText({text:"oops", tabId:tab.id});
+                switch (BP_MOD_COMMON.getScheme(tab.url))
+                {
+                    case "file:":
+                        chrome.browserAction.setTitle({title:"User Blocked", tabId:tab.id});
+                        BP_MOD_ERROR.alert("You have blocked BPrivy from accessing files. Please change the setting on 'Manage Extensions' page");
+                        break;
+                    default:
+                        chrome.browserAction.setTitle({title:"No passwords for this page", tabId:tab.id});
+                        break;
+                }                    
+            }
+            else { // Unset badge text
+                chrome.browserAction.setBadgeText({text:"", tabId:tab.id});
+                chrome.browserAction.setTitle({title:"", tabId:tab.id});
+            }
+        });
     }  
     
     function bpMenuClick(info, tab)

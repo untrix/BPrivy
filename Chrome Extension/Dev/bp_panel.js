@@ -38,20 +38,21 @@ var BP_MOD_WDL = (function ()
         addHandlers = IMPORT(m.addHandlers); // Compatibility function
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
-    var fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
-        fn_pass = IMPORT(m.fn_pass),        // Represents data-type password
-        dt_eRecord = IMPORT(m.dt_eRecord),
-        dt_pRecord = IMPORT(m.dt_pRecord),
-        newPRecord = IMPORT(m.newPRecord),
+    var newPRecord = IMPORT(m.newPRecord),
         saveRecord = IMPORT(m.saveRecord),
         deleteRecord = IMPORT(m.deleteRecord);
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
     /** @import-module-begin */
-    var MOD_TRAITS = IMPORT(BP_MOD_TRAITS);
-    var UI_TRAITS = IMPORT(MOD_TRAITS.UI_TRAITS);
-    /** @import-module-end **/    m = null;
+    m = BP_MOD_TRAITS;
+    var MOD_TRAITS = IMPORT(m),
+        UI_TRAITS = IMPORT(m.UI_TRAITS),
+        fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
+        fn_pass = IMPORT(m.fn_pass),        // Represents data-type password
+        dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord);
+        /** @import-module-end **/    m = null;
 
     /** @globals-begin */
     // Names used in the code. A mapping is being defined here because
@@ -161,8 +162,8 @@ var BP_MOD_WDL = (function ()
      *            allows descendants and later elements to take values directly from the WidgetElement instead
      *            of from the context. Value sources are same as described above for ctx.
      *     children == children wdls, inserted in order of appearence.
-     *              As a special case, an undefined value of a child-wdl is an indication to skip that
-     *              child element instead of throwing an exception (exception will be thrown if wdl === null)
+     *              As a special case, a w$undefined value of a child-wdl is an indication to skip that
+     *              child element instead of throwing an exception (exception will be thrown if (!child))
      *     iterate:{ it:iterator, wdi:wdl-template-func-or-plain-object }
      *              Insert children iteratively. Iterator should have a next() function that returns a 'record'
      *              object to be fed into the wdi function. The wdi property shoudl hold a wdl-template function

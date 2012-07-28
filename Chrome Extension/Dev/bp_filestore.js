@@ -7,7 +7,7 @@
 
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_PLAT, chrome */
+  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_PLAT, chrome, BP_MOD_TRAITS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -30,11 +30,13 @@ var BP_MOD_FILESTORE = (function()
         url_aliases = IMPORT(m.url_aliases),
         parseURL = IMPORT(m.parseURL),
         stripQuotes = IMPORT(m.stripQuotes);
+    /** @import-module-begin **/
+    m = BP_MOD_TRAITS;
+    var dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin connector **/
     m = BP_MOD_CONNECT; 
-    var dt_eRecord = IMPORT(m.dt_eRecord),
-        dt_pRecord = IMPORT(m.dt_pRecord),
-        newPRecord = IMPORT(m.newPRecord);
+    var newPRecord = IMPORT(m.newPRecord);
     /** @import-module-begin MemStore **/
     var MEM_STORE = IMPORT(BP_MOD_MEMSTORE);
     /** @import-module-end **/    m = null;

@@ -6,7 +6,7 @@
  */
 
 /* Global declaration for JSLint */
-/*global BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT, BP_MOD_ERROR */
+/*global BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT, BP_MOD_ERROR, BP_MOD_TRAITS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -23,33 +23,15 @@ var BP_MOD_CONNECT = (function ()
     var m = BP_MOD_CS_PLAT;
     var postMsgToMothership = IMPORT(m.postMsgToMothership);
     var rpcToMothership = IMPORT(m.rpcToMothership);
+    /** @import-module-begin Traits **/
+        m = BP_MOD_TRAITS;    
+    var dt_eRecord = IMPORT(m.dt_eRecord);  // Represents a E-Record (html-element record). Value is persisted.
+    var dt_pRecord = IMPORT(m.dt_pRecord);  // Represents a P-Record (password record). Value is persisted.
+    var dt_etld    = IMPORT(m.dt_etld);   // Represents a ETLD (Public Suffix) record. Value is persisted.
+    var fn_userid = IMPORT(m.fn_userid);   // Represents field userid. Copy value from P_UI_TRAITS.
+    var fn_pass = IMPORT(m.fn_pass);       // Represents field password. Copy value from P_UI_TRAITS.
     /** @import-module-end **/    m = null;
-    
-    /** 
-     * @constant Used for multiple purposes. Therefore be careful of what chars
-     * you use in the string.
-     * 1. As a data-type (class) identifier within in-memory objects.
-     * 2. As a component of filesystem directory/filenames of ADB. Therefore
-     *    name should be short and lowercase. NTFS and FAT ignores case. Do not
-     *    use any chars that are disallowed in any filesystem (NTFS, NFS, FAT,
-     *    ext1,2,3&4, CIFS/SMB, WebDAV, GFS, any FS on which a customer may want to store
-     *    their ADB).
-     * 3. As a component of tag-names inside DNodes. Hence keep it short. Do not
-     *    use any chars that are disallowed as Javascript properties.
-     * 4. These values will get marshalled into JSON files, therefore make sure
-     *    that they are all valid JSON property names (e.g. no backslash or quotes).
-     * 5. To represent the data-type in general at other places in the code ...
-     */
-    var dt_eRecord = "e";  // Represents a E-Record (html-element record). Value is persisted.
-    var dt_pRecord = "p";  // Represents a P-Record (password record). Value is persisted.
-    var dt_etld    = "m";   // Represents a ETLD (Public Suffix) record. Value is persisted.
 
-    // 'enumerated' values used internally only. We need these here in order
-    // to be able to use the same values consistently across modules.
-    /** @constant */
-    var fn_userid = "u";   // Represents field userid. Copy value from P_UI_TRAITS.
-    /** @constant */
-    var fn_pass = "p";       // Represents field password. Copy value from P_UI_TRAITS.
     /** @constant */
     var cm_getRecs = "cm_getRecs";     // Represents a getDB command
     var cm_loadDB = "cm_loadDB";

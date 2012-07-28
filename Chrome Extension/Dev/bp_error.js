@@ -8,7 +8,8 @@
 /*global document */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
- 
+
+//////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE ///////////////////
 function IMPORT(sym)
 {
     'use strict';

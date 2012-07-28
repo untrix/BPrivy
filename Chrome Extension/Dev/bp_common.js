@@ -9,6 +9,7 @@
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
  
+//////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE ///////////////////
 var BP_MOD_COMMON = (function() 
 {
     "use strict"; // TODO: @remove Only used in debug builds
@@ -97,6 +98,11 @@ var BP_MOD_COMMON = (function()
         return loc;
     }
     
+    function getScheme(url)
+    {
+        return url.slice(0, url.indexOf("://")+1);
+    }
+    
     function stripQuotes(s)
     {
         var a = s.match(/^[\s\"\']*([^\s\"\']*)[\s\"\']*$/);
@@ -165,6 +171,7 @@ var BP_MOD_COMMON = (function()
         url_aliases: {value: url_aliases},
         toJson: {value: toJson},
         parseURL: {value: parseURL},
+        getScheme: {value: getScheme},
         stripQuotes: {value: stripQuotes},
         encrypt: {value: encrypt},
         decrypt: {value: decrypt},

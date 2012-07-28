@@ -19,14 +19,16 @@
     var m = BP_MOD_PLAT;
     var registerMsgListener = IMPORT(m.registerMsgListener);
     var initScaffolding = IMPORT(m.init);
+    /** @import-module-begin **/
+    m = BP_MOD_TRAITS;
+    var dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
     var cm_getRecs = IMPORT(m.cm_getRecs);
     var cm_loadDB = IMPORT(m.cm_loadDB);
     var cm_createDB = IMPORT(m.cm_createDB);
     var cm_getDBPath = IMPORT(m.cm_getDBPath);
-    var dt_eRecord = IMPORT(m.dt_eRecord);
-    var dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin MemStore */
     var MEM_STORE = IMPORT(BP_MOD_MEMSTORE);
     var FILE_STORE = IMPORT(BP_MOD_FILESTORE);
