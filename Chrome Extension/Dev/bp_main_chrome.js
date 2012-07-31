@@ -26,15 +26,17 @@ var  BP_MOD_PLAT = (function()
         {
             if (!resp) 
             { // Set badge text
-                chrome.browserAction.setBadgeText({text:"oops", tabId:tab.id});
                 switch (BP_MOD_COMMON.getScheme(tab.url))
                 {
                     case "file:":
+                        chrome.browserAction.setBadgeText({text:"oops", tabId:tab.id});
                         chrome.browserAction.setTitle({title:"User Blocked", tabId:tab.id});
-                        BP_MOD_ERROR.alert("You have blocked BPrivy from accessing files. Please change the setting on 'Manage Extensions' page");
+                        BP_MOD_ERROR.alert("You have blocked BPrivy from accessing files. "+
+                        "Please 1) change the setting on 'Manage Extensions' page, then 2) reload the page");
                         break;
                     default:
-                        chrome.browserAction.setTitle({title:"No passwords for this page", tabId:tab.id});
+                        chrome.browserAction.setBadgeText({text:"oops", tabId:tab.id});
+                        chrome.browserAction.setTitle({title:"Empty or restricted page", tabId:tab.id});
                         break;
                 }                    
             }

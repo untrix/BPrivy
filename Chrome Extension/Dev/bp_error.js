@@ -183,7 +183,7 @@ var BP_MOD_ERROR = (function()
         if (_err!==undefined && _err!==null && (typeof _err === "string"))
         {
             this.atvt = BPError.atvt; // Take value of page atvt
-            this.message = _err || (acode ? msg[acode] : "" + gcode?msg[gcode]:'');
+            this.message = _err || (acode ? msg[acode] : String() + gcode?msg[gcode]:'');
             this.err.name = "BPDiags";
             this.err.acode = acode || 'Diag';
             this.err.gcode = gcode;

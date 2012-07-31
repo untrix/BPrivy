@@ -182,6 +182,11 @@ var BP_MOD_TRAITS = (function ()
         }
     };
 
+    function DNodeIterator (root) // Walks dictionary and returns DNodes that have data.
+    {
+        
+    }
+
     var iface = {};
     Object.defineProperties(iface,
     {

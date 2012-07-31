@@ -110,18 +110,19 @@ var BP_MOD_MEMSTORE = (function ()
     function isValidLocation(loc)
     {
         return (loc && 
-                (typeof loc.S=== "string") && (loc.S.length > 0) &&
-                (typeof loc.H === "string") && (loc.H.length > 0) &&
-                (typeof loc.P === "string") && (loc.P.length > 0));
+                //(typeof loc.S=== "string") && (loc.S.length > 0) &&
+                (typeof loc.H === "string") && (loc.H.length > 0)
+                //(typeof loc.P === "string") && (loc.P.length > 0)
+                );
     }
 
     function isValidARec(that)
     {
         if (that  && 
-                (typeof that.dt === "string") &&
+                //(typeof that.dt === "string") &&
                 (typeof that.tm === "number") &&
                 isValidLocation(that.l))
-            { return true;}
+            { return true; }
         else {return false;}
     }
 
@@ -131,93 +132,124 @@ var BP_MOD_MEMSTORE = (function ()
         traits: {}, // Various traits objects defined below.
         getTraits: function (dt) {
             var n = this.traits[dt];
-            if (!n) {
-                n = this.traits[dt_default];
-            }
             return n;
         },
         getDictTraits: function (dt) {
             return this.getTraits(dt).dict;
-        },
-        imbue: function (rec, dt) {
-            Object.defineProperty(rec, "traits",
-            {
-                value: this.getTraits(dt) // enumerable, writable, configurable=false.
-                                          // Won't get saved to file or transferred in a
-                                          // postMessage.
-            });
-            return rec;
         }
     };
     
     // Most properties defined in DEFAULT_TRAITS are optional for urlMap type dictionaries.
     // Omitting second-level properties (e.g. dict.url_scheme) implies false for
     // boolean properties.
-    // var EXAMPLE_TRAITS = Object.freeze(    // {        // // dict: Properties referenced by dictionary/trie/URLA.        // // dict.url_xyz=true implies that xyz will be matched in insertions and lookups from dictionary.        // dict: {url_scheme: false, url_host:true, url_port:true,                 // url_path:true},        // // action: properties referenced by the Actions class.        // actions: { // not needed by dt_etld            // // history=true asserts we're interested in maintaining history.            // // Will cause Actions class to keep history in memory            // // A value of false asserts the opposite. Will            // // cause Actions to only keep current value in memory.            // history: 0,            // // An assert action is one that re-asserts the existing value. When a record            // // is received that has the same value as the most current value for its key,            // // but a different timestamp, then it is deemed as an assertion of an existing            // // value. 'save_asserts' dictates whether or not such records should be persisted            // // to storage. Persisting repeated values can significantly increase the storage            // // size for situations where the same values are repeatedly generated - e.g. E-Records.            // // Note that an assert with the same exact value and timestamp is a duplicate and will            // // always be ignored and discarded - the value of save_asserts traits will not            // // affect that behaviour.            // persist_asserts: false        // },        // // ui: {fields: ["key", "value"]},        // // Returns record key        // getKey: function (rec) {},// not needed by dt_etld        // compareVals: function(rec1, rec2) // not needed by dt_etld        // {},        // isValid: function(rec) {} // only needed for some types.    // });
+    var DEFAULT_TRAITS = Object.freeze(    {        // dict: Properties referenced by dictionary/trie/URLA.        // dict.url_xyz=true implies that xyz will be matched in insertions and lookups from dictionary.        dict: DICT_TRAITS[undefined],        // action: properties referenced by the Actions class.        actions: { // not needed by dt_etld            // history=true asserts we're interested in maintaining history.            // Will cause Actions class to keep history in memory            // A value of false asserts the opposite. Will            // cause Actions to only keep current value in memory.            history: 0        },
+        file: {
+            // An assert action is one that re-asserts the existing value. When a record
+            // is received that has the same value as the most current value for its key,
+            // but a different timestamp, then it is deemed as an assertion of an existing
+            // value. 'save_asserts' dictates whether or not such records should be persisted
+            // to storage. Persisting repeated values can significantly increase the storage
+            // size for situations where the same values are repeatedly generated - e.g. E-Records.
+            // Note that an assert with the same exact value and timestamp is a duplicate and will
+            // always be ignored and discarded - the value of save_asserts traits will not
+            // affect that behaviour.
+            persist_asserts: false            
+        },        // Returns record key        getKey: function (rec) {},// not needed by dt_etld        compareVals: function(rec1, rec2) // not needed by dt_etld        {},        isValid: function(rec) {} // only needed for some types.    });
 
-    var PREC_TRAITS = DT_TRAITS.traits[dt_pRecord] = Object.freeze(
+    function PStoreTraits() 
     {
-        dict: DICT_TRAITS[dt_pRecord],
-        actions: {history:2, persist_asserts: true},
-        //ui: {fields: Object.keys(newPRecord())},
-        getKey: function(rec)
+        Object.freeze(Object.defineProperties(this,
         {
-            return rec.u;
-        },        
-        isValid: function(rec)
-        {
-            return (isValidARec(rec) && 
-                (typeof rec.u === "string") &&
-                (typeof rec.p === "string"));
-        },
-        compareVals: function(rec1, rec2) 
-        {
-            if (rec1 && rec2)
+            dict: {value:DICT_TRAITS[dt_pRecord]},
+            actions: {value:{history:2}},
+            file: {value:{persist_asserts: true}},
+            getKey: {value:function(rec)
             {
-                if (rec1.p === rec2.p) { return EQUAL;}
-                else {return DIFFRNT;}
-            }
-            else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
-                return EQUAL;
-            }
-            else { return DIFFRNT;}
-        }
-    });
+                return rec.u;
+            }},
+            isValid: {value:function(rec)
+            {
+                return (isValidARec(rec) && 
+                    (typeof rec.u === "string") &&
+                    (typeof rec.p === "string"));
+            }},
+            compareVals: {value:function(rec1, rec2) 
+            {
+                if (rec1 && rec2)
+                {
+                    if (rec1.p === rec2.p) { return EQUAL;}
+                    else {return DIFFRNT;}
+                }
+                else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
+                    return EQUAL;
+                }
+                else { return DIFFRNT; }
+            }},
+            valStr: {value: function(rec)
+            {
+                return rec.p;
+            }}
+        }));   
+    }
+    PStoreTraits.prototype = DEFAULT_TRAITS;
+    var PREC_TRAITS = DT_TRAITS.traits[dt_pRecord] = new PStoreTraits();
 
-    var EREC_TRAITS = DT_TRAITS.traits[dt_eRecord] = Object.freeze(
+    function EStoreTraits()
     {
-        dict: DICT_TRAITS[dt_eRecord],
-        actions: {history: 0, persist_asserts:false},
-        //ui: {fields: Object.keys(newERecord())},
-        getKey: function(rec)
+        Object.freeze(Object.defineProperties(this, 
         {
-            return rec.f;
-        },
-        isValid: function(rec)
-        {
-            return (isValidARec(rec) && 
-                (typeof rec.f === "string") &&
-                (typeof rec.t === "string"));
-        },
-        compareVals: function(rec1, rec2) 
-        {
-            if (rec1 && rec2)
+            dict: {value:DICT_TRAITS[dt_eRecord]},
+            actions: {value:{history: 0}},
+            file: {value:{persist_asserts: false}},
+            getKey: {value:function(rec)
             {
-                if (rec1.t === rec2.t &&
-                    rec1.id === rec2.id &&
-                    rec1.n === rec2.n &&
-                    rec1.y === rec2.y)
-                    {
-                        return EQUAL;
-                    }
-                else {return DIFFRNT;}
-            }
-            else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
-                return EQUAL;
-            }
-            else { return DIFFRNT;}                
-        }
-    });
+                return rec.f;
+            }},
+            isValid: {value:function(rec)
+            {
+                return (isValidARec(rec) && 
+                    (typeof rec.f === "string") &&
+                    (typeof rec.t === "string"));
+            }},
+            compareVals: {value:function(rec1, rec2) 
+            {
+                if (rec1 && rec2)
+                {
+                    if (rec1.t === rec2.t &&
+                        rec1.id === rec2.id &&
+                        rec1.n === rec2.n &&
+                        rec1.y === rec2.y)
+                        {
+                            return EQUAL;
+                        }
+                    else {return DIFFRNT;}
+                }
+                else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
+                    return EQUAL;
+                }
+                else { return DIFFRNT;}                
+            }},
+            valStr: {value: function(rec)
+            {
+                var str;
+                if (rec.t) {
+                    str += "T}" + rec.t;
+                }
+                if (rec.id) {
+                    str += "I}" + rec.id;
+                }
+                if (rec.n) {
+                    str += "N}" + rec.n;
+                }
+                if (rec.y) {
+                    str += "Y}" + rec.y;
+                }
+                return str;
+            }}
+        }));
+    }
+    EStoreTraits.prototype = DEFAULT_TRAITS;
+    var EREC_TRAITS = DT_TRAITS.traits[dt_eRecord] = new EStoreTraits();
 
     Object.freeze(DT_TRAITS);
     /** @end-static-class-defn DT_TRAITS **/    
@@ -242,7 +274,13 @@ var BP_MOD_MEMSTORE = (function ()
         {
             Object.defineProperties(this,
                 {
+                    // Points to the most recent element of arecs
                     curr: {value: jo.curr, writable: true, enumerable: true},
+                    // This is a collection of arecs. It is not just an array, it is
+                    // also has valStr properties that point to the corresponding arec.
+                    // In other words it is an array of arecs plus a value-index of arecs.
+                    // The arecs are sorted in reverse chronological order - i.e. the newest
+                    // one is at position 0. Consequently, this.curr === this.arecs[0]
                     arecs: {value: jo.arecs, enumerable:tr.actions.transfer_arecs}
                 }
             );
@@ -250,57 +288,237 @@ var BP_MOD_MEMSTORE = (function ()
         else {
             Object.defineProperties(this,
                 {
-                    curr: {writable: true, enumerable: true},
-                    arecs: {value: [], enumerable:tr.actions.transfer_arecs}
+                    curr:{ writable:true, enumerable:true },
+                    arecs:{ value:[], enumerable:tr.actions.transfer_arecs }
                 }
             );
         }
         Object.seal(this);
     }
-    /** Method. Insert a record into the Action Records collection */
-    Actions.prototype.insert = function(drec)
+    
+    /** Helper function invoked by insertNewVal only
+    Actions.prototype.delHelper = function (dItem, i)
     {
-        var arec = drec.rec, traits = arec.traits;
-        if (this.curr) {
-            if (this.curr.tm <= arec.tm) {
-                // This is the latest value. Check if it has the same value as this.curr
-                if (traits.compareVals(this.curr, arec) === EQUAL) {
-                    // Same values. Now compare timestamps to check if they're the same record being
-                    // resent (when merging DBs for e.g.)
-                    if (this.curr.tm !== arec.tm) {
-                        // Same value being re-asserted. Just update the timestamp of the current record.
-                        this.curr.tm = arec.tm;
-                        drec.notes.isAssert = true; // Notate that this is an assert. Someone (filestore) will use this info. 
-                    } else {
-                        //repeated record (e.g. imported a CSV file again, re-merged with a DB), discard it.
-                        drec.notes.isRepeat = true; // Tell filestore that this is a repeat.
+        var valStr = dItem.traits.valStr(dItem);
+        delete this[valStr];
+    };*/
+        
+    
+    /**
+     * This is a helper function intended to be invoked by Actions.prototype.insert only.
+     * Inserts a new value into the collection. Assumes that the value does not already
+     * exist within the collection and that it has been verified to be recent enough
+     * to be inserted.
+     * We optimize the algorithm for insertions from behind - i.e. older
+     * items are visited first.
+     * CAUTION: If the same value existed within the collection, then things
+     * will go wrong.
+     */
+    Actions.prototype.insertNewVal = function (valStr, drec)
+    {
+        var dtt = drec.dtt,
+            max = dtt.actions.history + 1,
+            arec = drec.rec,
+            arecs = this.arecs,
+            len = arecs.length;
+        
+        if (len===0) 
+        {
+            // This will happen the first time a key is created
+            arecs[0] = arec;
+            arecs[valStr] = arec;
+        }
+        else if (arec.tm<=arecs[len-1])
+        {
+            // In the case of loadDB, we load records in reverse chronological order. That
+            // allows us to simply push subsequent records to the end of the array.
+            arecs.push(arec);
+            arecs[valStr] = arec;
+        }
+        // Below clause may be useful in optimizing mergeDB use-case.
+        // else if (arec.tm>=arecs[0])        // {            // arecs.unshift(arec);            // arecs[valStr] = arec;
+            // if (len>max)
+            // delete the last item        // }
+        else
+        {
+            // We will only get here in case of DB merges or if due to some reason (a bug?)
+            // our record loading sequence was not strictly reverse-chronological.
+            // arecs are sorted in reverse chronological order starting with the newest at
+            // position 0
+            
+            this.arecs.some (function (item, i, items)
+            {
+                var dItm, l;
+                if (arec.tm >= items[i].tm)
+                {
+                    // Insert one new item
+                    items.splice(i, 0, arec);
+                    // Update the value index
+                    items[valStr] = arec;
+                    // Delete upto one item
+                    // del = items.length-max;                    // if (del > 0)                     // {                        // // Remove items from sorted array                        // del = items.splice(max, del);                        // // Remove items from the value index.                        // del.forEach(Actions.prototype.delHelper, this);                    // }
+                    if ((l=items.length)>max)
+                    {
+                        dItm = items[l-1];
+                        items.length = max; // removed item from array
+                        delete items[dtt.valStr(dItm)]; // removed val-index
                     }
+                    return true;
                 }
-                else {
-                    // This is a more current value than this.curr
-                    this.curr = arec;
-                    if (traits.actions.history > 0) {
-                        this.arecs.push(arec);
-                    }
-                    else {
-                        this.arecs[0] = arec;
+            }, this);
+        }
+        
+        this.curr = arecs[0];
+    };
+    
+    /**
+     * Helper function to be invoked by Actions.prototype.insert only.
+     * Is invoked when a new action is to be inserted with a value that already exists
+     * in the collection.
+     * Updates an existing arec with the provided timestamp. It also repositions the
+     * record within arecs array, per its new timestamp. We don't know where in the sorted
+     * array, the existing record lies, hence there is no particular preference regarding
+     * list-visit order. Therefore we'll just visit from position 0 onwards because that
+     * is convenient for coding.
+     */
+    Actions.prototype.updateTm = function (arec, tm)
+    {
+        var arecs = this.arecs, i;
+
+        i = arecs.indexOf(arec);
+        if (i !== -1)
+        {
+            arec.tm = tm;
+            if (i>0)
+            {
+                // Remove item
+                arecs.splice(i, 1);
+
+                // Reposition item.
+                for (i--; i>=0; i--)
+                {
+                    if (arec.tm<=arecs[i].tm) {
+                        // insert one item
+                        arecs.splice(i+1, 0, arec);
+                        break;
                     }
                 }
             }
-            else 
+            // else the item is already at the top. Can't be upgraded anymore than this
+        }
+        else {
+            throw new BPError("Internal Error", "SkipRecord", "UpgradeItemNotFound");
+        }
+    };
+    
+    /** 
+     *  Method. Insert a record into the Action Records collection 
+     *  We're optimizing the file-loading use-case over new item insertions. This is so because
+     *  thousands of items will be loaded at the time of file-load and the impact of performance
+     *  will be obviously more visible there than when inserting one item (such as when adding
+     *  a new password or knowledge record). File-loading will occur at startup and
+     *  DB merging. With this approach, the items loaded from the DB are visited
+     *  starting from the newest first, to the oldest last (we start at the end of
+     *  the file and work our way towards the top. If there were multiple files to load,
+     *  then we would start with the newest file first, and then work our way to the oldest file). 
+     *  This will ensure that we'll have minimum data-structure insertions/deletions
+     *  because the top traits.actions.history slots will fill up first and then the
+     *  remaining ones will simply be discarded at first check (see insert code below). If
+     *  we had visited the records in the opposite order, then we would've had to insert
+     *  the older ones into the data-structure first, but those would quickly get deleted
+     *  upon visitation of the newer records immediately afterwards. This would obviously
+     *  be wasted effort.
+     *  A consequence of the above strategy, is that records inserted
+     *  at file-loading time will be older than those already present in the data-structure.
+     *  Therefore we'll optimize the Actions.arecs datastructure insertions for the case
+     *  where inserted records have older timestamps than those already present in the
+     *  data-structure. That is, when linearly traversing the Actions.arecs array, we
+     *  visit the older items first and then work our way to the newer ones.
+     *  
+     *  This approach is suboptimal for new record insertions which occur at runtime
+     *  (such as inserting a new password or knowledge action) or at CSV import time.
+     *  However, it optimizes the most used use-case - that of DB load at startup. It
+     *  will incidentally also optimize DB merges (which is not expected to happen a lot 
+     *  and therefore is not the reason for choosing this approach).
+     *  As mentioned above, single-record insertions will be fast in terms of total time
+     *  anyway, therefore optimizing bulk-loads is more important. That leaves the matter
+     *  of CSV imports, which will stay unoptimized. Arguably, that's okay because CSV
+     *  import will certainly have fewer records than corresponding action files and CSV
+     *  import is supposed to be a rare activity only - the user is not expected to repeat
+     *  that action again.
+     */
+    Actions.prototype.insert = function(drec)
+    {
+        var arec = drec.rec, dtt = drec.dtt,
+            valStr = dtt.valStr(arec),
+            max = dtt.actions.history + 1,
+            oarec;
+            
+        if (this.arecs.length === max && arec.tm <= this.arecs[max-1]) 
+        {
+            // This record should not be inserted. Its date&time are older than the
+            // oldest record we have and our collection is already full.
+            drec.notes.isOverflow = true;
+            return;
+        }
+        
+        // Now check if we already have this value.
+        oarec = this.arecs[valStr];
+        if (oarec) 
+        {
+            // This value already exists in the collection. Is this the same
+            // record being replayed or an older record with same value?
+            if (arec.tm <= oarec.tm)
             {
-                // This is a historical value. Consult with DT_TRAITS whether we want to keep it.
-                drec.notes.isHistory = true;
-                if (traits.actions.history > 0) {
-                    // TODO: Need to prune out extra history.
-                    this.arecs.push(arec);
+                // Okay, same value, same timestamp. This is a repeated record.
+                // Do nothing, just ignore it.
+                drec.notes.oldRepeat = true;
+            }
+            else if (arec.tm > oarec.tm)
+            {
+                // The same value being reused in a different
+                // action. This could be the same value being set repeatedly multiple times -
+                // or a re-use of an old value that had not been in use for sometime.
+                // In terms of history we've decided to maintain the last N(3) unique
+                // values rather than saving the last N actions. The latest timestamp
+                // of each saved value will be saved as well. This strategy has the benefit
+                // of automatically pruning all the fluff out of the system. That is,
+                // continuously repeated/asserted values (as in user executing drag-n-drop
+                // repeatedly and thereby generating spurious e-records). However,
+                // it has the drawback of not faithfully maintaining the timeline. So,
+                // if a user wanted to roll-back in time, we can't do that. Sure the user
+                // won't loose any data, and we will be able to show her the older values
+                // but we won't have the capability to one-click-go-back in time. The
+                // utility of that use-case is very debatable especially since the user
+                // will have access to her older passwords immediately after a sync/merge.
+                // It does, however bring in a lot of complexity and fluff. Further more, this
+                // use-case can easily be made possible by changing the code in this section
+                // to not forget repeated values. Hence for now we'll go with the simpler
+                // leaner arguably smarter but certainly novel approach.
+                drec.notes.newRepeat = true;
+                // In loadCSV case all record-timestamps are Date.now and therefore are
+                // latest. Hence any value in the csv record will appear like a new value
+                // or an upgrade. We don't want that to spoil the chronology of the DB
+                // and hence we shall only import new values from CSV files. In that use-case
+                // utt.noTmUpdates===true.
+                // When loading DB files, we do want to honor the timestamp and hence
+                // we do want to perform timestamp upgrades. In that case
+                // utt.noTmUpdates===undefined
+                if (!drec.utt || !drec.utt.noTmUpdates)
+                {
+                    // We'll save only the latest record. So, we need to remove the old record
+                    // and insert the new one at the right location in the sorted list. This
+                    // constitutes an upgrade of the old record with a newer timestamp.
+                    this.updateTm(oarec, arec.tm);
                 }
             }
         }
-        else { // This is the first value.
-            var n = this.arecs.push(arec);
-            this.curr = this.arecs[n-1];    
-        }        
+        else
+        {
+            // This is a new value. We want to save the latest traits.actions.history
+            // values in the sorted list of values. This may or may not make it.
+            this.insertNewVal(valStr, drec);
+        }
     };
     
     function newActions(dt, jo) {
@@ -538,7 +756,7 @@ var BP_MOD_MEMSTORE = (function ()
         var recsMap = this[d];
         
         //r = recsMap[ki=DT_TRAITS.getKey(rec, dt)];
-        r = recsMap[ki=rec.traits.getKey(rec)];
+        r = recsMap[ki=drec.dtt.getKey(rec)];
         if (r) {
             r.insert(drec);
         }
@@ -561,7 +779,7 @@ var BP_MOD_MEMSTORE = (function ()
     {
         var rec = drec.rec,
             k = drec.urli.incr(),
-            t = rec.traits;
+            t = drec.dtt;
         if (!k) 
         {
             if (drec.dt === dt_etld) {
@@ -724,41 +942,44 @@ var BP_MOD_MEMSTORE = (function ()
         r.pRecsMap = DNProto.findPRecsMap.apply(DNode[dt_pRecord],[l]);
 
         return r;
-    };
-
-    // _dnode is optional and is only expected to be used at build-time by buildETLD.
-    // At runtime, don't pass _dnode
-    function insertRec (rec, dt, _dnode)
-    {
-        if (!_dnode) {_dnode = DNode[dt];}
-        return DNProto.insert.apply(_dnode, [new DRecord(rec, dt)]);
-    };
-    
-    /** @end-class-def DNode **/
-
-    function DNodeIterator (root) // Walks dictionary and returns DNodes that have data.
-    {
-        
     }
 
     /**
      * @constructor
      * Sets up the supplied record for insertion into the db
      */
-    function DRecord(rec, dt)
+    function DRecord(rec, dt, uct)
     {
         // Construct url segment iterator.
-        this.urli = new DURL(rec.l, dt);
-        this.rec = rec;
-        this.dt = dt;
-        DT_TRAITS.imbue(rec, dt);
-        Object.defineProperty(this, "notes", {value: {}});//By default, writable, enumerable, configurable = false
-                
-        Object.freeze(this);
+        Object.freeze(Object.defineProperties(this,
+        {
+            urli: {value:new DURL(rec.l, dt)},
+            rec:  {value:rec},
+            dt:   {value:dt},
+            dtt:  {value:DT_TRAITS.getTraits(dt)},
+            uct:  {value:uct},
+            notes:{value: {}}
+        }));
     }
     /** @end-class-def DRecord **/
 
-    function loadETLD () 
+    // _dnode is optional and is only expected to be used at build-time by buildETLD.
+    // At runtime, don't pass _dnode
+    function insertRec (rec, dt, _dnode)
+    {
+        if (!_dnode) {_dnode = DNode[dt];}
+        var dr = new DRecord(rec, dt);
+        return DNProto.insert.apply(_dnode, [dr]) ? dr.notes : undefined;
+    }
+    function insertDrec (dr, _dnode)
+    {
+        if (!_dnode) {_dnode = DNode[dr.dt];}
+        return DNProto.insert.apply(_dnode, [dr]) ? dr.notes : undefined;                
+    }
+    
+    /** @end-class-def DNode **/
+
+    function loadETLD ()
     {
         var xhr = new XMLHttpRequest();
         
@@ -774,20 +995,20 @@ var BP_MOD_MEMSTORE = (function ()
     }
     
     //Assemble the interface    
-    var iface = {};
-    Object.defineProperties(iface, 
+    var iface = Object.freeze(
     {
-        insertRec: {value: insertRec},
-        getRecs: {value: getRecs},
-        DT_TRAITS: {value: DT_TRAITS},
-        PREC_TRAITS: {value: PREC_TRAITS},
-        EREC_TRAITS: {value: EREC_TRAITS},
-        clear: {value: clear},
-        loadETLD: {value: loadETLD},
-        newDNode: {value: newDNode}, // used by build_tools
-        DURL: {value: DURL} // used by build_tools
+        insertRec:   insertRec,
+        insertDrec:  insertDrec,
+        getRecs:     getRecs,
+        DT_TRAITS:   DT_TRAITS,
+        PREC_TRAITS: PREC_TRAITS,
+        EREC_TRAITS: EREC_TRAITS,
+        clear:       clear,
+        loadETLD:    loadETLD,
+        newDNode:    newDNode, // used by build_tools
+        DURL:        DURL, // used by build_tools
+        DRecord:     DRecord
     });
-    Object.freeze(iface);
 
     console.log("loaded memstore");
     return iface;

@@ -270,7 +270,7 @@ var BP_MOD_CS = (function(g_win)
             g_db.ingest(db);
             var filled = autoFill();
         
-            if ((!filled) && g_db.numUserids && settings.ShowPanelIfNoFill)
+            if ((!filled) && g_bFillable && g_db.numUserids && settings.ShowPanelIfNoFill)
             {
                 var ctx = {
                     it: new RecsIterator(g_db.pRecsMap), 

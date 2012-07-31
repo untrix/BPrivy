@@ -7,7 +7,7 @@
 
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_PLAT, chrome, BP_MOD_TRAITS */
+  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_PLAT, chrome, BP_MOD_TRAITS, window */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -215,7 +215,7 @@ var BP_MOD_FILESTORE = (function()
                 result = BP_PLUGIN.appendFile(MOD_DB.getDTPath(dt_pRecord), rec_sep+JSON.stringify(rec), o);
                 break;
         }
-        
+
         if (!result) {
             unloadDB();
             throw new BPError(o.err);
@@ -223,21 +223,35 @@ var BP_MOD_FILESTORE = (function()
         
         return result;
     }
-    
+
     function loadFile(filePath, dt)
     {
-        var i, o={prefix: '[{"header":true}', suffix: "]"}; // Format the return data like a JSON array.
+        var i,
+            // Have BPPlugin format the return data like a JSON array. It is more efficient
+            // to do this inside the plugin because it can prefix and suffix the data
+            // without having to copy it over. In the case of javascript strings are immutable
+            // and hence we would have to copy the string over twice in order to prepend
+            // and append to the string (perhaps using typed-arrays may circumvent one of
+            // the two copies).
+            o={prefix: '[{"header":true}', suffix: "]"};
         BP_PLUGIN.readFile(filePath, o);
         var recs = JSON.parse(o.dat);
-        if (recs && (typeof recs === 'object') && recs.constructor === Array) {
-            for (i=recs.length-1; i>0; i--) {
+        if (recs && (typeof recs === 'object') && recs.constructor === Array)
+        {
+            // Loading records in reverse chronological order for faster insertion into
+            // MEM_STORE.
+            
+            // Remove the first entry that we artifically introduced above.
+            delete recs[0];
+            recs.reduceRight(function(accum, rec, i, recs)
+            {
                 try {
-                    MEM_STORE.insertRec(recs[i], dt);
+                    MEM_STORE.insertRec(rec, dt);
                 } catch (e) {
                     var bpe = new BPError(e);
                     BP_MOD_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
                 }
-            }
+            },0);
             MOD_ERROR.log("Loaded file " + filePath);
         }
         else {
@@ -285,6 +299,8 @@ var BP_MOD_FILESTORE = (function()
         {
             path_dir_p = MOD_DB.getDBPath() + path_sep + dir_p + path_sep;
             f = o.lsd.f; file_names = Object.keys(f);
+            // TODO: Load files in reverse chronological order for faster insertion into
+            // MEM_STORE.
             for (i=file_names.length-1; i>=0; --i)
             {
                 if (f[ file_names[i] ].ext === ext_Open) {
@@ -542,7 +558,7 @@ var BP_MOD_FILESTORE = (function()
    
     function importCSV(path, obfuscated)
     {
-        var o={}, rval, i, prec, pidx, csv, line;
+        var o={}, rval, i, prec, drec, pidx, csv, line, url, notes;
         if (BP_PLUGIN.ls(path, o))
         {
             switch (path.slice(-4).toLowerCase())
@@ -556,18 +572,31 @@ var BP_MOD_FILESTORE = (function()
                         if (!csv) {continue;} // unparsable line
                         else {BP_MOD_ERROR.loginfo("Importing " + JSON.stringify(csv));}
                         pidx = csvf.pidx;
-                        prec = newPRecord(parseURL(csv[pidx.url]), Date.now(), 
+                        url = parseURL(csv[pidx.url]);
+                        prec = newPRecord(url || {}, 
+                                          Date.now(), 
                                           csv[pidx.userid],
                                           csv[pidx.pass]);
-                        // prec.u = csv[pidx.userid];                        // prec.p = csv[pidx.pass];                        // prec.l = parseURL(csv[pidx.url]);
-                        if (!MEM_STORE.PREC_TRAITS.isValid(prec)) {
+                        if (!MEM_STORE.PREC_TRAITS.isValid(prec)) 
+                        {
                             console.log("Discarding invalid csv record - " + JSON.stringify(csv));
                             prec = null; continue;
                         }
-                        if (MEM_STORE.insertRec(prec, dt_pRecord)) {
+                        else
+                        {
+                            // Tell MEM_STORE to discard this value if it already existed
+                            // in the store. This will prevent extra processing and fluff
+                            // entering the MEM and FILE stores if the user repeatedly
+                            // imports the same/similar csv records.
+                            drec = new MEM_STORE.DRecord(prec, dt_pRecord, {noTmUpdates:true});
+                        }
+                        
+                        if ((notes=MEM_STORE.insertDrec(drec)))
+                        {
                             try {
-                                //TODO: Process rec.notes here.
-                                insertRec(prec, dt_pRecord);                                
+                                if (!notes.oldRepeat && !notes.newRepeat) {
+                                    insertRec(prec, dt_pRecord);
+                                }
                             } catch (e) {
                                 var bpe = new BPError(e);
                                 BP_MOD_ERROR.log("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());

@@ -39,8 +39,10 @@ var BP_MOD_CONNECT = (function ()
     var cm_getDBPath = "cm_getDBPath";
     var cm_importCSV = "cm_importCSV";
 
-    var DICT_TRAITS={}, generic=undefined;
-    DICT_TRAITS[generic] = Object.freeze(
+    var DICT_TRAITS={};
+   
+    /** generic traits */
+    DICT_TRAITS[undefined] = Object.freeze(
     {
         url_host:true,
         url_path:true
@@ -79,7 +81,7 @@ var BP_MOD_CONNECT = (function ()
     }
     
     /** Pseudo Inheritance */
-    function imbueARec(that, dt, loc, date) // TODO: Make everything unwritable
+    function ARec(dt, loc, date)
     {
         // date is number of milliseconds since midnight Jan 1, 1970.
         if (date !== undefined && date !== null)
@@ -87,23 +89,28 @@ var BP_MOD_CONNECT = (function ()
             date = Number(date); 
         }
         
-        Object.defineProperties(that,
+        Object.defineProperties(this,
         {
-            // Record Type. Determines which dictionary this record belongs to and a bunch
-            // of other logic based on DT_TRAITS
-            //dt: {value: dt, enumerable: true},
+            // Date and timestamp of record creation. Should be a Date object.
             tm: {value: date, enumerable: true},
             // URL that this record pertains to. Determines where the record will sit within the URL-trie.
             // We're stripping extra data and shortening property names so as to conserve space in memory
             // as well as on disk and processing cycles as well. This becomes important when one has to
             // ingest thousands of records (ETLD has about 7K records)
-            l: {value: newL(loc, dt), enumerable: true}
+            l: {value: newL(loc, dt), enumerable: true},
+            /** USECASE TRAITS PROPERTIES (prefixed with 'ut') */
+            // utNoTmUpdates: Set to true implies that if a record has the same key and value
+            //               but has a newer timestamp from that already present in the DB,
+            //               then it will be discarded by the MEM_STORE.
+            //               If it had the same key+value but an older timestamp, it would be
+            //               discarded anyway.
+            utNoTmUpdates: {writable:true} // not enumerable so that it won't end-up in the db.
         });
     }
     
     function ERecord(loc, date, fieldName, tagName, id, name, type)
     {
-        imbueARec(this, dt_eRecord, loc, date);
+        ARec.apply(this, [dt_eRecord, loc, date]);
         Object.defineProperties(this, 
         {
             f: {value: fieldName, enumerable: true},
@@ -112,7 +119,9 @@ var BP_MOD_CONNECT = (function ()
             n: {value: name, enumerable: true},
             y: {value: type, enumerable: true}
         });
+        Object.seal(this);
     }
+    ERecord.prototype = Object.create(ARec.prototype,{});
     ERecord.prototype.toJson = function ()
     {
         return JSON.stringify(this, null, 2);
@@ -123,15 +132,17 @@ var BP_MOD_CONNECT = (function ()
 
     function PRecord(loc, date, userid, pass)
     {
-        imbueARec(this, dt_pRecord, loc, date);
+        ARec.apply(this, [dt_pRecord, loc, date]);
         Object.defineProperties(this,
             {
                 u: {value: userid, enumerable: true},
                 p: {value: pass, enumerable: true}
             }
         );
+        Object.seal(this);
     }
-    
+    PRecord.prototype = Object.create(ARec.prototype,{});
+        
     function newPRecord(loc, date, userid, pass)
     {
         return new PRecord(loc, date, userid, pass);
@@ -157,12 +168,14 @@ var BP_MOD_CONNECT = (function ()
     {
         var saveRecord = function (rec, dt, callbackFunc)
         {
-            rec.cm = dt;
+            var req = {};
+            req.cm = dt;
+            req.rec = rec;
             if (callbackFunc) {
-                rpcToMothership(rec, callbackFunc);
+                rpcToMothership(req, callbackFunc);
             }
             else {
-                postMsgToMothership(rec);
+                postMsgToMothership(req);
             }
         };
         
