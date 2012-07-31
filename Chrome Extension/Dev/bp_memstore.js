@@ -17,8 +17,8 @@ var BP_MOD_MEMSTORE = (function ()
     
     var m;
     /** @import-module-begin Error */
-    m = IMPORT(BP_MOD_ERROR);
-    var BPError = IMPORT(m.BPError);
+    var DIAGS = IMPORT(BP_MOD_ERROR);
+    var BPError = IMPORT(DIAGS.BPError);
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
     var PROTO_HTTP = IMPORT(m.PROTO_HTTP),
@@ -306,9 +306,13 @@ var BP_MOD_MEMSTORE = (function ()
     
     /**
      * This is a helper function intended to be invoked by Actions.prototype.insert only.
+     * 
      * Inserts a new value into the collection. Assumes that the value does not already
      * exist within the collection and that it has been verified to be recent enough
-     * to be inserted.
+     * to be inserted either: 1) In the front or in the middle of the sorted list in which
+     * case an item-overflow is possible. 2) At the end of the sorted list in which case
+     * an item-overflow is *not* possible otherwise we wouldn't have been invoked.
+     * 
      * We optimize the algorithm for insertions from behind - i.e. older
      * items are visited first.
      * CAUTION: If the same value existed within the collection, then things
@@ -320,33 +324,17 @@ var BP_MOD_MEMSTORE = (function ()
             max = dtt.actions.history + 1,
             arec = drec.rec,
             arecs = this.arecs,
-            len = arecs.length;
+            len = arecs.length,
+            res;
         
-        if (len===0) 
-        {
-            // This will happen the first time a key is created
-            arecs[0] = arec;
-            arecs[valStr] = arec;
-        }
-        else if (arec.tm<=arecs[len-1])
-        {
-            // In the case of loadDB, we load records in reverse chronological order. That
-            // allows us to simply push subsequent records to the end of the array.
-            arecs.push(arec);
-            arecs[valStr] = arec;
-        }
-        // Below clause may be useful in optimizing mergeDB use-case.
-        // else if (arec.tm>=arecs[0])        // {            // arecs.unshift(arec);            // arecs[valStr] = arec;
-            // if (len>max)
-            // delete the last item        // }
-        else
+        if (len===0)        {            // This will happen the first time a key is created            arecs[0] = arec;            arecs[valStr] = arec;        }        else if (arec.tm<=arecs[len-1].tm)        {            // In the case of loadDB, we load records in reverse chronological order. That            // allows us to simply push subsequent records to the end of the array.            arecs.push(arec);            arecs[valStr] = arec;            // We don't need to check for item-overflow because that has already            // been checked before we were invoked.        }        // // Below clause may be useful in optimizing mergeDB use-case.        // // else if (arec.tm>=arecs[0])        // // {            // // arecs.unshift(arec);            // // arecs[valStr] = arec;            // // if (len>max)            // // delete the last item        // // }        else
         {
             // We will only get here in case of DB merges or if due to some reason (a bug?)
             // our record loading sequence was not strictly reverse-chronological.
-            // arecs are sorted in reverse chronological order starting with the newest at
+            // Arecs are sorted in reverse chronological order starting with the newest at
             // position 0
             
-            this.arecs.some (function (item, i, items)
+            res = this.arecs.some (function (item, i, items)
             {
                 var dItm, l;
                 if (arec.tm >= items[i].tm)
@@ -356,7 +344,6 @@ var BP_MOD_MEMSTORE = (function ()
                     // Update the value index
                     items[valStr] = arec;
                     // Delete upto one item
-                    // del = items.length-max;                    // if (del > 0)                     // {                        // // Remove items from sorted array                        // del = items.splice(max, del);                        // // Remove items from the value index.                        // del.forEach(Actions.prototype.delHelper, this);                    // }
                     if ((l=items.length)>max)
                     {
                         dItm = items[l-1];
@@ -365,7 +352,21 @@ var BP_MOD_MEMSTORE = (function ()
                     }
                     return true;
                 }
+                else if (i===(len-1))
+                {
+                    // This is the last element in the iteration and our new record
+                    // happens to be older than this one too. Therefore append it
+                    // to the end of the list.
+                    items.push(arec);
+                    items[valStr] = arec;
+                    // We don't need to check for item-overflow because that has already
+                    // been checked before we were invoked.
+                    return true;
+                }
             }, this);
+            if (!res) {
+                DIAGS.logwarn(new BPError("Didn't insert arec", "NewRecordSkipped", "Arecs.Some===false"));
+            }
         }
         
         this.curr = arecs[0];
@@ -454,7 +455,7 @@ var BP_MOD_MEMSTORE = (function ()
             max = dtt.actions.history + 1,
             oarec;
             
-        if (this.arecs.length === max && arec.tm <= this.arecs[max-1]) 
+        if (this.arecs.length === max && arec.tm <= this.arecs[max-1].tm) 
         {
             // This record should not be inserted. Its date&time are older than the
             // oldest record we have and our collection is already full.
@@ -500,11 +501,11 @@ var BP_MOD_MEMSTORE = (function ()
                 // latest. Hence any value in the csv record will appear like a new value
                 // or an upgrade. We don't want that to spoil the chronology of the DB
                 // and hence we shall only import new values from CSV files. In that use-case
-                // utt.noTmUpdates===true.
+                // uct.noTmUpdates===true.
                 // When loading DB files, we do want to honor the timestamp and hence
                 // we do want to perform timestamp upgrades. In that case
-                // utt.noTmUpdates===undefined
-                if (!drec.utt || !drec.utt.noTmUpdates)
+                // uct.noTmUpdates===undefined
+                if (!drec.uct || !drec.uct.noTmUpdates)
                 {
                     // We'll save only the latest record. So, we need to remove the old record
                     // and insert the new one at the right location in the sorted list. This
