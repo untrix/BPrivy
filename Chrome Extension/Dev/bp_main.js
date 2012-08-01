@@ -27,6 +27,7 @@
     m = BP_MOD_CONNECT;
     var cm_getRecs = IMPORT(m.cm_getRecs);
     var cm_loadDB = IMPORT(m.cm_loadDB);
+    var cm_mergeInDB = IMPORT(m.cm_mergeInDB);
     var cm_createDB = IMPORT(m.cm_createDB);
     var cm_getDBPath = IMPORT(m.cm_getDBPath);
     /** @import-module-begin MemStore */
@@ -55,10 +56,10 @@
                 if (notes) 
                 {
                     res = true;
-                    if (notes.oldRepeat) {
+                    if (notes.isOldRepeat) {
                     }
-                    else if (notes.newRepeat) {
-                        if (rec.traits.file.persist_asserts) {
+                    else if (notes.isNewRepeat) {
+                        if (MEM_STORE.getTraits(dt).file.persist_asserts) {
                             res = FILE_STORE.insertRec(rec, dt);
                         }
                     }
@@ -102,6 +103,11 @@
                 case cm_loadDB:
                     BPError.push("LoadDB");
                     dbPath = FILE_STORE.loadDB(rq.dbPath);
+                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath});
+                    break;
+                case cm_mergeInDB:
+                    BPError.push("MergeInDB");
+                    dbPath = FILE_STORE.mergeInDB(rq.dbPath);
                     funcSendResponse({result:Boolean(dbPath), dbPath:dbPath});
                     break;
                 case cm_createDB:

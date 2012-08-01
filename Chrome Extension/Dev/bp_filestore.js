@@ -224,9 +224,17 @@ var BP_MOD_FILESTORE = (function()
         return result;
     }
 
-    function loadFile(filePath, dt)
+    /**
+     * @param filePath
+     * @param dt
+     * @parm  {Boolean} bP Dictates whether or not the records should be saved to DB after
+     *        reading. Used for mergeDB operations where records are loaded from an external
+     *        DB and written onto the currently open DB.
+     */
+    function loadFile(filePath, dt, merge)
     {
-        var i,
+        var i, notes,
+            ftraits = MEM_STORE.DT_TRAITS.getTraits(dt).file,
             // Have BPPlugin format the return data like a JSON array. It is more efficient
             // to do this inside the plugin because it can prefix and suffix the data
             // without having to copy it over. In the case of javascript strings are immutable
@@ -245,8 +253,16 @@ var BP_MOD_FILESTORE = (function()
             delete recs[0];
             recs.reduceRight(function(accum, rec, i, recs)
             {
-                try {
-                    MEM_STORE.insertRec(rec, dt);
+                try 
+                {
+                    notes = MEM_STORE.insertRec(rec, dt);
+                    if (merge && !notes.isOverflow && !notes.isOldRepeat)
+                    {
+                        if (!notes.isNewRepeat || ftraits.persist_asserts) 
+                        {
+                            insertRec(rec, dt);
+                        }
+                    }
                 } catch (e) {
                     var bpe = new BPError(e);
                     BP_MOD_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
@@ -281,23 +297,17 @@ var BP_MOD_FILESTORE = (function()
         return dbPath;
     }
     
-    function loadDB(dbPath)
+    /**
+     * Helper function to loadDB 
+     */
+    function loadDBFiles(dbPath, merge)
     {
-        var o = {}, file_names, path_dir_p, path_dir_k,
-            i, f, dbBad=false;
-
-        // First determine if this DB exists and is good.
-        dbPath = verifyDBForLoad(dbPath);
-        
-        console.log("loadingDB " + dbPath);
-        MEM_STORE.clear(); // unload the previous DB.
-        MOD_DB.setDBPath(dbPath);
-
         // Load P-Records
-        o={};
-        if (BP_PLUGIN.ls(MOD_DB.getDBPath() + path_sep + dir_p, o) && o.lsd && o.lsd.f)
+        var o={}, path_dir_p, path_dir_k, f, i, file_names;
+        
+        if (BP_PLUGIN.ls(dbPath + path_sep + dir_p, o) && o.lsd && o.lsd.f)
         {
-            path_dir_p = MOD_DB.getDBPath() + path_sep + dir_p + path_sep;
+            path_dir_p = dbPath + path_sep + dir_p + path_sep;
             f = o.lsd.f; file_names = Object.keys(f);
             // TODO: Load files in reverse chronological order for faster insertion into
             // MEM_STORE.
@@ -305,7 +315,7 @@ var BP_MOD_FILESTORE = (function()
             {
                 if (f[ file_names[i] ].ext === ext_Open) {
                     try {
-                        loadFile(path_dir_p + file_names[i], dt_pRecord);
+                        loadFile(path_dir_p + file_names[i], dt_pRecord, merge);
                     } catch (e) {
                         var bpe = new BPError(e);
                         BP_MOD_ERROR.warn(bpe);
@@ -316,15 +326,15 @@ var BP_MOD_FILESTORE = (function()
         }
         // Load K-Records
         o={};
-        if (BP_PLUGIN.ls(MOD_DB.getDBPath() + path_sep + dir_k, o) && o.lsd && o.lsd.f)
+        if (BP_PLUGIN.ls(dbPath + path_sep + dir_k, o) && o.lsd && o.lsd.f)
         {
-            path_dir_k = MOD_DB.getDBPath() + path_sep + dir_k + path_sep;
+            path_dir_k = dbPath + path_sep + dir_k + path_sep;
             f = o.lsd.f; file_names = Object.keys(f);
             for (i=file_names.length-1; i>=0; --i)
             {
                 if (f[ file_names[i] ].ext === ext_Open) {
                     try {
-                        loadFile(path_dir_k + file_names[i], dt_eRecord);
+                        loadFile(path_dir_k + file_names[i], dt_eRecord, merge);
                     } 
                     catch (e) {
                         var bpe = new BPError(e);
@@ -334,9 +344,48 @@ var BP_MOD_FILESTORE = (function()
                 }
             }
         }
+    }
+    
+    /**
+     * @param dbPath
+     * @param {Boolean} merge  If true, the loaded records will be saved to DB after loading.
+     *                  This is used for DB merges, where records are loaded from an
+     *                  external DB and then written to the open DB.
+     * @return          returns the root of the DB-folder that was read/loaded. Should be
+     *                  equal to the dbPath if it was the root of the DB. If DB path was a
+     *                  path inside an existing DB, then the system backtracks up to the root
+     *                  of the DB and loads that. That's the path which is returned.     
+     */
+    function loadDB(dbPath, merge)
+    {
+        // First determine if this DB exists and is good.
+        dbPath = verifyDBForLoad(dbPath);
+
+        if (!merge)
+        {
+            console.log("loadingDB " + dbPath);
+            MEM_STORE.clear(); // unload the previous DB.
+            MOD_DB.setDBPath(dbPath);
+        }
+        else
+        {
+            console.log("Merging in DB " + dbPath);
+        }
         
+        loadDBFiles(dbPath, merge);
+                
         MOD_ERROR.log("Loaded DB " + dbPath);
-        return MOD_DB.getDBPath();
+        return dbPath;
+    }
+    
+    /**
+     * Merges in a DB and returns its root path. Returned value should be equal to the root
+     * folder of the DB pointed out by the user (user may point to the root or anywhere
+     * within the DB) 
+     */
+    function mergeInDB(dbPath)
+    {
+        return loadDB(dbPath, true);
     }
     
     function createDB(name, dir) // throws
@@ -594,7 +643,7 @@ var BP_MOD_FILESTORE = (function()
                         if ((notes=MEM_STORE.insertDrec(drec)))
                         {
                             try {
-                                if (!notes.oldRepeat && !notes.newRepeat) {
+                                if (!notes.isOldRepeat && !notes.isNewRepeat && !notes.isOverflow) {
                                     insertRec(prec, dt_pRecord);
                                 }
                             } catch (e) {
@@ -629,6 +678,7 @@ var BP_MOD_FILESTORE = (function()
         CSVFile: {value: CSVFile},
         createDB: {value: createDB},
         loadDB: {value: loadDB},
+        mergeInDB: {value: mergeInDB},
         getDBPath: {value: MOD_DB.getDBPath},
         cullDBName: {value: cullDBName},
         getDBName: {value: MOD_DB.getDBName},

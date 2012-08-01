@@ -33,11 +33,12 @@ var BP_MOD_CONNECT = (function ()
     /** @import-module-end **/    m = null;
 
     /** @constant */
-    var cm_getRecs = "cm_getRecs";     // Represents a getDB command
-    var cm_loadDB = "cm_loadDB";
-    var cm_createDB = "cm_createDB";
-    var cm_getDBPath = "cm_getDBPath";
-    var cm_importCSV = "cm_importCSV";
+    var cm_getRecs = "cm_getRecs",     // Represents a getDB command
+        cm_loadDB = "cm_loadDB",
+        cm_mergeInDB = "cm_mergeInDB",
+        cm_createDB = "cm_createDB",
+        cm_getDBPath = "cm_getDBPath",
+        cm_importCSV = "cm_importCSV";
 
     var DICT_TRAITS={};
    
@@ -158,6 +159,11 @@ var BP_MOD_CONNECT = (function ()
         rpcToMothership({cm: cm_loadDB, dbPath:dbPath}, callbackFunc);
     }
 
+    function mergeInDB (dbPath, callbackFunc)
+    {
+        rpcToMothership({cm: cm_mergeInDB, dbPath:dbPath}, callbackFunc);
+    }
+
     function importCSV (dbPath, obfuscated, callbackFunc) 
     {
         rpcToMothership({cm: cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
@@ -207,6 +213,7 @@ var BP_MOD_CONNECT = (function ()
             fn_pass: {value: fn_pass},
             cm_getRecs: {value: cm_getRecs},
             cm_loadDB: {value: cm_loadDB},
+            cm_mergeInDB: {value: cm_mergeInDB},
             cm_createDB: {value: cm_createDB},
             cm_getDBPath: {value: cm_getDBPath},
             cm_importCSV: {value: cm_importCSV},
@@ -216,6 +223,7 @@ var BP_MOD_CONNECT = (function ()
             newPRecord: {value: newPRecord},
             getRecs: {value: getRecs},
             loadDB: {value: loadDB},
+            mergeInDB: {value: mergeInDB},
             createDB: {value: createDB},
             getDBPath: {value: getDBPath},
             importCSV: {value: importCSV}

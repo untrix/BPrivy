@@ -96,10 +96,31 @@ var BP_MOD_MANAGE = (function ()
             }
         });
         
+        addEventListeners('#dbMergeIn', 'click', function (e)
+        {
+            var o={dtitle:"BPrivy: Select Other Wallet",
+                   dbutton: "Select Other Wallet"};
+            if (BP_PLUGIN.chooseFolder(o)) {
+                console.log("ChooseFolder returned:" + o.path);
+                BP_MOD_CONNECT.mergeInDB(o.path, function (resp)
+                {
+                    if (resp.result === true) {
+                        BP_MOD_ERROR.success('Merged password wallet at ' + resp.dbPath);
+                    }
+                    else {
+                        callbackHandleError(resp);
+                    }
+                });
+            }
+            else {
+                console.log("ChooseFolder returned false");
+            }
+        });
+        
         addEventListeners('#dbChooseLoad', 'click', function (e)
         {
-            var o={dtitle:"BPrivy: Select Store Folder",
-                   dbutton: "Select Existing Wallet"};
+            var o={dtitle:"BPrivy: Select Wallet Folder",
+                   dbutton: "Select Wallet Folder"};
             if (BP_PLUGIN.chooseFolder(o)) {
                 console.log("ChooseFolder returned:" + o.path);
                 BP_MOD_CONNECT.loadDB(o.path, function (resp)

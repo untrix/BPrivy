@@ -473,7 +473,7 @@ var BP_MOD_MEMSTORE = (function ()
             {
                 // Okay, same value, same timestamp. This is a repeated record.
                 // Do nothing, just ignore it.
-                drec.notes.oldRepeat = true;
+                drec.notes.isOldRepeat = true;
             }
             else if (arec.tm > oarec.tm)
             {
@@ -496,7 +496,7 @@ var BP_MOD_MEMSTORE = (function ()
                 // use-case can easily be made possible by changing the code in this section
                 // to not forget repeated values. Hence for now we'll go with the simpler
                 // leaner arguably smarter but certainly novel approach.
-                drec.notes.newRepeat = true;
+                drec.notes.isNewRepeat = true;
                 // In loadCSV case all record-timestamps are Date.now and therefore are
                 // latest. Hence any value in the csv record will appear like a new value
                 // or an upgrade. We don't want that to spoil the chronology of the DB
