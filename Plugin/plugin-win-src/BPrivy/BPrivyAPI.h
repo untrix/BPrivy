@@ -65,6 +65,7 @@ public:
 	 *  instead.
 	 */
 	bool ls(const bp::ucs& path_s, FB::JSObjectPtr out);
+	bool exists(const bp::ucs& path_s, FB::JSObjectPtr out);
 	bool appendFile(const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr out);
 	bool readFile(const bp::ucs& path, FB::JSObjectPtr out, const boost::optional<unsigned long long> pos);
 	bool createDir(const bp::ucs& path, FB::JSObjectPtr);
@@ -82,6 +83,7 @@ public:
 
 private:
 	bool _ls(bfs::path& path, bp::JSObject* out);
+	bool _exists(bfs::path& path, bp::JSObject* out);
 	bool _appendFile(bfs::path&, const std::string& data, bp::JSObject* out);
 	bool _readFile(bfs::path& path, bp::JSObject* out, const boost::optional<unsigned long long>& pos);
 	bool _createDir(bfs::path& path, bp::JSObject*);
@@ -96,6 +98,7 @@ private:
 	bool copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
 	bool removeFile(bfs::path&);
 	unsigned BPrivyAPI::lsDrives(bp::VariantMap&);
+	unsigned long long _lockFile(bfs::path& path, bp::JSObject* out);
 
 #ifdef DEBUG
 public:

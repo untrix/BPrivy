@@ -195,6 +195,7 @@ var BP_MOD_ERROR = (function()
                 this.atvt = BPError.atvt;
                 this.err = _err;
                 this.message = _err.gmsg || _err.smsg || _err.acode || _err.gcode || _err.scode;
+                this.message += _err.path1? ' path1='+_err.path1 : '';
             }
             else if (_err.name === "BPDiags") 
             {

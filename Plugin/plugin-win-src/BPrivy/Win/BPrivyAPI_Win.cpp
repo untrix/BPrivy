@@ -292,7 +292,9 @@ public:
 		LONG end2 = 0;
 		DWORD end1 = SetFilePointer(m_Handle, 0, &end2, FILE_END);
 		THROW_IF(end1 == INVALID_SET_FILE_POINTER);
-		BOOL st = LockFile(m_Handle, end1, end2, siz, 0);
+		//BOOL st = LockFile(m_Handle, end1, end2, siz, 0);
+		// EXP: Preventing Sky-Drives from reading file when we're writing to it.
+		BOOL st = LockFile(m_Handle, 0, 0, siz, 0);
 		THROW_IF (!st)
 
 		m_LkPos1 = end1;
@@ -410,8 +412,9 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 		// example 'Appending One File to Another File' in MSDN-help.
 		HANDLEGuard h( CreateFileW(path.c_str(), 
 						FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile
-						// // Allow other readers but no appenders (we never write inside a file), deleters or renamers
-						FILE_SHARE_READ,
+						0, // EXP: Changed from FILE_SHARE_READ to 0 in order to prevent Sky-Drives from reading when we want to write.
+						// Allow other readers but no appenders (we never write inside a file), deleters or renamers
+						//FILE_SHARE_READ,
 						//FILE_SHARE_PROMISCUOUS, // // Disabling ShareMode in order to test efficacy of locking
 						NULL, 
 						OPEN_ALWAYS, 
@@ -473,8 +476,10 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* out, const boost::optio
 
 		HANDLEGuard h( CreateFileW(path.c_str(), 
 						FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
+						FILE_SHARE_READ, // EXP: Removing FILE_SHARE_WRITE access because Sky-Drives may attempt
+										 // to write to the file.
 						// Allow other readers as well as appenders (we never write inside a file), but no deleters or renamers
-						FILE_SHARE_WRITE | FILE_SHARE_READ,
+						//FILE_SHARE_WRITE | FILE_SHARE_READ,
 						//FILE_SHARE_PROMISCUOUS, // Disabling ShareMode in order to test efficacy of locking
 						NULL, 
 						OPEN_EXISTING, 
@@ -492,7 +497,7 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* out, const boost::optio
 		if ((fsiz.QuadPart-pos) > bp::MAX_READ_BYTES)
 		{
 			//siz = bp::MAX_READ_BYTES;
-			throw BPError(ACODE_RESOURCE_UNAVAILABLE, BPCODE_FILE_TOO_BIG);
+			throw BPError(ACODE_UNSUPPORTED, BPCODE_FILE_TOO_BIG);
 		}
 		else 
 		{
@@ -922,7 +927,7 @@ unsigned long long BPrivyAPI::_readLock(bfs::path& path, bp::JSObject* out)
 		BOOL rval = GetFileSizeEx(h, &fsiz);
 		THROW_IF (rval == 0)
 
-		msize32_t siz = ((fsiz.QuadPart-pos) > bp::MAX_READ_BYTES) ? bp::MAX_READ_BYTES : static_cast<msize32_t>(fsiz.QuadPart);
+		msize32_t siz = static_cast<msize32_t>(fsiz.QuadPart);
 
 		// Copied from PrepareForRead(pos, siz); // throws
 		{

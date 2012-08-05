@@ -58,6 +58,7 @@ BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host) :
 
 	registerMethod("testEvent", make_method(this, &BPrivyAPI::testEvent));
 	registerMethod("ls", make_method(this, &BPrivyAPI::ls));
+	registerMethod("exists", make_method(this, &BPrivyAPI::exists));
 	registerMethod("getpid", make_method(this, &BPrivyAPI::getpid));
 	registerMethod("appendFile", make_method(this, &BPrivyAPI::appendFile));
 	registerMethod("readFile", make_method(this, &BPrivyAPI::readFile));
@@ -245,6 +246,18 @@ void BPrivyAPI::CONSOLE_LOG(const std::string& s){}
 void BPrivyAPI::CONSOLE_LOG(const std::wstring& s) {}
 #endif
 
+bool BPrivyAPI::_exists(bfs::path& path, bp::JSObject* p)
+{
+	static const std::string allowedExt[] = {".3ab", ".3ad", ".3ao", ".3ac", ".3am", ".3at", ".csv", ""};
+	try
+	{
+		securityCheck(path, allowedExt);
+		return bfs::exists(path);
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(p)
+	return false;
+}
+
 bool BPrivyAPI::_ls(bfs::path& path, bp::JSObject* p)
 {
 	try 
@@ -288,7 +301,7 @@ bool BPrivyAPI::_ls(bfs::path& path, bp::JSObject* p)
 		}
 		else if (bfs::is_directory(stat))
 		{
-			CONSOLE_LOG(path.wstring() + L" is a directory");
+			//CONSOLE_LOG(path.wstring() + L" is a directory");
 			const bfs::directory_iterator it_end;
 			bool hide = false; // By default we list hidden files
 			if (p->HasProperty(PROP_HIDE)) try
@@ -387,7 +400,7 @@ bool BPrivyAPI::_rm(bfs::path& path, bp::JSObject* p)
 
 	try
 	{
-		CONSOLE_LOG("In rmDir");
+		CONSOLE_LOG("In rm");
 
 		securityCheck(path, allowedExt);
 

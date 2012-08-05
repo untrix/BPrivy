@@ -42,10 +42,11 @@ var BP_MOD_TRAITS = (function ()
      *    that they are all valid JSON property names (e.g. no backslash or quotes).
      * 5. To represent the data-type in general at other places in the code ...
      */
-    var dt_eRecord = "e";  // Represents a E-Record (html-element record). Value is persisted.
-    var dt_pRecord = "p";  // Represents a P-Record (password record). Value is persisted.
-    var dt_etld    = "m",   // Represents a ETLD (Public Suffix) record. Value is persisted.
-        dt_default = "DefaultDT";
+    var dt_eRecord = "e",  // Represents a E-Record (html-element record). Value is persisted.
+        dt_pRecord = "p",  // Represents a P-Record (password record). Value is persisted.
+        dt_settings= "s",
+        dt_etld    = "m",  // Represents a ETLD (Public Suffix) record. Value is persisted.
+        dt_default = "d";
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
     /** @constant */
@@ -68,7 +69,7 @@ var BP_MOD_TRAITS = (function ()
             dt: { value:dt_default },
             key: { value:{uiName:'key', apiName:'key'} },
             fields: { value:[{uiName:'value', apiName:'value'}] },
-            showRecs: { value:function(loc) {return true;} }
+            showRecs: { value:function(loc) {return false;} }
         }));
     }
     var DEFAULT_UI_TRAITS = new DefaultUiTraits();
@@ -102,6 +103,7 @@ var BP_MOD_TRAITS = (function ()
     }
     EUiTraits.prototype = DEFAULT_UI_TRAITS;
 
+    // function SUiTraits ()    // {        // Object.freeze( Object.defineProperties(this,        // {            // dt: {value: dt_settings}        // }));    // }    // SUiTraits.prototype = DEFAULT_UI_TRAITS;
     
     Object.defineProperty(UI_TRAITS, dt_eRecord, {value: new EUiTraits()});
     Object.defineProperty(UI_TRAITS, dt_pRecord, {value: new PUiTraits()});
@@ -196,6 +198,7 @@ var BP_MOD_TRAITS = (function ()
         dt_eRecord: {value: dt_eRecord},
         dt_pRecord: {value: dt_pRecord},
         dt_etld: {value: dt_etld},
+        dt_settings:{value: dt_settings},
         dt_default: {value: dt_default},
         fn_userid: {value: fn_userid},
         fn_pass: {value: fn_pass}

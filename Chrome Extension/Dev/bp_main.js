@@ -25,6 +25,7 @@
         dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
+    var MOD_CONNECT = IMPORT(BP_MOD_CONNECT);
     var cm_getRecs = IMPORT(m.cm_getRecs);
     var cm_loadDB = IMPORT(m.cm_loadDB);
     var cm_mergeInDB = IMPORT(m.cm_mergeInDB);
@@ -77,7 +78,8 @@
     function onRequest(rq, sender, funcSendResponse)
     {
         var result, recs, dbPath,
-            cm = rq.cm;
+            cm = rq.cm,
+            bSaveRec;
         delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
         console.info("Mothership Received object of type " + cm);
         
@@ -87,10 +89,12 @@
             switch (cm) {
                 case dt_eRecord:
                     BPError.push("SaveERecord");
+                    bSaveRec = true;
                     funcSendResponse({result:insertNewRec(rq.rec, dt_eRecord)});
                     break;
                 case dt_pRecord:
                     BPError.push("SavePRecord");
+                    bSaveRec = true;
                     funcSendResponse({result:insertNewRec(rq.rec, dt_pRecord)});
                     break;
                 case cm_getRecs:
@@ -108,6 +112,11 @@
                 case cm_mergeInDB:
                     BPError.push("MergeInDB");
                     dbPath = FILE_STORE.mergeInDB(rq.dbPath);
+                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath});
+                    break;
+                case MOD_CONNECT.cm_compactDB:
+                    BPError.push("CompactDB");
+                    dbPath = FILE_STORE.compactDB();
                     funcSendResponse({result:Boolean(dbPath), dbPath:dbPath});
                     break;
                 case cm_createDB:
@@ -130,6 +139,7 @@
         } 
         catch (err) {
             BP_MOD_ERROR.logwarn(err);
+            if (bSaveRec) {FILE_STORE.unloadDB();}
             funcSendResponse({result:false, err:err});
         }
     }
@@ -147,7 +157,7 @@
             BPError.atvt = new Activity('LoadDBAtInit');
             dbPath = FILE_STORE.loadDB(dbPath);
 
-            if (!dbPath) { // db-load failed, remove the stored dbPath value.
+            if (!dbPath) { // db-load failed
                 throw new BPError("DB Load Failed");
             }
         }

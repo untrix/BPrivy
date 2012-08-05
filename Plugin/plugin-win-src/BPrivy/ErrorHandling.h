@@ -38,6 +38,7 @@ namespace bp
 	extern const bp::ustring PROP_FILEEXT;
 	extern const bp::ustring PROP_FILESTEM;
 	extern const bp::ustring PROP_FILESIZE;
+	extern const bp::ustring PROP_MTIME;
 	extern const bp::ustring PROP_DATA;
 	extern const bp::ustring PROP_READFILE;
 	extern const bp::ustring PROP_HIDE;
@@ -79,6 +80,9 @@ namespace bp
  	// Unmapped System Code
  	extern const bp::ustring ACODE_UNMAPPED;
 	extern const bp::ustring ACODE_UNKNOWN;
+	// Indicates that a unsupported feature was trying to be accessed,
+	// Or a resource-limit was reached (e.g. unsupported file size).
+	extern const bp::ustring ACODE_UNSUPPORTED;
 
 	//typedef enum _ACODE
 	//{

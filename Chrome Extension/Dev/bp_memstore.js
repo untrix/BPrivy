@@ -52,21 +52,26 @@ var BP_MOD_MEMSTORE = (function ()
      * copies of the tries will get created.
      */
         g_pd, g_kd,
+        DNODE_NEXT = 'N', 
         DNODE_TAG =  Object.freeze(
         {
-            // tag is a property name that should never clash withe a URL
-            // segment. Hence the bracket
-            // characters are being used because they are excluded in rfc 3986.
-            HOST: 'H', // Prefix for hostname
-            PATH: 'P', // Prefix for path
+            // These are DNode property prefixes. Each property shall have one and only one
+            // of these prefixes, in order to identify the property type.
+            // Individual DURL segments are prefixed based on their segment type in order
+            // to ensure a one-to-one mapping between URL and its concatenated DURL
+            // segments.
+            NEXT:  DNODE_NEXT, // Prefix to all next-node-pointer properties - i.e. URL segments
+            HOST:  DNODE_NEXT+'H', // Prefix for URL-hostname
+            PATH:  DNODE_NEXT+'P', // Prefix for URL-path
             ETLD: 'E', // ETLD rule marker. 0=> regular ETLD rule, 1 implies an override 
                        // (e.g. !educ.ar). See publicsuffix.org for details.
             DATA: 'D', // Prefix for data - e.g. De for E-Rec, Dp for P-Rec etc.
-            //PORT: 'O',
-            //HTTP: 'Shttp',
-            //HTTPS: 'Shttps'
-            // SCHEME: 'S',
-            //QUERY: 'Q',
+            ITER: "I" // Property used by DNodeIterator to save notes
+            //PORT: 'NO',
+            //HTTP: 'NS',
+            //HTTPS: 'NS'
+            // SCHEME: 'NS',
+            //QUERY: 'NQ',
             // getDataTag: {value: function (dt) {
                 // if(dt) {
                     // return /*DNODE_TAG.DATA +*/ dt;
@@ -154,7 +159,22 @@ var BP_MOD_MEMSTORE = (function ()
             // always be ignored and discarded - the value of save_asserts traits will not
             // affect that behaviour.
             persist_asserts: false            
-        },        // Returns record key        getKey: function (rec) {},// not needed by dt_etld        compareVals: function(rec1, rec2) // not needed by dt_etld        {},        isValid: function(rec) {} // only needed for some types.    });
+        },        // Returns record key        getKey: function (rec) {return rec.k;},// not needed by dt_etld
+        // return EQUAL or DIFFRNT. // not needed by dt_etld        compareVals: function(rec1, rec2)
+        {
+            if (rec1 && rec2)
+            {
+                if (rec1.v === rec2.v) { return EQUAL;}
+                else {return DIFFRNT;}
+            }
+            else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
+                return EQUAL;
+            }
+            else { return DIFFRNT; }
+        },
+        // return true if the record is valid, false otherwise. Only needed for pRecords        isValidCSV: function(rec) {return Boolean(rec.k);}, // only needed for some types.
+        // Returns value converted to a string suitable to be used as a property name
+        valStr: function(rec) {return rec.v;}    });
 
     function PStoreTraits() 
     {
@@ -167,13 +187,13 @@ var BP_MOD_MEMSTORE = (function ()
             {
                 return rec.u;
             }},
-            isValid: {value:function(rec)
+            isValidCSV: {value:function(rec)
             {
                 return (isValidARec(rec) && 
                     (typeof rec.u === "string") &&
                     (typeof rec.p === "string"));
             }},
-            compareVals: {value:function(rec1, rec2) 
+            compareVals: {value:function(rec1, rec2)
             {
                 if (rec1 && rec2)
                 {
@@ -205,7 +225,7 @@ var BP_MOD_MEMSTORE = (function ()
             {
                 return rec.f;
             }},
-            isValid: {value:function(rec)
+            isValidCSV: {value:function(rec)
             {
                 return (isValidARec(rec) && 
                     (typeof rec.f === "string") &&
@@ -250,7 +270,18 @@ var BP_MOD_MEMSTORE = (function ()
     }
     EStoreTraits.prototype = DEFAULT_TRAITS;
     var EREC_TRAITS = DT_TRAITS.traits[dt_eRecord] = new EStoreTraits();
-
+    
+    function SStoreTraits()
+    {
+        Object.freeze(Object.defineProperties(this, 
+        {
+            dict: {value:DICT_TRAITS[BP_MOD_TRAITS.dt_settings]},
+            // everything else is same as DEFAULT_TRAITS            
+        }));        
+    }
+    SStoreTraits.prototype = DEFAULT_TRAITS;
+    DT_TRAITS.traits[BP_MOD_TRAITS.dt_settings] = new SStoreTraits();
+    
     Object.freeze(DT_TRAITS);
     /** @end-static-class-defn DT_TRAITS **/    
 
@@ -368,6 +399,7 @@ var BP_MOD_MEMSTORE = (function ()
                 DIAGS.logwarn(new BPError("Didn't insert arec", "NewRecordSkipped", "Arecs.Some===false"));
             }
         }
+        
         
         this.curr = arecs[0];
     };
@@ -521,7 +553,23 @@ var BP_MOD_MEMSTORE = (function ()
             this.insertNewVal(valStr, drec);
         }
     };
-    
+    Actions.prototype.newIt = function ()
+    {
+        return new TimeIterator(this);
+    };
+    function TimeIterator(acns)
+    {
+        Object.defineProperties(this,
+        {
+            i:      {value:acns.arecs.length, writable:true},
+            arecs:  {value:acns.arecs}
+        });
+    }
+    TimeIterator.prototype.next = function ()
+    {
+        // Return records in chronological order
+        return this.arecs[--this.i];
+    };
     function newActions(dt, jo) {
         return new Actions(dt, jo);
     }
@@ -740,7 +788,6 @@ var BP_MOD_MEMSTORE = (function ()
          */
     }
     var DNProto = DNode.prototype;
-    DNProto.hasData = function() {return this.d;};
     DNProto.getData = function(dt) {return this[DNODE_TAG.DATA+dt];};
     DNProto.putData = function(drec)
     {
@@ -995,6 +1042,80 @@ var BP_MOD_MEMSTORE = (function ()
         var i, dt,            dtList = Object.keys(DT_TRAITS.traits),            n = dtList.length;        for (i=0; i<n; i++)        {            dt = dtList[i];            DNode[dt] = newDNode();        }
     }
     
+    function DNodeIterHelper(node, up)
+    {
+        return Object.defineProperties(this,
+        {
+            i:      {value:0, writable:true},
+            keys:   {value:Object.keys(node)},
+            up:     {value:up}
+        });
+    }
+    DNodeIterHelper.prototype.nextKey = function ()
+    {
+        var key, found;
+        for(key = this.keys[this.i++];
+            key;
+            key = this.keys[this.i++])
+        {
+            if (key.charAt(0) === DNODE_TAG.NEXT) // Only return next-node-pointer keys
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        return found? key : undefined;
+    };
+
+    /**
+     * Iterate DNodes 
+     * @param {String} dt - data-type
+     */
+    function DNodeIterator (root)
+    {
+        if (!root) {throw new BPError("", "InternalError", "BadArgument");}
+        Object.defineProperties(this,
+        {
+            node:   {value:root, writable:true}
+        });
+        this.visit(root, undefined); // specifying 'undefined' for self-documentation
+    }
+    DNodeIterator.prototype.visit = function (node, up)
+    {
+        //node.initIterHelper(up);
+        node[DNODE_TAG.ITER] = new DNodeIterHelper(node, up);
+        this.node = node;
+        return node;
+    };
+    DNodeIterator.prototype.next = function ()
+    {
+        var notes, key;
+        
+        for (notes = this.node[DNODE_TAG.ITER], key = notes.nextKey();
+             !key;
+             notes = this.node[DNODE_TAG.ITER], key = notes.nextKey())
+        {
+            // No more children at this level. Go back up the tree.
+            delete this.node[DNODE_TAG.ITER]; // clean-up this node.
+            this.node = notes.up;
+            if (!this.node) {
+                break;
+            }
+        }
+        
+        if (key)
+        {
+            return this.visit(this.node[key], this.node);// visit a child node
+        }
+        // else walk is over; return undefined.
+    };
+
+    function newDNodeIterator (dt)
+    {
+        return new DNodeIterator(DNode[dt]);
+    }
+    
     //Assemble the interface    
     var iface = Object.freeze(
     {
@@ -1008,7 +1129,8 @@ var BP_MOD_MEMSTORE = (function ()
         loadETLD:    loadETLD,
         newDNode:    newDNode, // used by build_tools
         DURL:        DURL, // used by build_tools
-        DRecord:     DRecord
+        DRecord:     DRecord,
+        newDNodeIterator: newDNodeIterator
     });
 
     console.log("loaded memstore");

@@ -45,6 +45,7 @@ namespace bp
 	const bp::ustring PROP_FILEEXT				(L"ext");
 	const bp::ustring PROP_FILESTEM				(L"stm");
 	const bp::ustring PROP_FILESIZE				(L"siz");
+	const bp::ustring PROP_MTIME				(L"mtm");
 	const bp::ustring PROP_DATA					(L"dat");
 	const bp::ustring PROP_PASS					(L"pass");
 
@@ -57,6 +58,7 @@ namespace bp
  	const bp::ustring ACODE_BAD_PATH_ARGUMENT	(L"BadPathArgument");
  	const bp::ustring ACODE_RESOURCE_LOCKED		(L"ResourceLocked");
  	const bp::ustring ACODE_ACCESS_DENIED		(L"AccessDenied");
+	const bp::ustring ACODE_UNSUPPORTED			(L"Unsupported");
 
 	const bp::ustring BPCODE_UNAUTHORIZED_CLIENT (L"UnauthorizedClient");
 	const bp::ustring BPCODE_WRONG_PASS			(L"WrongPass"); // Password too short or wrong.

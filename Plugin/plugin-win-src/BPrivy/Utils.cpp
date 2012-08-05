@@ -9,7 +9,7 @@ using namespace std;
 namespace bp
 {
 	// *** Value MUST be less than 4GiB since msize32_t is uint32_t
-	const msize32_t MAX_READ_BYTES = 1048576; // = 1MB
+	const msize32_t MAX_READ_BYTES = 10485760; // = 10MB
 
 	bool direntToVariant(const bfs::path& path, bp::VariantMap& v, bp::VariantMap& v_e,
 					 ENT_TYPE type)
@@ -19,6 +19,7 @@ namespace bp
 		{
 			if (type == ENT_FILE) {
 				v.insert(PROP_FILESIZE, file_size(path));
+				v.insert(PROP_MTIME, last_write_time(path));
 			}
 			if (path.has_extension()) {
 				v.insert(PROP_FILEEXT, path.extension());

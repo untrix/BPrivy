@@ -45,31 +45,9 @@ var BP_MOD_FILESTORE = (function()
     var eid_bp = "com-untrix-bpplugin",
     // Points to the bp-plugin
         BP_PLUGIN,
-        /** File/Dirname extenstions */
-        ext_Root = ".3ab",
-        ext_Dict = ".3ad",
-        ext_Open = ".3ao",
-        ext_Closed=".3ac",
-        ext_MMap = ".3am",
-        ext_Temp = ".3at",
-        ext_Csv  = ".csv",
-        path_sep,
         /** Record Separator in the files */
-        rec_sep = '\r\n\r\n,',
-        /**
-         * Name of knowledge-dict directory on filesystem. Should be case insensitive
-         * since not all filesystems will honor case.
-         */
-        dir_k = ".k" + ext_Dict,
-        file_k = ".k" + ext_Open,
-        /**
-         * Name of passwords-dict directory on filesystem. Should be case insensitive
-         * since not all filesystems will honor case.
-         */
-        dir_p = ".p" + ext_Dict,
-        file_p = ".p" + ext_Open;
-        // g_dbPath, // Currently opened DB's root path. Will be set at runtime.        // g_path_k, // File to write e/k-records to. Will be set at runtime.        // g_path_p; // File to write p-records to. Will be set at runtime.
-       
+        rec_sep = '\r\n\r\n,';
+               
     function parseSegment (sgmnt)
     {
         var regex = /^(.*)(\.[^.]+)$/;
@@ -91,25 +69,6 @@ var BP_MOD_FILESTORE = (function()
         return o;
     }
         
-    function cullDBName(dbPath)
-    {
-        var regex, array;
-        if (path_sep === "/") {
-            regex = /^.*\/([^\/]+)$/;
-        }
-        else {
-            regex = /^.*\\([^\\]+)$/;
-        }
-        
-        array = regex.exec(dbPath);
-        if (array) {
-            var o = parseSegment(array[1]);
-            if (o) {
-                return o.stem;
-            }
-        }
-    }
-    
     function parsePath(path)
     {
         var regex = /(?:^[\/\\]*)?(?:([^\\\/]+)[\\\/]+)/g;
@@ -132,98 +91,214 @@ var BP_MOD_FILESTORE = (function()
         }
     }
 
-    function insideDB (dbPath, out)
-    {
-        var pathArray = parsePath(dbPath), 
-            i, j, inDB=false;
-        
-        for (i = pathArray.length - 1; i >= 0; i--)
-        {
-            if (pathArray[i] && (pathArray[i].ext === ext_Root)) {
-                inDB = true;
-                break;
-            }
-        }
-        
-        if (inDB && out) 
-        {
-            for (out.dbPath='',j=0; j<=i; j++) {
-                out.dbPath += (j>0 ? path_sep : '') + pathArray[j].name;
-            }
-        }
-        
-        return inDB;
-    }
-     
-    var MOD_DB = (function ()
+    var DB_FS = (function ()
     {
         var g_dbPath, // Currently opened DB's root path. Will be set at runtime.
-            g_path_k, // File to write e/k-records to. Will be set at runtime.
-            g_path_p, // File to write p-records to. Will be set at runtime.
-            module = {};
-    
-        module.setDBPath = function  (dbPath)
+            g_path_dt={}, // File to write e/k-records to. Will be set at runtime.
+            dir_dt={}, // populated below
+            file_dt={},// populated below
+            path_sep = null, // populated below
+            dt_settings = IMPORT(BP_MOD_TRAITS.dt_settings),
+            dtl = [dt_eRecord, dt_pRecord, dt_settings];
+
+        var mod =
         {
-            if (dbPath) {
-                g_dbPath = dbPath;
-                g_path_k = g_dbPath + path_sep + dir_k + path_sep + file_k;
-                g_path_p = g_dbPath + path_sep + dir_p + path_sep + file_p;
-            }
-            else {
-                g_dbPath = g_path_k = g_path_p = null;
+            dtl: dtl,
+             /** File/Dirname extenstions */
+            ext_Root: ".3ab",
+            ext_Dict: ".3ad",
+            ext_Open: ".3ao",
+            ext_Closed:".3ac",
+            ext_MMap: ".3am",
+            ext_Temp: ".3at",
+            ext_Bad : ".3ae", // e => error
+            ext_Csv : ".csv",
+            cullDBName: function (dbPath)
+            {
+                var regex, array;
+                if (path_sep === "/") {
+                    regex = /^.*\/([^\/]+)$/;
+                }
+                else {
+                    regex = /^.*\\([^\\]+)$/;
+                }
+                
+                array = regex.exec(dbPath);
+                if (array) {
+                    var o = parseSegment(array[1]);
+                    if (o) {
+                        return o.stem;
+                    }
+                }
+            },
+            putPathSep: function (p_sep)
+            {
+                path_sep = p_sep || BP_PLUGIN.pathSeparator();
+            },
+            getPathSep: function ()
+            {
+                return path_sep;
+            },
+            setDBPath: function (dbPath)
+            {
+                if (dbPath)
+                {
+                    g_dbPath = dbPath;
+                    dtl.forEach(function (dt, i)
+                    {
+                        g_path_dt[dt] = g_dbPath + path_sep + dir_dt[dt]+ path_sep + file_dt[dt];
+                    });
+                }
+                else {
+                    g_dbPath = null;
+                    dtl.forEach(function (dt, i)
+                    {
+                        g_path_dt[dt] = null;
+                    });
+                }
+            },
+            getDTFilePath: function (dt, dbPath)
+            {
+                if (!dbPath) {MOD_ERROR.logwarn("@getDTFilePath: No dbPath supplied."); throw new BPError("", "InternalError");}
+                return dbPath? mod.getDTDirPath(dt, dbPath) + mod.getDTFileName(dt) : g_path_dt[dt];
+            },
+            makeDTFilePath: function (dt, dbPath)
+            {
+                if (!dbPath) {MOD_ERROR.logwarn("@getDTFilePath: No dbPath supplied."); throw new BPError("", "InternalError");}
+                return g_path_dt[dt]? mod.getDTDirPath(dt, dbPath) + mod.getDTFileName(dt) : undefined;
+            },            
+            getDTFileName: function (dt)
+            {
+                return file_dt[dt];
+            },
+            makeClosedDTFilePath: function(dt, dbPath)
+            {
+                if (!dbPath) {MOD_ERROR.logwarn("@makeClosedDTFilePath: No dbPath supplied."); throw new BPError("", "InternalError");}
+                return mod.getDTDirPath(dt, dbPath) + Date.now().valueOf() + mod.ext_Closed;
+            },
+            makeTempDTFilePath: function(dt, dbPath)
+            {
+                if (!dbPath) {MOD_ERROR.logwarn("@makeTempDTFilePath: No dbPath supplied."); throw new BPError("", "InternalError");}
+                return mod.getDTDirPath(dt, dbPath) + Date.now().valueOf() + mod.ext_Temp;
+            },
+            makeBadDTFilePath:  function(dt, dbPath)
+            {
+                if (!dbPath) {MOD_ERROR.logwarn("@makeBadDTFilePath: No dbPath supplied."); throw new BPError("", "InternalError");}
+                return mod.getDTDirPath(dt, dbPath) + Date.now().valueOf() + mod.ext_Bad;
+            }, 
+            getDTDirPath: function (dt, dbPath)
+            {
+                if (!dbPath) {MOD_ERROR.logwarn("@getDTDirPath: No dbPath supplied"); throw new BPError("", "InternalError");}
+                return dbPath + path_sep + dir_dt[dt] + path_sep;                
+            },
+            getDBPath: function  ()
+            {
+                return g_dbPath;
+            },
+            getDBName: function ()
+            {
+                return mod.cullDBName(g_dbPath);
+            },
+            makeDBPath: function (name, dir)
+            {
+                var dbPath = dir + path_sep + name;
+                if (name.slice(name.length - mod.ext_Root.length) !== mod.ext_Root) 
+                {
+                    dbPath += mod.ext_Root;
+                }
+                return dbPath;
+            },
+            insideDB: function  (dbPath, out)
+            {
+                var pathArray = parsePath(dbPath), 
+                    i, j, inDB=false;
+                
+                for (i = pathArray.length - 1; i >= 0; i--)
+                {
+                    if (pathArray[i] && (pathArray[i].ext === mod.ext_Root)) {
+                        inDB = true;
+                        break;
+                    }
+                }
+                
+                if (inDB && out) 
+                {
+                    for (out.dbPath='',j=0; j<=i; j++) {
+                        out.dbPath += (j>0 ? path_sep : '') + pathArray[j].name;
+                    }
+                }
+                
+                return inDB;
+            },
+            verifyDBForLoad: function (dbPath)
+            {
+                var o={}, goodPath;
+        
+                if (!mod.insideDB(dbPath, o)) {
+                    goodPath = false;
+                }
+                else {
+                    dbPath = o.dbPath;
+                    goodPath = true;
+                }
+        
+                var path_k = dbPath + path_sep + dir_dt[dt_eRecord],
+                    path_p = dbPath + path_sep + dir_dt[dt_pRecord];
+                
+                if (!(goodPath && BP_PLUGIN.ls(dbPath, o) && BP_PLUGIN.ls(path_k, o) &&
+                    BP_PLUGIN.ls(path_p, o)))
+                {
+                    throw new BPError("", 'BadPathArgument');
+                }
+                
+                return dbPath;
+            },
+            /** 
+             * Returns true if the file should be loaded into the DB
+             * @param {Object} dirEnt dirEnt should be a dir-entry listing from BP_PLUGIN.ls and it should
+             *      be a regular file. IN other words, it should be obtained from o.lsd.f or o.lsf   
+             */
+            toLoad: function (dirEnt)
+            {
+                switch (dirEnt.ext)
+                {
+                    case mod.ext_Open:
+                    case mod.ext_Closed:
+                    case mod.ext_Temp:
+                        return true;
+                    default:
+                        return false;
+                }
             }
         };
         
-        module.getDTPath = function  (dt)
+        // populate dir and file with all possible data-types
+        // Right now, we're using the dt string as the file/dirname as well. However,
+        // if needed a mapping can be performed in this function. For e.g. dt_eRecord
+        // may be mapped to filename '.k.3ao' instead of '.e.3ao' if desired.
+        dtl.forEach(function (dt, i)
         {
             switch (dt)
             {
-                case dt_pRecord:
-                    return g_path_p;
                 case dt_eRecord:
-                    return g_path_k;
+                    dir_dt[dt] = ".k" + mod.ext_Dict;
+                    file_dt[dt]= ".k" + mod.ext_Open;
+                break;
+                default:
+                    dir_dt[dt] = "." + dt + mod.ext_Dict;
+                    file_dt[dt]= "." + dt + mod.ext_Open;
             }
-        };
-        
-        module.getDBPath = function  ()
-        {
-            return g_dbPath;
-        };
-        
-        module.getDBName = function ()
-        {
-            return cullDBName(g_dbPath);
-        };
-        
-        return Object.freeze(module);
+        });
+
+        return Object.freeze(mod);
     }());
-    
+
     function unloadDB()
     {
         MEM_STORE.clear(); // unload the previous DB.
-        MOD_DB.setDBPath(null);
+        DB_FS.setDBPath(null);
     }
     
-    function insertRec(rec, dt)
-    {
-        var result = false, o={};
-        switch (dt) {
-            case dt_eRecord:
-                result = BP_PLUGIN.appendFile(MOD_DB.getDTPath(dt_eRecord), rec_sep+JSON.stringify(rec), o);
-                break;
-            case dt_pRecord:
-                result = BP_PLUGIN.appendFile(MOD_DB.getDTPath(dt_pRecord), rec_sep+JSON.stringify(rec), o);
-                break;
-        }
-
-        if (!result) {
-            unloadDB();
-            throw new BPError(o.err);
-        }
-        
-        return result;
-    }
-
     /**
      * @param filePath
      * @param dt
@@ -231,7 +306,7 @@ var BP_MOD_FILESTORE = (function()
      *        reading. Used for mergeDB operations where records are loaded from an external
      *        DB and written onto the currently open DB.
      */
-    function loadFile(filePath, dt, merge)
+    function loadFile(filePath, dt)
     {
         var i, notes,
             ftraits = MEM_STORE.DT_TRAITS.getTraits(dt).file,
@@ -249,20 +324,13 @@ var BP_MOD_FILESTORE = (function()
             // Loading records in reverse chronological order for faster insertion into
             // MEM_STORE.
             
-            // Remove the first entry that we artifically introduced above.
+            // Remove the first entry that we artifically inserted above.
             delete recs[0];
             recs.reduceRight(function(accum, rec, i, recs)
             {
                 try 
                 {
-                    notes = MEM_STORE.insertRec(rec, dt);
-                    if (merge && !notes.isOverflow && !notes.isOldRepeat)
-                    {
-                        if (!notes.isNewRepeat || ftraits.persist_asserts) 
-                        {
-                            insertRec(rec, dt);
-                        }
-                    }
+                    MEM_STORE.insertRec(rec, dt);
                 } catch (e) {
                     var bpe = new BPError(e);
                     BP_MOD_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
@@ -274,76 +342,103 @@ var BP_MOD_FILESTORE = (function()
             MOD_ERROR.log("File " + filePath + " is corrupted");
         }
     }
-    
-    function verifyDBForLoad (dbPath) 
-    {
-        var o={}, goodPath;
-
-        if (!insideDB(dbPath, o)) {
-            goodPath = false;
-        }
-        else {
-            dbPath = o.dbPath;
-            goodPath = true;
-        }
-
-        var path_k = dbPath + path_sep + dir_k,
-            path_p = dbPath + path_sep + dir_p;
-        
-        if (!(goodPath && BP_PLUGIN.ls(dbPath, o) && BP_PLUGIN.ls(path_k, o) && BP_PLUGIN.ls(path_p, o))) {
-            throw new BPError("", 'BadPathArgument');
-        }
-        
-        return dbPath;
-    }
-    
+      
     /**
      * Helper function to loadDB 
      */
-    function loadDBFiles(dbPath, merge)
+    function loadDBFiles(dbPath)
     {
-        // Load P-Records
-        var o={}, path_dir_p, path_dir_k, f, i, file_names;
+        var dbStats = DB_FS.newDBStats();
+            //loaded = {};
+        DB_FS.dtl.forEach(function (dt, jj, dtl)
+        {
+            var o={}, i, file_names, f,
+                path_dir = DB_FS.getDTDirPath(dt, dbPath),
+                j, name;
+            if (BP_PLUGIN.ls(path_dir, o) && o.lsd && o.lsd.f)
+            {
+                f = o.lsd.f;
+                file_names = Object.keys(f);
+                //loaded[dt] = [];
+
+                // Load files in reverse chronological order for faster insertion into
+                // MEM_STORE.
+                file_names.sort(function (x,y)
+                {
+                    // We want a reverse-sort, hence flip x and y.
+                    return f[y].mtm-f[x].mtm;
+                });
+                
+                for(j=0; j < file_names.length; j++)
+                {
+                    name = file_names[j];
+                    if (DB_FS.toLoad(f[name]))
+                    {
+                        try 
+                        {
+                            loadFile(path_dir + name, dt);
+                            //loaded[dt].push(name);
+                            dbStats.loaded(dt, name, f[name]);
+                        } catch (e) 
+                        {
+                            var bpe = new BPError(e),
+                                oldPath = path_dir + name,
+                                newPath = DB_FS.makeBadDTFilePath(dt, dbPath);
+                            BP_MOD_ERROR.logwarn("Moving bad file " + oldPath + " to " + newPath);
+                            o={};
+                            BP_PLUGIN.rename(oldPath, newPath, o);
+                            dbStats.bad(dt, name, f[name]);
+                        }
+                    }
+                    else
+                    {
+                        dbStats.fluff(dt, name, f[name]);
+                    }
+                }
+            }
+        });
         
-        if (BP_PLUGIN.ls(dbPath + path_sep + dir_p, o) && o.lsd && o.lsd.f)
+        return dbStats;
+    }
+    
+    function tempDBFiles(dbPath)
+    {
+        DB_FS.dtl.forEach(function (dt, j, dtl)
         {
-            path_dir_p = dbPath + path_sep + dir_p + path_sep;
-            f = o.lsd.f; file_names = Object.keys(f);
-            // TODO: Load files in reverse chronological order for faster insertion into
-            // MEM_STORE.
-            for (i=file_names.length-1; i>=0; --i)
+            var o, i,
+                path_dir = DB_FS.getDTDirPath(dt, dbPath),
+                frmPath,
+                toPath,
+                done;
+
+            frmPath = DB_FS.getDTFilePath(dt, dbPath);
+            toPath  = DB_FS.makeTempDTFilePath(dt, dbPath);
+            
+            for (i=0; i<3 && !done; i++)
             {
-                if (f[ file_names[i] ].ext === ext_Open) {
-                    try {
-                        loadFile(path_dir_p + file_names[i], dt_pRecord, merge);
-                    } catch (e) {
-                        var bpe = new BPError(e);
-                        BP_MOD_ERROR.warn(bpe);
-                        BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_p + file_names[i]);
+                o={};
+                if (!BP_PLUGIN.exists(frmPath, o)) {
+                    done = true;
+                    continue;
+                }
+                
+                o={};
+                done = BP_PLUGIN.rename(frmPath, toPath, o, false);
+                if (!done)
+                {
+                    // Looks like a vestige of a failed previous attempt. We can't
+                    // delete it, let's try another filename
+                    if (o.err && o.err.gcode==='WouldClobber')
+                    {
+                        toPath  = DB_FS.makeTempDTFilePath(dt, dbPath);
+                    }
+                    else
+                    {
+                        throw new BPError(o.err);
                     }
                 }
             }
-        }
-        // Load K-Records
-        o={};
-        if (BP_PLUGIN.ls(dbPath + path_sep + dir_k, o) && o.lsd && o.lsd.f)
-        {
-            path_dir_k = dbPath + path_sep + dir_k + path_sep;
-            f = o.lsd.f; file_names = Object.keys(f);
-            for (i=file_names.length-1; i>=0; --i)
-            {
-                if (f[ file_names[i] ].ext === ext_Open) {
-                    try {
-                        loadFile(path_dir_k + file_names[i], dt_eRecord, merge);
-                    } 
-                    catch (e) {
-                        var bpe = new BPError(e);
-                        BP_MOD_ERROR.warn(bpe);
-                        BP_MOD_ERROR.logwarn("Skipping remainder file " + path_dir_k + file_names[i]);
-                    }
-                }
-            }
-        }
+        });
     }
     
     /**
@@ -356,62 +451,160 @@ var BP_MOD_FILESTORE = (function()
      *                  path inside an existing DB, then the system backtracks up to the root
      *                  of the DB and loads that. That's the path which is returned.     
      */
-    function loadDB(dbPath, merge)
+    function loadDB(dbPath, io)
     {
+        var dbStats;
         // First determine if this DB exists and is good.
-        dbPath = verifyDBForLoad(dbPath);
+        dbPath = DB_FS.verifyDBForLoad(dbPath);
 
-        if (!merge)
+        if (!io || !io.merge)
         {
             console.log("loadingDB " + dbPath);
             MEM_STORE.clear(); // unload the previous DB.
-            MOD_DB.setDBPath(dbPath);
+            DB_FS.setDBPath(dbPath);
         }
         else
         {
+            if (dbPath === DB_FS.getDBPath())
+            {
+                throw new BPError("This wallet is already loaded. Specify a different one");
+            }
             console.log("Merging in DB " + dbPath);
         }
         
-        loadDBFiles(dbPath, merge);
+        dbStats = loadDBFiles(dbPath);
+        if (io) {io.dbStats = dbStats;}
                 
         MOD_ERROR.log("Loaded DB " + dbPath);
         return dbPath;
     }
     
-    /**
-     * Merges in a DB and returns its root path. Returned value should be equal to the root
-     * folder of the DB pointed out by the user (user may point to the root or anywhere
-     * within the DB) 
-     */
-    function mergeInDB(dbPath)
+    function rmDictFiles (files, dbPath)
     {
-        return loadDB(dbPath, true);
+        var dtl = Object.keys(files), i, j;
+        for (i=0; i<dtl.length; i++)
+        {
+            var dt = dtl[i],
+                dirPath = DB_FS.getDTDirPath(dt, dbPath),
+                names = files[dt],
+                len = names.length,
+                o;
+                
+            for (j=0; j<len; j++)
+            {
+                o={};
+                BP_PLUGIN.rm(dirPath + names[j], o);
+            }
+        }
     }
+    
+    // Constructor. Inherits from Array
+    function RecsBuf(fPath) 
+    {
+        if (!fPath) {throw new BPError("InternalError @RecsBuf", "InternalError");}
+        Object.defineProperties(this,
+        {
+            fPth: {value:fPath}
+        });
+    }
+    RecsBuf.prototype = Object.create(Array.prototype);
+    RecsBuf.prototype.flush = function ()
+    {
+        var o={};
+        if (!BP_PLUGIN.appendFile(this.fPth, rec_sep, o) ||
+            !BP_PLUGIN.appendFile(this.fPth, this.join(rec_sep), o))
+        {
+            throw new BPError(o.err);
+        }
+        else {
+            this.length = 0;
+        }
+    };
+
+    function insertRec(rec, dt)
+    {
+        var result = false, 
+            dtPath = DB_FS.getDTFilePath(dt, DB_FS.getDBPath()),
+            o={};
+
+        if (dtPath)
+        {
+            result = BP_PLUGIN.appendFile(dtPath, rec_sep+JSON.stringify(rec), o);
+            if (!result) {
+                throw new BPError(o.err);
+            }
+        }
+        
+        return result;
+    }
+    
+    function compactDB()    {        var dbPath = DB_FS.getDBPath(),
+            out={},
+            dt, 
+            dnIt, dn, recs, rIt, acoll, aIt, arec,
+            buf, o,
+            i, dtPath;        // 1. Move files to compacting.<filename> with clobbering enabled.        // 2. Block MEM_STORE writes.        // 3. Reload DB. (loads all open files in the DB).        // 4. Append MEM_STORE to usual DB files. Normally these files shouldn't exist        //    because we renamed them in step 1. In the off-chance that another browser        //    instance had created the files between steps 1 and 4, then we will end-up        //    appending the compacted records to the file - that's what we want.        // 5. Unblock MEM_STORE writes.        // 6. Remove files prefixed with 'compacting'.        
+        if (!dbPath) {
+            throw new BPError ("No DB loaded");
+        }        tempDBFiles(dbPath);        dbPath = loadDB(dbPath, out);
+        // Iterate the MEM_STORE and write recs to the appropriate files.
+        for (i=0; i<DB_FS.dtl.length; i++)
+        {
+            dt = DB_FS.dtl[i];
+            dnIt = MEM_STORE.newDNodeIterator(dt);
+            buf = new RecsBuf(DB_FS.getDTFilePath(dt, dbPath));
+            while ((dn=dnIt.next()))
+            {
+                if ((recs=dn.getData(dt)))
+                {
+                    rIt = new BP_MOD_TRAITS.RecsIterator(recs);
+                    while ((acoll=rIt.next()))
+                    {
+                        aIt = acoll.newIt();
+                        for (arec=aIt.next(); 
+                             arec; 
+                             arec=aIt.next())
+                        {
+                            buf.push(JSON.stringify(arec));                            if (buf.length>=100)                            {
+                                buf.flush();                            }
+                            //insertRec(arec, dt);
+                        }
+                    }
+                }
+            }
+            
+            if (buf.length)
+            {
+                buf.flush();
+            }
+        }        // MEM_STORE.append(dbPath);
+                rmDictFiles(out.dbStats.loaded, dbPath);                // lockDBFiles(dbPath);        // loadDB(dbPath);        // MEM_STORE.persist(dbPath, 'compact');        // mvDBFiles(dbPath, 'compact', null);        // clearDB(dbPath);        // unlockDBFiles(dbPath);
+        return dbPath;    }//         // function mergeInDB(db1, db2)    // {        // DB_FS.mvDBFiles(db1, 'merging');        // loadDB(db1);        // loadDB(db2, {merge:true});        // MEM_STORE.append(db1);        // DB_FS.rmDBFiles('compacting');    // }//         // function mergeOutDB(db1, db2)    // {        // MEM_STORE.blockInserts(); // Since we'll be loading the db2, we don't want any                                   // // inserts to it while we're merging because from user                                  // // POV those inserts were meant for db1        // mergeInDB(db2, db1);        // loadDB(db1);        // MEM_STORE.unblockInserts();    // }//         // function merge(db1, db2)    // {//             // }
     
     function createDB(name, dir) // throws
     {
-        var root, i, 
+        var dbPath, i, 
             o = {};
             
-        if (insideDB(dir)) {
+        if (DB_FS.insideDB(dir)) {
             throw new BPError(BP_MOD_ERROR.msg.ExistingStore, 'BadPathArgument', 'ExistingStore');
         }
-        if (name.slice(name.slice.length - ext_Root.length) !== ext_Root) {
-            root = dir + path_sep + name + ext_Root;
-        }
+        
+        dbPath = DB_FS.makeDBPath(name, dir);
 
-        if (BP_PLUGIN.createDir(root,o))
+        if (BP_PLUGIN.createDir(dbPath,o))
         {
-            var p = root + path_sep + dir_p;
-            if (!BP_PLUGIN.createDir(p,o)) {
-                o={}; BP_PLUGIN.rm(root, o);
-                throw new BPError(o.err);
-            }
-            p = root + path_sep + dir_k;
-            if (!BP_PLUGIN.createDir(p,o)) {
-                o={}; BP_PLUGIN.rm(root, o);
-                throw new BPError(o.err);
-            }
+            DB_FS.dtl.forEach(function (dt, j)
+            {
+                var p = DB_FS.getDTDirPath(dt, dbPath);
+                if (!BP_PLUGIN.createDir(p,o)) 
+                {
+                    var err = o.err;
+                    o={}; 
+                    BP_PLUGIN.rm(dbPath, o);
+                    throw new BPError(err);
+                }
+            });
         }
         else
         {
@@ -419,8 +612,8 @@ var BP_MOD_FILESTORE = (function()
         }
         
         MEM_STORE.clear(); // unload the previous DB.
-        MOD_DB.setDBPath(root); // The DB is deemed loaded (though it is empty)
-        return root; // same as return MOD_DB.getDBPath();
+        DB_FS.setDBPath(dbPath); // The DB is deemed loaded (though it is empty)
+        return dbPath; // same as return DB_FS.getDBPath();
     }
 
     function findPPropsIdx(keys)
@@ -626,7 +819,7 @@ var BP_MOD_FILESTORE = (function()
                                           Date.now(), 
                                           csv[pidx.userid],
                                           csv[pidx.pass]);
-                        if (!MEM_STORE.PREC_TRAITS.isValid(prec)) 
+                        if (!MEM_STORE.PREC_TRAITS.isValidCSV(prec))
                         {
                             console.log("Discarding invalid csv record - " + JSON.stringify(csv));
                             prec = null; continue;
@@ -666,7 +859,8 @@ var BP_MOD_FILESTORE = (function()
     function init (p_sep)
     {
         BP_PLUGIN = document.getElementById(eid_bp);
-        path_sep = p_sep || (BP_PLUGIN && BP_PLUGIN.pathSeparator) ? BP_PLUGIN.pathSeparator() : undefined;        
+        DB_FS.putPathSep(p_sep);
+        //path_sep = p_sep || (BP_PLUGIN && BP_PLUGIN.pathSeparator) ? BP_PLUGIN.pathSeparator() : undefined;        
     }
                   
     //Assemble the interface    
@@ -678,10 +872,11 @@ var BP_MOD_FILESTORE = (function()
         CSVFile: {value: CSVFile},
         createDB: {value: createDB},
         loadDB: {value: loadDB},
-        mergeInDB: {value: mergeInDB},
-        getDBPath: {value: MOD_DB.getDBPath},
-        cullDBName: {value: cullDBName},
-        getDBName: {value: MOD_DB.getDBName},
+        unloadDB: {value: unloadDB},
+        compactDB: {value: compactDB},
+        getDBPath: {value: DB_FS.getDBPath},
+        cullDBName: {value: DB_FS.cullDBName},
+        getDBName: {value: DB_FS.getDBName},
         insertRec: {value: insertRec}
     });
     Object.freeze(iface);

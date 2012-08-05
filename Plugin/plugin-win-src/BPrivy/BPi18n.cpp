@@ -72,10 +72,16 @@ namespace bp
 /************* API INGRES POINTS. ENSURE THAT WE'RE ONLY INJECTING UNICODE INTO THE SYSTEM *************/
 /*******************************************************************************************************/
 
-bool BPrivyAPI::ls(const bp::ucs& path_s, FB::JSObjectPtr out) 
+bool BPrivyAPI::ls(const bp::ucs& path_s, FB::JSObjectPtr out)
 {
 	bfs::path path(path_s); path.make_preferred();
 	return _ls(path, &bp::JSObject(out));
+}
+
+bool BPrivyAPI::exists(const bp::ucs& path_s, FB::JSObjectPtr out)
+{
+	bfs::path path(path_s); path.make_preferred();
+	return _exists(path, &bp::JSObject(out));
 }
 
 bool BPrivyAPI::appendFile(const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr out)

@@ -33,39 +33,51 @@ var BP_MOD_CONNECT = (function ()
     /** @import-module-end **/    m = null;
 
     /** @constant */
-    var cm_getRecs = "cm_getRecs",     // Represents a getDB command
-        cm_loadDB = "cm_loadDB",
-        cm_mergeInDB = "cm_mergeInDB",
-        cm_createDB = "cm_createDB",
-        cm_getDBPath = "cm_getDBPath",
-        cm_importCSV = "cm_importCSV";
+    var cm_getRecs = "cm_recs",     // Represents a getDB command
+        cm_loadDB = "cm_load",
+        cm_mergeInDB = "cm_mrgIn",
+        cm_createDB = "cm_crDB",
+        cm_getDBPath = "cm_dbPth",
+        cm_importCSV = "cm_imCSV",
+        cm_compactDB = "cm_cmDB";
 
     var DICT_TRAITS={};
    
-    /** generic traits */
-    DICT_TRAITS[undefined] = Object.freeze(
+    /** list of traits properties */
+    var TRAITS_PROPS = DICT_TRAITS[undefined] = Object.freeze(Object.create(Object.prototype,
     {
-        url_host:true,
-        url_path:true
-    });
+        url_scheme:{}, // currently unused by DURL
+        url_host:{},
+        domain_only:{},
+        url_path:{},
+        url_query:{}, // currently unused by DURL
+        url_port:{} // currently unused by DURL
+    }));
     
-    DICT_TRAITS[dt_pRecord] = Object.freeze(
+    DICT_TRAITS[dt_pRecord] = Object.freeze(Object.create(TRAITS_PROPS,
     {
-        url_host:true,
-        domain_only:true // Store records agains domain only - e.g. facebook.com
+        url_host: {value:true},
+        url_path: {value:false},
+        domain_only: {value:true} // Store records agains domain only - e.g. facebook.com
         // instead of apps.facebook.com.
-    });
+    }));
 
-    DICT_TRAITS[dt_eRecord] = Object.freeze(
+    DICT_TRAITS[dt_eRecord] = Object.freeze(Object.create(TRAITS_PROPS,
     {
-        url_host:true,
-        url_path:true,
-    });
+        url_host:{value:true},
+        url_path:{value:true}
+    }));
 
-    DICT_TRAITS[dt_etld] = Object.freeze(
+    DICT_TRAITS[dt_etld] = Object.freeze(Object.create(TRAITS_PROPS,
     {
-        url_host:true        
-    });
+        url_host:{value:true}
+    }));
+    
+    DICT_TRAITS[BP_MOD_TRAITS.dt_settings] = Object.freeze(Object.create(TRAITS_PROPS,
+    {
+        url_host:{value:false},
+        url_path:{value:false}
+    }));
     
     function newL (loc, dt)
     {
@@ -164,6 +176,11 @@ var BP_MOD_CONNECT = (function ()
         rpcToMothership({cm: cm_mergeInDB, dbPath:dbPath}, callbackFunc);
     }
 
+    function compactDB (callbackFunc)
+    {
+        rpcToMothership({cm: cm_compactDB}, callbackFunc);
+    }
+
     function importCSV (dbPath, obfuscated, callbackFunc) 
     {
         rpcToMothership({cm: cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
@@ -217,6 +234,7 @@ var BP_MOD_CONNECT = (function ()
             cm_createDB: {value: cm_createDB},
             cm_getDBPath: {value: cm_getDBPath},
             cm_importCSV: {value: cm_importCSV},
+            cm_compactDB: {value: cm_compactDB},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
             newERecord: {value: newERecord},
@@ -224,6 +242,7 @@ var BP_MOD_CONNECT = (function ()
             getRecs: {value: getRecs},
             loadDB: {value: loadDB},
             mergeInDB: {value: mergeInDB},
+            compactDB: {value: compactDB},
             createDB: {value: createDB},
             getDBPath: {value: getDBPath},
             importCSV: {value: importCSV}

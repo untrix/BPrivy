@@ -96,6 +96,19 @@ var BP_MOD_MANAGE = (function ()
             }
         });
         
+        addEventListeners('#dbCompact', 'click', function (e)
+        {
+            BP_MOD_CONNECT.compactDB(function (resp)
+            {
+                  if (resp.result === true) {
+                        BP_MOD_ERROR.success('UWallet has been compacted: ' + resp.dbPath);
+                    }
+                    else {
+                        callbackHandleError(resp);
+                    }                
+            });
+        });
+        
         addEventListeners('#dbMergeIn', 'click', function (e)
         {
             var o={dtitle:"BPrivy: Select Other Wallet",
