@@ -47,6 +47,24 @@ var BP_MOD_MANAGE = (function ()
         }
     }
     
+    function updateStats (resp)
+    {
+        //$('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+        var fluff, loaded;
+        if (resp.result) 
+        {
+            $('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+            fluff = resp.dbStats.recs.bad + resp.dbStats.recs.fluff;
+            loaded = resp.dbStats.recs.loaded;
+            $('#dbStats').val("Recs: "+loaded+"/"+fluff);
+        }
+        else 
+        {
+            $('#dbPath').text(null).attr('data-original-title', '').attr('data-path', null);
+            $('#dbStats').val('');
+        }
+    }
+
     function onload()
     {               
         //$("#nav-list a[data-nav]").click(function (e)
@@ -100,12 +118,14 @@ var BP_MOD_MANAGE = (function ()
         {
             BP_MOD_CONNECT.compactDB(function (resp)
             {
-                  if (resp.result === true) {
-                        BP_MOD_ERROR.success('UWallet has been compacted: ' + resp.dbPath);
-                    }
-                    else {
-                        callbackHandleError(resp);
-                    }                
+                if (resp.result === true) 
+                {
+                    updateStats(resp);
+                    BP_MOD_ERROR.success('UWallet has been compacted: ' + resp.dbPath);
+                }
+                else {
+                    callbackHandleError(resp);
+                }                
             });
         });
         
@@ -142,7 +162,7 @@ var BP_MOD_MANAGE = (function ()
                         if ($('#dbSaveLocation:checked').length) {
                             localStorage['db.path'] = resp.dbPath;
                         }
-                        $('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+                        updateStats(resp);
                         BP_MOD_ERROR.success('Opened password wallet at ' + resp.dbPath);
                     }
                     else {
@@ -172,7 +192,8 @@ var BP_MOD_MANAGE = (function ()
                         if ($('#dbSaveLocation:checked').length) {
                             localStorage['db.path'] = resp.dbPath;
                         }
-                        $('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+                        updateStats(resp);
+                        //$('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
                         BP_MOD_ERROR.success('Password store created at ' + resp.dbPath);
                     }
                     else {
@@ -215,12 +236,7 @@ var BP_MOD_MANAGE = (function ()
 
         BP_MOD_CONNECT.getDBPath(function(resp)
         {
-            if (resp.result) {
-                $('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
-            }
-            else {
-                $('#dbPath').text(null).attr('data-original-title', '').attr('data-path', null);
-            }
+            updateStats(resp);
         });
     }
    

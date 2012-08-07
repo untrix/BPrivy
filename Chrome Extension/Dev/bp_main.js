@@ -79,7 +79,8 @@
     {
         var result, recs, dbPath,
             cm = rq.cm,
-            bSaveRec;
+            bSaveRec,
+            io = {};
         delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
         console.info("Mothership Received object of type " + cm);
         
@@ -106,18 +107,18 @@
                     break;
                 case cm_loadDB:
                     BPError.push("LoadDB");
-                    dbPath = FILE_STORE.loadDB(rq.dbPath);
-                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath});
+                    dbPath = FILE_STORE.loadDB(rq.dbPath, io);
+                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath, dbStats:io.dbStats});
                     break;
                 case cm_mergeInDB:
                     BPError.push("MergeInDB");
-                    dbPath = FILE_STORE.mergeInDB(rq.dbPath);
-                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath});
+                    dbPath = FILE_STORE.mergeInDB(rq.dbPath, io);
+                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath, dbStats:io.dbStats});
                     break;
                 case MOD_CONNECT.cm_compactDB:
                     BPError.push("CompactDB");
-                    dbPath = FILE_STORE.compactDB();
-                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath});
+                    dbPath = FILE_STORE.compactDB(io);
+                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath, dbStats:BP_MOD_FILESTORE.getDBStats()});
                     break;
                 case cm_createDB:
                     BPError.push("CreateDB");
@@ -127,7 +128,7 @@
                 case cm_getDBPath:
                     BPError.push("GetDBPath");
                     dbPath = BP_MOD_FILESTORE.getDBPath();
-                    funcSendResponse({result:true, dbPath:dbPath});
+                    funcSendResponse({result:true, dbPath:dbPath, dbStats:BP_MOD_FILESTORE.getDBStats()});
                     break;
                 case BP_MOD_CONNECT.cm_importCSV:
                     BPError.push("ImportCSV");

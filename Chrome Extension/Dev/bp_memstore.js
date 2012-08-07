@@ -358,7 +358,8 @@ var BP_MOD_MEMSTORE = (function ()
             len = arecs.length,
             res;
         
-        if (len===0)        {            // This will happen the first time a key is created            arecs[0] = arec;            arecs[valStr] = arec;        }        else if (arec.tm<=arecs[len-1].tm)        {            // In the case of loadDB, we load records in reverse chronological order. That            // allows us to simply push subsequent records to the end of the array.            arecs.push(arec);            arecs[valStr] = arec;            // We don't need to check for item-overflow because that has already            // been checked before we were invoked.        }        // // Below clause may be useful in optimizing mergeDB use-case.        // // else if (arec.tm>=arecs[0])        // // {            // // arecs.unshift(arec);            // // arecs[valStr] = arec;            // // if (len>max)            // // delete the last item        // // }        else
+        if (len===0)        {            // This will happen the first time a key is created            arecs[0] = arec;            arecs[valStr] = arec;        }        else if (arec.tm<=arecs[len-1].tm)        {            // In the case of loadDB, we load records in reverse chronological order. That            // allows us to simply push subsequent records to the end of the array.            arecs.push(arec);            arecs[valStr] = arec;            // We don't need to check for item-overflow because that has already            // been checked before we were invoked.        }        // // Below clause may be useful in optimizing mergeDB use-case.        // // else if (arec.tm>=arecs[0])        // // {            // // arecs.unshift(arec);            // // arecs[valStr] = arec;            // // if (len>max)            // // delete the last item
+            // // drec.notes.causedOverflow = true;        // // }        else
         {
             // We will only get here in case of DB merges or if due to some reason (a bug?)
             // our record loading sequence was not strictly reverse-chronological.
@@ -378,8 +379,9 @@ var BP_MOD_MEMSTORE = (function ()
                     if ((l=items.length)>max)
                     {
                         dItm = items[l-1];
-                        items.length = max; // removed item from array
-                        delete items[dtt.valStr(dItm)]; // removed val-index
+                        items.length = max; // remove item from array
+                        delete items[dtt.valStr(dItm)]; // remove val-index
+                        drec.notes.causedOverflow = true;
                     }
                     return true;
                 }
@@ -399,7 +401,6 @@ var BP_MOD_MEMSTORE = (function ()
                 DIAGS.logwarn(new BPError("Didn't insert arec", "NewRecordSkipped", "Arecs.Some===false"));
             }
         }
-        
         
         this.curr = arecs[0];
     };
@@ -551,6 +552,7 @@ var BP_MOD_MEMSTORE = (function ()
             // This is a new value. We want to save the latest traits.actions.history
             // values in the sorted list of values. This may or may not make it.
             this.insertNewVal(valStr, drec);
+            drec.notes.isNew = true;
         }
     };
     Actions.prototype.newIt = function ()
