@@ -52,6 +52,7 @@ var BP_MOD_MEMSTORE = (function ()
      * copies of the tries will get created.
      */
         g_pd, g_kd,
+        COMMA = ",",
         DNODE_NEXT = 'N', 
         DNODE_TAG =  Object.freeze(
         {
@@ -134,7 +135,7 @@ var BP_MOD_MEMSTORE = (function ()
     /** @begin-static-class-defn DT_TRAITS */
     var DT_TRAITS = 
     {
-        traits: {}, // Various traits objects defined below.
+        traits: {}, // Various traits objects defined & populated later/below.
         getTraits: function (dt) {
             var n = this.traits[dt];
             return n;
@@ -174,7 +175,16 @@ var BP_MOD_MEMSTORE = (function ()
         },
         // return true if the record is valid, false otherwise. Only needed for pRecords        isValidCSV: function(rec) {return Boolean(rec.k);}, // only needed for some types.
         // Returns value converted to a string suitable to be used as a property name
-        valStr: function(rec) {return rec.v;}    });
+        valStr: function(rec) {return rec.v;},        csvHeader: function ()
+        {
+            return "key, value";
+        },
+        toCSV: {value: function(rec)
+        {
+            return  (rec.k || "") + COMMA +
+                    (rec.v || "");
+        }}
+    });
 
     function PStoreTraits() 
     {
@@ -208,6 +218,16 @@ var BP_MOD_MEMSTORE = (function ()
             valStr: {value: function(rec)
             {
                 return rec.p;
+            }},
+            csvHeader: {value: function ()
+            {
+                return "url,username,password";
+            }},
+            toCSV: {value: function(rec)
+            {
+                return  (rec.l.H + (rec.l.P || "")) + COMMA + 
+                        (rec.u || "") + COMMA + 
+                        (rec.p || "");
             }}
         }));   
     }
@@ -265,6 +285,19 @@ var BP_MOD_MEMSTORE = (function ()
                     str += "Y}" + rec.y;
                 }
                 return str;
+            }},
+            csvHeader: {value: function ()
+            {
+                return "url,fieldName,tagName,id,name,type";
+            }},
+            toCSV: {value: function(rec)
+            {
+                return  (rec.l.H + (rec.l.P || "")) + COMMA + 
+                        (rec.f || "") + COMMA +
+                        (rec.t || "") + COMMA +
+                        (rec.id|| "") + COMMA +
+                        (rec.n|| "") + COMMA +
+                        (rec.y|| "");
             }}
         }));
     }
@@ -1074,12 +1107,13 @@ var BP_MOD_MEMSTORE = (function ()
      * Iterate DNodes 
      * @param {String} dt - data-type
      */
-    function DNodeIterator (root)
+    function DNodeIterator (root, dt)
     {
         if (!root) {throw new BPError("", "InternalError", "BadArgument");}
         Object.defineProperties(this,
         {
-            node:   {value:root, writable:true}
+            node:   {value:root, writable:true},
+            dt:     {value:dt}
         });
         this.visit(root, undefined); // specifying 'undefined' for self-documentation
     }
@@ -1112,10 +1146,58 @@ var BP_MOD_MEMSTORE = (function ()
         }
         // else walk is over; return undefined.
     };
+    /**
+     * Walks the DNode tree and calls a callback for each action-record in the tree. It
+     * visits all actions, both current as well as historical.
+     * @param {Object} callback
+     */
+    DNodeIterator.prototype.walk = function (callback,currOnly)
+    {
+        var dn, recs, rIt, acoll, aIt, arec;
+        while ((dn=this.next()))
+        {
+            // Can't write dn.getData(dt) because dn maybe a JSON parsed object.
+            if ((recs=DNProto.getData.apply(dn, [this.dt])))
+            {
+                rIt = new BP_MOD_TRAITS.RecsIterator(recs);
+                while ((acoll=rIt.next()))
+                {
+                    aIt = new TimeIterator(acoll);
+                    for (arec=aIt.next(); 
+                         arec; 
+                         arec=aIt.next())
+                    {
+                        callback(arec);
+                    }
+                }
+            }
+        }        
+    };
 
+    /**
+     * Walks the DNode tree and calls a callback for each current-record in the tree. It
+     * visits only current records of the Actions collections. Skips the historical records.
+     * @param {Object} callback
+     */
+    DNodeIterator.prototype.walkCurr = function (callback)
+    {
+        var dn, recs, rIt, acoll, aIt, arec;
+        while ((dn=this.next()))
+        {
+            // Can't write dn.getData(dt) because dn maybe a JSON parsed object.
+            if ((recs=DNProto.getData.apply(dn, [this.dt])))
+            {
+                rIt = new BP_MOD_TRAITS.RecsIterator(recs);
+                while ((acoll=rIt.next()))
+                {
+                    callback(acoll.curr);
+                }
+            }
+        }        
+    };
     function newDNodeIterator (dt)
     {
-        return new DNodeIterator(DNode[dt]);
+        return new DNodeIterator(DNode[dt], dt);
     }
     
     //Assemble the interface    
@@ -1132,7 +1214,8 @@ var BP_MOD_MEMSTORE = (function ()
         newDNode:    newDNode, // used by build_tools
         DURL:        DURL, // used by build_tools
         DRecord:     DRecord,
-        newDNodeIterator: newDNodeIterator
+        newDNodeIterator: newDNodeIterator,
+        getDT:       function(dt){return DNode[dt];}
     });
 
     console.log("loaded memstore");

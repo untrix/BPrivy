@@ -33,7 +33,9 @@ var ProtoJobTracker = Object.create(events.EventEmitter.prototype,{
         return function() 
         {
             if (func) {
-                // invoke func with all passed in arguments as well as ctx if available
+                // invoke func with all passed in arguments as well as ctx if available.
+                // 'arguments' is actually not an array, therefore we need to convert it
+                // to one by applying Array.prototype.slice to it.
                 func.apply(null, (!ctx)? arguments: Array.prototype.slice.apply(arguments).concat([ctx]));
             }
             self.done();
@@ -102,4 +104,27 @@ function buildPackage(src, bld, async)
     copy(src, bld, ['updates.xml'], async);
 }
 
-module.exports = {newAsync:Async, throwErr:throwErr, buildPackage:buildPackage};
+function cleanJson(err, data, ctx)
+{
+    if (err) {throw err;}
+    var o = JSON.parse(data);
+    fs.writeFile(ctx.df, JSON.stringify(o), ctx.async.runHere(throwErr));
+}
+
+function processFiles(src, dst, files, callback, async)
+{
+    files.forEach(function (fname, i, files)
+    {
+        var df = dst+fname,
+            sf = src+fname;
+        fs.readFile(src+fname, async.runHere(callback, {sf:sf, df:df, async:async}));
+    });
+}
+
+module.exports = {
+    newAsync:Async, 
+    throwErr:throwErr, 
+    buildPackage:buildPackage,
+    processFiles:processFiles,
+    cleanJson:cleanJson
+};

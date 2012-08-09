@@ -653,10 +653,11 @@ var BP_MOD_WDL = (function ()
             children:[
             {tag:"div", attr:{ id:eid_panelTitle },
                 children:[
-                UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)?NButton.wdt: w$undefined,
+                (UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)&&ctx.dbName)?NButton.wdt: w$undefined,
                 cs_panelTitleText_wdt,
                 XButton.wdt,
-                SButton.wdt
+                SButton.wdt,
+                //ctx.dbName?CButton.wdt:OButton.wdt
                 ]
             },
             UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt : w$undefined],

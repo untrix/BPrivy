@@ -23,6 +23,7 @@ var fs = require('fs.extra'),
     bp = require('./bp.js'),
     async = bp.newAsync('build'),
     qualify = function (relDir, varFileNames) // takes relDir & variable number of files
+                                              // and prepends relDir to them
     {   'use strict';
         var files = [], i, n;
         for (i=1, n=arguments.length; i<n; i++) {
@@ -94,14 +95,14 @@ var src = abs(argv[0]),
     'bp_memstore.js',
     'bp_panel.js',
     'bp_traits.js',
-    'bp_w$.js'    
+    'bp_w$.js'
     ],
     release_others = [
-    'manifest.json',
     'bp_manage.html',
     'BP_Main.html'].
     concat(qualify('data', 'etld.json')).
-    concat(lsDir(abs(src,'icons'), src)).    concat(lsDir(abs(src,'tp'), src));
+    concat(lsDir(abs(src,'icons'), src)).    concat(lsDir(abs(src,'tp'), src)),
+    release_json = ['manifest.json'];
 
 fs.mkdirpSync(bld);
 
@@ -137,12 +138,13 @@ function mkdirp(dirs)
     });
 }
 
+// ensure that all internal directories exist
+mkdirp(Object.keys(lsSkel(release, release_others)));
+mkdirp(Object.keys(lsSkel(dist, release_others)));
+
 var ch2 = child.fork('buildminify.js', [src, minjs]);
 ch2.on('exit', async.runHere(function childExit(code, signal)
 {
-    // ensure that all internal directories exist
-    mkdirp(Object.keys(lsSkel(release, release_others)));
-    mkdirp(Object.keys(lsSkel(dist, release_others)));
     copy(minjs, release, release_js);
     copy(src, release, release_others);
     copy(minjs, dist, release_js);
@@ -153,7 +155,12 @@ ch2.on('exit', async.runHere(function childExit(code, signal)
 }));
 ch2.disconnect();
 
+// Cleanup manifest.json, remove comments.
+bp.processFiles(src+path.sep, release+path.sep, release_json, bp.cleanJson, async);
+bp.processFiles(src+path.sep, dist+path.sep, release_json, bp.cleanJson, async);
+
 var async2 = bp.newAsync('package');
+// Interleave async and async2 here.
 async.on('done', async2.runHere(function() {bp.buildPackage(src, bld, async2);}));
 async.end();
 async2.end();

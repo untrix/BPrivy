@@ -50,23 +50,39 @@ var BP_MOD_MANAGE = (function ()
     function updateStats (resp)
     {
         //$('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
-        var fluff, loaded;
+        var fluff, gbg, loaded;
         if (resp.result) 
         {
-            $('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
-            fluff = resp.dbStats.recs.bad + resp.dbStats.recs.fluff;
-            loaded = resp.dbStats.recs.loaded;
-            $('#dbStats').val("Recs: "+loaded+"/"+fluff);
+            resp.dbPath = resp.dbPath || "";
+            if ($('#dbSaveLocation:checked').length) {
+                localStorage['db.path'] = resp.dbPath;
+            }
+            $('#dbPath').text(cullDBName(resp.dbPath)||"").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+
+            if (resp.dbStats)
+            {
+                fluff = resp.dbStats.recs.bad + resp.dbStats.recs.fluff;
+                loaded = resp.dbStats.recs.loaded;
+            }
+            gbg = loaded? Math.round(fluff*100/(loaded+fluff)) : undefined;
+            $('#stats').val( (gbg!==undefined) ? gbg+"% reduction" : "");
         }
         else 
         {
             $('#dbPath').text(null).attr('data-original-title', '').attr('data-path', null);
-            $('#dbStats').val('');
+            $('#stats').val('');
         }
     }
 
     function onload()
     {               
+        if (localStorage['dbSaveLocation']) {
+            $('#dbSaveLocation')[0].checked = true;
+        }
+        else {
+            $('#dbSaveLocation')[0].checked = false;
+        }
+
         //$("#nav-list a[data-nav]").click(function (e)
         addEventListeners("#nav-list a[data-nav]", "click", function(e)
         {
@@ -95,27 +111,58 @@ var BP_MOD_MANAGE = (function ()
             var o={filter:['CSV','*.csv'],
                    dtitle: "BPrivy: Import CSV File",
                    dbutton: "Import"};
+            $('#csvImportSpinner').show();
             if (BP_PLUGIN.chooseFile(o)) {
                 console.log("ChooseFile returned:" + o.path);
                 var obfuscated = $('#csvImportObfuscated')[0].checked;
                 //var overrides = $('#csvImportOverrides')[0].checked;
                 BP_MOD_CONNECT.importCSV(o.path, obfuscated, function (resp)
                 {
-                    if (resp.result === true) {
+                    if (resp.result === true) 
+                    {
                         BP_MOD_ERROR.success('Imported passwords from ' + o.path);
                     }
                     else {
                         callbackHandleError(resp);
                     }
+                    $('#csvImportSpinner').hide();
                 });
             }
             else {
+                $('#csvImportSpinner').hide();
                 console.log("ChooseFile Failed");
+            }
+        });
+        
+        addEventListeners('#csvExport', 'click', function (e)
+        {
+            var o={dtitle:"BPrivy: CSV Export",
+                   dbutton: "Select Folder"};
+            $('#csvExportSpinner').show();
+            if (BP_PLUGIN.chooseFolder(o)) {
+                console.log("ChooseFolder returned:" + o.path);
+                BP_MOD_CONNECT.exportCSV(o.path, false, function (resp)
+                {
+                    var msg;
+                    if (resp.result === true) 
+                    {
+                        BP_MOD_ERROR.success('Exported to files ' + resp.fnames.join(","));
+                    }
+                    else {
+                        callbackHandleError(resp);
+                    }
+                    $('#csvExportSpinner').hide();
+                });
+            }
+            else {
+                $('#csvExportSpinner').hide();
+                console.log("ChooseFolder returned false");
             }
         });
         
         addEventListeners('#dbCompact', 'click', function (e)
         {
+            $('#dbCompactSpinner').show();
             BP_MOD_CONNECT.compactDB(function (resp)
             {
                 if (resp.result === true) 
@@ -126,6 +173,7 @@ var BP_MOD_MANAGE = (function ()
                 else {
                     callbackHandleError(resp);
                 }                
+                $('#dbCompactSpinner').hide();
             });
         });
         
@@ -154,23 +202,24 @@ var BP_MOD_MANAGE = (function ()
         {
             var o={dtitle:"BPrivy: Select Wallet Folder",
                    dbutton: "Select Wallet Folder"};
+            $('#dbLoadSpinner').show();
             if (BP_PLUGIN.chooseFolder(o)) {
                 console.log("ChooseFolder returned:" + o.path);
                 BP_MOD_CONNECT.loadDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
-                        if ($('#dbSaveLocation:checked').length) {
-                            localStorage['db.path'] = resp.dbPath;
-                        }
+                        // if ($('#dbSaveLocation:checked').length) {                            // localStorage['db.path'] = resp.dbPath;                        // }
                         updateStats(resp);
                         BP_MOD_ERROR.success('Opened password wallet at ' + resp.dbPath);
                     }
                     else {
                         callbackHandleError(resp);
                     }
+                    $('#dbLoadSpinner').hide();
                 });
             }
             else {
+                $('#dbLoadSpinner').hide();
                 console.log("ChooseFolder returned false");
             }
         });
@@ -189,9 +238,7 @@ var BP_MOD_MANAGE = (function ()
                 BP_MOD_CONNECT.createDB(dbName, o.path, function (resp)
                 {
                     if (resp.result === true) {
-                        if ($('#dbSaveLocation:checked').length) {
-                            localStorage['db.path'] = resp.dbPath;
-                        }
+                        // if ($('#dbSaveLocation:checked').length) {                            // localStorage['db.path'] = resp.dbPath;                        // }
                         updateStats(resp);
                         //$('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
                         BP_MOD_ERROR.success('Password store created at ' + resp.dbPath);
@@ -226,14 +273,23 @@ var BP_MOD_MANAGE = (function ()
                 localStorage['dbSaveLocation'] = '';
             }
         });
-        
-        if (localStorage['dbSaveLocation']) {
-            $('#dbSaveLocation')[0].checked = true;
-        }
-        else {
-            $('#dbSaveLocation')[0].checked = false;
-        }
 
+        addEventListeners('#dbClose', 'click', function (e)
+        {
+            BP_MOD_CONNECT.unloadDB(function (resp)
+            {
+                if (resp.result === true) 
+                {
+                    updateStats(resp);
+                    BP_MOD_ERROR.success('UWallet has been closed');
+                }
+                else 
+                {
+                    callbackHandleError(resp);
+                }
+            });
+        });
+               
         BP_MOD_CONNECT.getDBPath(function(resp)
         {
             updateStats(resp);

@@ -44,16 +44,16 @@
                   <span id="dbPath" style="display: block; cursor: default"  class="input-medium uneditable-input"></span>
                 </legend>
                 <fieldset id="formStoreLoad"  class="control-group">
-                  <label class="control-label">Open</label>
+                  <label class="control-label">Open/Close</label>
                   <div class="controls form-inline">
-                    <button id="dbChooseLoad" type="button" class="btn btn-primary" title="Browse and select a <i style='display:inline-block'>Password Wallet</i> to open. It will be a folder-name starting with the name you had selected and ending with the letters &quot;.3ab&quot;">
-                      <img hidden id="dbLoadSpinner" src="icons/ajax-loader-white.gif" />                      
+                    <button id="dbChooseLoad" type="button" class="btn btn-primary" title="Browse and select a <i style='display:inline-block'>Password Wallet</i> to open">
+                      <img style="display:none" id="dbLoadSpinner" src="icons/ajax-loader-white.gif" />                      
                       Open</button>
                     <label class="checkbox" title="If checked, the <i style='display:inline-block'>Password Wallet</i> location will be saved on this computer and automatically selected the next time. For privacy and safety, uncheck it if this is not your computer.">
                       <input id="dbSaveLocation" type="checkbox" name="savelocation" checked>
                       Don't ask again
                     </label>
-                    <button id="dbDetach" type="button" class="btn btn-small" title="Close the password Wallet">Close</button>
+                    <button id="dbClose" type="button" class="btn btn-small" title="Close the password Wallet"><i class="icon-off"></i></button>
                   </div>
                 </fieldset>
                 
@@ -77,8 +77,10 @@
                 <fieldset class="control-group">
                   <label class="control-label">Advanced</label>
                   <div class="controls">
-                    <button id="dbCompact" type="button" class="btn btn-primary" title="Remove fluff.">Compact DB</button>
-                    <input disabled id="dbStats" class="uneditable-input input-small"></input>
+                    <button id="dbCompact" type="button" class="btn btn-primary">
+                      <img style="display:none" id="dbCompactSpinner" src="icons/ajax-loader-white.gif" />
+                      Compact DB</button>
+                    <input disabled id="stats" class="uneditable-input input-small">
                   </div>
                 </fieldset>
 
@@ -99,9 +101,11 @@
                   <button data-path-reset id="csvPathReset" type="reset" class="btn" title="Click to start over">Over</button> -->
                   <label class="control-label">Import from CSV File</label>
                   <div class="controls form-inline">
-                    <button id="csvImport" type="button" class="btn btn-primary" title="Click to choose the file">Import</button>
+                    <button id="csvImport" type="button" class="btn btn-primary" title="Click to choose the file">
+                      <img style="display:none" id="csvImportSpinner" src="icons/ajax-loader-white.gif" />
+                      Import</button>
                     <label class="checkbox" title="Check this if import file is obfuscated">
-                      <input type="checkbox" name="obfuscated" id="csvImportObfuscated">
+                      <input type="checkbox" name="obfuscated" id="csvImportObfuscated" disabled>
                       Obfuscated
                     </label>
                   </div>
@@ -109,9 +113,9 @@
                 <div class="control-group">
                   <label class="control-label">Export to CSV File</label>
                   <div class="controls form-inline">
-                    <button id="csvPathExport" type="button" class="btn btn-inverse" title="Click to choose the file">Export</button>
+                    <button id="csvExport" type="button" class="btn btn-inverse" title="Click to choose the file">Export</button>
                     <label class="checkbox" title="Check this to obfuscate export file">
-                      <input type="checkbox" name="obfuscate" checked>
+                      <input type="checkbox" name="obfuscate" disabled>
                       Obfuscate
                     </label>
                   </div>
@@ -126,7 +130,7 @@
                   <div class="controls">
                     <input type="text" placeholder="None" class="input-xlarge disabled" disabled title="Currently opened <i style='display:inline-block'>Privy Password Wallet</i>">
                     <button data-path-choose id="dbPathChoose" type="button" class="btn btn-primary" title="Browse for wallet folder to open">Open</button>
-                    <button id="dbDetach" type="button" class="btn-small" title="Close the password wallet">Close</button>
+                    <button id="dbClose" type="button" class="btn-small" title="Close the password wallet">Close</button>
                   </div>
                 </div>  
               </div>

@@ -35,10 +35,12 @@ var BP_MOD_CONNECT = (function ()
     /** @constant */
     var cm_getRecs = "cm_recs",     // Represents a getDB command
         cm_loadDB = "cm_load",
+        cm_unloadDB = "cm_unload",
         cm_mergeInDB = "cm_mrgIn",
         cm_createDB = "cm_crDB",
         cm_getDBPath = "cm_dbPth",
         cm_importCSV = "cm_imCSV",
+        cm_exportCSV = "cm_exCSV",
         cm_compactDB = "cm_cmDB";
 
     var DICT_TRAITS={};
@@ -90,6 +92,8 @@ var BP_MOD_CONNECT = (function ()
             out.P = loc.pathname;
         }
 
+        //TODO: URL saved for CSV exports, could be removed to save on memory/storage/processing overhead
+        //out.U = loc.href;
         return out;
     }
     
@@ -156,36 +160,6 @@ var BP_MOD_CONNECT = (function ()
     }
     PRecord.prototype = Object.create(ARec.prototype,{});
         
-    function newPRecord(loc, date, userid, pass)
-    {
-        return new PRecord(loc, date, userid, pass);
-    }
-    
-    function createDB (dbName, dbDir, callbackFunc)
-    {
-        rpcToMothership({cm: cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
-    }
-
-    function loadDB (dbPath, callbackFunc)
-    {
-        rpcToMothership({cm: cm_loadDB, dbPath:dbPath}, callbackFunc);
-    }
-
-    function mergeInDB (dbPath, callbackFunc)
-    {
-        rpcToMothership({cm: cm_mergeInDB, dbPath:dbPath}, callbackFunc);
-    }
-
-    function compactDB (callbackFunc)
-    {
-        rpcToMothership({cm: cm_compactDB}, callbackFunc);
-    }
-
-    function importCSV (dbPath, obfuscated, callbackFunc) 
-    {
-        rpcToMothership({cm: cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
-    }
-
     /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
@@ -217,6 +191,41 @@ var BP_MOD_CONNECT = (function ()
             return rpcToMothership({cm:cm_getDBPath}, callback);
         };
 
+        function newPRecord(loc, date, userid, pass)
+        {
+            return new PRecord(loc, date, userid, pass);
+        }
+        
+        function createDB (dbName, dbDir, callbackFunc)
+        {
+            rpcToMothership({cm: cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
+        }
+    
+        function loadDB (dbPath, callbackFunc)
+        {
+            rpcToMothership({cm: cm_loadDB, dbPath:dbPath}, callbackFunc);
+        }
+    
+        function mergeInDB (dbPath, callbackFunc)
+        {
+            rpcToMothership({cm: cm_mergeInDB, dbPath:dbPath}, callbackFunc);
+        }
+    
+        function compactDB (callbackFunc)
+        {
+            rpcToMothership({cm: cm_compactDB}, callbackFunc);
+        }
+    
+        function importCSV (dbPath, obfuscated, callbackFunc)
+        {
+            rpcToMothership({cm: cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
+        }
+    
+        function exportCSV (dirPath, obfuscated, callbackFunc)
+        {
+            rpcToMothership({cm: cm_exportCSV, dirPath:dirPath, obfuscated: obfuscated}, callbackFunc);
+        }
+    
         //Assemble the interface    
         var iface = {};
         Object.defineProperties(iface, 
@@ -230,10 +239,12 @@ var BP_MOD_CONNECT = (function ()
             fn_pass: {value: fn_pass},
             cm_getRecs: {value: cm_getRecs},
             cm_loadDB: {value: cm_loadDB},
+            cm_unloadDB: {value: cm_unloadDB},
             cm_mergeInDB: {value: cm_mergeInDB},
             cm_createDB: {value: cm_createDB},
             cm_getDBPath: {value: cm_getDBPath},
             cm_importCSV: {value: cm_importCSV},
+            cm_exportCSV: {value: cm_exportCSV},
             cm_compactDB: {value: cm_compactDB},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
@@ -241,11 +252,13 @@ var BP_MOD_CONNECT = (function ()
             newPRecord: {value: newPRecord},
             getRecs: {value: getRecs},
             loadDB: {value: loadDB},
+            unloadDB: {value: function (cback) {rpcToMothership({cm: cm_unloadDB}, cback);}},
             mergeInDB: {value: mergeInDB},
             compactDB: {value: compactDB},
             createDB: {value: createDB},
             getDBPath: {value: getDBPath},
-            importCSV: {value: importCSV}
+            importCSV: {value: importCSV},
+            exportCSV: {value: exportCSV}
         });
         Object.freeze(iface);
 

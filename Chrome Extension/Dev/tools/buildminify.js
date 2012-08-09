@@ -40,19 +40,21 @@ function readFileCallback(err, data, ctx)
 function minify(SRC, DST)
 {
     var files = fs.readdirSync(SRC),
-        i, n, d, f, df, sf;
+        i, n, d, f, df, sf, ext;
         
     for (i=0,n=files.length; i<n; i++)
     {
-        if (files[i].slice(-3).toLowerCase()===".js")
+        f = files[i];
+        ext = f.slice(f.lastIndexOf(".")).toLowerCase();
+        if (ext===".js")
         {
-            f = files[i]; 
             df = DST + f;
             sf = SRC + f;
             if ((!fs.existsSync(df)) ||
                 (fs.lstatSync(sf).mtime > fs.lstatSync(df).mtime))
             {
                 console.log('Minifying ' + df);
+                //readFileCallback will be invoked with {df:df} as last argument
                 d = fs.readFile(sf, async.runHere(readFileCallback, {df:df}));
             }
         }

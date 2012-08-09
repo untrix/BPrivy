@@ -128,10 +128,12 @@ var BP_MOD_ERROR = (function()
         Unsupported:'Unsupported Feature.', //Unsupported URL etc.
         Diag:'', // Diagnostic Message
         BadWDL: 'Bad WDL argument.',
+        UserError: '',
         /*********** 'G-Codes' **************/
         ETLDLoadFailed: 'ETLD Load Failed',
         ExistingStore: "The selected folder seems to already be part of an existing DB.",
-        NotJSObject: "Argument is not a javascript object."
+        NotJSObject: "Argument is not a javascript object.",
+        NoDBLoaded: "Please load a Wallet first"
     });
 
    function Activity(arg)

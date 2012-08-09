@@ -110,6 +110,11 @@
                     dbPath = FILE_STORE.loadDB(rq.dbPath, io);
                     funcSendResponse({result:Boolean(dbPath), dbPath:dbPath, dbStats:io.dbStats});
                     break;
+                case MOD_CONNECT.cm_unloadDB:
+                    BPError.push("UnloadDB");
+                    dbPath = FILE_STORE.unloadDB(rq.dbPath);
+                    funcSendResponse({result:true});
+                    break;
                 case cm_mergeInDB:
                     BPError.push("MergeInDB");
                     dbPath = FILE_STORE.mergeInDB(rq.dbPath, io);
@@ -130,9 +135,14 @@
                     dbPath = BP_MOD_FILESTORE.getDBPath();
                     funcSendResponse({result:true, dbPath:dbPath, dbStats:BP_MOD_FILESTORE.getDBStats()});
                     break;
-                case BP_MOD_CONNECT.cm_importCSV:
+                case MOD_CONNECT.cm_importCSV:
                     BPError.push("ImportCSV");
                     result = FILE_STORE.importCSV(rq.dbPath, rq.obfuscated);
+                    funcSendResponse({result: result});
+                    break;
+                case MOD_CONNECT.cm_exportCSV:
+                    BPError.push("ExportCSV");
+                    result = FILE_STORE.exportCSV(rq.dirPath, rq.obfuscated);
                     funcSendResponse({result: result});
                     break;
                 default: // do nothing
