@@ -117,8 +117,8 @@
                     break;
                 case cm_mergeInDB:
                     BPError.push("MergeInDB");
-                    dbPath = FILE_STORE.mergeInDB(rq.dbPath, io);
-                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath, dbStats:io.dbStats});
+                    result = FILE_STORE.mergeInDB(rq.dbPath, io);
+                    funcSendResponse({result:result});
                     break;
                 case MOD_CONNECT.cm_compactDB:
                     BPError.push("CompactDB");

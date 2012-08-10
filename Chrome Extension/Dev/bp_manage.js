@@ -65,7 +65,7 @@ var BP_MOD_MANAGE = (function ()
                 loaded = resp.dbStats.recs.loaded;
             }
             gbg = loaded? Math.round(fluff*100/(loaded+fluff)) : undefined;
-            $('#stats').val( (gbg!==undefined) ? gbg+"% reduction" : "");
+            $('#stats').val( (gbg!==undefined) ? gbg+"% garbage" : "");
         }
         else 
         {
@@ -82,7 +82,8 @@ var BP_MOD_MANAGE = (function ()
         else {
             $('#dbSaveLocation')[0].checked = false;
         }
-
+        // Enable button toggling effects
+        $('.nav-tabs').button();
         //$("#nav-list a[data-nav]").click(function (e)
         addEventListeners("#nav-list a[data-nav]", "click", function(e)
         {
@@ -162,7 +163,7 @@ var BP_MOD_MANAGE = (function ()
         
         addEventListeners('#dbCompact', 'click', function (e)
         {
-            $('#dbCompactSpinner').show();
+            $('#dbCompact').button('loading');
             BP_MOD_CONNECT.compactDB(function (resp)
             {
                 if (resp.result === true) 
@@ -173,7 +174,7 @@ var BP_MOD_MANAGE = (function ()
                 else {
                     callbackHandleError(resp);
                 }                
-                $('#dbCompactSpinner').hide();
+                $('#dbCompact').button('reset');
             });
         });
         
@@ -181,12 +182,13 @@ var BP_MOD_MANAGE = (function ()
         {
             var o={dtitle:"BPrivy: Select Other Wallet",
                    dbutton: "Select Other Wallet"};
-            if (BP_PLUGIN.chooseFolder(o)) {
+            if (BP_PLUGIN.chooseFolder(o)) 
+            {
                 console.log("ChooseFolder returned:" + o.path);
                 BP_MOD_CONNECT.mergeInDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
-                        BP_MOD_ERROR.success('Merged password wallet at ' + resp.dbPath);
+                        BP_MOD_ERROR.success('Merged In password wallet at ' + o.path);
                     }
                     else {
                         callbackHandleError(resp);
@@ -202,9 +204,9 @@ var BP_MOD_MANAGE = (function ()
         {
             var o={dtitle:"BPrivy: Select Wallet Folder",
                    dbutton: "Select Wallet Folder"};
-            $('#dbLoadSpinner').show();
-            if (BP_PLUGIN.chooseFolder(o)) {
-                console.log("ChooseFolder returned:" + o.path);
+            $('#dbChooseLoad').button('loading');
+            if (BP_PLUGIN.chooseFolder(o)) 
+            {
                 BP_MOD_CONNECT.loadDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
@@ -215,11 +217,11 @@ var BP_MOD_MANAGE = (function ()
                     else {
                         callbackHandleError(resp);
                     }
-                    $('#dbLoadSpinner').hide();
+                    $('#dbChooseLoad').button('reset');
                 });
             }
             else {
-                $('#dbLoadSpinner').hide();
+                $('#dbChooseLoad').button('reset');
                 console.log("ChooseFolder returned false");
             }
         });

@@ -119,6 +119,11 @@ var BP_MOD_FILESTORE = (function()
             ext_Temp: ".3at",
             ext_Bad : ".3aq", // q => Quarantine
             ext_Csv : ".csv",
+            ft_Open : "ft_Open",
+            ft_Closed:"ft_Closed",
+            ft_Temp : "ft_Temp",
+            ft_Bad  : "ft_Bad",
+            ft_Loaded:"ft_Loaded",
             cullDBName: function (dbPath)
             {
                 var regex, array;
@@ -309,7 +314,92 @@ var BP_MOD_FILESTORE = (function()
                     default:
                         return false;
                 }
-            }
+            },
+            getType: function (fname)
+            {
+                var ext = fname.lastIndexOf(".");
+                if (ext===-1) {
+                    return false;
+                }
+                else {
+                    ext = fname.slice(ext);
+                    switch (ext)
+                    {
+                        case mod.ext_Closed:
+                            return mod.ft_Closed;
+                        case mod.ext_Open:
+                            return mod.ft_Open;
+                        case mod.ext_Temp:
+                            return mod.ft_Temp;
+                        case mod.ext_Bad:
+                            return mod.ft_Bad;
+                        default:
+                            return undefined;
+                    }
+                }
+            },
+            isType: function (fType, fname)
+            {
+                var ext = fname.lastIndexOf(".");
+                if (ext===-1) {
+                    return false;
+                }
+                else {
+                    ext = fname.slice(ext);
+                    switch (fType)
+                    {
+                        case mod.ft_Closed:
+                            return (ext === mod.ext_Closed);
+                        case mod.ft_Temp:
+                            return (ext === mod.ext_Temp);
+                        case mod.ft_Open:
+                            return (ext === mod.ext_Open);
+                        case mod.ft_Bad:
+                            return (ext === mod.ext_Bad);
+                        default:
+                            return false;
+                    }
+                }
+            },
+            isBad: function (fname)
+            {
+                return mod.isType(mod.ft_Bad, fname);
+            },
+            lsFiles: function (dbPath)
+            {
+                var dbStats = newDBStats(dbPath),
+                    ft;
+                DB_FS.dtl.forEach(function (dt, jj, dtl)
+                {
+                    var o={}, i, file_names, f,
+                        path_dir = DB_FS.makeDTDirPath(dt, dbPath),
+                        j, name;
+                    if (BP_PLUGIN.ls(path_dir, o) && o.lsd && o.lsd.f)
+                    {
+                        f = o.lsd.f;
+                        file_names = Object.keys(f);
+        
+                        // List files in reverse chronological order for faster insertion into
+                        // MEM_STORE.
+                        file_names.sort(function (x,y)
+                        {
+                            // We want a reverse-sort, hence flip x and y.
+                            return f[y].mtm-f[x].mtm;
+                        });
+                        
+                        for (j=0; j < file_names.length; j++)
+                        {
+                            name = file_names[j];
+                            if ((ft=DB_FS.getType(name)))
+                            {
+                                dbStats.putDT(ft, dt, name, f[name]);
+                            }
+                        }
+                    }
+                });
+                
+                return dbStats;
+            }          
         };
                 
         // populate dir and file with all possible data-types
@@ -335,26 +425,14 @@ var BP_MOD_FILESTORE = (function()
         return Object.freeze(mod);
     }());
 
-    function newDBStats ()
+    function newDBStats (dbPath)
     {
-        function FSStats (name, dirent)
-        {
-            Object.freeze(Object.defineProperties(this,
-            {
-                name: {value: name, enumerable:true},
-                ent : {value: dirent, enumerable:true}
-            }));
-        }
-        function DBStats()
+        function DBStats(dbPath)
         {
             Object.seal(Object.defineProperties(this,
             {
-                fs:     {value:
-                    {
-                        loaded: {},
-                        bad:    {},
-                        fluff:  {}
-                    }, enumerable:true},
+                dbPath: {value:dbPath},
+                fs:     {value: {}, enumerable:true, writable:true},
                 recs:   {value:
                     {
                         loaded: 0,
@@ -362,6 +440,12 @@ var BP_MOD_FILESTORE = (function()
                         bad:    0
                     }, enumerable:true}
             }));
+            
+            Object.defineProperty(this.fs, DB_FS.ft_Loaded, {value: {}, writable:true});
+            Object.defineProperty(this.fs, DB_FS.ft_Open, {value: {}, writable:true});
+            Object.defineProperty(this.fs, DB_FS.ft_Closed, {value: {}, writable:true});
+            Object.defineProperty(this.fs, DB_FS.ft_Temp, {value: {}, writable:true});
+            Object.defineProperty(this.fs, DB_FS.ft_Bad, {value: {}, writable:true});
         }
         DBStats.prototype.getFSCat = function (cat)
         {
@@ -377,7 +461,7 @@ var BP_MOD_FILESTORE = (function()
                 }
                 else
                 {
-                    this.fs[cat][dt] = [];
+                    this.fs[cat][dt] = {};
                 }
             }
 
@@ -390,38 +474,30 @@ var BP_MOD_FILESTORE = (function()
             
             for (num=0,i=dtl.length-1; i>=0; i--)
             {
-                num += this.fs[cat][dtl[i]].length;
+                num += Object.keys(this.fs[cat][dtl[i]]).length;
             }
             
             return num;
         };
         DBStats.prototype.putDT = function (cat, dt, name, dirent)
         {
-            this.getFSCatDT(dt, cat).push(new FSStats(name, dirent));
+            this.getFSCatDT(dt, cat)[name]=dirent;
         };
         DBStats.prototype.loadedDT = function (dt, name, dirent)
         {
-            this.putDT('loaded', dt, name, dirent);
+            this.putDT(DB_FS.ft_Loaded, dt, name, dirent);
         };
         DBStats.prototype.badDT = function (dt, name, dirent)
         {
-            this.putDT('bad', dt, name, dirent);
-        };
-        DBStats.prototype.fluffDT = function (dt, name, dirent)
-        {
-            this.putDT('fluff', dt, name, dirent);
+            this.putDT(DB_FS.ft_Bad, dt, name, dirent);
         };
         DBStats.prototype.numLoaded = function ()
         {
-            return this.num('loaded');
+            return this.num(DB_FS.ft_Loaded);
         };
         DBStats.prototype.numBad = function ()
         {
-            return this.num('bad');
-        };
-        DBStats.prototype.numFluff = function ()
-        {
-            return this.num('fluff');
+            return this.num(DB_FS.ft_Bad);
         };
         DBStats.prototype.updRecs = function (notes)
         {
@@ -440,12 +516,57 @@ var BP_MOD_FILESTORE = (function()
                 this.recs.bad++;
             }
         };
+        DBStats.prototype.diffNewClosed = function (other)
+        {
+            var dtl = Object.keys(this.getFSCat(DB_FS.ft_Closed)),
+                diff = newDBStats(this.dbPath),
+                fname, j;
+            dtl.forEach(function (dt, i, dtl)
+            {
+                var stats1 = this.getFSCatDT(dt, DB_FS.ft_Closed),
+                    fnames1 = Object.keys(stats1),
+                    stats2 = other.getFSCatDT(dt, DB_FS.ft_Closed);
+                    
+                //fnames1.forEach(function(fname, i, fnames)
+                for (j=fnames1.length-1; j>=0; j--)
+                {
+                    fname = fnames1[j];
+                    if (!stats2.hasOwnProperty(fname))
+                    {
+                        diff.putDT(DB_FS.ft_Closed, dt, fname, stats1[fname]);
+                    }
+                }
+            }, this);
+            
+            return diff;
+        };
         DBStats.prototype.clrRecs = function ()
         {
             this.recs.loaded = this.recs.fluff = this.recs.bad = 0;
         };
+        DBStats.prototype.walkCat = function (cat, callback, db2)
+        {
+            var fsCat = this.getFSCat(cat),
+                dtl = Object.keys(fsCat), i, j;
+            for (i=0; i<dtl.length; i++)
+            {
+                var dt = dtl[i],
+                    dtDirPath = DB_FS.makeDTDirPath(dt, this.dbPath),
+                    dtDirPath2= db2 ? DB_FS.makeDTDirPath(dt, db2) : undefined,
+                    fnames = Object.keys(fsCat[dt]),
+                    len = fnames.length,
+                    fpath;
+                    
+                for (j=0; j<len; j++)
+                {
+                    fpath = dtDirPath + fnames[j];
+                    callback(fpath, dt, cat, fnames[j], dtDirPath2);
+                }
+            }
+        };
 
-        return new DBStats();
+        
+        return new DBStats(dbPath);
     }
 
 
@@ -510,7 +631,7 @@ var BP_MOD_FILESTORE = (function()
      */
     function loadDBFiles(dbPath, io)
     {
-        var dbStats = io.dbStats || newDBStats();
+        var dbStats = io.dbStats || newDBStats(dbPath);
         if (!io.dbStats) {io.dbStats = dbStats;}
         
         DB_FS.dtl.forEach(function (dt, jj, dtl)
@@ -531,16 +652,17 @@ var BP_MOD_FILESTORE = (function()
                     return f[y].mtm-f[x].mtm;
                 });
                 
-                for(j=0; j < file_names.length; j++)
+                for (j=0; j < file_names.length; j++)
                 {
                     name = file_names[j];
-                    if (DB_FS.toLoad(f[name], io.dbStats))
+                    if (DB_FS.toLoad(f[name]))
                     {
                         try 
                         {
                             loadFile(path_dir + name, dt, dbStats);
                             dbStats.loadedDT(dt, name, f[name]);
-                        } catch (e) 
+                        }
+                        catch (e) 
                         {
                             var bpe = new BPError(e),
                                 oldPath = path_dir + name,
@@ -551,9 +673,9 @@ var BP_MOD_FILESTORE = (function()
                             dbStats.badDT(dt, name, f[name]);
                         }
                     }
-                    else
+                    else if (DB_FS.isBad(name)) 
                     {
-                        dbStats.fluffDT(dt, name, f[name]);
+                        dbStats.badDT(dt, name, f[name]);
                     }
                 }
             }
@@ -604,13 +726,11 @@ var BP_MOD_FILESTORE = (function()
     
     /**
      * @param dbPath
-     * @param {Boolean} merge  If true, the loaded records will be saved to DB after loading.
-     *                  This is used for DB merges, where records are loaded from an
-     *                  external DB and then written to the open DB.
      * @return          returns the root of the DB-folder that was read/loaded. Should be
      *                  equal to the dbPath if it was the root of the DB. If DB path was a
      *                  path inside an existing DB, then the system backtracks up to the root
-     *                  of the DB and loads that. That's the path which is returned.     
+     *                  of the DB and loads that. That's the path which is returned.
+     *                  io.dbStats is populated with stats of the opened files.   
      */
     function loadDB(dbPath, io)
     {
@@ -638,7 +758,7 @@ var BP_MOD_FILESTORE = (function()
         DB_FS.setDBPath(dbPath, dbStats);
                 
         MOD_ERROR.log("Loaded DB " + dbPath + ". files loaded: "+dbStats.numLoaded()+
-                      ", files bad: "+dbStats.numBad()+", files fluff: "+dbStats.numFluff() +
+                      ", files bad: "+dbStats.numBad()+
                       ", recs loaded: "+dbStats.recs.loaded + ", recs bad: " +dbStats.recs.bad +
                       ", recs fluff: " +dbStats.recs.fluff);
         return dbPath;
@@ -649,27 +769,20 @@ var BP_MOD_FILESTORE = (function()
      * the main DT file though. Will remove all other files listed in the
      * files object.
      */
-    function rmFiles (files, dbPath)
+    // function rmFiles (fsCat, dbPath)    // {        // var dtl = Object.keys(fsCat), i, j;        // for (i=0; i<dtl.length; i++)        // {            // var dt = dtl[i],                // dirPath = DB_FS.makeDTDirPath(dt, dbPath),                // fnames = Object.keys(fsCat[dt]),                // len = fnames.length,                // o;//                             // for (j=0; j<len; j++)            // {                // o={};                // if (fnames[j] === DB_FS.getDTFileName(dt)) { // TODO:                     // // Skp the main DT-file                    // continue;                // }                // BP_PLUGIN.rm(dirPath + fnames[j], o);            // }        // }    // }
+    
+    function rmFilesCat (cat, dbStats)
     {
-        var dtl = Object.keys(files), i, j;
-        for (i=0; i<dtl.length; i++)
+        function rm(fpath, dt, ft, fname, dtDirPath2)
         {
-            var dt = dtl[i],
-                dirPath = DB_FS.makeDTDirPath(dt, dbPath),
-                fstats = files[dt],
-                len = fstats.length,
-                o;
-                
-            for (j=0; j<len; j++)
-            {
-                o={};
-                if (fstats[j] === DB_FS.getDTFileName(dt)) {
-                    // Skp the main DT-file
-                    continue;
-                }
-                BP_PLUGIN.rm(dirPath + fstats[j].name, o);
-            }
+            var o = {};
+            if (fname !== DB_FS.getDTFileName(dt))
+            { 
+                // Skp the main DT-file
+                BP_PLUGIN.rm(fpath, o);
+            }       
         }
+        dbStats.walkCat(cat, rm, null);
     }
     
     // Constructor. Inherits from Array
@@ -712,7 +825,7 @@ var BP_MOD_FILESTORE = (function()
         return result;
     }
     
-    function compactDB(io, db2)    {        var io2 = {},
+    function compactDB(io)    {        var io2 = {},
             dbPath = DB_FS.getDBPath(),
             dt, 
             dnIt, dn, recs, rIt, acoll, aIt, arec,
@@ -723,11 +836,6 @@ var BP_MOD_FILESTORE = (function()
         if (!dbPath) {
             throw new BPError ("No DB loaded");
         }        tempDTFiles(dbPath);        dbPath = loadDB(dbPath, io);
-        if (db2)
-        {
-            io.merge = true; // indicate to loadDB that this is a merge, not a clean load.
-            db2 = loadDB(db2, io);
-        }
         io.dbStats.clrRecs();
         // Iterate the MEM_STORE and write recs to the appropriate files.
         for (i=0; i<DB_FS.dtl.length; i++)
@@ -761,8 +869,50 @@ var BP_MOD_FILESTORE = (function()
             }
         }
         
-        rmFiles(io.dbStats.getFSCat('loaded'), dbPath);
-        return dbPath;    }//         // function mergeInDB(db1, db2)    // {        // DB_FS.mvDBFiles(db1, 'merging');        // loadDB(db1);        // loadDB(db2, {merge:true});        // MEM_STORE.append(db1);        // DB_FS.rmDBFiles('compacting');    // }//         // function mergeOutDB(db1, db2)    // {        // MEM_STORE.blockInserts(); // Since we'll be loading the db2, we don't want any                                   // // inserts to it while we're merging because from user                                  // // POV those inserts were meant for db1        // mergeInDB(db2, db1);        // loadDB(db1);        // MEM_STORE.unblockInserts();    // }//         // function merge(db1, db2)    // {//             // }
+        //rmFiles(io.dbStats.getFSCat('loaded'), dbPath);
+        rmFilesCat(DB_FS.ft_Loaded, io.dbStats);
+        return dbPath;    }
+
+    function mergeDirs (io)
+    {
+        var dbStats1 = DB_FS.lsFiles(io.db1),
+            dbStats2 = DB_FS.lsFiles(io.db2),
+            dbStats1_new = dbStats1.diffNewClosed(dbStats2),
+            dbStats2_new = dbStats2.diffNewClosed(dbStats1);
+            
+        function copy(fpath, dt, ft, fname, dtDirPath2)
+        {
+            var toPath = dtDirPath2 + fname,
+                o = {};
+                        
+            if (!BP_PLUGIN.copy(fpath, toPath, o, false)) {
+                throw new BPError (o.err);
+            }
+        }
+
+        dbStats2_new.walkCat(DB_FS.ft_Closed, copy, io.db1);
+        dbStats1_new.walkCat(DB_FS.ft_Closed, copy, io.db2);
+    }
+        function mergeDB(db2, out)    {
+        var db1 = DB_FS.getDBPath(),
+            io = {db1:db1, db2:db2};
+        
+        if (!db1) {
+            throw new BPError ("No DB loaded");
+        }
+        else if (!db2) {
+            throw new BPError ("DB2 not selected", "InternalError", "BadArgument");
+        }
+        else if (db2===db1) {
+            throw new BPError ("This wallet is already loaded. Please select a different one.", "UserError", "BadArgument");
+        }
+                mergeDirs(io);
+        return true;
+        //var io2 = {};
+        //loadDB(db1, io2);
+        //loadDTFiles(db2, {persist:true});
+        // if (!oneWay)        // {            // DB_FS.copyDTFiles(db2);        // }    }
+    // function mergeInDB(db1, db2)    // {        // DB_FS.mvDBFiles(db1, 'merging');        // loadDB(db1);        // loadDB(db2, {merge:true});        // MEM_STORE.append(db1);        // DB_FS.rmDBFiles('compacting');    // }//         // function mergeOutDB(db1, db2)    // {        // MEM_STORE.blockInserts(); // Since we'll be loading the db2, we don't want any                                   // // inserts to it while we're merging because from user                                  // // POV those inserts were meant for db1        // mergeInDB(db2, db1);        // loadDB(db1);        // MEM_STORE.unblockInserts();    // }//     
     
     function writeCSV(arec, buf, fpath, traits)
     {
@@ -1105,8 +1255,9 @@ var BP_MOD_FILESTORE = (function()
         CSVFile: {value: CSVFile},
         createDB: {value: createDB},
         loadDB: {value: loadDB},
-        unloadDB: {value: unloadDB},
-        compactDB: {value: compactDB},
+        unloadDB:   {value: unloadDB},
+        compactDB:  {value: compactDB},
+        mergeInDB:    {value: mergeDB},
         getDBPath: {value: DB_FS.getDBPath},
         getDBStats:{value: DB_FS.getDBStats},
         cullDBName: {value: DB_FS.cullDBName},

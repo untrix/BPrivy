@@ -46,14 +46,15 @@
                 <fieldset id="formStoreLoad"  class="control-group">
                   <label class="control-label">Open/Close</label>
                   <div class="controls form-inline">
-                    <button id="dbChooseLoad" type="button" class="btn btn-primary" title="Browse and select a <i style='display:inline-block'>Password Wallet</i> to open">
-                      <img style="display:none" id="dbLoadSpinner" src="icons/ajax-loader-white.gif" />                      
-                      Open</button>
+                    <button id="dbChooseLoad" type="button" class="btn btn-primary" data-loading-text="Opening..." title="Browse for your <i style='display:inline-block'>UWallet</i> folder">
+                      <!-- <img style="display:none" id="dbLoadSpinner" src="icons/ajax-loader-white.gif" /> -->
+                      <!-- <i class="icon-folder-open icon-white"></i>  -->                    
+                       Open</button>
                     <label class="checkbox" title="If checked, the <i style='display:inline-block'>Password Wallet</i> location will be saved on this computer and automatically selected the next time. For privacy and safety, uncheck it if this is not your computer.">
                       <input id="dbSaveLocation" type="checkbox" name="savelocation" checked>
-                      Don't ask again
+                      Remember location
                     </label>
-                    <button id="dbClose" type="button" class="btn btn-small" title="Close the password Wallet"><i class="icon-off"></i></button>
+                    <button id="dbClose" type="button" class="btn btn-small" title="Close the password Wallet"><i class="icon-folder-close"></i></button>
                   </div>
                 </fieldset>
                 
@@ -77,9 +78,9 @@
                 <fieldset class="control-group">
                   <label class="control-label">Advanced</label>
                   <div class="controls">
-                    <button id="dbCompact" type="button" class="btn btn-primary">
-                      <img style="display:none" id="dbCompactSpinner" src="icons/ajax-loader-white.gif" />
-                      Compact DB</button>
+                    <button id="dbCompact" type="button" class="btn btn-primary" data-loading-text="Compacting...">
+                      <!-- <img style="display:none" id="dbCompactSpinner" src="icons/ajax-loader-white.gif" /> -->
+                      Compact</button>
                     <input disabled id="stats" class="uneditable-input input-small">
                   </div>
                 </fieldset>
@@ -104,20 +105,14 @@
                     <button id="csvImport" type="button" class="btn btn-primary" title="Click to choose the file">
                       <img style="display:none" id="csvImportSpinner" src="icons/ajax-loader-white.gif" />
                       Import</button>
-                    <label class="checkbox" title="Check this if import file is obfuscated">
-                      <input type="checkbox" name="obfuscated" id="csvImportObfuscated" disabled>
-                      Obfuscated
-                    </label>
+                    <!-- <label class="checkbox" title="Check this if import file is obfuscated">                      <input type="checkbox" name="obfuscated" id="csvImportObfuscated" disabled>                      Obfuscated                    </label> -->
                   </div>
                 </div>
                 <div class="control-group">
                   <label class="control-label">Export to CSV File</label>
                   <div class="controls form-inline">
                     <button id="csvExport" type="button" class="btn btn-inverse" title="Click to choose the file">Export</button>
-                    <label class="checkbox" title="Check this to obfuscate export file">
-                      <input type="checkbox" name="obfuscate" disabled>
-                      Obfuscate
-                    </label>
+                    <!-- <label class="checkbox" title="Check this to obfuscate export file">                      <input type="checkbox" name="obfuscate" disabled>                      Obfuscate                    </label> -->
                   </div>
                 </div>
               </div>

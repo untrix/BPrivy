@@ -199,6 +199,9 @@ var BP_MOD_WDL = (function ()
         };
     }
 
+    /**
+     * New Item button 
+     */
     function NButton () {}
     NButton.prototype = w$defineProto(
     {
@@ -223,7 +226,16 @@ var BP_MOD_WDL = (function ()
         _iface:{ w$ctx:{ panel:'panel' } }
         };
     };
+
+
+    /**
+     * Shortcut to Options->Open button 
+     */
+    // function OButton () {}    // OButton.wdt = function (w$ctx)    // {        // // make sure panel is captured into private closure, so we won't lose it.        // // values inside ctx will get changed as other wdls and wdts are executed.        // var panel = w$ctx.panel;//         // return {        // cons: OButton,        // html:'<button type="button"></button>',        // css:{ float:'right' },        // //attr:{ /*class:css_class_xButton,*/ },        // //text:u_cir_X,        // on:{ click:OButton.prototype.go },        // iface:{ panel:panel },            // children:[            // {tag:"i",            // css:{ 'vertical-align':'middle' },            // addClass:'icon-folder-open'            // }]        // };    // };    // OButton.prototype = w$defineProto (    // {        // go: {value: function click (e)        // {            // if (this.panel) {                               // e.stopPropagation(); // We don't want the enclosing web-page to interefere                // e.preventDefault(); // Causes event to get cancelled if cancellable                // this.panel.die();                // BP_MOD_CS_PLAT.getURL("bp_manage.html?open=true");                // return false; // Causes the event to be cancelled (except mouseover event).            // }        // }}    // });
     
+    /**
+     * Settings/Options page link 
+     */
     function SButton(){}
     SButton.wdt = function (w$ctx)
     {
@@ -239,20 +251,10 @@ var BP_MOD_WDL = (function ()
         };
     };
     
-
+    /**
+     * Panel Dismiss/Close button - 'x' button 
+     */
     function XButton () {}
-    XButton.prototype = w$defineProto (
-    {
-        x: {value: function click (e)
-        {
-            if (this.panel) {               
-                e.stopPropagation(); // We don't want the enclosing web-page to interefere
-                e.preventDefault(); // Causes event to get cancelled if cancellable
-                this.panel.die();
-                return false; // Causes the event to be cancelled (except mouseover event).
-            }
-        }}
-    });
     XButton.wdt = function (w$ctx)
     {
         // make sure panel is captured into private closure, so we won't lose it.
@@ -274,7 +276,22 @@ var BP_MOD_WDL = (function ()
             }]
         };
     };
+    XButton.prototype = w$defineProto (
+    {
+        x: {value: function click (e)
+        {
+            if (this.panel) {               
+                e.stopPropagation(); // We don't want the enclosing web-page to interefere
+                e.preventDefault(); // Causes event to get cancelled if cancellable
+                this.panel.die();
+                return false; // Causes the event to be cancelled (except mouseover event).
+            }
+        }}
+    });
 
+    /**
+     * AutoFill button 
+     */
     function FButton(){}
     FButton.prototype =  w$defineProto(
     {
@@ -657,7 +674,7 @@ var BP_MOD_WDL = (function ()
                 cs_panelTitleText_wdt,
                 XButton.wdt,
                 SButton.wdt,
-                //ctx.dbName?CButton.wdt:OButton.wdt
+                // ctx.dbName? CButton.wdt: w$undefined,                // OButton.wdt
                 ]
             },
             UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt : w$undefined],
