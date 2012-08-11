@@ -159,7 +159,28 @@ var BP_MOD_COMMON = (function()
             dst[keys[n]] = src[keys[n]];
         }
     }
+
+    function curry (func)
+    {
+        // convert arguments into an array. Remove the 'func' argument though.
+        var ctx = Array.prototype.slice.apply(arguments);
+        ctx.shift();
+        return function ()
+        {
+            func.apply(null, Array.prototype.slice.apply(arguments).concat(ctx));
+        };
+    }
     
+    function iterKeys (o, func)
+    {
+        var keys = Object.keys(o),
+            i = keys.length-1;
+        for (i; i>=0; i--)
+        {
+            func (keys[i], o[keys[i]], o);
+        } 
+    }
+        
     var iface = {};
     Object.defineProperties(iface, 
     {
@@ -179,7 +200,9 @@ var BP_MOD_COMMON = (function()
         preventDefault: {value: preventDefault},
         newInherited: {value: newInherited},
         copy: {value: copy},
-        clear: {value: clear}
+        clear: {value: clear},
+        curry: {value: curry},
+        iterKeys: {value: iterKeys}
     });
     Object.freeze(iface);
 

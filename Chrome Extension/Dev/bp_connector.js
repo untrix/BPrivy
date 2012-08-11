@@ -116,12 +116,7 @@ var BP_MOD_CONNECT = (function ()
             // ingest thousands of records (ETLD has about 7K records)
             l: {value: newL(loc, dt), enumerable: true},
             /** USECASE TRAITS PROPERTIES (prefixed with 'ut') */
-            // utNoTmUpdates: Set to true implies that if a record has the same key and value
-            //               but has a newer timestamp from that already present in the DB,
-            //               then it will be discarded by the MEM_STORE.
-            //               If it had the same key+value but an older timestamp, it would be
-            //               discarded anyway.
-            utNoTmUpdates: {writable:true} // not enumerable so that it won't end-up in the db.
+            // utNoTmUpdates: {writable:true} // not enumerable so that it won't end-up in the db.
         });
     }
     

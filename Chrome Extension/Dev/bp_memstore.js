@@ -1030,6 +1030,7 @@ var BP_MOD_MEMSTORE = (function ()
     /**
      * @constructor
      * Sets up the supplied record for insertion into the db
+     * @param {Object} uct  Use-Case Traits. See function DRecord.UCT
      */
     function DRecord(rec, dt, uct)
     {
