@@ -160,27 +160,51 @@ var BP_MOD_COMMON = (function()
         }
     }
 
-    function curry (func)
+    function curry (thisArg, func)
     {
-        // convert arguments into an array. Remove the 'func' argument though.
-        var ctx = Array.prototype.slice.apply(arguments);
-        ctx.shift();
+        // convert arguments into an array. Omit 'thisArg' and 'func' arguments though.
+        var ctx = Array.prototype.slice.apply(arguments, [2]);
+        //ctx.shift(2);
         return function ()
         {
-            func.apply(null, Array.prototype.slice.apply(arguments).concat(ctx));
+            func.apply(thisArg, Array.prototype.slice.apply(arguments).concat(ctx));
         };
     }
     
-    function iterKeys (o, func)
+    /**
+     * Iterates over keys of an object (as in Object.keys)
+     * Calls func with the array-item as first argument
+     * followed by all arguments passed to iterArray.
+     * 'this' is mapped to thisArg
+     */
+    function iterKeys (o, thisArg, func)
     {
         var keys = Object.keys(o),
-            i = keys.length-1;
+            i = keys.length-1,
+            // convert arguments into an array. Omit 'o', 'this' and 'func' arguments though.
+            ctx = Array.prototype.slice.apply(arguments, [3]);
         for (i; i>=0; i--)
         {
-            func (keys[i], o[keys[i]], o);
+            func.apply(thisArg, [keys[i], o[keys[i]], o].concat(ctx));
         } 
     }
-        
+    
+    // Similar to forEach, but not the same. This is here because forEach is supposed
+    // to be slower than a for-loop ! Calls func with the array-item as first argument
+    // followed by all arguments passed to iterArray.
+    // 'this' is mapped to thisArg.
+    function iterArray (a, thisArg, func)
+    {
+        var n = a.length,
+            i,
+            // convert arguments into an array. Omit 'o', 'this' and 'func' arguments.
+            ctx = Array.prototype.slice.apply(arguments, [3]);
+        for (i=0; i<n; i++)
+        {
+            func.apply(thisArg, [a[i]].concat(ctx));
+        } 
+    }    
+    
     var iface = {};
     Object.defineProperties(iface, 
     {

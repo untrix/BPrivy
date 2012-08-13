@@ -241,7 +241,7 @@ var BP_MOD_WDL = (function ()
     {
         return {
         tag: 'a',
-        attr:{ class:css_class_xButton, href:BP_MOD_CS_PLAT.getURL("bp_manage.html") },
+        attr:{ class:css_class_xButton, href:BP_MOD_CS_PLAT.getURL("/bp_manage.html") },
         css:{ width:'20px' },
             children:[
             {tag:"i",
@@ -673,7 +673,7 @@ var BP_MOD_WDL = (function ()
                 (UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)&&ctx.dbName)?NButton.wdt: w$undefined,
                 cs_panelTitleText_wdt,
                 XButton.wdt,
-                SButton.wdt,
+                SButton.wdt
                 // ctx.dbName? CButton.wdt: w$undefined,                // OButton.wdt
                 ]
             },

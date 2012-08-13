@@ -389,10 +389,13 @@ var BP_MOD_MEMSTORE = (function ()
             arec = drec.rec,
             arecs = this.arecs,
             len = arecs.length,
-            res;
+            res,
+            memStats = MemStats.stats;
         
-        if (len===0)        {            // This will happen the first time a key is created            arecs[0] = arec;            arecs[valStr] = arec;        }        else if (arec.tm<=arecs[len-1].tm)        {            // In the case of loadDB, we load records in reverse chronological order. That            // allows us to simply push subsequent records to the end of the array.            arecs.push(arec);            arecs[valStr] = arec;            // We don't need to check for item-overflow because that has already            // been checked before we were invoked.        }        // // Below clause may be useful in optimizing mergeDB use-case.        // // else if (arec.tm>=arecs[0])        // // {            // // arecs.unshift(arec);            // // arecs[valStr] = arec;            // // if (len>max)            // // delete the last item
-            // // drec.notes.causedOverflow = true;        // // }        else
+        if (len===0)        {            // This will happen the first time a key is created            arecs[0] = arec;            arecs[valStr] = arec;        }        else if (arec.tm<=arecs[len-1].tm)        {            // In the case of loadDB, we load records in reverse chronological order. That            // allows us to simply push subsequent records to the end of the array.            arecs.push(arec);            arecs[valStr] = arec;
+            memStats.loaded++;            // We don't need to check for item-overflow because that has already            // been checked before we were invoked.        }        // // Below clause may be useful in optimizing mergeDB use-case.        // // else if (arec.tm>=arecs[0])        // // {            // // arecs.unshift(arec);            // // arecs[valStr] = arec;            // // if (len>max)            // // delete the last item
+            // // drec.notes.causedOverflow = true;
+            // // memStats.fluff++;        // // }        else
         {
             // We will only get here in case of DB merges or if due to some reason (a bug?)
             // our record loading sequence was not strictly reverse-chronological.
@@ -406,6 +409,7 @@ var BP_MOD_MEMSTORE = (function ()
                 {
                     // Insert one new item
                     items.splice(i, 0, arec);
+                    memStats.loaded++;
                     // Update the value index
                     items[valStr] = arec;
                     // Delete upto one item
@@ -414,6 +418,7 @@ var BP_MOD_MEMSTORE = (function ()
                         dItm = items[l-1];
                         items.length = max; // remove item from array
                         delete items[dtt.valStr(dItm)]; // remove val-index
+                        memStats.fluff++; memStats.loaded--;
                         drec.notes.causedOverflow = true;
                     }
                     return true;
@@ -425,6 +430,7 @@ var BP_MOD_MEMSTORE = (function ()
                     // to the end of the list.
                     items.push(arec);
                     items[valStr] = arec;
+                    memStats.loaded++;
                     // We don't need to check for item-overflow because that has already
                     // been checked before we were invoked.
                     return true;
@@ -432,6 +438,7 @@ var BP_MOD_MEMSTORE = (function ()
             }, this);
             if (!res) {
                 DIAGS.logwarn(new BPError("Didn't insert arec", "NewRecordSkipped", "Arecs.Some===false"));
+                memStats.fluff++;
             }
         }
         
@@ -519,13 +526,15 @@ var BP_MOD_MEMSTORE = (function ()
         var arec = drec.rec, dtt = drec.dtt,
             valStr = dtt.valStr(arec),
             max = dtt.actions.history + 1,
-            oarec;
+            oarec,
+            memStats = MemStats.stats;
             
         if (this.arecs.length === max && arec.tm <= this.arecs[max-1].tm) 
         {
             // This record should not be inserted. Its date&time are older than the
             // oldest record we have and our collection is already full.
             drec.notes.isOverflow = true;
+            memStats.fluff++;
             return;
         }
         
@@ -535,6 +544,7 @@ var BP_MOD_MEMSTORE = (function ()
         {
             // This value already exists in the collection. Is this the same
             // record being replayed or an older record with same value?
+            memStats.fluff++;
             if (arec.tm <= oarec.tm)
             {
                 // Okay, same value, same timestamp. This is a repeated record.
@@ -582,10 +592,10 @@ var BP_MOD_MEMSTORE = (function ()
         }
         else
         {
-            // This is a new value. We want to save the latest traits.actions.history
+            // This is a unique value. However, we want to keep only the latest #traits.actions.history
             // values in the sorted list of values. This may or may not make it.
             this.insertNewVal(valStr, drec);
-            drec.notes.isNew = true;
+            drec.notes.isUnique = true;
         }
     };
     Actions.prototype.newIt = function ()
@@ -1045,6 +1055,37 @@ var BP_MOD_MEMSTORE = (function ()
             notes:{value: {}}
         }));
     }
+    
+    function MemStats ()
+    {
+        Object.defineProperties(this,
+        {
+            loaded: {value:0, writable:true, enumerable:true},
+            fluff:  {value: 0, writable:true, enumerable:true},
+            bad:    {value:0, writable:true, enumerable:true}
+        });
+    }
+    MemStats.prototype.clr = function ()
+    {
+        this.loaded = this.fluff = this.bad = 0;
+    };
+    MemStats.prototype.update = function (notes)
+    {
+        if (notes && notes.isUnique) {
+            if (notes.causedOverflow) {
+                this.fluff++;
+            }
+            else {
+                this.loaded++;
+            }
+        }
+        else if (notes) { // if (rec.notes.isOldRepeat || rec.notes.isNewRepeat || rec.notes.isOverflow)
+            this.fluff++;
+        }
+        else {
+            this.bad++;
+        }
+    };
     /** @end-class-def DRecord **/
 
     // _dnode is optional and is only expected to be used at build-time by buildETLD.
@@ -1076,6 +1117,7 @@ var BP_MOD_MEMSTORE = (function ()
     function clear ()
     {
         var i, dt,            dtList = Object.keys(DT_TRAITS.traits),            n = dtList.length;        for (i=0; i<n; i++)        {            dt = dtList[i];            DNode[dt] = newDNode();        }
+        MemStats.stats = new MemStats();
     }
     
     function DNodeIterHelper(node, up)
@@ -1216,7 +1258,8 @@ var BP_MOD_MEMSTORE = (function ()
         DURL:        DURL, // used by build_tools
         DRecord:     DRecord,
         newDNodeIterator: newDNodeIterator,
-        getDT:       function(dt){return DNode[dt];}
+        getDT:       function(dt){return DNode[dt];},
+        getStats:    function(){return MemStats.stats;}
     });
 
     console.log("loaded memstore");
