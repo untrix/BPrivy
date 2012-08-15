@@ -41,7 +41,8 @@ var BP_MOD_CONNECT = (function ()
         cm_getDBPath = "cm_dbPth",
         cm_importCSV = "cm_imCSV",
         cm_exportCSV = "cm_exCSV",
-        cm_compactDB = "cm_cmDB";
+        cm_compactDB = "cm_cmDB",
+        cm_cleanDB = "cm_clnDB";
 
     var DICT_TRAITS={};
    
@@ -211,6 +212,11 @@ var BP_MOD_CONNECT = (function ()
             rpcToMothership({cm: cm_compactDB}, callbackFunc);
         }
     
+        function cleanDB (callbackFunc)
+        {
+            rpcToMothership({cm: cm_cleanDB}, callbackFunc);
+        }
+    
         function importCSV (dbPath, obfuscated, callbackFunc)
         {
             rpcToMothership({cm: cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
@@ -241,6 +247,7 @@ var BP_MOD_CONNECT = (function ()
             cm_importCSV: {value: cm_importCSV},
             cm_exportCSV: {value: cm_exportCSV},
             cm_compactDB: {value: cm_compactDB},
+            cm_cleanDB: {value: cm_cleanDB},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
             newERecord: {value: newERecord},
@@ -250,6 +257,7 @@ var BP_MOD_CONNECT = (function ()
             unloadDB: {value: function (cback) {rpcToMothership({cm: cm_unloadDB}, cback);}},
             mergeInDB: {value: mergeInDB},
             compactDB: {value: compactDB},
+            cleanDB: {value: cleanDB},
             createDB: {value: createDB},
             getDBPath: {value: getDBPath},
             importCSV: {value: importCSV},

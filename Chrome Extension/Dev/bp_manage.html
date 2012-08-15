@@ -25,8 +25,10 @@
               <a data-nav id="nav-settings" href="#settings-pane"><i class="icon-cog"></i> Settings</a>
             </li>
             <li>
-              <a data-nav href="#editor-pane"><i class="icon-edit"></i> Edit Passwords </a>
+              <a data-nav href="#editor-pane"><i class="icon-pencil"></i> Edit Passwords </a>
             </li>
+            <li><a data-nav href="#advanced-pane"><i class="icon-wrench"></i> Advanced</a></li>
+            <li><a data-nav href="#license-pane"><i class="icon-certificate"></i> Credits &amp; Licenses</a></li>
             <li><a data-nav href="#help-pane"><i class="icon-flag"></i> Help</a></li>
             <li class="divider"></li>
             <li>
@@ -34,14 +36,14 @@
             </li>
           </ul>
         </div>
-        <div class="span10">
+        <div id="content" class="span10">
           <div class="tab-content">
             <!--Body content-->
             <div class="tab-pane" id="settings-pane">
               <h3>Settings</h3>
               <div class="well form-horizontal">
-                <legend>My Password Wallet
-                  <span id="dbPath" style="display: block; cursor: default"  class="input-medium uneditable-input"></span>
+                <legend>Manage Wallet 
+                  <span id="dbPath" data-dbPath style="text-align:center; cursor: default"  class="input-medium uneditable-input dash-text"></span>
                 </legend>
                 <fieldset id="formStoreLoad"  class="control-group">
                   <label class="control-label">Open/Close</label>
@@ -72,16 +74,6 @@
                     <button data-path-choose id="dbMergeIn" type="button" class="btn btn-primary" title="Open Wallet will get merged data. Other Wallet will stay unchanged.">Merge In</button>                    
                     <button data-path-choose id="dbMerge" type="button" class="btn btn-primary" title="Both Wallets will have merged data.">Merge</button>                    
                     <button data-path-choose id="dbMergeOut" type="button" class="btn btn-primary" title="Other Wallet will get merged data. This Wallet will stay unchanged.">Merge Out</button>                    
-                  </div>
-                </fieldset>
-
-                <fieldset class="control-group">
-                  <label class="control-label">Advanced</label>
-                  <div class="controls">
-                    <button id="dbCompact" type="button" class="btn btn-primary" data-loading-text="Compacting...">
-                      <!-- <img style="display:none" id="dbCompactSpinner" src="icons/ajax-loader-white.gif" /> -->
-                      Compact</button>
-                    <input disabled id="stats" class="uneditable-input input-small">
                   </div>
                 </fieldset>
 
@@ -130,9 +122,44 @@
                 </div>  
               </div>
             </div>
+
+            <div class="tab-pane" id="advanced-pane">
+              <h3>Advanced Settings</h3>
+              <div class="well form-horizontal">
+                <legend>DB Maintenance 
+                  <span data-dbPath style="text-align:center; cursor: default"  class="input-medium uneditable-input dash-text"></span>
+                </legend>
+
+                <fieldset class="control-group">
+                  <label class="control-label">Quick Cleanup</label>
+                  <div class="controls">
+                    <button id="dbClean" type="button" class="btn btn-primary" data-loading-text="Cleaning...">
+                      <!-- <img style="display:none" id="dbCompactSpinner" src="icons/ajax-loader-white.gif" /> -->
+                      Cleanup </button>
+                    <input disabled id="qclean-stats" style="cursor: default" class="uneditable-input input-medium dash-text">
+                  </div>
+                </fieldset>
+
+                <fieldset class="control-group">
+                  <label class="control-label">Full Compaction</label>
+                  <div class="controls">
+                    <button id="dbCompact" type="button" class="btn btn-primary" data-loading-text="Compacting...">
+                      <!-- <img style="display:none" id="dbCompactSpinner" src="icons/ajax-loader-white.gif" /> -->
+                      Compact</button>
+                    <input disabled id="stats" style="cursor: default" class="uneditable-input input-medium dash-text">
+                  </div>
+                </fieldset>
+
+              </div>
+
+            </div>
             <div class="tab-pane" id="help-pane">
               <!-- Help Content Goes Here -->
               <h6> Sorry, no help content yet</h6>
+            </div>
+            <div class="tab-pane" id="license-pane">
+              <!-- License and Credits Go Here -->
+              <h6> EULA, Licenses and Credits Go Here</h6>
             </div>
           </div>
         </div>
@@ -140,10 +167,10 @@
       <hr>
       <footer>
         <p>
-          &copy; Copyright 2012 Untrix Soft (http://www.untrix.com)
+          &copy; Copyright 2012 Untrix Soft LLC (http://www.untrix.com)
         </p>
         <p>
-          Privy&trade;, Privy Wallet&trade;, UWallet&trade;, UMerge&trade; and UTeach&trade; are trademarks of Untrix Soft (http://www.untrix.com)
+          Privy&trade;, Privy Wallet&trade;, UWallet&trade;, UMerge&trade; and UTeach&trade; are trademarks of Untrix Soft LLC (http://www.untrix.com)
         </p>
       </footer>    
     </div>

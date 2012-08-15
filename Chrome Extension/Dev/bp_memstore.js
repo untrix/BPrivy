@@ -392,7 +392,8 @@ var BP_MOD_MEMSTORE = (function ()
             res,
             memStats = MemStats.stats;
         
-        if (len===0)        {            // This will happen the first time a key is created            arecs[0] = arec;            arecs[valStr] = arec;        }        else if (arec.tm<=arecs[len-1].tm)        {            // In the case of loadDB, we load records in reverse chronological order. That            // allows us to simply push subsequent records to the end of the array.            arecs.push(arec);            arecs[valStr] = arec;
+        if (len===0)        {            // This will happen the first time a key is created            arecs[0] = arec;            arecs[valStr] = arec;
+            memStats.loaded++;        }        else if (arec.tm<=arecs[len-1].tm)        {            // In the case of loadDB, we load records in reverse chronological order. That            // allows us to simply push subsequent records to the end of the array.            arecs.push(arec);            arecs[valStr] = arec;
             memStats.loaded++;            // We don't need to check for item-overflow because that has already            // been checked before we were invoked.        }        // // Below clause may be useful in optimizing mergeDB use-case.        // // else if (arec.tm>=arecs[0])        // // {            // // arecs.unshift(arec);            // // arecs[valStr] = arec;            // // if (len>max)            // // delete the last item
             // // drec.notes.causedOverflow = true;
             // // memStats.fluff++;        // // }        else
@@ -1194,7 +1195,7 @@ var BP_MOD_MEMSTORE = (function ()
      * visits all actions, both current as well as historical.
      * @param {Object} callback
      */
-    DNodeIterator.prototype.walk = function (callback,currOnly)
+    DNodeIterator.prototype.walk = function (callback, ctx)
     {
         var dn, recs, rIt, acoll, aIt, arec;
         while ((dn=this.next()))
@@ -1210,7 +1211,7 @@ var BP_MOD_MEMSTORE = (function ()
                          arec; 
                          arec=aIt.next())
                     {
-                        callback(arec);
+                        callback(arec, ctx);
                     }
                 }
             }
@@ -1222,7 +1223,7 @@ var BP_MOD_MEMSTORE = (function ()
      * visits only current records of the Actions collections. Skips the historical records.
      * @param {Object} callback
      */
-    DNodeIterator.prototype.walkCurr = function (callback)
+    DNodeIterator.prototype.walkCurr = function (callback, ctx)
     {
         var dn, recs, rIt, acoll, aIt, arec;
         while ((dn=this.next()))
@@ -1233,7 +1234,7 @@ var BP_MOD_MEMSTORE = (function ()
                 rIt = new BP_MOD_TRAITS.RecsIterator(recs);
                 while ((acoll=rIt.next()))
                 {
-                    callback(acoll.curr);
+                    callback(acoll.curr, ctx);
                 }
             }
         }        

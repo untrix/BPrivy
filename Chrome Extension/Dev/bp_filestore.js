@@ -106,27 +106,116 @@ var BP_MOD_FILESTORE = (function()
             path_sep = null, // populated below
             dt_settings = IMPORT(BP_MOD_TRAITS.dt_settings),
             dtl = [dt_eRecord, dt_pRecord, dt_settings],
-            DOT = '.';
+            DOT = '.',
+            ext = {
+                ext_Root: ".3ab",
+                ext_Dict: ".3ad",
+                ext_Open: ".3ao",
+                ext_Closed:".3ac",
+                ext_MMap: ".3am",
+                ext_Temp: ".3at",
+                ext_Bad : ".3aq", // q => Quarantine
+                ext_Csv : ".csv"
+            },
+            cat_Load = {
+                cat_Open : "cat_Open",
+                cat_Closed:"cat_Closed",
+                cat_Temp : "cat_Temp",
+            },
+            cat_Bad = "cat_Bad";
 
         var mod =
         {
             dtl: dtl,
             valid_dt: valid_dt,
             fileCap: 100, //File capacity in #recs
-             /** File/Dirname extenstions */
-            ext_Root: ".3ab",
-            ext_Dict: ".3ad",
-            ext_Open: ".3ao",
-            ext_Closed:".3ac",
-            ext_MMap: ".3am",
-            ext_Temp: ".3at",
-            ext_Bad : ".3aq", // q => Quarantine
-            ext_Csv : ".csv",
-            cat_Open : "cat_Open",
-            cat_Closed:"cat_Closed",
-            cat_Temp : "cat_Temp",
-            cat_Bad  : "cat_Bad",
-            cat_Loaded:"cat_Loaded",
+            /** File/Dirname extenstions populated later/below */
+            ext_Root: ext.ext_Root,
+            ext_Dict: ext.ext_Dict,
+            ext_Open: ext.ext_Open,
+            ext_Closed:ext.ext_Closed,
+            ext_MMap: ext.ext_MMap,
+            ext_Temp: ext.ext_Temp,
+            ext_Bad : ext.ext_Bad, // q => Quarantine
+            ext_Csv : ext.ext_Csv,
+            cat_Open : cat_Load.cat_Open,
+            cat_Closed:cat_Load.cat_Closed,
+            cat_Temp : cat_Load.cat_Temp,
+            cat_Bad  : cat_Bad,            /** 
+             * Returns true if the file should be loaded into the DB
+             * @param {Object} dirEnt dirEnt should be a dir-entry listing from BP_PLUGIN.ls and it should
+             *      be a regular file. IN other words, it should be obtained from o.lsd.f or o.lsf   
+             */
+            // Loadable DB-file categories. Populated later/below
+            cats_Load: [],
+            /**
+             * Returns undefined if the file should not be loaded. Otherwise returns its
+             * category.
+             */
+            toLoad: function (dirEnt)
+            {
+                switch (dirEnt.ext)
+                {
+                    case mod.ext_Open:
+                        return mod.cat_Open;
+                    case mod.ext_Closed:
+                        return mod.cat_Closed;
+                    case mod.ext_Temp:
+                        return mod.cat_Temp;
+                    default:
+                        return undefined;
+                }
+            },
+            getCat: function (fname)
+            {
+                var ext = fname.lastIndexOf(".");
+                if (ext===-1) {
+                    return false;
+                }
+                else {
+                    ext = fname.slice(ext);
+                    switch (ext)
+                    {
+                        case mod.ext_Closed:
+                            return mod.cat_Closed;
+                        case mod.ext_Open:
+                            return mod.cat_Open;
+                        case mod.ext_Temp:
+                            return mod.cat_Temp;
+                        case mod.ext_Bad:
+                            return mod.cat_Bad;
+                        default:
+                            return undefined;
+                    }
+                }
+            },
+            isCat: function (fType, fname)
+            {
+                var ext = fname.lastIndexOf(".");
+                if (ext===-1) {
+                    return false;
+                }
+                else {
+                    ext = fname.slice(ext);
+                    switch (fType)
+                    {
+                        case mod.cat_Closed:
+                            return (ext === mod.ext_Closed);
+                        case mod.cat_Temp:
+                            return (ext === mod.ext_Temp);
+                        case mod.cat_Open:
+                            return (ext === mod.ext_Open);
+                        case mod.cat_Bad:
+                            return (ext === mod.ext_Bad);
+                        default:
+                            return false;
+                    }
+                }
+            },
+            isBad: function (fname)
+            {
+                return mod.isCat(mod.cat_Bad, fname);
+            },
             cullDBName: function (dbPath)
             {
                 var regex, array;
@@ -172,6 +261,7 @@ var BP_MOD_FILESTORE = (function()
                 }
                 
                 g_dbStats = dbStats;
+                if (g_dbStats) {Object.freeze(g_dbStats);}
             },
             getDTFilePath: function (dt)
             {
@@ -192,6 +282,18 @@ var BP_MOD_FILESTORE = (function()
             getDBStats: function ()
             {
                 return g_dbStats;
+            },
+            getFSNums: function ()
+            {
+                var dupes = 0;
+                if (g_dbStats)
+                {
+                    dupes = g_dbStats.calcDupes();
+                }
+                
+                return {
+                    dupes: dupes
+                };
             },
             makeDTFilePath: function (dt, dbPath)
             {
@@ -229,31 +331,10 @@ var BP_MOD_FILESTORE = (function()
                 
                 return fname;
             },
-            // makeClosedFilePath: function(dt, dbPath)
-            // {
-                // if (!dbPath || !valid_dt[dt]) {
-                    // MOD_ERROR.logwarn("filestore.js@makeClosedFilePath: Bad argument supplied.");
-                    // throw new BPError("", "InternalError");
-                // }
-//                 
-                // return mod.makeDTDirPath(dt, dbPath) + Date.now().valueOf() + DOT + dt + mod.ext_Closed;
-            // },
-            // makeTempFilePath: function(dt, dbPath)
-            // {
-                // if (!dbPath || !valid_dt[dt]) {
-                    // MOD_ERROR.logwarn("filestore.js@makeTempFilePath: Bad argument supplied.");
-                    // throw new BPError("", "InternalError");
-                // }
-                // return mod.makeDTDirPath(dt, dbPath) + Date.now().valueOf() + DOT + dt + mod.ext_Temp;
-            // },
-            // makeBadFilePath:  function(dt, dbPath)
-            // {
-                // if (!dbPath || !valid_dt[dt]) {
-                    // MOD_ERROR.logwarn("filestore.js@makeBadFilePath: Bad argument supplied."); 
-                    // throw new BPError("", "InternalError");
-                // }
-                // return mod.makeDTDirPath(dt, dbPath) + Date.now().valueOf() + DOT + dt + mod.ext_Bad;
-            // },
+            quarantineFile: function (fname, fpath)
+            {
+                BP_PLUGIN.rename(fpath, fpath+mod.ext_Bad, {}); //  no clobber by default
+            },
             renameBad: function (name)
             {
                 if (!name) {
@@ -333,74 +414,6 @@ var BP_MOD_FILESTORE = (function()
                 
                 return dbPath;
             },
-            /** 
-             * Returns true if the file should be loaded into the DB
-             * @param {Object} dirEnt dirEnt should be a dir-entry listing from BP_PLUGIN.ls and it should
-             *      be a regular file. IN other words, it should be obtained from o.lsd.f or o.lsf   
-             */
-            catsToLoad: undefined, // categories to load. Populated later/below
-            toLoad: function (dirEnt)
-            {
-                switch (dirEnt.ext)
-                {
-                    case mod.ext_Open:
-                    case mod.ext_Closed:
-                    case mod.ext_Temp:
-                        return true;
-                    default:
-                        return false;
-                }
-            },
-            getCat: function (fname)
-            {
-                var ext = fname.lastIndexOf(".");
-                if (ext===-1) {
-                    return false;
-                }
-                else {
-                    ext = fname.slice(ext);
-                    switch (ext)
-                    {
-                        case mod.ext_Closed:
-                            return mod.cat_Closed;
-                        case mod.ext_Open:
-                            return mod.cat_Open;
-                        case mod.ext_Temp:
-                            return mod.cat_Temp;
-                        case mod.ext_Bad:
-                            return mod.cat_Bad;
-                        default:
-                            return undefined;
-                    }
-                }
-            },
-            isCat: function (fType, fname)
-            {
-                var ext = fname.lastIndexOf(".");
-                if (ext===-1) {
-                    return false;
-                }
-                else {
-                    ext = fname.slice(ext);
-                    switch (fType)
-                    {
-                        case mod.cat_Closed:
-                            return (ext === mod.ext_Closed);
-                        case mod.cat_Temp:
-                            return (ext === mod.ext_Temp);
-                        case mod.cat_Open:
-                            return (ext === mod.ext_Open);
-                        case mod.cat_Bad:
-                            return (ext === mod.ext_Bad);
-                        default:
-                            return false;
-                    }
-                }
-            },
-            isBad: function (fname)
-            {
-                return mod.isCat(mod.cat_Bad, fname);
-            },
             lsFiles: function (dbPath)
             {
                 var dbStats = newDBStats(dbPath),
@@ -428,7 +441,7 @@ var BP_MOD_FILESTORE = (function()
                             name = file_names[j];
                             if ((cat=DB_FS.getCat(name)))
                             {
-                                dbStats.put(cat, dt, name, f[name]);
+                                dbStats.putCat(cat, dt, name, f[name]);
                             }
                         }
                     }
@@ -477,9 +490,23 @@ var BP_MOD_FILESTORE = (function()
                     throw new BPError("", "InternalError");
                 }
                 else {
-                    dbStats.del(DB_FS.cat_Open, dt, DB_FS.getDTFileName(dt));
-                    dbStats.put(toCat, dt, toName);
+                    dbStats.delDTFileEnt(dt);
+                    dbStats.putCat(toCat, dt, toName);
                 }
+            },
+            rmFiles: function (dbStats, keepDTFiles)
+            {
+                function rmCbk(dbStatsSrc, cat, dt, fname, dirEnt, dtDirPath)
+                {
+                    var o = {},
+                        fpath = dtDirPath+fname;
+        
+                    if ( (!keepDTFiles) || (fname !== DB_FS.getDTFileName(dt)) )
+                    {
+                        BP_PLUGIN.rm(fpath, o);
+                    } // else skip the main DT-file
+                }
+                dbStats.walkCats(DB_FS.cats_Load, rmCbk, keepDTFiles);
             }
         };
                 
@@ -502,141 +529,232 @@ var BP_MOD_FILESTORE = (function()
                     csv_dt[dt] = "UWallet_" + dt;
             }
         });
-        mod.catsToLoad = [mod.cat_Open, mod.cat_Closed, mod.cat_Temp];
+        // Setup ext and cat constants
+        MOD_COMMON.iterKeys(cat_Load, function (cat, val)
+        {
+            mod.cats_Load.push(val);
+        });
         
         return Object.freeze(mod);
     }());
 
-    function newDBStats (dbPath)
+    function DBStats(dbPath, dbSObj)
     {
-        function DBStats(dbPath)
+        if (dbSObj)
+        {                
+            Object.seal(Object.defineProperties(this,
+            {
+                dbPath: {value:dbSObj.dbPath, enumerable:true},
+                fs:     {value: dbSObj.fs, enumerable:true, writable:true}
+            }));
+            
+            // empty out dbSObj
+            delete dbSObj.fs; //This is a Object object, hence 'fs' should be configurable.
+        }
+        else
         {
             Object.seal(Object.defineProperties(this,
             {
-                dbPath: {value:dbPath},
+                dbPath: {value:dbPath, enumerable:true},
                 fs:     {value: {}, enumerable:true, writable:true}
             }));
-            
-            Object.defineProperty(this.fs, DB_FS.cat_Loaded, {value: {}, writable:true});
-            Object.defineProperty(this.fs, DB_FS.cat_Open, {value: {}, writable:true});
-            Object.defineProperty(this.fs, DB_FS.cat_Closed, {value: {}, writable:true});
-            Object.defineProperty(this.fs, DB_FS.cat_Temp, {value: {}, writable:true});
-            Object.defineProperty(this.fs, DB_FS.cat_Bad, {value: {}, writable:true});
+            Object.defineProperty(this.fs, DB_FS.cat_Open, {value: {}, writable:true, enumerable:true});
+            Object.defineProperty(this.fs, DB_FS.cat_Closed, {value: {}, writable:true, enumerable:true});
+            Object.defineProperty(this.fs, DB_FS.cat_Temp, {value: {}, writable:true, enumerable:true});
+            Object.defineProperty(this.fs, DB_FS.cat_Bad, {value: {}, writable:true, enumerable:true});
         }
-        DBStats.prototype.getFSCat = function (cat)
+    }
+    DBStats.prototype.getFSCat = function (cat)
+    {
+        return this.fs[cat];
+    };
+    DBStats.prototype.getFSCatDT = function (cat, dt)
+    {
+        if (!this.fs[cat][dt])
         {
-            return this.fs[cat];
-        };
-        DBStats.prototype.getFSCatDT = function (dt, cat)
-        {
-            if (!this.fs[cat][dt])
+            if (!DB_FS.valid_dt[dt])
             {
-                if (!DB_FS.valid_dt[dt])
-                {
-                    throw new BPError ('@DBStats.prototype.get', 'InternalError', 'BadArgument');
-                }
-                else
-                {
-                    this.fs[cat][dt] = {};
-                }
+                throw new BPError ('@DBStats.prototype.get', 'InternalError', 'BadArgument');
             }
+            else
+            {
+                this.fs[cat][dt] = {};
+            }
+        }
 
-            return this.fs[cat][dt];
-        };
-        DBStats.prototype.num = function (cat)
-        {
-            var dtl = Object.keys(this.fs[cat]),
-                i, num;
-            
-            for (num=0,i=dtl.length-1; i>=0; i--)
-            {
-                num += Object.keys(this.fs[cat][dtl[i]]).length;
-            }
-            
-            return num;
-        };
-        DBStats.prototype.put = function (cat, dt, name, dirent)
-        {
-            this.getFSCatDT(dt, cat)[name]=dirent || {};
-        };
-        DBStats.prototype.del = function (cat, dt, name)
-        {
-            delete this.getFSCatDT(dt, cat)[name];
-        };
-        DBStats.prototype.putLoaded = function (dt, name, dirent)
-        {
-            this.put(DB_FS.cat_Loaded, dt, name, dirent);
-        };
-        DBStats.prototype.putBad = function (dt, name, dirent)
-        {
-            this.put(DB_FS.cat_Bad, dt, name, dirent);
-        };
-        DBStats.prototype.numLoaded = function ()
-        {
-            return this.num(DB_FS.cat_Loaded);
-        };
-        DBStats.prototype.numBad = function ()
-        {
-            return this.num(DB_FS.cat_Bad);
-        };
-        DBStats.prototype.diffCat = function (cat, other)
-        {
-            var dtl = Object.keys(this.getFSCat(cat)),
-                diff = newDBStats(this.dbPath),
-                fname, j;
-            dtl.forEach(function (dt, i, dtl)
-            {
-                var ents1 = this.getFSCatDT(dt, cat),
-                    fnames1 = Object.keys(ents1),
-                    ents2 = other.getFSCatDT(dt, cat);
-                    
-                //fnames1.forEach(function(fname, i, fnames)
-                for (j=fnames1.length-1; j>=0; j--)
-                {
-                    fname = fnames1[j];
-                    if (!ents2.hasOwnProperty(fname))
-                    {
-                        diff.put(cat, dt, fname, ents1[fname]);
-                    }
-                }
-            }, this);
-            
-            return diff;
-        };
-        DBStats.prototype.diff = function (cats, other)
-        {
-            MOD_COMMON.iterArray(cats || DB_FS.cat_All, null, this.diffCat, other);
-        };
-        DBStats.prototype.walkCat = function (cat, callback, db2Path)
-        {
-            var fsCat = this.getFSCat(cat),
-                dtl = Object.keys(fsCat), i, j;
-            for (i=0; i<dtl.length; i++)
-            {
-                var dt = dtl[i],
-                    dtDirPath = DB_FS.makeDTDirPath(dt, this.dbPath),
-                    dtDirPath2= db2Path ? DB_FS.makeDTDirPath(dt, db2Path) : undefined,
-                    fnames = Object.keys(fsCat[dt]),
-                    len = fnames.length,
-                    fname;
-                    
-                for (j=0; j<len; j++)
-                {
-                    fname = fnames[j];
-                    callback(cat, dt, fname, fsCat[dt][fname], dtDirPath, dtDirPath2);
-                }
-            }
-        };
-        DBStats.prototype.walkCats = function (cats, callback, db2)
-        {
-            var i;
-            cats = cats || DB_FS.cat_All;
-            for (i=cats.length-1; i>=0; i--) {
-                this.walkCat(cats[i], callback, db2);
-            }
-        };
+        return this.fs[cat][dt];
+    };
+    DBStats.prototype.getDTFileEnt = function(dt)
+    {
+        return this.getFSCatDT(DB_FS.cat_Open, dt)[DB_FS.getDTFileName(dt)];
+    };
+    DBStats.prototype.getFileEnt = function(cat, dt, fname)
+    {
+        return this.getFSCatDT(cat, dt)[fname];  
+    };
+    DBStats.prototype.num = function (cat)
+    {
+        var dtl = Object.keys(this.fs[cat]),
+            i, num;
         
-        return new DBStats(dbPath);
+        for (num=0,i=dtl.length-1; i>=0; i--)
+        {
+            num += Object.keys(this.fs[cat][dtl[i]]).length;
+        }
+        
+        return num;
+    };
+    DBStats.prototype.calcDupes = function ()
+    {
+        var dupes = 0;
+        var dts = this.getFSCat(DB_FS.cat_Open);
+        MOD_COMMON.iterKeys(dts, function (dt, ents, dbStats)
+        {
+            dupes += Object.keys(ents).length;
+            if (ents[DB_FS.getDTFileName(dt)])
+            {
+                dupes--;
+            }
+        }, this, this);
+
+        return dupes;
+    };
+    DBStats.prototype.putCat = function (cat, dt, name, dirent)
+    {
+        var ent = dirent || {};
+        ent.cat = cat;
+        ent.dt = dt;
+        this.getFSCatDT(cat, dt)[name]=ent;
+    };
+    DBStats.prototype.del = function (cat, dt, name)
+    {
+        delete this.getFSCatDT(cat, dt)[name];
+    };
+    DBStats.prototype.delDTFileEnt = function (dt)
+    {
+        this.del(DB_FS.cat_Open, dt, DB_FS.getDTFileName(dt));
+    };
+    DBStats.prototype.delDTFileEnts = function ()
+    {
+        var dts = this.getFSCat(DB_FS.cat_Open);
+        MOD_COMMON.iterKeys(dts, function (dt, ents, dbStats)
+        {
+            dbStats.delDTFileEnt(dt);
+        }, this, this);
+    };
+    DBStats.prototype.putBad = function (dt, name, dirent)
+    {
+        this.putCat(DB_FS.cat_Bad, dt, name, dirent);
+    };
+    DBStats.prototype.numLoaded = function ()
+    {
+        var num = 0,
+            dbStats = this;
+        MOD_COMMON.iterArray(DB_FS.cats_Load, function (cat)
+        {
+            num += dbStats.num(cat);
+        });
+        return num;
+    };
+    DBStats.prototype.numBad = function ()
+    {
+        return this.num(DB_FS.cat_Bad);
+    };
+    // DBStats.prototype.diffCatOld = function (cat, args)
+    // {
+        // var dtl = Object.keys(this.getFSCat(cat)),
+            // diff = args.diff,
+            // other = args.other,
+            // fname, j;
+        // dtl.forEach(function (dt, i, dtl)
+        // {
+            // var ents1 = this.getFSCatDT(cat, dt),
+                // fnames1 = Object.keys(ents1),
+                // ents2 = other.getFSCatDT(cat, dt);
+//                     
+            // //fnames1.forEach(function(fname, i, fnames)
+            // for (j=fnames1.length-1; j>=0; j--)
+            // {
+                // fname = fnames1[j];
+                // if (!ents2.hasOwnProperty(fname))
+                // {
+                    // diff.putCat(cat, dt, fname, ents1[fname]);
+                // }
+            // }
+        // }, this);
+//             
+        // return diff;
+    // };
+    DBStats.prototype.diffCat = function (cat, args)
+    {
+        this.walkCat(cat, function(obj, cat, dt, fname, dirEnt, dtDirPath, args)
+        {
+            if (!args.other.getFileEnt(cat, dt, fname))
+            {
+                args.diff.putCat(cat, dt, fname, dirEnt);
+            }
+            
+        }, args, this);
+        
+        return args.diff;
+    };
+    DBStats.prototype.diff = function (cats, other)
+    {
+        var diff = newDBStats(this.dbPath);
+        MOD_COMMON.iterArray(cats || DB_FS.cats_Load, this.diffCat, {diff:diff, other:other}, this);
+        return diff;
+    };
+    DBStats.prototype.merge = function (rhs, cats)
+    {
+        var lhs = this;
+        rhs.walkCats(cats || DB_FS.cats_Load, function(rhs, cat, dt, fname, dirEnt, dtDirPath)
+        {
+            lhs.putCat(cat, dt, fname, dirEnt);
+        });
+    };
+    /**
+     * Walks the specified category of files in dbStats and calls the callback with
+     * for each file encountered. Provides arguments relating to the file, followed
+     * by one additional context argument passed in to walkCat. The file-related arguments
+     * are (cat, dt, fname, dirEnt, dtDirPath); 
+     */
+    DBStats.prototype.walkCat = function (cat, callback, ctx, thisArg)
+    {
+        var fsCat = this.getFSCat(cat),
+            dtl = Object.keys(fsCat),
+            i, j,
+            thisVal = thisArg || this;
+        for (i=0; i<dtl.length; i++)
+        {
+            var dt = dtl[i],
+                dtDirPath = DB_FS.makeDTDirPath(dt, this.dbPath),
+                fnames = Object.keys(fsCat[dt]),
+                len = fnames.length,
+                fname;
+                
+            for (j=0; j<len; j++)
+            {
+                fname = fnames[j];
+                callback.apply(thisVal, [this, cat, dt, fname, fsCat[dt][fname], dtDirPath, ctx]);
+            }
+        }
+    };
+    DBStats.prototype.walkCats = function (cats, callback, ctx)
+    {
+        var i;
+        cats = cats || DB_FS.cats_Load;
+        for (i=cats.length-1; i>=0; i--) {
+            this.walkCat(cats[i], callback, ctx);
+        }
+    };
+    
+    /**
+     * Normally invoked with only one argument - dbPath. Constructs a new DBStats object.
+     * dbSObj should be an Object object derived after converting DBStats to JSON and back. 
+     */
+    function newDBStats (dbPath, dbSObj)
+    {
+        return new DBStats(dbPath, dbSObj);
     }
 
     var UC_TRAITS = Object.freeze(
@@ -674,14 +792,14 @@ var BP_MOD_FILESTORE = (function()
     /**
      * @param filePath
      * @param dt
-     * @parm  {Object} dbStats  Output pram. dbStats.recs is updated appropriately.
+     * @parm  {Object} dbStats  Output pram. dbStats is updated based on loading activity.
      * @param {Object} dirEnt   Directory entry object (for dbStats) to be updated. May or may not
      *                  eventually get inserted into dbStats.
      * @param {Object} buf      A RecsBuf object is present specifies that the loaded records should be
      *                  collected for saving in addition to being loaded in memory. This is used
      *                  for importing records from an external DB.
      */
-    function loadFile(filePath, fname, dirEnt, dt, io, buf)
+    function loadFile(dbPath, cat, dt, dtDirPath, fname, dirEnt, dbStats, buf)
     {
         var i, notes,
             //loaded=0,
@@ -693,11 +811,12 @@ var BP_MOD_FILESTORE = (function()
             // and append to the string (perhaps using typed-arrays may circumvent one of
             // the two copies).
             o={prefix: '[{"header":true}', suffix: "]"},
-            recs;
+            recs,
+            filePath = dtDirPath+fname;
             
         if (!BP_PLUGIN.readFile(filePath, o))
         {
-            // TODO: Complete this
+            return false;
         }
         
         try
@@ -705,12 +824,11 @@ var BP_MOD_FILESTORE = (function()
             recs = JSON.parse(o.dat);
         }
         catch (e)
-        {
-            // TODO: Complete this
-            BP_MOD_ERROR.logwarn("Moving bad file " + oldPath + " to " + newPath);
-            o={};
-            BP_PLUGIN.rename(oldPath, newPath, o); //  no clobber by default
-            return;
+        { 
+            BP_MOD_ERROR.logwarn("loadFile@filestore: Corrupted file: " + filePath);
+            DB_FS.quarantineFile(fname, filePath);
+            dbStats.putBad(dt, fname, dirEnt);
+            return false;
         }
         
         if (recs && (typeof recs === 'object') && recs.constructor === Array)
@@ -728,7 +846,8 @@ var BP_MOD_FILESTORE = (function()
                 {
                     notes = MEM_STORE.insertRec(rec, dt);
                     // In case of file-import, the imported records need to be persisted
-                    // to the local DB.
+                    // to the local DB. Such records are merely saved to buf here - not
+                    // actually written to file (that's done later).
                     if (buf && UC_TRAITS.importFile.toPersist(notes))
                     {
                         buf.pushRec(rec);
@@ -743,13 +862,12 @@ var BP_MOD_FILESTORE = (function()
             },0);
             
             MOD_ERROR.log("Loaded file " + filePath);
-            io.dbStats.putLoaded(dt, fname, dirEnt);
+            dbStats.putCat(cat, dt, fname, dirEnt);
+            return true;
         }
         else 
         {
-            // TODO: Quarantine file
-            MOD_ERROR.log("File " + filePath + " is corrupted");
-            io.dbStats.putBad(dt, fname, dirEnt);
+            MOD_ERROR.log("loadFile@filestore: Empty file?: " + filePath);
         }
     }
     
@@ -759,31 +877,30 @@ var BP_MOD_FILESTORE = (function()
      *                  equal to the dbPath if it was the root of the DB. If DB path was a
      *                  path inside an existing DB, then the system backtracks up to the root
      *                  of the DB and loads that. That's the path which is returned.
-     * @param {Object} io io.dbStats is created if not present. io.dbStats.fs and io.dbStats.recs 
+     * @param {Object}  dbStats is created if not present. io.dbStats.fs and io.dbStats.recs 
      *                  are populated per the loaded DB. If an existing dbStats object was supplied
      *                  then the impact of calling loadDB is additive - i.e. the existing values
      *                  in the collection will stay and existing counts will simply be incremented.
      */
-    function loadDB(dbPath, io)
+    function loadDB(dbPath, dbStats, exclude)
     {
         /**
          * Helper function to loadDB. Loads files of given DB.
          * @returns Nothing
-         * @param   {Object}io  io.dbStats is created if not present. io.dbStats.fs and io.dbStats.recs 
+         * @param   {Object}io  dbStats is created if not present. dbStats 
          *                  are populated per the loaded DB. If an existing dbStats object was supplied
          *                  then the impact of calling loadDB is additive - i.e. the existing values
          *                  in the collection will stay and existing counts will simply be incremented.
+         * @param   {Object} excludes Optional. A DBStats object containing files to exclude from the
+         *                  load operation. Used by the DB-cleanup operation.
          */
-        function loadDBFiles(dbPath, io)
+        function loadDBFiles(dbPath, dbStats, exclude)
         {
-            var dbStats = io.dbStats || newDBStats(dbPath);
-            if (!io.dbStats) {io.dbStats = dbStats;}
-            
             DB_FS.dtl.forEach(function (dt, jj, dtl)
             {
                 var o={}, i, file_names, f,
                     dtDirPath = DB_FS.makeDTDirPath(dt, dbPath),
-                    j, name;
+                    j, name, cat;
                 if (BP_PLUGIN.ls(dtDirPath, o) && o.lsd && o.lsd.f)
                 {
                     f = o.lsd.f;
@@ -800,11 +917,11 @@ var BP_MOD_FILESTORE = (function()
                     for (j=0; j < file_names.length; j++)
                     {
                         name = file_names[j];
-                        if (DB_FS.toLoad(f[name]))
+                        if ((cat=DB_FS.toLoad(f[name])) && !(exclude && exclude.getFileEnt(cat, dt, name)))
                         {
                             try 
                             {
-                                loadFile(dtDirPath + name, name, f[name], dt, io);
+                                loadFile(dbPath, cat, dt, dtDirPath, name, f[name], dbStats);
                             }
                             catch (e) 
                             {
@@ -825,26 +942,16 @@ var BP_MOD_FILESTORE = (function()
             return dbStats;
         }
 
-        if (!io) {io = {};}
+        var memStats;
+        dbStats = dbStats || newDBStats(dbPath);
         // First determine if this DB exists and is good.
         dbPath = DB_FS.verifyDBForLoad(dbPath);
 
-        if (!io.merge)
-        {
-            console.log("loadingDB " + dbPath);
-            MEM_STORE.clear(); // unload the previous DB.
-        }
-        else
-        {
-            if (dbPath === DB_FS.getDBPath())
-            {
-                throw new BPError("This wallet is already loaded. Specify a different one");
-            }
-        }
+        console.log("loadingDB " + dbPath);
+        MEM_STORE.clear(); // unload the previous DB.
         
-        loadDBFiles(dbPath, io);
-        var dbStats = io.dbStats,
-            memStats = MEM_STORE.getStats();
+        loadDBFiles(dbPath, dbStats, exclude);
+        memStats = MEM_STORE.getStats();
         DB_FS.setDBPath(dbPath, dbStats);
                 
         MOD_ERROR.log("Loaded DB " + dbPath + ". files loaded: "+dbStats.numLoaded()+
@@ -919,20 +1026,7 @@ var BP_MOD_FILESTORE = (function()
         return result;
     }
     
-    function compactDB(io)    {        function rmFilesCat (cat, dbStats)
-        {
-            function rm(cat, dt, fname, dirEnt, dtDirPath1 /*,dtDirPath2*/)
-            {
-                var o = {},
-                    fpath = dtDirPath1+fname;
-                if (fname !== DB_FS.getDTFileName(dt))
-                { 
-                    // Skp the main DT-file
-                    BP_PLUGIN.rm(fpath, o);
-                }       
-            }
-            dbStats.walkCat(cat, rm, null);
-        }
+    function compactDB()    {
         /**
          * Renames open files (<dt>.3ao) to temporary files (extension <rand>.<dt>.3at). Used
          * by CompactDB to enable it to close the open files. 
@@ -945,39 +1039,50 @@ var BP_MOD_FILESTORE = (function()
             });
         }
 
-        function writeArec (arec, buf, dt, dbStats)
+        function writeArec (arec, ctx)
         {
-            var fname;
+            var fname,
+                buf = ctx.buf,
+                dt = ctx.dt, 
+                dbStats = ctx.dbStats;
             buf.pushRec(arec);
             if (buf.length>=DB_FS.fileCap)
             {
                 fname = DB_FS.makeFileName(DB_FS.cat_Closed, dt);
                 buf.flush(DB_FS.makeDTDirPath(dt, dbStats.dbPath) + fname);
-                dbStats.putClosed(fname);
+                dbStats.putCat(DB_FS.cat_Closed, dt, fname);
             }
         }
         
-        var io2 = {},
-            dbPath = DB_FS.getDBPath(),
+        var dbPath = DB_FS.getDBPath(),
             dt, 
             dnIt, dn, recs, rIt, acoll, aIt, arec,
             buf, o,
             i, dtPath,
             temp,
-            dbStats2;        // 1. Move files to <rand-number>.<dt>.3at with clobbering disabled.        // 2. Reload DB. (loads all loadable file extensions in the DB).        // 3. Append MEM_STORE to <rand>.<dt>.3ac files until the last batch which will go to the
-        //    usual DT file <dt>.3ao. Normally <dt>.3ao files shouldn't exist        //    because we renamed them in step 1. In case DropBox or another browser        //    instance had created the files between then and now, we will end-up        //    appending the compacted records to the file - and that's exactly what we want.        // 4. Remove files loaded in step-2.        
+            dbStatsCompacted,
+            dbStats = newDBStats(DB_FS.getDBPath());        
         if (!dbPath) {
             throw new BPError ("No DB loaded");
-        }        tempDTFiles(newDBStats(dbPath));        dbPath = loadDB(dbPath, io);
+        }
+        
+        // Rename open files to temp-closed status. This will ensure that we won't need
+        // to delete open files in the last step (because we renamed them to temp). This
+        // is necessary in order to allow for the possibility that some new changes may
+        // creep into the DB between now and the last step, either form another concurrently
+        // editing browser (either on the same device or on another device accessing a DB
+        // stored on NFS) or through sky-drives such as DropBox. New records will be
+        // written only to .3ao files.        tempDTFiles(newDBStats(dbPath));
+        // Clear old records and load DB to memory - including the temp files created above.        dbPath = loadDB(dbPath, dbStats);
         // Iterate the MEM_STORE and write recs to the appropriate files.
-        dbStats2 = newDBStats(dbPath);
+        dbStatsCompacted = newDBStats(dbPath);
         for (i=0; i<DB_FS.dtl.length; i++)
         {
             dt = DB_FS.dtl[i];
             dnIt = MEM_STORE.newDNodeIterator(dt);
             buf = new RecsBuf();
             
-            dnIt.walk(BP_MOD_COMMON.curry(null, writeArec, buf, dt, dbStats2));
+            dnIt.walk(writeArec, {buf:buf, dt:dt, dbStats:dbStatsCompacted});
             
             if (buf.length)
             {
@@ -985,84 +1090,147 @@ var BP_MOD_FILESTORE = (function()
             }
         }
         
-        //rmFiles(io.dbStats.getFSCat('loaded'), dbPath);
-        rmFilesCat(DB_FS.cat_Loaded, io.dbStats);
+        // Remove files that we had earlier loaded. Their records have all been incorporated
+        // into the newly created files. Skip the main DT files if encountered because
+        // those would've been surely created after step 1.
+        DB_FS.rmFiles(dbStats, true);
+                // We have to reload again just to populate accurate mem-stats :(
+        loadDB(dbPath);
         return dbPath;    }
 
-    function merge(db2, out)
+    /**
+     * Import records from files supplied in dbStats of categories specified in cats
+     * If (!cats) then load all categories.
+     */
+    function importFiles(cats, dbSSrc, dbSWrote, dbSRead)
     {
-        /**
-         * Import records from files supplied in dbStats of categories specified in cats
-         * If (!cats) then load all categories.
-         */
-        function importFiles(dbStatsOth, io, cats)
+        var bufs = {};
+
+        function importFile (dbSSrc, cat, dt, fname, dirEnt, dtDirPath, ctx)
         {
-            var bufs = {},
-                newFiles = newDBStats(io.dbStats.dbPath);
-                        
-            //function importFile (fpath, dt, cat, fname, dirEnt, dtDirPath2)
-            function importFile (cat, dt, fname, dirEnt, dtDirPath1, dtDirPath2)
-            {
-                var fpath = dtDirPath1+fname,
-                    dtOpenEnt = io.dbStats.getDTFileEnt(dt),
-                    numOpenRecs = dtOpenEnt ? dtOpenEnt.numRecs: 0; // dt-file (.3ao) may not exist
-                    
-                if (!bufs[dt]) {bufs[dt] = new RecsBuf();}
+            var fpath = dtDirPath+fname,
+                dbSRead = ctx.dbSRead,
+                dbSWrote = ctx.dbSWrote,
+                dtOpenEnt = dbSWrote.getDTFileEnt(dt),
+                numOpenRecs = dtOpenEnt ? dtOpenEnt.numRecs: 0; // dt-file (.3ao) may not exist
                 
-                loadFile(fpath, fname, dirEnt, dt, io, bufs[dt]);
-                while (numOpenRecs + bufs[dt].length >= DB_FS.fileCap)
-                {
-                    // flush records to DT-file. Then close the file.
-                    bufs[dt].flushDT(dt, io.dbStats.dbPath, DB_FS.fileCap-numOpenRecs);
-                    // close the file and fix dbStats appropriately
-                    DB_FS.renameDTFile(DB_FS.cat_Closed, dt, io.dbStats);
-                    // Fix impacted vars.
-                    numOpenRecs = 0; dtOpenEnt = undefined;
-                }
-            }
+            if (!bufs[dt]) {bufs[dt] = new RecsBuf();}
             
-            dbStatsOth.walkCats(cats, importFile, null);
-            BP_MOD_COMMON.iterKeys(bufs, null, function(dt, buf)
+            loadFile(dbSSrc.dbPath, cat, dt, dtDirPath, fname, dirEnt, dbSRead, bufs[dt]);
+            while (numOpenRecs + bufs[dt].length >= DB_FS.fileCap)
             {
-                if (buf.length)
-                {
-                    buf.flushDT(dt, io.dbStats.dbPath);
-                    io.dbStats.put(DB_FS.cat_Open, dt, DB_FS.getDTFileName(dt));
-                }
-            });
+                // flush records to DT-file. Then close the file.
+                bufs[dt].flushDT(dt, dbSWrote.dbPath, DB_FS.fileCap-numOpenRecs);
+                // close the file and fix dbStats appropriately
+                DB_FS.renameDTFile(DB_FS.cat_Closed, dt, dbSWrote);
+                // Fix impacted vars.
+                numOpenRecs = 0; dtOpenEnt = undefined;
+            }
         }
         
+        dbSSrc.walkCats(cats, importFile, {dbSSrc:dbSSrc, dbSWrote:dbSWrote, dbSRead:dbSRead});
+        BP_MOD_COMMON.iterKeys(bufs, function(dt, buf)
+        {
+            if (buf.length)
+            {
+                buf.flushDT(dt, dbSWrote.dbPath);
+                dbSWrote.putCat(DB_FS.cat_Open, dt, DB_FS.getDTFileName(dt));
+            }
+        });
+    }
+
+    /**
+     * Consolidates multiple open files per DT (if more than one) into a single one.
+     * Multiple open files will be created by Sky-Drives like DropBox. This process
+     * will import those records and delete those files.
+     * Assumes that the DB is already loaded - won't reload it.
+     */
+    function cleanLoadDB(dbPath)
+    {
+        dbPath = dbPath || DB_FS.getDBPath();
+        var dbSrc   = DB_FS.lsFiles(dbPath),
+            dbSRead = newDBStats(dbPath), // Reads are from same DB-Path
+            dbSWrote = newDBStats(dbPath),
+            dbSFluff = newDBStats(dbPath),// Writes are into same DB Path
+            retStats = newDBStats(dbPath);
+        
+        // Prepare a collection of fluff files.
+        dbSrc.delDTFileEnts(); // DT files are not fluff, so remove them.
+        dbSFluff.merge(dbSrc, [DB_FS.cat_Open, DB_FS.cat_Temp]);
+        
+        // Now load db excluding the fluff. Collect load-stats into retStats for
+        // final return.
+        loadDB(dbPath, retStats, dbSFluff);
+        
+        // Import the fluff now
+        importFiles(DB_FS.cats_Load, dbSFluff, dbSWrote, dbSRead);
+        // Remove the fluff files that we successfully imported.
+        // If all went well dbSRead == dbSFluff, but only if all went well.
+        DB_FS.rmFiles(dbSRead);
+ 
+        // Finally, consolidate the loaded files with those created as a result of
+        // importation. These are the DB stats that would be generated
+        // if we were to run loadDB again at this point.
+        retStats.merge(dbSWrote, DB_FS.cats_Load);
+        // Set the global stats/path.
+        DB_FS.setDBPath(dbPath, retStats);
+        // Done.
+        return retStats;
+    }
+    
+    function merge(db2, oneWay)
+    {
         function mergeDB (db1, db2)
         {
-            var dbStats1 = DB_FS.lsFiles(db1),
-                dbStats2 = DB_FS.lsFiles(db2),
-                //dbStats1_diff = dbStats1.diffCat(DB_FS.cat_Closed, dbStats2),
-                dbStats2_diff = dbStats2.diff([DB_FS.cat_Closed, DB_FS.cat_Temp], dbStats1),
-                io = {}, newFiles = {};
+            var dbStats1 = newDBStats(db1),
+                dbStats2,
+                dbStats2_diff,
+                dbStats1_diff,
+                dbStatsMods = newDBStats(db1); // to track newly created files
+                                              // that will need to be copied over to db2
                 
-            //function copy(fpath, dt, cat, fname, dirEnt, dtDirPath2)
-            function copy(cat, dt, fname, dirEnt, dtDirPath1, dtDirPath2)
+            function copy(dbStatsSrc, cat, dt, fname, dirEnt, dtDirPath, dbStatsDst)
             {
-                var frmPath = dtDirPath1+fname,
-                    toPath = dtDirPath2 + fname,
+                var frmPath = dtDirPath+fname,
+                    toPath = DB_FS.makeDTDirPath(dt, dbStatsDst.dbPath) + fname,
                     o = {};
                             
-                if (!BP_PLUGIN.copy(frmPath, toPath, o, false)) {
+                if (!BP_PLUGIN.copy(frmPath, toPath, o, true)) // do Clobber
+                {
                     throw new BPError (o.err);
                 }
             }
-    
-            // Copy closed files from DB2 to DB1.
-            //dbStats2_diff.walkCat(DB_FS.cat_Closed, copy, db1);
             
-            loadDB(db1, io);
-            dbStats1 = io.dbStats;
-            // Import the open files first. Save names of new/modified files
-            importFiles(dbStats2, newFiles, [DB_FS.cat_Open]);
-            // Import closed files next. Save names of new/modified files
-            importFiles(dbStats2_diff, newFiles);
-            // Now copy newly/modified db1 files to db2
-            newFiles.dbStats.walkCats(null, copy, db2);
+            //loadDB(db1, dbStats1);
+            dbStats1 = cleanLoadDB(db1);
+            dbStats2 = DB_FS.lsFiles(db2);
+            dbStats2_diff = dbStats2.diff([DB_FS.cat_Closed, DB_FS.cat_Temp], dbStats1);
+            var dbStatsImported = newDBStats(db2);
+            // Import the open files first. While doing that, save names of new/modified files
+            importFiles([DB_FS.cat_Open], dbStats2, dbStatsMods, dbStatsImported);
+            // Import closed/temp files next. While doing that, save names of new/modified files
+            importFiles(DB_FS.cats_Load, dbStats2_diff, dbStatsMods, dbStatsImported);
+
+            if (!oneWay)
+            {   // Merge-Out. Copy the missing files to db2
+                
+                // List the files that are missing in db2.
+                dbStats1 = DB_FS.lsFiles(db1);
+                dbStats1_diff = dbStats1.diff(DB_FS.cats_Load, dbStats2);
+                // Add files that were newly created or modified
+                dbStats1_diff.merge(dbStatsMods);
+                // Finally, ensure that all DT-files are included. We copy those no matter
+                // what.
+                dbStats1_diff.merge(dbStats1, [DB_FS.cat_Open]);
+                dbStats1_diff.walkCats(DB_FS.cats_Load, copy, newDBStats(db2));
+                
+                // Delete the files in db2 that were imported from there. Their recs. were
+                // incorporated into dbStatsMods. However, since DT-filenames are the same,
+                // we don't want to delete files that were just copied to db2. Hence remove
+                // those names from the mods collection.
+                dbStatsImported = dbStatsImported.diff(DB_FS.cats_Load, dbStats1_diff);
+                DB_FS.rmFiles(dbStatsImported);
+            }
         }
     
         var db1 = DB_FS.getDBPath();
@@ -1079,13 +1247,14 @@ var BP_MOD_FILESTORE = (function()
                 mergeDB(db1, db2);
         return true;
     }
-    // function mergeInDB(db1, db2)    // {        // DB_FS.mvDBFiles(db1, 'merging');        // loadDB(db1);        // loadDB(db2, {merge:true});        // MEM_STORE.append(db1);        // DB_FS.rmDBFiles('compacting');    // }//         // function mergeOutDB(db1, db2)    // {        // MEM_STORE.blockInserts(); // Since we'll be loading the db2, we don't want any                                   // // inserts to it while we're merging because from user                                  // // POV those inserts were meant for db1        // mergeInDB(db2, db1);        // loadDB(db1);        // MEM_STORE.unblockInserts();    // }//     
-    
-    function writeCSV(arec, buf, fpath, traits)
+   
+    function writeCSV(arec, ctx)
     {
-        buf.push(traits.toCSV(arec));
+        var buf=ctx.buf;
+        
+        buf.push(ctx.traits.toCSV(arec));
         if (buf.length>=1000) {
-            buf.flush(fpath);
+            buf.flush(ctx.fpath);
         }
     }
     
@@ -1103,7 +1272,7 @@ var BP_MOD_FILESTORE = (function()
         
         buf = new RecsBuf("\n");
         buf.push(traits.csvHeader());
-        MEM_STORE.newDNodeIterator(dt).walkCurr(BP_MOD_COMMON.curry(null, writeCSV, buf, fpath, traits));
+        MEM_STORE.newDNodeIterator(dt).walkCurr(writeCSV, {buf:buf, fpath:fpath, traits:traits});
         buf.flush(fpath);
     }
     
@@ -1413,9 +1582,11 @@ var BP_MOD_FILESTORE = (function()
         mergeInDB:    {value: merge},
         getDBPath: {value: DB_FS.getDBPath},
         getDBStats:{value: DB_FS.getDBStats},
+        newDBStats:{value: newDBStats},
         cullDBName: {value: DB_FS.cullDBName},
         getDBName: {value: DB_FS.getDBName},
-        insertRec: {value: insertRec}
+        insertRec: {value: insertRec},
+        cleanLoadDB:   {value: cleanLoadDB}
     });
     Object.freeze(iface);
 

@@ -7,7 +7,7 @@
 
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR,
-  ls, BP_PLUGIN */
+  ls, BP_PLUGIN, BP_MOD_FILESTORE */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
  
@@ -21,6 +21,7 @@ var BP_MOD_MANAGE = (function ()
     var DIR_SEP = IMPORT(m.DIR_SEP);
     /** @import-module-begin Common */
     m = BP_MOD_FILESTORE;
+    var FILESTORE = IMPORT(m);
     var cullDBName = IMPORT(m.cullDBName);
     /** @import-module-end **/ m = null;
 
@@ -47,7 +48,7 @@ var BP_MOD_MANAGE = (function ()
         }
     }
     
-    function updateStats (resp)
+    function updateDash (resp)
     {
         //$('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
         var fluff, gbg, loaded;
@@ -57,15 +58,40 @@ var BP_MOD_MANAGE = (function ()
             if ($('#dbSaveLocation:checked').length) {
                 localStorage['db.path'] = resp.dbPath;
             }
-            $('#dbPath').text(cullDBName(resp.dbPath)||"").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+            $('[data-dbPath]').text(cullDBName(resp.dbPath)||"").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
 
+            if (resp.memStats)
+            {
+                fluff = resp.memStats.bad + resp.memStats.fluff;
+                loaded = resp.memStats.loaded;
+            
+                gbg = loaded? Math.round((fluff)*100/loaded) : undefined;
+                $('#stats').val( (gbg!==undefined) ? "bloat: "+gbg+"%" : "");
+                if (gbg<=0) {
+                    $('#dbCompact').removeClass('btn-warning').removeClass('btn-primary').prop('disabled', true);
+                }
+                else if (gbg <50) {
+                    $('#dbCompact').removeClass('btn-primary').addClass('btn-warning').prop('disabled', false);
+                }
+                else if (gbg>0){
+                    $('#dbCompact').removeClass('btn-warning').addClass('btn-primary').prop('disabled', false);
+                }
+            }
+            
             if (resp.dbStats)
             {
-                fluff = resp.dbStats.recs.bad + resp.dbStats.recs.fluff;
-                loaded = resp.dbStats.recs.loaded;
+                resp.dbStats = FILESTORE.newDBStats(null, resp.dbStats);
+                gbg = resp.dbStats.calcDupes();
+                
+                if (gbg) {
+                    $('#qclean-stats').val("dirt index: "+gbg);
+                    $('#dbClean').addClass('btn-primary').prop('disabled', false);
+                }
+                else {
+                    $('#qclean-stats').val("sparkling clean!");
+                    $('#dbClean').removeClass('btn-primary').prop('disabled', true);
+                }
             }
-            gbg = loaded? Math.round(fluff*100/(loaded+fluff)) : undefined;
-            $('#stats').val( (gbg!==undefined) ? gbg+"% garbage" : "");
         }
         else 
         {
@@ -91,7 +117,6 @@ var BP_MOD_MANAGE = (function ()
             $(this).tab('show');
         });
         $("#nav-settings").tab('show');
-        $('#settings-pane *').tooltip();
         //$("#csvPathSubmit").click(function (e)
         //addEventListeners("#csvPathSubmit", "click", function(e)
         addEventListeners("[data-path-submit]", "click", function(e)
@@ -168,13 +193,30 @@ var BP_MOD_MANAGE = (function ()
             {
                 if (resp.result === true) 
                 {
-                    updateStats(resp);
+                    updateDash(resp);
                     BP_MOD_ERROR.success('UWallet has been compacted: ' + resp.dbPath);
                 }
                 else {
                     callbackHandleError(resp);
                 }                
                 $('#dbCompact').button('reset');
+            });
+        });
+        
+        addEventListeners('#dbClean', 'click', function (e)
+        {
+            $('#dbClean').button('loading');
+            BP_MOD_CONNECT.cleanDB(function (resp)
+            {
+                if (resp.result === true) 
+                {
+                    updateDash(resp);
+                    BP_MOD_ERROR.success('UWallet has been compacted: ' + resp.dbPath);
+                }
+                else {
+                    callbackHandleError(resp);
+                }                
+                $('#dbClean').button('reset');
             });
         });
         
@@ -210,8 +252,7 @@ var BP_MOD_MANAGE = (function ()
                 BP_MOD_CONNECT.loadDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
-                        // if ($('#dbSaveLocation:checked').length) {                            // localStorage['db.path'] = resp.dbPath;                        // }
-                        updateStats(resp);
+                        updateDash(resp);
                         BP_MOD_ERROR.success('Opened password wallet at ' + resp.dbPath);
                     }
                     else {
@@ -241,7 +282,7 @@ var BP_MOD_MANAGE = (function ()
                 {
                     if (resp.result === true) {
                         // if ($('#dbSaveLocation:checked').length) {                            // localStorage['db.path'] = resp.dbPath;                        // }
-                        updateStats(resp);
+                        updateDash(resp);
                         //$('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
                         BP_MOD_ERROR.success('Password store created at ' + resp.dbPath);
                     }
@@ -282,7 +323,7 @@ var BP_MOD_MANAGE = (function ()
             {
                 if (resp.result === true) 
                 {
-                    updateStats(resp);
+                    updateDash(resp);
                     BP_MOD_ERROR.success('UWallet has been closed');
                 }
                 else 
@@ -294,8 +335,9 @@ var BP_MOD_MANAGE = (function ()
                
         BP_MOD_CONNECT.getDBPath(function(resp)
         {
-            updateStats(resp);
+            updateDash(resp);
         });
+        $('#content *').tooltip();
     }
    
     //Assemble the interface    

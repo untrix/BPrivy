@@ -75,12 +75,21 @@
         return res;
     }
     
+    function makeDashResp(result)
+    {
+        return {
+            result: result,
+            dbPath:FILE_STORE.getDBPath(),
+            dbStats:FILE_STORE.getDBStats(), 
+            memStats:MEM_STORE.getStats()            
+        };
+    }
+    
     function onRequest(rq, sender, funcSendResponse)
     {
-        var result, recs, dbPath,
+        var result, recs, dbPath, dbStats,
             cm = rq.cm,
-            bSaveRec,
-            io = {};
+            bSaveRec;
         delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
         console.info("Mothership Received object of type " + cm);
         
@@ -107,23 +116,28 @@
                     break;
                 case cm_loadDB:
                     BPError.push("LoadDB");
-                    dbPath = FILE_STORE.loadDB(rq.dbPath, io);
-                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath, dbStats:io.dbStats});
+                    dbPath = FILE_STORE.loadDB(rq.dbPath);
+                    funcSendResponse(makeDashResp(Boolean(dbPath))); 
                     break;
                 case MOD_CONNECT.cm_unloadDB:
                     BPError.push("UnloadDB");
                     dbPath = FILE_STORE.unloadDB(rq.dbPath);
-                    funcSendResponse({result:true});
+                    funcSendResponse(makeDashResp(true));
                     break;
                 case cm_mergeInDB:
                     BPError.push("MergeInDB");
-                    result = FILE_STORE.mergeInDB(rq.dbPath, io);
-                    funcSendResponse({result:result});
+                    result = FILE_STORE.mergeInDB(rq.dbPath);
+                    funcSendResponse(makeDashResp(result));
                     break;
                 case MOD_CONNECT.cm_compactDB:
                     BPError.push("CompactDB");
-                    dbPath = FILE_STORE.compactDB(io);
-                    funcSendResponse({result:Boolean(dbPath), dbPath:dbPath, dbStats:BP_MOD_FILESTORE.getDBStats()});
+                    dbPath = FILE_STORE.compactDB();
+                    funcSendResponse(makeDashResp(Boolean(dbPath)));
+                    break;
+                case MOD_CONNECT.cm_cleanDB:
+                    BPError.push("CleanDB");
+                    dbStats = FILE_STORE.cleanLoadDB();
+                    funcSendResponse(makeDashResp(true));
                     break;
                 case cm_createDB:
                     BPError.push("CreateDB");
@@ -133,12 +147,12 @@
                 case cm_getDBPath:
                     BPError.push("GetDBPath");
                     dbPath = BP_MOD_FILESTORE.getDBPath();
-                    funcSendResponse({result:true, dbPath:dbPath, dbStats:BP_MOD_FILESTORE.getDBStats()});
+                    funcSendResponse(makeDashResp(true));
                     break;
                 case MOD_CONNECT.cm_importCSV:
                     BPError.push("ImportCSV");
                     result = FILE_STORE.importCSV(rq.dbPath, rq.obfuscated);
-                    funcSendResponse({result: result});
+                    funcSendResponse(makeDashResp(result));                        
                     break;
                 case MOD_CONNECT.cm_exportCSV:
                     BPError.push("ExportCSV");

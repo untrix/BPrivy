@@ -160,32 +160,32 @@ var BP_MOD_COMMON = (function()
         }
     }
 
-    function curry (thisArg, func)
-    {
-        // convert arguments into an array. Omit 'thisArg' and 'func' arguments though.
-        var ctx = Array.prototype.slice.apply(arguments, [2]);
-        //ctx.shift(2);
-        return function ()
-        {
-            func.apply(thisArg, Array.prototype.slice.apply(arguments).concat(ctx));
-        };
-    }
+    // function curry (func, ctx)
+    // {
+        // // convert arguments into an array. Omit 'thisArg' and 'func' arguments though.
+        // //var ctx = Array.prototype.slice.apply(arguments, [2]);
+// 
+        // return function ()
+        // {
+            // func.apply(null, Array.prototype.slice.apply(arguments).concat(ctx));
+        // };
+    // }
     
     /**
      * Iterates over keys of an object (as in Object.keys)
      * Calls func with the array-item as first argument
-     * followed by all arguments passed to iterArray.
+     * followed by all arguments passed to iterKeys.
      * 'this' is mapped to thisArg
      */
-    function iterKeys (o, thisArg, func)
+    function iterKeys (o, func, ctx, thisArg)
     {
         var keys = Object.keys(o),
-            i = keys.length-1,
+            i = keys.length-1;
             // convert arguments into an array. Omit 'o', 'this' and 'func' arguments though.
-            ctx = Array.prototype.slice.apply(arguments, [3]);
+            // ctx = Array.prototype.slice.apply(arguments, [3]);
         for (i; i>=0; i--)
         {
-            func.apply(thisArg, [keys[i], o[keys[i]], o].concat(ctx));
+            func.apply(thisArg, [keys[i], o[keys[i]], ctx]);
         } 
     }
     
@@ -193,15 +193,15 @@ var BP_MOD_COMMON = (function()
     // to be slower than a for-loop ! Calls func with the array-item as first argument
     // followed by all arguments passed to iterArray.
     // 'this' is mapped to thisArg.
-    function iterArray (a, thisArg, func)
+    function iterArray (a, func, ctx, thisArg)
     {
         var n = a.length,
-            i,
+            i;
             // convert arguments into an array. Omit 'o', 'this' and 'func' arguments.
-            ctx = Array.prototype.slice.apply(arguments, [3]);
+            //ctx = Array.prototype.slice.apply(arguments, [3]);
         for (i=0; i<n; i++)
         {
-            func.apply(thisArg, [a[i]].concat(ctx));
+            func.apply(thisArg, [a[i], ctx]);
         } 
     }    
     
@@ -225,8 +225,8 @@ var BP_MOD_COMMON = (function()
         newInherited: {value: newInherited},
         copy: {value: copy},
         clear: {value: clear},
-        curry: {value: curry},
-        iterKeys: {value: iterKeys}
+        iterKeys: {value: iterKeys},
+        iterArray: {value: iterArray}
     });
     Object.freeze(iface);
 
