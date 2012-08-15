@@ -276,8 +276,8 @@ var BP_MOD_CS = (function(g_win)
                     it: new RecsIterator(g_db.pRecsMap), 
                     reload:getRecsCallback, 
                     autoFill:g_bFillable?autoFill:undefined, 
-                    dbName:g_db.dbName,
-                    dbPath:g_db.dbPath
+                    dbName:resp.dbName, //g_db.dbName,
+                    dbPath:resp.dbPath //g_db.dbPath
                     },
                     panel = w$exec(cs_panel_wdt, ctx);
                 gid_panel = panel.id;
@@ -311,7 +311,7 @@ var BP_MOD_CS = (function(g_win)
         {
             g_db.clear();
             var exc = new BPError(resp.err);
-            BP_MOD_ERROR.logdebug("bp_cs.js@showPanel " + exc.toString() + "]");
+            BP_MOD_ERROR.logdebug("bp_cs.js@showPanel " + exc.toString());
         }
 
         // TODO: Since this is async, maybe we should check if the panel already exists?
@@ -319,8 +319,8 @@ var BP_MOD_CS = (function(g_win)
             it: new RecsIterator(g_db.pRecsMap), 
             reload:getRecsCallback, 
             autoFill:g_bFillable?autoFill:undefined, 
-            dbName:g_db.dbName, 
-            dbPath:g_db.dbPath
+            dbName:resp.dbName, //g_db.dbName,
+            dbPath:resp.dbPath //g_db.dbPath
             };
         var    panel = w$exec(cs_panel_wdt, ctx);
         gid_panel = panel.id;

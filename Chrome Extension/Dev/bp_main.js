@@ -79,15 +79,16 @@
     {
         return {
             result: result,
+            dbName:FILE_STORE.getDBName(),
             dbPath:FILE_STORE.getDBPath(),
-            dbStats:FILE_STORE.getDBStats(), 
-            memStats:MEM_STORE.getStats()            
+            dbStats:FILE_STORE.getDBStats(),
+            memStats:MEM_STORE.getStats()
         };
     }
     
     function onRequest(rq, sender, funcSendResponse)
     {
-        var result, recs, dbPath, dbStats,
+        var result, recs, dbPath, dbStats, resp,
             cm = rq.cm,
             bSaveRec;
         delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
@@ -112,7 +113,9 @@
                     recs = MEM_STORE.getRecs(rq.loc);
                     recs.dbName = FILE_STORE.getDBName();
                     recs.dbPath = FILE_STORE.getDBPath();
-                    funcSendResponse({result:true, db:recs});
+                    resp = makeDashResp(true);
+                    resp.db = recs;
+                    funcSendResponse(resp);
                     break;
                 case cm_loadDB:
                     BPError.push("LoadDB");
@@ -124,9 +127,19 @@
                     dbPath = FILE_STORE.unloadDB(rq.dbPath);
                     funcSendResponse(makeDashResp(true));
                     break;
-                case cm_mergeInDB:
+                case MOD_CONNECT.cm_mergeInDB:
                     BPError.push("MergeInDB");
                     result = FILE_STORE.mergeInDB(rq.dbPath);
+                    funcSendResponse(makeDashResp(result));
+                    break;
+                case MOD_CONNECT.cm_mergeOutDB:
+                    BPError.push("MergeOutDB");
+                    result = FILE_STORE.mergeOutDB(rq.dbPath);
+                    funcSendResponse(makeDashResp(result));
+                    break;
+                case MOD_CONNECT.cm_mergeDB:
+                    BPError.push("MergeDB");
+                    result = FILE_STORE.mergeDB(rq.dbPath);
                     funcSendResponse(makeDashResp(result));
                     break;
                 case MOD_CONNECT.cm_compactDB:
@@ -142,7 +155,7 @@
                 case cm_createDB:
                     BPError.push("CreateDB");
                     dbPath = FILE_STORE.createDB(rq.dbName, rq.dbDir);
-                    funcSendResponse({result:true, dbPath:dbPath});
+                    funcSendResponse(makeDashResp(true));
                     break;
                 case cm_getDBPath:
                     BPError.push("GetDBPath");
@@ -164,8 +177,10 @@
         } 
         catch (err) {
             BP_MOD_ERROR.logwarn(err);
-            if (bSaveRec) {FILE_STORE.unloadDB();}
-            funcSendResponse({result:false, err:err});
+            if (bSaveRec) {FILE_STORE.unloadDB();} // Seems that we lost DB-connection
+            var resp = makeDashResp(false);
+            resp.err = new BPError(err);
+            funcSendResponse(resp);
         }
     }
 

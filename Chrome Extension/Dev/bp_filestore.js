@@ -1178,76 +1178,101 @@ var BP_MOD_FILESTORE = (function()
         return retStats;
     }
     
-    function merge(db2, oneWay)
+    function merge (db1, db2, oneWay)
     {
-        function mergeDB (db1, db2)
-        {
-            var dbStats1 = newDBStats(db1),
-                dbStats2,
-                dbStats2_diff,
-                dbStats1_diff,
-                dbStatsMods = newDBStats(db1); // to track newly created files
-                                              // that will need to be copied over to db2
-                
-            function copy(dbStatsSrc, cat, dt, fname, dirEnt, dtDirPath, dbStatsDst)
-            {
-                var frmPath = dtDirPath+fname,
-                    toPath = DB_FS.makeDTDirPath(dt, dbStatsDst.dbPath) + fname,
-                    o = {};
-                            
-                if (!BP_PLUGIN.copy(frmPath, toPath, o, true)) // do Clobber
-                {
-                    throw new BPError (o.err);
-                }
-            }
+        var dbStats1 = newDBStats(db1),
+            dbStats2,
+            dbStats2_diff,
+            dbStats1_diff,
+            dbStatsMods = newDBStats(db1); // to track newly created files
+                                          // that will need to be copied over to db2
             
-            //loadDB(db1, dbStats1);
-            dbStats1 = cleanLoadDB(db1);
-            dbStats2 = DB_FS.lsFiles(db2);
-            dbStats2_diff = dbStats2.diff([DB_FS.cat_Closed, DB_FS.cat_Temp], dbStats1);
-            var dbStatsImported = newDBStats(db2);
-            // Import the open files first. While doing that, save names of new/modified files
-            importFiles([DB_FS.cat_Open], dbStats2, dbStatsMods, dbStatsImported);
-            // Import closed/temp files next. While doing that, save names of new/modified files
-            importFiles(DB_FS.cats_Load, dbStats2_diff, dbStatsMods, dbStatsImported);
-
-            if (!oneWay)
-            {   // Merge-Out. Copy the missing files to db2
-                
-                // List the files that are missing in db2.
-                dbStats1 = DB_FS.lsFiles(db1);
-                dbStats1_diff = dbStats1.diff(DB_FS.cats_Load, dbStats2);
-                // Add files that were newly created or modified
-                dbStats1_diff.merge(dbStatsMods);
-                // Finally, ensure that all DT-files are included. We copy those no matter
-                // what.
-                dbStats1_diff.merge(dbStats1, [DB_FS.cat_Open]);
-                dbStats1_diff.walkCats(DB_FS.cats_Load, copy, newDBStats(db2));
-                
-                // Delete the files in db2 that were imported from there. Their recs. were
-                // incorporated into dbStatsMods. However, since DT-filenames are the same,
-                // we don't want to delete files that were just copied to db2. Hence remove
-                // those names from the mods collection.
-                dbStatsImported = dbStatsImported.diff(DB_FS.cats_Load, dbStats1_diff);
-                DB_FS.rmFiles(dbStatsImported);
+        function copy(dbStatsSrc, cat, dt, fname, dirEnt, dtDirPath, dbStatsDst)
+        {
+            var frmPath = dtDirPath+fname,
+                toPath = DB_FS.makeDTDirPath(dt, dbStatsDst.dbPath) + fname,
+                o = {};
+                        
+            if (!BP_PLUGIN.copy(frmPath, toPath, o, true)) // do Clobber
+            {
+                throw new BPError (o.err);
             }
         }
+        
+        //loadDB(db1, dbStats1);
+        dbStats1 = cleanLoadDB(db1);
+        dbStats2 = DB_FS.lsFiles(db2);
+        dbStats2_diff = dbStats2.diff([DB_FS.cat_Closed, DB_FS.cat_Temp], dbStats1);
+        var dbStatsImported = newDBStats(db2);
+        // Import the open files first. While doing that, save names of new/modified files
+        importFiles([DB_FS.cat_Open], dbStats2, dbStatsMods, dbStatsImported);
+        // Import closed/temp files next. While doing that, save names of new/modified files
+        importFiles(DB_FS.cats_Load, dbStats2_diff, dbStatsMods, dbStatsImported);
+
+        if (!oneWay)
+        {   // Merge-Out. Copy the missing files to db2
+            
+            // List the files that are missing in db2.
+            dbStats1 = DB_FS.lsFiles(db1);
+            dbStats1_diff = dbStats1.diff(DB_FS.cats_Load, dbStats2);
+            // Add files that were newly created or modified
+            dbStats1_diff.merge(dbStatsMods);
+            // Finally, ensure that all DT-files are included. We copy those no matter
+            // what.
+            dbStats1_diff.merge(dbStats1, [DB_FS.cat_Open]);
+            dbStats1_diff.walkCats(DB_FS.cats_Load, copy, newDBStats(db2));
+            
+            // Delete the files in db2 that were imported from there. Their recs. were
+            // incorporated into dbStatsMods. However, since DT-filenames are the same,
+            // we don't want to delete files that were just copied to db2. Hence remove
+            // those names from the mods collection.
+            dbStatsImported = dbStatsImported.diff(DB_FS.cats_Load, dbStats1_diff);
+            DB_FS.rmFiles(dbStatsImported);
+        }
+    }
     
+    function mergeMain(db2, bIn)
+    {
         var db1 = DB_FS.getDBPath();
         
         if (!db1) {
-            throw new BPError ("No DB loaded");
+            throw new BPError ("","UserError", "NoDBLoaded");
         }
         else if (!db2) {
-            throw new BPError ("DB2 not selected", "InternalError", "BadArgument");
+            throw new BPError ("", "InternalError", "NoDBSelected");
         }
         else if (db2===db1) {
-            throw new BPError ("This wallet is already loaded. Please select a different one.", "UserError", "BadArgument");
+            throw new BPError ("", "UserError", "DBAlreadyLoaded");
         }
-                mergeDB(db1, db2);
+        
+        if (bIn === true ) {
+            merge(db1, db2, true);    
+        }
+        else if (bIn === false) {
+            merge(db2, db1, true);
+            loadDB(db1);
+        }
+        else if (bIn === undefined) {
+            merge(db1, db2, false);
+        }        
         return true;
     }
    
+    function mergeInDB(db2)
+    {
+        return mergeMain(db2, true);
+    }
+    
+    function mergeOutDB(db2)
+    {
+        return mergeMain(db2, false);
+    }
+    
+    function mergeDB(db2)
+    {
+        return mergeMain(db2);
+    }
+    
     function writeCSV(arec, ctx)
     {
         var buf=ctx.buf;
@@ -1328,9 +1353,6 @@ var BP_MOD_FILESTORE = (function()
         var rval = {}, i, j, n, k,
             //keys,
             bN = false, bP = false, bU = false;
-        //for (i=0; i<5; i++) 
-        //{ // Search the first few rows for a valid line
-            //keys = Object.keys(recs[i]);
             
             for (j=0, n=keys.length; j<n; j++) 
             {
@@ -1348,10 +1370,6 @@ var BP_MOD_FILESTORE = (function()
                     bU = true; continue;
                 }
             }
-            
-            //if ((bN && bP && bU)) {break;}   // We're done.
-            //else {bN = (bP = (bU = false));} // Probably a header line. Start over
-        //}
         
         // We'll return rval only if we got all property names
         if (bN && bP && bU) {return rval;}
@@ -1579,7 +1597,9 @@ var BP_MOD_FILESTORE = (function()
         loadDB: {value: loadDB},
         unloadDB:   {value: unloadDB},
         compactDB:  {value: compactDB},
-        mergeInDB:    {value: merge},
+        mergeDB:    {value: mergeDB},
+        mergeInDB:  {value: mergeInDB},        
+        mergeOutDB: {value: mergeOutDB},
         getDBPath: {value: DB_FS.getDBPath},
         getDBStats:{value: DB_FS.getDBStats},
         newDBStats:{value: newDBStats},

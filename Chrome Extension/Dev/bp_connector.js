@@ -33,16 +33,18 @@ var BP_MOD_CONNECT = (function ()
     /** @import-module-end **/    m = null;
 
     /** @constant */
-    var cm_getRecs = "cm_recs",     // Represents a getDB command
-        cm_loadDB = "cm_load",
-        cm_unloadDB = "cm_unload",
-        cm_mergeInDB = "cm_mrgIn",
-        cm_createDB = "cm_crDB",
-        cm_getDBPath = "cm_dbPth",
-        cm_importCSV = "cm_imCSV",
-        cm_exportCSV = "cm_exCSV",
-        cm_compactDB = "cm_cmDB",
-        cm_cleanDB = "cm_clnDB";
+    var cm_getRecs      = "cm_recs",     // Represents a getDB command
+        cm_loadDB       = "cm_load",
+        cm_unloadDB     = "cm_unload",
+        cm_mergeDB      = "cm_mrgDb",
+        cm_mergeInDB    = "cm_mrgIn",
+        cm_mergeOutDB   = "cm_mrgOut",
+        cm_createDB     = "cm_crDB",
+        cm_getDBPath    = "cm_dbPth",
+        cm_importCSV    = "cm_imCSV",
+        cm_exportCSV    = "cm_exCSV",
+        cm_compactDB    = "cm_cmDB",
+        cm_cleanDB      = "cm_clnDB";
 
     var DICT_TRAITS={};
    
@@ -207,6 +209,16 @@ var BP_MOD_CONNECT = (function ()
             rpcToMothership({cm: cm_mergeInDB, dbPath:dbPath}, callbackFunc);
         }
     
+        function mergeDB (dbPath, callbackFunc)
+        {
+            rpcToMothership({cm: cm_mergeDB, dbPath:dbPath}, callbackFunc);
+        }
+    
+        function mergeOutDB (dbPath, callbackFunc)
+        {
+            rpcToMothership({cm: cm_mergeOutDB, dbPath:dbPath}, callbackFunc);
+        }
+    
         function compactDB (callbackFunc)
         {
             rpcToMothership({cm: cm_compactDB}, callbackFunc);
@@ -242,6 +254,8 @@ var BP_MOD_CONNECT = (function ()
             cm_loadDB: {value: cm_loadDB},
             cm_unloadDB: {value: cm_unloadDB},
             cm_mergeInDB: {value: cm_mergeInDB},
+            cm_mergeOutDB: {value: cm_mergeOutDB},
+            cm_mergeDB: {value: cm_mergeDB},
             cm_createDB: {value: cm_createDB},
             cm_getDBPath: {value: cm_getDBPath},
             cm_importCSV: {value: cm_importCSV},
@@ -255,6 +269,8 @@ var BP_MOD_CONNECT = (function ()
             getRecs: {value: getRecs},
             loadDB: {value: loadDB},
             unloadDB: {value: function (cback) {rpcToMothership({cm: cm_unloadDB}, cback);}},
+            mergeDB: {value: mergeDB},
+            mergeOutDB: {value: mergeOutDB},
             mergeInDB: {value: mergeInDB},
             compactDB: {value: compactDB},
             cleanDB: {value: cleanDB},

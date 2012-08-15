@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Privy&trade; Password Wallet</title>
+    <title>U-Wallet&trade;:Passwords </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Privy&trade; Password Wallet">
+    <meta name="description" content="U-Wallet&trade;:Passwords">
     <meta name="author" content="sumeet@untrix.com">
     <!-- Stylesheets -->
     <link href="tp/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -19,20 +19,20 @@
       <div class="row-fluid">
         <div class="span2">
           <!--Sidebar content-->
-          <h3> <i>Privy&trade;</i> Password Wallet </h3>
+          <h3> <i>U-Wallet</i>: Passwords </h3>
           <ul class="nav nav-list" id="nav-list">
             <li>
-              <a data-nav id="nav-settings" href="#settings-pane"><i class="icon-cog"></i> Settings</a>
+              <a data-nav id="nav-settings" href="#settings-pane"><i class="icon-cog"></i> Manage</a>
             </li>
             <li>
-              <a data-nav href="#editor-pane"><i class="icon-pencil"></i> Edit Passwords </a>
+              <a data-nav href="#editor-pane"><i class="icon-pencil"></i> Edit </a>
             </li>
-            <li><a data-nav href="#advanced-pane"><i class="icon-wrench"></i> Advanced</a></li>
-            <li><a data-nav href="#license-pane"><i class="icon-certificate"></i> Credits &amp; Licenses</a></li>
+            <li><a data-nav href="#advanced-pane"><i class="icon-wrench"></i> Fix</a></li>
+            <li><a data-nav href="#license-pane"><i class="icon-certificate"></i> Legal</a></li>
             <li><a data-nav href="#help-pane"><i class="icon-flag"></i> Help</a></li>
             <li class="divider"></li>
             <li>
-              <a href="mailto:bprivy@untrix.com"><i class="icon-envelope"></i> Contact</a>
+              <a href="mailto:uwallet@untrix.com"><i class="icon-envelope"></i> Contact</a>
             </li>
           </ul>
         </div>
@@ -40,40 +40,46 @@
           <div class="tab-content">
             <!--Body content-->
             <div class="tab-pane" id="settings-pane">
-              <h3>Settings</h3>
+              <!-- <h3>Manage U-Wallets</h3> -->
               <div class="well form-horizontal">
-                <legend>Manage Wallet 
-                  <span id="dbPath" data-dbPath style="text-align:center; cursor: default"  class="input-medium uneditable-input dash-text"></span>
+                <legend>Manage <i>U-Wallets</i> 
+                  <span id="dbPath" data-dbPath style="text-align:center; cursor: default"  class="input-large uneditable-input dash-text"></span>
                 </legend>
                 <fieldset id="formStoreLoad"  class="control-group">
-                  <label class="control-label">Open/Close</label>
+                  <label class="control-label">Open</label>
                   <div class="controls form-inline">
-                    <button id="dbChooseLoad" type="button" class="btn btn-primary" data-loading-text="Opening..." title="Browse for your <i style='display:inline-block'>UWallet</i> folder">
+                    <button id="dbChooseLoad" type="button" class="btn btn-primary" data-loading-text="Opening..." title="Browse for <i style='display:inline-block'>U-Wallet</i> folder">
                       <!-- <img style="display:none" id="dbLoadSpinner" src="icons/ajax-loader-white.gif" /> -->
                       <!-- <i class="icon-folder-open icon-white"></i>  -->                    
                        Open</button>
                     <label class="checkbox" title="If checked, the <i style='display:inline-block'>Password Wallet</i> location will be saved on this computer and automatically selected the next time. For privacy and safety, uncheck it if this is not your computer.">
                       <input id="dbSaveLocation" type="checkbox" name="savelocation" checked>
-                      Remember location
+                      Remember Location
                     </label>
-                    <button id="dbClose" type="button" class="btn btn-small" title="Close the password Wallet"><i class="icon-folder-close"></i></button>
                   </div>
                 </fieldset>
                 
-                <fieldset id="formStoreCreate" class="control-group">
-                  <label class="control-label" title="Allows you to create a new<i style='display:inline-block'>Privy Password Wallet</i> into which you may import passwords">New</label>
+                <fieldset id="formStoreLoad"  class="control-group">
+                  <label class="control-label">Close</label>
                   <div class="controls form-inline">
-                    <input id="dbName"  type="text" placeholder="Type Wallet Name Here" class="input-medium" title="Please enter a name for the new Wallet that you would like to create. Example: <i>My Privy Wallet</i>">
-                    <button id="dbChooseCreate" type="button" class="btn btn-inverse" title="Browse and select a location for your new <i style='display:inline-block'>Password Wallet</i>">Create</button>
+                    <button id="dbClose" type="button" class="btn btn-small" title="Close the password Wallet">Close</button>
+                  </div>
+                </fieldset>
+
+                <fieldset id="formStoreCreate" class="control-group">
+                  <label class="control-label" title="Allows you to create a new<i style='display:inline-block'>U-Wallet</i> for storing passwords">New</label>
+                  <div class="controls form-inline">
+                    <input id="dbName"  type="text" placeholder="Type Wallet Name Here" class="input-medium" title="Please enter a name for the new Wallet that you would like to create. Example: <i>Tony's Wallet</i>">
+                    <button id="dbChooseCreate" type="button" class="btn btn-inverse" title="Browse and select a location for your new <i style='display:inline-block'>U-Wallet</i>">Create</button>
                   </div>
                 </fieldset>
 
                 <fieldset class="control-group">
-                  <label class="control-label">Import Other Wallet</label>
+                  <label class="control-label">Merge Wallets</label>
                   <div class="controls">
-                    <button data-path-choose id="dbMergeIn" type="button" class="btn btn-primary" title="Open Wallet will get merged data. Other Wallet will stay unchanged.">Merge In</button>                    
                     <button data-path-choose id="dbMerge" type="button" class="btn btn-primary" title="Both Wallets will have merged data.">Merge</button>                    
-                    <button data-path-choose id="dbMergeOut" type="button" class="btn btn-primary" title="Other Wallet will get merged data. This Wallet will stay unchanged.">Merge Out</button>                    
+                    <button data-path-choose id="dbMergeIn" type="button" class="btn btn-info" title="Open Wallet will get merged data. Other Wallet will stay unchanged.">Merge In</button>                    
+                    <button data-path-choose id="dbMergeOut" type="button" class="btn btn-inverse" title="Other Wallet will get merged data. This Wallet will stay unchanged.">Merge Out</button>                    
                   </div>
                 </fieldset>
 
@@ -82,7 +88,7 @@
               <div class="form-horizontal well">
                 <legend>
                     <span title="Import/Export a comma separated (CSV) password file exported from another password manager">
-                      Import/Export Passwords
+                      Import / Export External Passwords
                     </span>
                 </legend>
                 <div class="control-group">
@@ -115,7 +121,7 @@
                 <div class="control-group">
                   <label class="control-label" title="Load a different Wallet">Location</label>
                   <div class="controls">
-                    <input type="text" placeholder="None" class="input-xlarge disabled" disabled title="Currently opened <i style='display:inline-block'>Privy Password Wallet</i>">
+                    <input type="text" placeholder="None" class="input-xlarge disabled" disabled title="The open <i style='display:inline-block'>U-Wallet</i>">
                     <button data-path-choose id="dbPathChoose" type="button" class="btn btn-primary" title="Browse for wallet folder to open">Open</button>
                     <button id="dbClose" type="button" class="btn-small" title="Close the password wallet">Close</button>
                   </div>
@@ -124,14 +130,14 @@
             </div>
 
             <div class="tab-pane" id="advanced-pane">
-              <h3>Advanced Settings</h3>
+              <!-- <h3>Advanced Settings</h3> -->
               <div class="well form-horizontal">
-                <legend>DB Maintenance 
-                  <span data-dbPath style="text-align:center; cursor: default"  class="input-medium uneditable-input dash-text"></span>
+                <legend>Maintenence  
+                  <span data-dbPath style="text-align:center; cursor: default"  class="input-large uneditable-input dash-text"></span>
                 </legend>
 
-                <fieldset class="control-group">
-                  <label class="control-label">Quick Cleanup</label>
+                <fieldset class="control-group ">
+                  <label class="control-label" title="Clean up duplicate files generated by cloud-sync (e.g. Dropbox&trade;, Microsoft SkyDrive&trade; or Google Drive&trade;)">Cloud Sync Cleanup</label>
                   <div class="controls">
                     <button id="dbClean" type="button" class="btn btn-primary" data-loading-text="Cleaning...">
                       <!-- <img style="display:none" id="dbCompactSpinner" src="icons/ajax-loader-white.gif" /> -->
@@ -144,7 +150,6 @@
                   <label class="control-label">Full Compaction</label>
                   <div class="controls">
                     <button id="dbCompact" type="button" class="btn btn-primary" data-loading-text="Compacting...">
-                      <!-- <img style="display:none" id="dbCompactSpinner" src="icons/ajax-loader-white.gif" /> -->
                       Compact</button>
                     <input disabled id="stats" style="cursor: default" class="uneditable-input input-medium dash-text">
                   </div>
@@ -170,7 +175,7 @@
           &copy; Copyright 2012 Untrix Soft LLC (http://www.untrix.com)
         </p>
         <p>
-          Privy&trade;, Privy Wallet&trade;, UWallet&trade;, UMerge&trade; and UTeach&trade; are trademarks of Untrix Soft LLC (http://www.untrix.com)
+          Privy&trade;, Privy Wallet&trade;, U-Wallet&trade;, U-Wallet:Passwords&trade;, UMerge&trade; and UTeach&trade; are trademarks of Untrix Soft LLC (http://www.untrix.com)
         </p>
       </footer>    
     </div>

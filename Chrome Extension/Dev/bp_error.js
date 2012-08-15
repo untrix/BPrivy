@@ -133,7 +133,9 @@ var BP_MOD_ERROR = (function()
         ETLDLoadFailed: 'ETLD Load Failed',
         ExistingStore: "The selected folder seems to already be part of an existing DB.",
         NotJSObject: "Argument is not a javascript object.",
-        NoDBLoaded: "Please load a Wallet first"
+        NoDBLoaded: "Please load a uWallet first.",
+        DBAlreadyLoaded: "This wallet is already loaded. Please select a different one.",
+        NoDBSelected: "Please choose a uWallet first."
     });
 
    function Activity(arg)
@@ -185,7 +187,7 @@ var BP_MOD_ERROR = (function()
         if (_err!==undefined && _err!==null && (typeof _err === "string"))
         {
             this.atvt = BPError.atvt; // Take value of page atvt
-            this.message = _err || (acode ? msg[acode] : String() + gcode?msg[gcode]:'');
+            this.message = _err || ( (acode&&msg[acode]) ? msg[acode] : String() + (gcode?msg[gcode]:''));
             this.err.name = "BPDiags";
             this.err.acode = acode || 'Diag';
             this.err.gcode = gcode;
@@ -240,8 +242,9 @@ var BP_MOD_ERROR = (function()
                    (this.err.scode? "&scode="+this.err.scode : "") +
                    (this.err.smsg? "&smsg="+this.err.smsg : "")
                )),
-           str = msg+diags;
-               
+            str = msg+diags;
+        
+        //var str = this.msg + (this.atvt?"activity="+this.atvt.toString()+"\n":'') + (this.err?JSON.stringify(this.err):'');
         return str.length<=200? str : str.slice(0,200);
     };
     BPError.push = function (actn)
@@ -256,7 +259,8 @@ var BP_MOD_ERROR = (function()
     function alert (arg) 
     {
         var be = new BPError(arg);
-        window.alert(be.toString());
+        console.log(be.toString());
+        window.alert(be.message || "Something went wrong :(");
     }
     
     function log (arg)

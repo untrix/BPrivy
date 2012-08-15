@@ -18,6 +18,7 @@ var BP_MOD_MANAGE = (function ()
     /** @import-module-begin CSPlatform */
     var m = BP_MOD_CS_PLAT;
     var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
+    var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     var DIR_SEP = IMPORT(m.DIR_SEP);
     /** @import-module-begin Common */
     m = BP_MOD_FILESTORE;
@@ -50,32 +51,40 @@ var BP_MOD_MANAGE = (function ()
     
     function updateDash (resp)
     {
-        //$('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
         var fluff, gbg, loaded;
         if (resp.result) 
         {
             resp.dbPath = resp.dbPath || "";
-            if ($('#dbSaveLocation:checked').length) {
-                localStorage['db.path'] = resp.dbPath;
+            if ($('#dbSaveLocation:checked').length) 
+            {
+                if (localStorage['db.path'] !== resp.dbPath) {
+                    localStorage['db.path'] = resp.dbPath;
+                }
             }
-            $('[data-dbPath]').text(cullDBName(resp.dbPath)||"").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+            $('[data-dbPath]').text(cullDBName(resp.dbPath)||"No Open Wallet").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
 
-            if (resp.memStats)
+            if (resp.memStats && resp.dbPath)
             {
                 fluff = resp.memStats.bad + resp.memStats.fluff;
                 loaded = resp.memStats.loaded;
             
-                gbg = loaded? Math.round((fluff)*100/loaded) : undefined;
+                gbg = loaded ? Math.round((fluff)*100/loaded) : 0;
                 $('#stats').val( (gbg!==undefined) ? "bloat: "+gbg+"%" : "");
-                if (gbg<=0) {
-                    $('#dbCompact').removeClass('btn-warning').removeClass('btn-primary').prop('disabled', true);
-                }
-                else if (gbg <50) {
+                // if (gbg<=0) {
+                    // $('#dbCompact').removeClass('btn-warning').removeClass('btn-primary').prop('disabled', true);
+                // }
+                // else 
+                if (gbg <50) {
                     $('#dbCompact').removeClass('btn-primary').addClass('btn-warning').prop('disabled', false);
                 }
-                else if (gbg>0){
+                else if (gbg){
                     $('#dbCompact').removeClass('btn-warning').addClass('btn-primary').prop('disabled', false);
                 }
+            }
+            else
+            {
+                $('#stats').val('');
+                $('#dbCompact').removeClass('btn-warning').removeClass('btn-primary').prop('disabled', true);
             }
             
             if (resp.dbStats)
@@ -88,15 +97,27 @@ var BP_MOD_MANAGE = (function ()
                     $('#dbClean').addClass('btn-primary').prop('disabled', false);
                 }
                 else {
-                    $('#qclean-stats').val("sparkling clean!");
-                    $('#dbClean').removeClass('btn-primary').prop('disabled', true);
+                    if (resp.dbStats.dbPath) {
+                        $('#qclean-stats').val("sparkling clean!");
+                    }
+                    else {
+                        $('#qclean-stats').val("");
+                    }
+                    $('#dbClean').removeClass('btn-primary').prop('disabled', false);
                 }
+            }
+            else {
+                $('#qclean-stats').val("");
+                $('#dbClean').removeClass('btn-primary').prop('disabled', true);
             }
         }
         else 
         {
             $('#dbPath').text(null).attr('data-original-title', '').attr('data-path', null);
             $('#stats').val('');
+            $('#dbCompact').removeClass('btn-warning').removeClass('btn-primary').prop('disabled', true);
+            $('#qclean-stats').val("");
+            $('#dbClean').removeClass('btn-primary').prop('disabled', true);
         }
     }
 
@@ -211,7 +232,7 @@ var BP_MOD_MANAGE = (function ()
                 if (resp.result === true) 
                 {
                     updateDash(resp);
-                    BP_MOD_ERROR.success('UWallet has been compacted: ' + resp.dbPath);
+                    BP_MOD_ERROR.success('UWallet has been cleaned: ' + resp.dbPath);
                 }
                 else {
                     callbackHandleError(resp);
@@ -231,6 +252,50 @@ var BP_MOD_MANAGE = (function ()
                 {
                     if (resp.result === true) {
                         BP_MOD_ERROR.success('Merged In password wallet at ' + o.path);
+                    }
+                    else {
+                        callbackHandleError(resp);
+                    }
+                });
+            }
+            else {
+                console.log("ChooseFolder returned false");
+            }
+        });
+        
+        addEventListeners('#dbMerge', 'click', function (e)
+        {
+            var o={dtitle:"BPrivy: Select Other Wallet",
+                   dbutton: "Select Other Wallet"};
+            if (BP_PLUGIN.chooseFolder(o)) 
+            {
+                console.log("ChooseFolder returned:" + o.path);
+                BP_MOD_CONNECT.mergeDB(o.path, function (resp)
+                {
+                    if (resp.result === true) {
+                        BP_MOD_ERROR.success('Merged with password wallet at ' + o.path);
+                    }
+                    else {
+                        callbackHandleError(resp);
+                    }
+                });
+            }
+            else {
+                console.log("ChooseFolder returned false");
+            }
+        });
+        
+        addEventListeners('#dbMergeOut', 'click', function (e)
+        {
+            var o={dtitle:"BPrivy: Select Other Wallet",
+                   dbutton: "Select Other Wallet"};
+            if (BP_PLUGIN.chooseFolder(o)) 
+            {
+                console.log("ChooseFolder returned:" + o.path);
+                BP_MOD_CONNECT.mergeOutDB(o.path, function (resp)
+                {
+                    if (resp.result === true) {
+                        BP_MOD_ERROR.success('Merged out to password wallet at ' + o.path);
                     }
                     else {
                         callbackHandleError(resp);
@@ -281,9 +346,7 @@ var BP_MOD_MANAGE = (function ()
                 BP_MOD_CONNECT.createDB(dbName, o.path, function (resp)
                 {
                     if (resp.result === true) {
-                        // if ($('#dbSaveLocation:checked').length) {                            // localStorage['db.path'] = resp.dbPath;                        // }
                         updateDash(resp);
-                        //$('#dbPath').text(cullDBName(resp.dbPath)).attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
                         BP_MOD_ERROR.success('Password store created at ' + resp.dbPath);
                     }
                     else {
@@ -340,7 +403,7 @@ var BP_MOD_MANAGE = (function ()
         $('#content *').tooltip();
     }
    
-    //Assemble the interface    
+    // Assemble the interface
     var iface = {};
     Object.defineProperties(iface, 
     {
@@ -353,20 +416,19 @@ var BP_MOD_MANAGE = (function ()
     return iface;
 }());
 
-    /** @globals-begin */
-    var BP_PLUGIN;
-    /** @globals-end */
-             
+/** @globals-begin */
+var BP_PLUGIN;
+/** @globals-end */
 
-        function bpPluginLoaded ()
-        {
-          BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
-          console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
-        }        
+function bpPluginLoaded ()
+{
+  BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
+  console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+}        
 
-        $(document).ready(function (e)
-        {
-          bpPluginLoaded();
-          BP_MOD_FILESTORE.init();
-          BP_MOD_MANAGE.onload();
-        });
+// $(document).ready(function (e)BP_MOD_CS_PLAT.addEventListener(window, 'load', function(e)
+{
+  bpPluginLoaded();
+  BP_MOD_FILESTORE.init();
+  BP_MOD_MANAGE.onload();
+});
