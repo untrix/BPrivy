@@ -125,6 +125,7 @@ var BP_MOD_ERROR = (function()
     {
         /***********Action Codes****************/
         BadPathArgument:"Bad Path Argument.",
+        BadDBPath:"The selected folder is not a Wallet folder",
         Unsupported:'Unsupported Feature.', //Unsupported URL etc.
         Diag:'', // Diagnostic Message
         BadWDL: 'Bad WDL argument.',

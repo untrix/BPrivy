@@ -172,10 +172,14 @@ var BP_MOD_COMMON = (function()
     // }
     
     /**
+     * DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED
+     *                      Use IterObj instead
      * Iterates over keys of an object (as in Object.keys)
      * Calls func with the array-item as first argument
      * followed by all arguments passed to iterKeys.
      * 'this' is mapped to thisArg
+     *
+     * DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED
      */
     function iterKeys (o, func, ctx, thisArg)
     {
@@ -188,11 +192,16 @@ var BP_MOD_COMMON = (function()
             func.apply(thisArg, [keys[i], o[keys[i]], ctx]);
         } 
     }
-    
+
+
+    // DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED
+    //                      Use IterArray2 instead
     // Similar to forEach, but not the same. This is here because forEach is supposed
     // to be slower than a for-loop ! Calls func with the array-item as first argument
     // followed by all arguments passed to iterArray.
     // 'this' is mapped to thisArg.
+    //
+    // DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED
     function iterArray (a, func, ctx, thisArg)
     {
         var n = a.length,
@@ -204,6 +213,47 @@ var BP_MOD_COMMON = (function()
             func.apply(thisArg, [a[i], ctx]);
         } 
     }    
+    
+    /**
+     *                  Replaces IterKeys
+     * 
+     * Iterates over keys of an object (as in Object.keys)
+     * Calls func with the array-item as first argument
+     * followed by all arguments passed to iterKeys.
+     * 'this' is mapped to thisArg
+     */
+    function iterObj (o, thisArg, func, ctx)
+    {
+        var keys = Object.keys(o),
+            i = keys.length-1;
+        for (i; i>=0; i--)
+        {
+            func.apply(thisArg, [keys[i], o[keys[i]], ctx]);
+        } 
+    }
+
+    //                      Replaces IterArray
+    // Similar to forEach, but not the same. This is here because forEach is supposed
+    // to be slower than a for-loop ! Calls func with the array-item as first argument
+    // followed by all arguments passed to iterArray.
+    // 'this' is mapped to thisArg.
+    //
+    function iterArray2 (a, thisArg, func, ctx)
+    {
+        var n = a.length, i;
+        for (i=0; i<n; i++)
+        {
+            func.apply(thisArg, [a[i], ctx]);
+        } 
+    }
+    
+    function concatArray (dst, frag)
+    {
+        iterArray(frag, function (item, dst)
+        {
+            dst.push(item);
+        }, dst);
+    }
     
     var iface = {};
     Object.defineProperties(iface, 
@@ -226,7 +276,10 @@ var BP_MOD_COMMON = (function()
         copy: {value: copy},
         clear: {value: clear},
         iterKeys: {value: iterKeys},
-        iterArray: {value: iterArray}
+        iterArray: {value: iterArray},
+        iterArray2:{value: iterArray2},
+        iterObj:{value:iterObj},
+        concatArray: {value: concatArray}
     });
     Object.freeze(iface);
 

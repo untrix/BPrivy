@@ -17,7 +17,7 @@
   <body>
     <div class="container-fluid">
       <div class="row-fluid">
-        <div class="span2">
+        <div class="span3">
           <!--Sidebar content-->
           <h3> <i>U-Wallet</i>: Passwords </h3>
           <ul class="nav nav-list" id="nav-list">
@@ -36,7 +36,8 @@
             </li>
           </ul>
         </div>
-        <div id="content" class="span10">
+        <div class="span1"></div>
+        <div id="content" class="span7">
           <div class="tab-content">
             <!--Body content-->
             <div class="tab-pane" id="settings-pane">
@@ -58,7 +59,7 @@
                     </label>
                   </div>
                 </fieldset>
-                
+
                 <fieldset id="formStoreLoad"  class="control-group">
                   <label class="control-label">Close</label>
                   <div class="controls form-inline">
@@ -75,11 +76,11 @@
                 </fieldset>
 
                 <fieldset class="control-group">
-                  <label class="control-label">Merge Wallets</label>
+                  <label class="control-label" title="Merge your <em>actions</em>, not just data.">SmartMerge Wallets</label>
                   <div class="controls">
-                    <button data-path-choose id="dbMerge" type="button" class="btn btn-primary" title="Both Wallets will have merged data.">Merge</button>                    
-                    <button data-path-choose id="dbMergeIn" type="button" class="btn btn-info" title="Open Wallet will get merged data. Other Wallet will stay unchanged.">Merge In</button>                    
-                    <button data-path-choose id="dbMergeOut" type="button" class="btn btn-inverse" title="Other Wallet will get merged data. This Wallet will stay unchanged.">Merge Out</button>                    
+                    <button data-path-choose id="dbMerge" type="button" class="btn btn-primary" title="Both Wallets will become same.">Merge</button>                    
+                    <button data-path-choose id="dbMergeIn" type="button" class="btn btn-info" title="Open Wallet will get sync'd. Other Wallet will stay unchanged.">Merge In</button>                    
+                    <button data-path-choose id="dbMergeOut" type="button" class="btn btn-inverse" title="Other Wallet will get sync'd. Open Wallet will stay unchanged.">Merge Out</button>                    
                   </div>
                 </fieldset>
 

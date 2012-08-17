@@ -372,6 +372,17 @@ private:
 	DWORD	m_LkSiz;
 };
 
+bool GetDataProperty(bp::JSObject* p, const bp::ustring& name, bp::utf8& val)
+{
+	if (p->HasProperty(name))
+	try {
+		FB::variant t_var = p->GetProperty(name);
+		val = t_var.convert_cast<bp::utf8>();
+		return true;	
+	} catch (...) {}
+
+	return false;
+}
 
 bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObject* out)
 {
@@ -431,16 +442,41 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 		}
 
 		msize32_t siz = data.size();
-		// No need to proceed if there is nothing to append. In that case the end-affect of this call would be
+		// No need to proceed if there is no data to append. Prefix and suffix are applied only
+		// if there was non-zero data. In that case the end-affect of this call would be
 		// file creation.
 		if (siz == 0) {return true;}
 
-		// Seek Pointer and Lock File.
-		h.PrepareForAppend(siz);
+		// Prepare the buffer if needed.
+		msize32_t bsiz = 0;
+		bp::utf8 pfx, sfx;
+		GetDataProperty(out, PROP_PREFIX, pfx);
+		GetDataProperty(out, PROP_SUFFIX, sfx);
+		bsiz = siz + pfx.length() + sfx.length();
 
-		DWORD n;
-		BOOL st = WriteFile(h.m_Handle, data.c_str(), data.size(), &n, NULL);
-		THROW_IF ((!st) || (n!=data.size()))
+		if (bsiz > siz)
+		{
+			MemGuard<char> buf((bsiz));// Allocates memory for bsiz UTF8 bytes
+			buf.Copy(0, pfx.data(), pfx.length());
+			buf.Copy(pfx.length(), data.c_str(), siz);
+			buf.Copy(siz+pfx.length(), sfx.data(), sfx.length());
+
+			// Seek Pointer and Lock File.
+			h.PrepareForAppend(bsiz);
+
+			DWORD n;
+			BOOL st = WriteFile(h.m_Handle, buf, bsiz, &n, NULL);
+			THROW_IF ((!st) || (n!=bsiz))
+		}
+		else // No need to create buffer. Write directly from data.c_str()
+		{
+			// Seek Pointer and Lock File.
+			h.PrepareForAppend(siz);
+
+			DWORD n;
+			BOOL st = WriteFile(h.m_Handle, data.c_str(), siz, &n, NULL);
+			THROW_IF ((!st) || (n!=siz))
+		}
 			
 		return true;
 	}
@@ -448,19 +484,6 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 	
 	return false;
 }
-
-bool GetDataProperty(bp::JSObject* p, const bp::ustring& name, bp::utf8& val)
-{
-	if (p->HasProperty(name))
-	try {
-		FB::variant t_var = p->GetProperty(name);
-		val = t_var.convert_cast<bp::utf8>();
-		return true;	
-	} catch (...) {}
-
-	return false;
-}
-
 
 bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* out, const boost::optional<unsigned long long>& o_pos)
 {

@@ -57,14 +57,9 @@
                 if (notes) 
                 {
                     res = true;
-                    if (notes.isOldRepeat) {
-                    }
-                    else if (notes.isNewRepeat) {
-                        if (MEM_STORE.getTraits(dt).file.persist_asserts) {
-                            res = FILE_STORE.insertRec(rec, dt);
-                        }
-                    }
-                    else {
+                    if (MEM_STORE.DT_TRAITS.getTraits(dt).toPersist(notes) &&
+                        FILE_STORE.UC_TRAITS.insertNewRec.toPersist(notes))
+                    {
                         res = FILE_STORE.insertRec(rec, dt);
                     }
                 }

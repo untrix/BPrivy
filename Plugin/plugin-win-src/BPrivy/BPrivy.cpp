@@ -116,7 +116,7 @@ FB::JSAPIPtr BPrivy::createJSAPI()
 	FB::DOM::WindowPtr pWin = m_host->getDOMWindow();
 	std::string loc = pWin->getLocation();
 #ifndef DEBUG
-	std::string allowed("chrome-extension://");
+	std::string allowed("chrome-extension://cbijeplmlcacenmfiadijamehnlkepne");
 	if (loc.compare(0, allowed.size(), allowed) != 0)
 	{
 		m_host->htmlLog("In BPrivy::createJSAPI, loc = " + loc);

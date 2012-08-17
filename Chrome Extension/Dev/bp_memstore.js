@@ -159,7 +159,7 @@ var BP_MOD_MEMSTORE = (function ()
             // Note that an assert with the same exact value and timestamp is a duplicate and will
             // always be ignored and discarded - the value of save_asserts traits will not
             // affect that behaviour.
-            persist_asserts: false            
+            persist_asserts: false
         },        // Returns record key        getKey: function (rec) {return rec.k;},// not needed by dt_etld
         // return EQUAL or DIFFRNT. // not needed by dt_etld        compareVals: function(rec1, rec2)
         {
@@ -179,11 +179,15 @@ var BP_MOD_MEMSTORE = (function ()
         {
             return "key, value";
         },
-        toCSV: {value: function(rec)
+        toCSV: function(rec)
         {
             return  (rec.k || "") + COMMA +
                     (rec.v || "");
-        }}
+        },
+        toPersist: function (notes)
+        {
+            return (notes.isRecentUnique || (notes.isNewRepeat && this.persist_asserts));
+        }
     });
 
     function PStoreTraits() 
@@ -374,13 +378,14 @@ var BP_MOD_MEMSTORE = (function ()
      * Inserts a new value into the collection. Assumes that the value does not already
      * exist within the collection and that it has been verified to be recent enough
      * to be inserted either: 1) In the front or in the middle of the sorted list in which
-     * case an item-overflow is possible. 2) At the end of the sorted list in which case
+     * case an item-overflow is possible. 2) Appended to the end of the sorted list in which case
      * an item-overflow is *not* possible otherwise we wouldn't have been invoked.
      * 
      * We optimize the algorithm for insertions from behind - i.e. older
      * items are visited first.
      * CAUTION: If the same value existed within the collection, then things
-     * will go wrong.
+     * will go wrong. So ensure that the value is unique and also recent enough to be
+     * inserted here.
      */
     Actions.prototype.insertNewVal = function (valStr, drec)
     {
@@ -398,10 +403,11 @@ var BP_MOD_MEMSTORE = (function ()
             // // drec.notes.causedOverflow = true;
             // // memStats.fluff++;        // // }        else
         {
-            // We will only get here in case of DB merges or if due to some reason (a bug?)
-            // our record loading sequence was not strictly reverse-chronological.
-            // Arecs are sorted in reverse chronological order starting with the newest at
-            // position 0
+            // We will only get here in case of DB merges or if due to some reason
+            // our record loading sequence was not strictly reverse-chronological - can't
+            // guarantee that loading-order though have tried hard to.
+            // Arecs are sorted in reverse chronological order here starting with the newest
+            // at position 0
             
             res = this.arecs.some (function (item, i, items)
             {
@@ -594,9 +600,10 @@ var BP_MOD_MEMSTORE = (function ()
         else
         {
             // This is a unique value. However, we want to keep only the latest #traits.actions.history
-            // values in the sorted list of values. This may or may not make it.
+            // values in the sorted list of values. This will make it to the list, but will bump out
+            // an existing value if the list was full.
             this.insertNewVal(valStr, drec);
-            drec.notes.isUnique = true;
+            drec.notes.isRecentUnique = true;
         }
     };
     Actions.prototype.newIt = function ()
@@ -614,7 +621,7 @@ var BP_MOD_MEMSTORE = (function ()
     TimeIterator.prototype.next = function ()
     {
         // Return records in chronological order
-        return this.arecs[--this.i];
+        return this.arecs[--this.i]; // TODO: Should we floor 'this.i' at -1?
     };
     function newActions(dt, jo) {
         return new Actions(dt, jo);
@@ -1072,7 +1079,7 @@ var BP_MOD_MEMSTORE = (function ()
     };
     MemStats.prototype.update = function (notes)
     {
-        if (notes && notes.isUnique) {
+        if (notes && notes.isRecentUnique) {
             if (notes.causedOverflow) {
                 this.fluff++;
             }

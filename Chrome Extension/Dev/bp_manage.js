@@ -421,13 +421,13 @@ var BP_PLUGIN;
 /** @globals-end */
 
 function bpPluginLoaded ()
-{
+{ "use strict";
   BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
   console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
 }        
 
 // $(document).ready(function (e)BP_MOD_CS_PLAT.addEventListener(window, 'load', function(e)
-{
+{ "use strict";
   bpPluginLoaded();
   BP_MOD_FILESTORE.init();
   BP_MOD_MANAGE.onload();

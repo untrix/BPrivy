@@ -64,7 +64,7 @@ namespace bp
 	{
 		if (siz>0)
 		{
-			if ((pos>=0) && (pos+siz<m_Siz) && buf)
+			if ((pos>=0) && (pos+siz<=m_Siz) && buf)
 			{
 				memcpy((void*)(m_P+pos), (const void*)buf, siz*sizeof(T));
 			}
