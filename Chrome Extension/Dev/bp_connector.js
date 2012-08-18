@@ -44,7 +44,8 @@ var BP_MOD_CONNECT = (function ()
         cm_importCSV    = "cm_imCSV",
         cm_exportCSV    = "cm_exCSV",
         cm_compactDB    = "cm_cmDB",
-        cm_cleanDB      = "cm_clnDB";
+        cm_cleanDB      = "cm_clnDB",
+        cm_getDB        = "cm_getDB";
 
     var DICT_TRAITS={};
    
@@ -194,51 +195,6 @@ var BP_MOD_CONNECT = (function ()
             return new PRecord(loc, date, userid, pass);
         }
         
-        function createDB (dbName, dbDir, callbackFunc)
-        {
-            rpcToMothership({cm: cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
-        }
-    
-        function loadDB (dbPath, callbackFunc)
-        {
-            rpcToMothership({cm: cm_loadDB, dbPath:dbPath}, callbackFunc);
-        }
-    
-        function mergeInDB (dbPath, callbackFunc)
-        {
-            rpcToMothership({cm: cm_mergeInDB, dbPath:dbPath}, callbackFunc);
-        }
-    
-        function mergeDB (dbPath, callbackFunc)
-        {
-            rpcToMothership({cm: cm_mergeDB, dbPath:dbPath}, callbackFunc);
-        }
-    
-        function mergeOutDB (dbPath, callbackFunc)
-        {
-            rpcToMothership({cm: cm_mergeOutDB, dbPath:dbPath}, callbackFunc);
-        }
-    
-        function compactDB (callbackFunc)
-        {
-            rpcToMothership({cm: cm_compactDB}, callbackFunc);
-        }
-    
-        function cleanDB (callbackFunc)
-        {
-            rpcToMothership({cm: cm_cleanDB}, callbackFunc);
-        }
-    
-        function importCSV (dbPath, obfuscated, callbackFunc)
-        {
-            rpcToMothership({cm: cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
-        }
-    
-        function exportCSV (dirPath, obfuscated, callbackFunc)
-        {
-            rpcToMothership({cm: cm_exportCSV, dirPath:dirPath, obfuscated: obfuscated}, callbackFunc);
-        }
-    
         //Assemble the interface    
         var iface = {};
         Object.defineProperties(iface, 
@@ -262,22 +218,22 @@ var BP_MOD_CONNECT = (function ()
             cm_exportCSV: {value: cm_exportCSV},
             cm_compactDB: {value: cm_compactDB},
             cm_cleanDB: {value: cm_cleanDB},
+            cm_getDB:   {value: cm_getDB},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
             newERecord: {value: newERecord},
             newPRecord: {value: newPRecord},
             getRecs: {value: getRecs},
-            loadDB: {value: loadDB},
-            unloadDB: {value: function (cback) {rpcToMothership({cm: cm_unloadDB}, cback);}},
-            mergeDB: {value: mergeDB},
-            mergeOutDB: {value: mergeOutDB},
-            mergeInDB: {value: mergeInDB},
-            compactDB: {value: compactDB},
-            cleanDB: {value: cleanDB},
-            createDB: {value: createDB},
-            getDBPath: {value: getDBPath},
-            importCSV: {value: importCSV},
-            exportCSV: {value: exportCSV}
+            //loadDB: {value: loadDB},
+            // mergeDB: {value: mergeDB},
+            // mergeOutDB: {value: mergeOutDB},
+            // mergeInDB: {value: mergeInDB},
+            // compactDB: {value: compactDB},
+            // cleanDB: {value: cleanDB},
+            // createDB: {value: createDB},
+            getDBPath: {value: getDBPath}
+            // importCSV: {value: importCSV},
+            // exportCSV: {value: exportCSV}
         });
         Object.freeze(iface);
 

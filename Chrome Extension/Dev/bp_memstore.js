@@ -1128,10 +1128,11 @@ var BP_MOD_MEMSTORE = (function ()
         MemStats.stats = new MemStats();
     }
     
-    function DNodeIterHelper(node, up)
+    function DNodeIterHelper(node, up, myKey)
     {
         return Object.defineProperties(this,
         {
+            myKey:  {value:myKey},
             i:      {value:0, writable:true},
             keys:   {value:Object.keys(node)},
             up:     {value:up}
@@ -1168,10 +1169,11 @@ var BP_MOD_MEMSTORE = (function ()
         });
         this.visit(root, undefined); // specifying 'undefined' for self-documentation
     }
-    DNodeIterator.prototype.visit = function (node, up)
+    /** Internal Private method */
+    DNodeIterator.prototype.visit = function (node, up, key)
     {
         //node.initIterHelper(up);
-        node[DNODE_TAG.ITER] = new DNodeIterHelper(node, up);
+        node[DNODE_TAG.ITER] = new DNodeIterHelper(node, up, key);
         this.node = node;
         return node;
     };
@@ -1179,6 +1181,9 @@ var BP_MOD_MEMSTORE = (function ()
     {
         var notes, key;
         
+        // Walk back up the tree if dead-ended, until you get to a node which has at
+        // least one unvisited child remaining, or if you get back to the top/root of
+        // the tree.
         for (notes = this.node[DNODE_TAG.ITER], key = notes.nextKey();
              !key;
              notes = this.node[DNODE_TAG.ITER], key = notes.nextKey())
@@ -1191,9 +1196,10 @@ var BP_MOD_MEMSTORE = (function ()
             }
         }
         
+        // Step down below the node unless we're back at the top of the tree.
         if (key)
         {
-            return this.visit(this.node[key], this.node);// visit a child node
+            return this.visit(this.node[key], this.node, notes.myKey+key);// visit a child node
         }
         // else walk is over; return undefined.
     };
@@ -1250,7 +1256,7 @@ var BP_MOD_MEMSTORE = (function ()
     {
         return new DNodeIterator(DNode[dt], dt);
     }
-    
+
     //Assemble the interface    
     var iface = Object.freeze(
     {
@@ -1265,9 +1271,13 @@ var BP_MOD_MEMSTORE = (function ()
         newDNode:    newDNode, // used by build_tools
         DURL:        DURL, // used by build_tools
         DRecord:     DRecord,
+        DNProto:     DNProto,
+        DNODE_TAG:   DNODE_TAG,
         newDNodeIterator: newDNodeIterator,
         getDT:       function(dt){return DNode[dt];},
-        getStats:    function(){return MemStats.stats;}
+        getStats:    function(){return MemStats.stats;},
+        putDB:       function(dNode, dt){DNode[dt] = dNode;},
+        getDB:       function(dt){return DNode[dt];}
     });
 
     console.log("loaded memstore");

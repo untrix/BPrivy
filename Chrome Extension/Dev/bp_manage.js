@@ -7,7 +7,7 @@
 
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR,
-  ls, BP_PLUGIN, BP_MOD_FILESTORE */
+  ls, BP_PLUGIN, BP_MOD_FILESTORE, BP_MOD_EDITOR, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_MEMSTORE */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
  
@@ -16,16 +16,80 @@ var BP_MOD_MANAGE = (function ()
     "use strict"; //TODO: Remove this from prod. build
     /** @import-module-begin BP_PLUGIN */
     /** @import-module-begin CSPlatform */
-    var m = BP_MOD_CS_PLAT;
+    var m = IMPORT(BP_MOD_CS_PLAT);
     var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
     var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     var DIR_SEP = IMPORT(m.DIR_SEP);
     /** @import-module-begin Common */
-    m = BP_MOD_FILESTORE;
+    m = IMPORT(BP_MOD_FILESTORE);
     var FILESTORE = IMPORT(m);
     var cullDBName = IMPORT(m.cullDBName);
+    /** @import-module-begin*/
+    m = IMPORT(BP_MOD_TRAITS);
+    var dt_pRecord = IMPORT(m.dt_pRecord);
+    /** @import-module-begin */
+    var MEMSTORE = IMPORT(BP_MOD_MEMSTORE);
+    var CS_PLAT = IMPORT(BP_MOD_CS_PLAT),
+        rpcToMothership = IMPORT(CS_PLAT.rpcToMothership);
+    /** @import-module-begin */
+    var MOD_CONNECT = IMPORT(BP_MOD_CONNECT);
     /** @import-module-end **/ m = null;
+    
+    function createDB (dbName, dbDir, callbackFunc)
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
+    }
 
+    function loadDB (dbPath, callbackFunc)
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_loadDB, dbPath:dbPath}, callbackFunc);
+    }
+
+    function mergeInDB (dbPath, callbackFunc)
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_mergeInDB, dbPath:dbPath}, callbackFunc);
+    }
+
+    function mergeDB (dbPath, callbackFunc)
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_mergeDB, dbPath:dbPath}, callbackFunc);
+    }
+
+    function mergeOutDB (dbPath, callbackFunc)
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_mergeOutDB, dbPath:dbPath}, callbackFunc);
+    }
+
+    function compactDB (callbackFunc)
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_compactDB}, callbackFunc);
+    }
+
+    function cleanDB (callbackFunc)
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_cleanDB}, callbackFunc);
+    }
+
+    function importCSV (dbPath, obfuscated, callbackFunc)
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
+    }
+
+    function exportCSV (dirPath, obfuscated, callbackFunc)
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_exportCSV, dirPath:dirPath, obfuscated: obfuscated}, callbackFunc);
+    }
+    
+    function unloadDB(cback) 
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_unloadDB}, cback);
+    }
+    
+    function getDB(dt, cback)
+    {
+        rpcToMothership({cm: MOD_CONNECT.cm_getDB, dt:dt}, cback);
+    }
+    
     function fillOptions(eid, dir)
     {
         var o={hide:true}, d, i=0, n=0;
@@ -61,7 +125,8 @@ var BP_MOD_MANAGE = (function ()
                     localStorage['db.path'] = resp.dbPath;
                 }
             }
-            $('[data-dbPath]').text(cullDBName(resp.dbPath)||"No Open Wallet").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+            $('[data-dbName]').text(cullDBName(resp.dbPath)||"No Open Wallet").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+            $('[data-db-path]').val(resp.dbPath||"No Open Wallet").attr('data-path', resp.dbPath);
 
             if (resp.memStats && resp.dbPath)
             {
@@ -89,7 +154,7 @@ var BP_MOD_MANAGE = (function ()
             
             if (resp.dbStats)
             {
-                resp.dbStats = FILESTORE.newDBStats(null, resp.dbStats);
+                resp.dbStats = FILESTORE.newDBMap(null, resp.dbStats);
                 gbg = resp.dbStats.calcDupes();
                 
                 if (gbg) {
@@ -113,7 +178,7 @@ var BP_MOD_MANAGE = (function ()
         }
         else 
         {
-            $('#dbPath').text(null).attr('data-original-title', '').attr('data-path', null);
+            $('[data-db-path]').text(null).attr('data-original-title', '').attr('data-path', null);
             $('#stats').val('');
             $('#dbCompact').removeClass('btn-warning').removeClass('btn-primary').prop('disabled', true);
             $('#qclean-stats').val("");
@@ -163,7 +228,7 @@ var BP_MOD_MANAGE = (function ()
                 console.log("ChooseFile returned:" + o.path);
                 var obfuscated = $('#csvImportObfuscated')[0].checked;
                 //var overrides = $('#csvImportOverrides')[0].checked;
-                BP_MOD_CONNECT.importCSV(o.path, obfuscated, function (resp)
+                importCSV(o.path, obfuscated, function (resp)
                 {
                     if (resp.result === true) 
                     {
@@ -188,7 +253,7 @@ var BP_MOD_MANAGE = (function ()
             $('#csvExportSpinner').show();
             if (BP_PLUGIN.chooseFolder(o)) {
                 console.log("ChooseFolder returned:" + o.path);
-                BP_MOD_CONNECT.exportCSV(o.path, false, function (resp)
+                exportCSV(o.path, false, function (resp)
                 {
                     var msg;
                     if (resp.result === true) 
@@ -210,7 +275,7 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#dbCompact', 'click', function (e)
         {
             $('#dbCompact').button('loading');
-            BP_MOD_CONNECT.compactDB(function (resp)
+            compactDB(function (resp)
             {
                 if (resp.result === true) 
                 {
@@ -227,7 +292,7 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#dbClean', 'click', function (e)
         {
             $('#dbClean').button('loading');
-            BP_MOD_CONNECT.cleanDB(function (resp)
+            cleanDB(function (resp)
             {
                 if (resp.result === true) 
                 {
@@ -248,7 +313,7 @@ var BP_MOD_MANAGE = (function ()
             if (BP_PLUGIN.chooseFolder(o)) 
             {
                 console.log("ChooseFolder returned:" + o.path);
-                BP_MOD_CONNECT.mergeInDB(o.path, function (resp)
+                mergeInDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
                         BP_MOD_ERROR.success('Merged In password wallet at ' + o.path);
@@ -270,7 +335,7 @@ var BP_MOD_MANAGE = (function ()
             if (BP_PLUGIN.chooseFolder(o)) 
             {
                 console.log("ChooseFolder returned:" + o.path);
-                BP_MOD_CONNECT.mergeDB(o.path, function (resp)
+                mergeDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
                         BP_MOD_ERROR.success('Merged with password wallet at ' + o.path);
@@ -292,7 +357,7 @@ var BP_MOD_MANAGE = (function ()
             if (BP_PLUGIN.chooseFolder(o)) 
             {
                 console.log("ChooseFolder returned:" + o.path);
-                BP_MOD_CONNECT.mergeOutDB(o.path, function (resp)
+                mergeOutDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
                         BP_MOD_ERROR.success('Merged out to password wallet at ' + o.path);
@@ -307,14 +372,14 @@ var BP_MOD_MANAGE = (function ()
             }
         });
         
-        addEventListeners('#dbChooseLoad', 'click', function (e)
+        addEventListeners('#dbChooseLoad, #dbChooseLoad2', 'click', function (e)
         {
             var o={dtitle:"BPrivy: Select Wallet Folder",
                    dbutton: "Select Wallet Folder"};
             $('#dbChooseLoad').button('loading');
             if (BP_PLUGIN.chooseFolder(o)) 
             {
-                BP_MOD_CONNECT.loadDB(o.path, function (resp)
+                loadDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
                         updateDash(resp);
@@ -343,7 +408,7 @@ var BP_MOD_MANAGE = (function ()
                    dbutton: "Select Folder"};
             if (BP_PLUGIN.chooseFolder(o)) {
                 console.log("ChooseFolder returned:" + o.path);
-                BP_MOD_CONNECT.createDB(dbName, o.path, function (resp)
+                createDB(dbName, o.path, function (resp)
                 {
                     if (resp.result === true) {
                         updateDash(resp);
@@ -380,9 +445,9 @@ var BP_MOD_MANAGE = (function ()
             }
         });
 
-        addEventListeners('#dbClose', 'click', function (e)
+        addEventListeners('#dbClose, #dbClose2', 'click', function (e)
         {
-            BP_MOD_CONNECT.unloadDB(function (resp)
+            unloadDB(function (resp)
             {
                 if (resp.result === true) 
                 {
@@ -396,11 +461,26 @@ var BP_MOD_MANAGE = (function ()
             });
         });
                
-        BP_MOD_CONNECT.getDBPath(function(resp)
+        MOD_CONNECT.getDBPath(function(resp)
         {
             updateDash(resp);
         });
         $('#content *').tooltip();
+        
+        getDB(dt_pRecord, function (resp)
+        {
+            if (!resp) {
+                callbackHandleError(resp);
+            }
+
+            var dB = JSON.parse(resp.dB);
+            MEMSTORE.putDB(dB, dt_pRecord);
+            
+            var ctx = {it:MEMSTORE.newDNodeIterator(dt_pRecord)},
+                editor = BP_MOD_W$.w$exec(BP_MOD_EDITOR.EditWdl_wdt, ctx);
+                
+            editor.$el.appendTo($('#editorPane'));
+        });
     }
    
     // Assemble the interface

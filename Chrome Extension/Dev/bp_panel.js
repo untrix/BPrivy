@@ -605,7 +605,7 @@ var BP_MOD_WDL = (function ()
     PanelList.prototype = w$defineProto(
     {
         handleDragStart: {value: function handleDragStart (e)
-        {   // 'this' is bound to e.target
+        {   // CAUTION: 'this' is bound to e.target
             
             //console.info("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
@@ -623,13 +623,13 @@ var BP_MOD_WDL = (function ()
             //return true;
         }},
         handleDrag: {value: function handleDrag(e)
-        {   // 'this' is bound to e.target
+        {   // CAUTION: 'this' is bound to e.target
             //console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
             e.stopImmediatePropagation();
         }},
         handleDragEnd: {value: function handleDragEnd(e)
-        {   // 'this' is bound to e.target
+        {   // CAUTION: 'this' is bound to e.target
             //console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //return true;
@@ -718,7 +718,9 @@ var BP_MOD_WDL = (function ()
        CT_TEXT_PLAIN: CT_TEXT_PLAIN,
        CT_BP_PREFIX: CT_BP_PREFIX,
        CT_BP_USERID: CT_BP_USERID,
-       CT_BP_PASS: CT_BP_PASS
+       CT_BP_PASS: CT_BP_PASS,
+       NButton: NButton,
+       SButton: SButton
     };
     
     console.log("loaded wdl");

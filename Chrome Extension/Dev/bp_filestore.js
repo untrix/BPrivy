@@ -507,7 +507,7 @@ var BP_MOD_FILESTORE = (function()
                 function (dt, cat, fname, dirEnt)
                 {
                     var o = {},
-                        fpath = DB_FS.makeDTDirPath(dt)+fname;
+                        fpath = DB_FS.makeDTDirPath(dt, dbStats.dbPath) + fname;
         
                     if ( (!keepDTFiles) || (fname !== DB_FS.getDTFileName(dt)) )
                     {
@@ -943,7 +943,7 @@ var BP_MOD_FILESTORE = (function()
         DBMap.prototype.numEnts = function (catl)
         {
             var num = 0;
-            iterDTCatM (this, this, this.getDTL, catl, 
+            iterDTCatM (this, this, this.getDTL(), catl, 
             function(dt, cat, entM)
             {
                 num += Object.keys(entM).length;
@@ -963,7 +963,7 @@ var BP_MOD_FILESTORE = (function()
                 });
             });
         };
-        DBMap.prototype.iterEntSorted = function (thisArg, dtl, catl, func, ctx)
+        DBMap.prototype.iterEntSorted = function (thisArg, dtl, catl, func, ctx, cmp)
         {
             cmp = cmp || DB_FS.mtmCmp;
             iterDTM (this, this, dtl,

@@ -167,6 +167,10 @@
                     result = FILE_STORE.exportCSV(rq.dirPath, rq.obfuscated);
                     funcSendResponse({result: result});
                     break;
+                case MOD_CONNECT.cm_getDB:
+                    BPError.push("GetDB");
+                    funcSendResponse({result:true, dB:JSON.stringify(MEM_STORE.getDB(rq.dt))});
+                    break;
                 default: // do nothing
             }
         } 
