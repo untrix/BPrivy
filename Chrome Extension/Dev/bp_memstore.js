@@ -1199,7 +1199,7 @@ var BP_MOD_MEMSTORE = (function ()
         // Step down below the node unless we're back at the top of the tree.
         if (key)
         {
-            return this.visit(this.node[key], this.node, notes.myKey+key);// visit a child node
+            return this.visit(this.node[key], this.node, notes.myKey?notes.myKey+key:key);// visit a child node
         }
         // else walk is over; return undefined.
     };

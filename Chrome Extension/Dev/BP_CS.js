@@ -514,6 +514,10 @@ var BP_MOD_CS = (function(g_win)
             getRecs(g_win.location, initialGetDB);
             registerMsgListener(clickBP);
             setupDNDWatchers(g_win);
+            // chrome.tabs.getCurrent(function (tab)
+            // {
+                // chrome.pageAction.show(tab.id);
+            // });
         }
     }
     

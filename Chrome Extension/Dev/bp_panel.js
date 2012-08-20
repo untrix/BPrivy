@@ -89,6 +89,7 @@ var BP_MOD_WDL = (function ()
     var css_class_passIn = "com-bprivy-pass-in ";// Space at the end allows concatenation
     var css_class_passOut = "com-bprivy-pass-out ";// Space at the end allows concatenation
     var css_class_tButton = "com-bprivy-tB ";
+    var css_class_nButton = "com-bprivy-nB ";
     var css_class_xButton = "com-bprivy-xB ";
 
     // These are 'data' attribute names. If implemented as jQuery data
@@ -121,64 +122,6 @@ var BP_MOD_WDL = (function ()
     var u_cir_X = '\u24CD';
     /** @globals-end **/
        
-    /********************** UI Widgets in Javascript!  **************************
-     * WDL = Widget Description Language. WDL objects are evaluated by wdl-interpretor
-     * WDT = WDL Template. Functions that produce WDL objects. These may be executed either
-     *       directly by javascript or by the wdl-interpretor.
-     * WDI = WDL Template invoked inside an iteration. Gets additional w$i and w$rec properties
-     *       in its (w$)ctx argument.
-     * W$EL = Widget Element. This is the element finally produced by the wdl-interpretor.
-     *       It is a proxy to the DOM element. If the DOM is laid on a two-dimensional plane
-     *       then w$el elements are laid out on a parallel plane, with the same hierarchy
-     *       as the DOM elements and with cross-links between each pair of DOM and w$ element.
-     * Set of WDL Properties in order of processing:
-     * wdl = 
-     * {
-     *     'tag' or 'html' are mandatory
-     *     'cons' or 'proto' maybe be optionally present. But not both.
-     *     cons == widget element constructor. It should construct descendants of WidgetElement.prototype
-     *     proto== Prototype object. If this is specified, then it should be a descendant of
-     *             WidgetElement.proto. w$exec will construct an object inherited from proto.
-     *             If neither of cons or proto are present, then a simple WidgetElement will be constructed.
-     *     attr == same as in jquery
-     *     text == same as in jquery
-     *     prop == same as in jquery
-     *     css  == same as in jquery
-     *     addClass == same as in jquery
-     *     on   ==  same syntax as jQuery. Will bind 'this' to this element (i.e. currentTarget).
-     *                In this case 'this' is bound to the same element as the one catching the event.
-     *     onTarget = same syntax as jQuery. However, will bind 'this' to the target element
-     *                which may be different than the handling/catching element.
-     *     ctx == Object that holds name:value pairs to be populated into the context (ctx/w$ctx).
-     *            Meant for passing properties down to descendants, back up to parents or onto
-     *            elements further down the time-line. The elements will catch these properties
-     *            using iface and _iface properties. These properties are inserted into ctx
-     *            before children are processed. The property values may be directly specified
-     *            in the wdl (maybe dynamically created by a wdt or wdi function but ultimately
-     *            hard-bound into the resulting wdl object), or w$exec may be instructed to pick
-     *            them up from the context of from the lexical-environment denoted by 'w$'.
-     *            e.g. ctx:{ prop1:hard-boundvalue, w$:{ element:'w$el' }, w$ctx:{ prop3:'prop-from-ctx' } }
-     *     iface == Set of name:value pairs to insert into the WidgetElement before processing children. This
-     *            allows descendants and later elements to take values directly from the WidgetElement instead
-     *            of from the context. Value sources are same as described above for ctx.
-     *     children == children wdls, inserted in order of appearence.
-     *              As a special case, a w$undefined value of a child-wdl is an indication to skip that
-     *              child element instead of throwing an exception (exception will be thrown if (!child))
-     *     iterate:{ it:iterator, wdi:wdl-template-func-or-plain-object }
-     *              Insert children iteratively. Iterator should have a next() function that returns a 'record'
-     *              object to be fed into the wdi function. The wdi property shoudl hold a wdl-template function
-     *              that is expected to be executed at runtime and with each iteration w$ctx.w$rec property is
-     *              populated with the record obtained by iterator.next(). The iteration number (starting with 0)
-     *              is populated into w$ctx.w$i.
-     *     _iface: Same as iface, except that this directive is processed after children are created. Meant
-     *              to catch values thrown by children.
-     *     _final: Can have three properties {show:true/false/other, exec:func, appendTo:DOM-element}
-     *     _final.show: true=>show the element, false=>hide the element, other value or absent=> do nothing 
-     *     _final.exec: a function to execute
-     *     _final.appendTo: instructs w$exec to append the created element to a DOM element.
-     *     
-     * }
-     */
    
     function image_wdt(ctx)
     {
@@ -215,7 +158,7 @@ var BP_MOD_WDL = (function ()
         return {
         cons: NButton,
         html:'<button type="button"></button>', 
-        attr:{ class:css_class_tButton},
+        attr:{ class:css_class_nButton},
         on:{ click:NButton.prototype.newItem },
         css:{ width:'20px', float:'left' },
             children:[
@@ -590,7 +533,8 @@ var BP_MOD_WDL = (function ()
     PanelList.wdt = function (ctx)
     {
         var loc = ctx.loc || g_loc,
-            panel = ctx.panel;
+            panel = ctx.panel,
+            it = ctx.it;
         return {
         cons: PanelList,
         tag:'div', attr:{ id:eid_panelList },
@@ -599,7 +543,7 @@ var BP_MOD_WDL = (function ()
         dragend:PanelList.prototype.handleDragEnd },
         ctx:{ io_bInp:false, w$:{ itemList:'w$el' } },
         iface:{ loc:loc, panel:panel },
-             iterate:{ it:ctx.it, wdi:IoItem.wdi }
+             iterate:{ it:it, wdi:IoItem.wdi }
         };
     };
     PanelList.prototype = w$defineProto(
@@ -685,6 +629,7 @@ var BP_MOD_WDL = (function ()
             appendTo:document.body, 
             show:true, 
             exec:Panel.prototype.makeDraggable }
+        //_text: <post children text>
         };
     };
     Panel.prototype = w$defineProto( // same syntax as Object.defineProperties
@@ -720,7 +665,8 @@ var BP_MOD_WDL = (function ()
        CT_BP_USERID: CT_BP_USERID,
        CT_BP_PASS: CT_BP_PASS,
        NButton: NButton,
-       SButton: SButton
+       SButton: SButton,
+       PanelList: PanelList
     };
     
     console.log("loaded wdl");

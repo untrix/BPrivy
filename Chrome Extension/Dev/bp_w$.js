@@ -11,7 +11,83 @@
   BP_MOD_MEMSTORE, BP_MOD_TRAITS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
- 
+
+    /********************** UI Widgets in Javascript!  **************************
+     * WDL = Widget Description Language. WDL objects are evaluated by wdl-interpretor
+     * WDT = WDL Template. Functions that produce WDL objects. These may be executed either
+     *       directly by javascript or by the wdl-interpretor.
+     * WDI = WDL Template invoked inside an iteration. Gets additional w$i and w$rec properties
+     *       inside its (w$)ctx argument.
+     * W$EL = Widget Element. This is the element finally produced by the wdl-interpretor.
+     *       It is a proxy to the DOM element. If the DOM is laid on a two-dimensional plane
+     *       then w$el elements are laid out on a parallel plane, with the same hierarchy
+     *       as the DOM elements and with cross-links between each pair of DOM and w$ element.
+     * Set of WDL Properties in order of processing:
+     * wdl = 
+     * {
+     *     'tag' or 'html' are mandatory
+     *     'cons' or 'proto' maybe be optionally present. But not both.
+     *     cons == widget element constructor. It should construct descendants of WidgetElement.prototype
+     *     proto== Prototype object. If this is specified, then it should be a descendant of
+     *             WidgetElement.proto. w$exec will construct an object inherited from proto.
+     *             If neither of cons or proto are present, then a simple WidgetElement will be constructed.
+     *     attr == same as in jquery
+     *     text == same as in jquery - run before child nodes are inserted
+     *     prop == same as in jquery
+     *     css  == same as in jquery
+     *     addClass == same as in jquery
+     *     on   ==  same syntax as jQuery. Will bind 'this' to this element (i.e. currentTarget).
+     *                In this case 'this' is bound to the same element as the one catching the event.
+     *     onTarget = same syntax as jQuery. However, will bind 'this' to the target element
+     *                which may be different than the handling/catching element.
+     *     ctx == Object that holds name:value pairs to be populated into the context (ctx/w$ctx).
+     *            Meant for passing properties down to descendants, back up to parents or onto
+     *            elements further down the time-line. The elements will catch these properties
+     *            using iface and _iface properties. These properties are inserted into ctx
+     *            before children are processed. The property values may be directly specified
+     *            in the wdl (maybe dynamically created by a wdt or wdi function but ultimately
+     *            hard-bound into the resulting wdl object), or w$exec may be instructed to pick
+     *            them up from the context of from the lexical-environment denoted by 'w$'.
+                  Copy props to ctx with values:
+                  1. Directly from the javascript runtime.
+                  2. For the props under w$, copy them from the wdl-interpretor runtime. In this case
+                     the value of the prop defined below should be name of the prop in the wdl-runtime.
+                  3. Props listed under w$ctx are copied over from the context object - ctx - only makes
+                     sense when you're copying into something other than the context itself, like iface
+                     or _iface.
+     *          e.g. ctx:{ prop1:hard-boundvalue, w$:{ element:'w$el' }, w$ctx:{ prop3:'prop-from-ctx' } }
+     * 
+     *     iface == Set of name:value pairs to insert into the WidgetElement before processing children. This
+     *            allows descendants and later elements to take values directly from the WidgetElement instead
+     *            of from the context. Value sources are same as described above for ctx.
+                  Copy props to ctx with values:
+                  1. Directly from the javascript runtime.
+                  2. For the props under w$, copy them from the wdl-interpretor runtime. In this case
+                     the value of the prop defined below should be name of the prop in the wdl-runtime.
+                  3. Props listed under w$ctx are copied over from the context object - ctx - only makes
+                     sense when you're copying into something other than the context itself, like iface
+                     or _iface.
+     *     children == children wdls, inserted in order of appearence.
+     *              As a special case, a w$undefined value of a child-wdl is an indication to skip that
+     *              child element instead of throwing an exception (exception will be thrown if (!child))
+     *     iterate:{ it:iterator, wdi:wdl-template-func-or-plain-object }
+     *              Insert children iteratively. Iterator should have a next() function that returns a 'record'
+     *              object to be fed into the wdi function. The wdi property shoudl hold a wdl-template function
+     *              that is expected to be executed at runtime and with each iteration w$ctx.w$rec property is
+     *              populated with the record obtained by iterator.next(). The iteration number (starting with 0)
+     *              is populated into w$ctx.w$i.
+     *     _iface: Same as iface, except that this directive is processed after children are created. Meant
+     *              to catch values thrown by children.
+     *     _final: Can have three properties {show:true/false/other, exec:func, appendTo:DOM-element}
+     *     _final.show: true=>show the element, false=>hide the element, other value or absent=> do nothing 
+     *     _final.exec: a function to execute
+     *     _final.appendTo: instructs w$exec to append the created element to a DOM element.
+     *     _text:   Text (node) to append to the element after all children. Appends a
+     *              text node created by document.createTextNode() method.
+     *     
+     * }
+     */
+
 var BP_MOD_W$ = (function ()
 {
     "use strict";
@@ -243,8 +319,9 @@ var BP_MOD_W$ = (function ()
                     ctx.w$i = i;
                     cwdl = cwdl(ctx);
                 } // compile wdi to wdl
-                
-                w$el.append(w$exec(cwdl, ctx, true));
+                if (cwdl !== w$undefined) {
+                    w$el.append(w$exec(cwdl, ctx, true));
+                }
             } catch (e) {
                 logwarn(e);
             }}
@@ -252,7 +329,8 @@ var BP_MOD_W$ = (function ()
         
         // Populate w$el's interface post-children
         if (wdl._iface) { w$evalProps(wdl._iface, w$, ctx, w$el); }
-
+        // Insert text nodes after children
+        if (wdl._text) { $el.append(document.createTextNode(wdl._text)); }
         // Finally, post Creation steps
         if ((_final=wdl._final)) {            
             if (_final.show === true) {

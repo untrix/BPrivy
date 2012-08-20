@@ -169,12 +169,13 @@
                     break;
                 case MOD_CONNECT.cm_getDB:
                     BPError.push("GetDB");
-                    funcSendResponse({result:true, dB:JSON.stringify(MEM_STORE.getDB(rq.dt))});
+                    funcSendResponse({result:true, dB:MEM_STORE.getDB(rq.dt)});
                     break;
                 default: // do nothing
             }
         } 
-        catch (err) {
+        catch (err) 
+        {
             BP_MOD_ERROR.logwarn(err);
             if (bSaveRec) {FILE_STORE.unloadDB();} // Seems that we lost DB-connection
             var resp = makeDashResp(false);
@@ -200,6 +201,12 @@
                 throw new BPError("DB Load Failed");
             }
         }
+            
+        // chrome.tabs.onSelectionChanged.addListener(function(tabId) 
+        // {
+            // chrome.pageAction.show(tabId);
+        // });
+
     } catch (e)
     {
         

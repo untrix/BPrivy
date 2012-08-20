@@ -14,7 +14,11 @@
   "content_scripts": [
 	{
 	"matches": ["<all_urls>"],
-	"js": ["tp/jquery.js", "tp/jquery-ui.js", "bp_error.js", "bp_common.js", "bp_traits.js", "bp_cs_platform_chrome.js", "bp_connector.js", "bp_w$.js", "bp_panel.js", "bp_cs.js"],
+	"js": [
+	   "tp/jquery.js", "tp/jquery-ui.js", "bp_error.js", "bp_common.js", "bp_traits.js", 
+	   "bp_cs_platform_chrome.js", "bp_connector.js", "bp_w$.js", "bp_panel.js",
+	   "bp_cs.js"
+    ],
 	"css": ["bp.css"]
 	}
   ],

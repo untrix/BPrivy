@@ -111,10 +111,24 @@ function makeRecessCback (fpath)
         }
     };
 }
-
+function makeRecessCback2 (fpath) 
+{
+    'use strict';
+    return function (err, obj)
+    {   var i, n;
+        if (err) {throw err;}
+        zero(fpath);
+        console.log('Compiling ' + fpath);
+        
+        fs.appendFile(fpath, obj.output, async.runHere(bp.throwErr));
+    };
+}
 var devTarget = abs(SRC, 'bp.css'), 
     releaseTarget = abs(DST, 'release', 'bp.css'),
     distTarget = abs(DST, 'dist', 'bp.css'),
+    devTarget2 = abs(SRC, 'bp_editor.css'),
+    releaseTarget2 = abs(DST, 'release', 'bp_editor.css'),
+    distTarget2 = abs(DST, 'dist', 'bp_editor.css'),
     srcFiles=[];
     
 // Ensure that the build dirs exist.
@@ -133,5 +147,17 @@ srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dist.l
 if (doBuild(srcFiles, distTarget)) {
     recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(distTarget)));
 }
+
+var srcFile=SRC+'bp.less';
+if (doBuild([srcFile], devTarget2)) {
+    recess(srcFile, {compile:true, compress:false}, async.runHere(makeRecessCback2(devTarget2)));
+}
+if (doBuild(srcFiles, releaseTarget2)) { 
+    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget2)));
+}
+if (doBuild(srcFiles, distTarget2)) {
+    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget2)));
+}
+
 
 async.end();

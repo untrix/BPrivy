@@ -226,7 +226,7 @@ var BP_MOD_MANAGE = (function ()
             $('#csvImportSpinner').show();
             if (BP_PLUGIN.chooseFile(o)) {
                 console.log("ChooseFile returned:" + o.path);
-                var obfuscated = $('#csvImportObfuscated')[0].checked;
+                var obfuscated = false; //$('#csvImportObfuscated')[0].checked;
                 //var overrides = $('#csvImportOverrides')[0].checked;
                 importCSV(o.path, obfuscated, function (resp)
                 {
@@ -473,10 +473,10 @@ var BP_MOD_MANAGE = (function ()
                 callbackHandleError(resp);
             }
 
-            var dB = JSON.parse(resp.dB);
+            var dB = resp.dB;
             MEMSTORE.putDB(dB, dt_pRecord);
             
-            var ctx = {it:MEMSTORE.newDNodeIterator(dt_pRecord)},
+            var ctx = {dnIt:MEMSTORE.newDNodeIterator(dt_pRecord), dt:dt_pRecord},
                 editor = BP_MOD_W$.w$exec(BP_MOD_EDITOR.EditWdl_wdt, ctx);
                 
             editor.$el.appendTo($('#editorPane'));
