@@ -45,7 +45,8 @@ var BP_MOD_CONNECT = (function ()
         cm_exportCSV    = "cm_exCSV",
         cm_compactDB    = "cm_cmDB",
         cm_cleanDB      = "cm_clnDB",
-        cm_getDB        = "cm_getDB";
+        cm_getDB        = "cm_getDB",
+        cm_getDN        = "cm_getDN";
 
     var DICT_TRAITS={};
    
@@ -91,7 +92,7 @@ var BP_MOD_CONNECT = (function ()
         if (loc.hostname) {
             out.H = loc.hostname;
         }
-        if (DICT_TRAITS[dt].url_path && loc.pathname && loc.pathname !== "/") 
+        if (DICT_TRAITS[dt].url_path && loc.pathname && (loc.pathname !== "/")) 
         {
             out.P = loc.pathname;
         }
@@ -219,21 +220,13 @@ var BP_MOD_CONNECT = (function ()
             cm_compactDB: {value: cm_compactDB},
             cm_cleanDB: {value: cm_cleanDB},
             cm_getDB:   {value: cm_getDB},
+            cm_getDN:   {value: cm_getDN},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
             newERecord: {value: newERecord},
             newPRecord: {value: newPRecord},
             getRecs: {value: getRecs},
-            //loadDB: {value: loadDB},
-            // mergeDB: {value: mergeDB},
-            // mergeOutDB: {value: mergeOutDB},
-            // mergeInDB: {value: mergeInDB},
-            // compactDB: {value: compactDB},
-            // cleanDB: {value: cleanDB},
-            // createDB: {value: createDB},
             getDBPath: {value: getDBPath}
-            // importCSV: {value: importCSV},
-            // exportCSV: {value: exportCSV}
         });
         Object.freeze(iface);
 

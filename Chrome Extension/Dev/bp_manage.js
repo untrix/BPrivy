@@ -14,7 +14,8 @@
 var BP_MOD_MANAGE = (function () 
 {
     "use strict"; //TODO: Remove this from prod. build
-    /** @import-module-begin BP_PLUGIN */
+    /** @import-module-begin */
+    var MOD_COMMON = IMPORT(BP_MOD_COMMON);
     /** @import-module-begin CSPlatform */
     var m = IMPORT(BP_MOD_CS_PLAT);
     var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
@@ -33,7 +34,14 @@ var BP_MOD_MANAGE = (function ()
         rpcToMothership = IMPORT(CS_PLAT.rpcToMothership);
     /** @import-module-begin */
     var MOD_CONNECT = IMPORT(BP_MOD_CONNECT);
+    /** @import-module-begin */
+    m = IMPORT(BP_MOD_ERROR);
+    var BPError = IMPORT(m.BPError);
     /** @import-module-end **/ m = null;
+    
+    /** @globals-begin */
+    var g_editor, g_dbName;
+    /** @globals-end **/ 
     
     function createDB (dbName, dbDir, callbackFunc)
     {
@@ -125,7 +133,8 @@ var BP_MOD_MANAGE = (function ()
                     localStorage['db.path'] = resp.dbPath;
                 }
             }
-            $('[data-dbName]').text(cullDBName(resp.dbPath)||"No Open Wallet").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+            g_dbName = cullDBName(resp.dbPath);
+            $('[data-dbName]').text(g_dbName||"No Open Wallet").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
             $('[data-db-path]').val(resp.dbPath||"No Open Wallet").attr('data-path', resp.dbPath);
 
             if (resp.memStats && resp.dbPath)
@@ -186,9 +195,44 @@ var BP_MOD_MANAGE = (function ()
         }
     }
 
+    function reloadEditor()
+    {
+        $('#refreshEditor').button('loading');
+        getDB(dt_pRecord, function (resp)
+        {
+            if (!resp) {
+                callbackHandleError(resp);
+                // fall-through
+            }
+
+            var dB = resp.dB;
+            MEMSTORE.putDB(dB, dt_pRecord);
+            
+            var ctx = {dnIt:MEMSTORE.newDNodeIterator(dt_pRecord), dt:dt_pRecord},
+                editor = BP_MOD_W$.w$exec(BP_MOD_EDITOR.EditorWdl_wdt, ctx),
+                temp;
+            
+            MOD_COMMON.deleteProps(ctx); // Clear DOM refs inside the ctx to aid GC
+            if (g_editor) {
+                g_editor.$el.replaceWith(editor.$el);
+                temp = g_editor;    
+                temp.clear();
+                g_editor = editor;
+                //g_editor.$el.appendTo($('#editorPane'));
+            }
+            else {
+                g_editor = editor;
+                g_editor.$el.appendTo($('#editorPane'));
+            }
+            
+            $('#refreshEditor').button('reset');
+            //$('#editorPane *').tooltip(); // leaks DOM nodes :(. I wonder what else in bootstrap does.
+        });
+    }
+    
     function onload()
     {               
-        if (localStorage['dbSaveLocation']) {
+        if (localStorage.dbSaveLocation) {
             $('#dbSaveLocation')[0].checked = true;
         }
         else {
@@ -375,24 +419,30 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#dbChooseLoad, #dbChooseLoad2', 'click', function (e)
         {
             var o={dtitle:"BPrivy: Select Wallet Folder",
-                   dbutton: "Select Wallet Folder"};
-            $('#dbChooseLoad').button('loading');
+                   dbutton: "Select Wallet Folder"},
+                   //capture the id in the closure for using from callback
+                   id = e.currentTarget.id;
+            $('#dbChooseLoad, #dbChooseLoad2').button('loading');
+
             if (BP_PLUGIN.chooseFolder(o)) 
             {
                 loadDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
                         updateDash(resp);
+                        if (id === 'dbChooseLoad2') {
+                            reloadEditor();
+                        }
                         BP_MOD_ERROR.success('Opened password wallet at ' + resp.dbPath);
                     }
                     else {
                         callbackHandleError(resp);
                     }
-                    $('#dbChooseLoad').button('reset');
+                    $('#dbChooseLoad, #dbChooseLoad2').button('reset');
                 });
             }
             else {
-                $('#dbChooseLoad').button('reset');
+                $('#dbChooseLoad, #dbChooseLoad2').button('reset');
                 console.log("ChooseFolder returned false");
             }
         });
@@ -447,11 +497,17 @@ var BP_MOD_MANAGE = (function ()
 
         addEventListeners('#dbClose, #dbClose2', 'click', function (e)
         {
+            //capture the id in the closure for using from callback
+            var id = e.currentTarget.id;
+            
             unloadDB(function (resp)
             {
                 if (resp.result === true) 
                 {
                     updateDash(resp);
+                    if (id === 'dbClose2') {
+                        reloadEditor();
+                    }
                     BP_MOD_ERROR.success('UWallet has been closed');
                 }
                 else 
@@ -460,27 +516,31 @@ var BP_MOD_MANAGE = (function ()
                 }
             });
         });
-               
+
+        addEventListeners('#editB', 'click',
+        function initEditor(e)
+        {
+            if (!g_editor) {reloadEditor();}
+        });
+        
+        addEventListeners('#refreshEditor', 'click', reloadEditor);
+        
+        addEventListeners('#newDNode', 'click', 
+        function(e)
+        {
+            if (g_dbName) {
+                g_editor.newRecord();
+            }
+            else {
+                BP_MOD_ERROR.alert("Please open a wallet first");
+            }
+        });
+        
         MOD_CONNECT.getDBPath(function(resp)
         {
             updateDash(resp);
         });
-        $('#content *').tooltip();
-        
-        getDB(dt_pRecord, function (resp)
-        {
-            if (!resp) {
-                callbackHandleError(resp);
-            }
-
-            var dB = resp.dB;
-            MEMSTORE.putDB(dB, dt_pRecord);
-            
-            var ctx = {dnIt:MEMSTORE.newDNodeIterator(dt_pRecord), dt:dt_pRecord},
-                editor = BP_MOD_W$.w$exec(BP_MOD_EDITOR.EditWdl_wdt, ctx);
-                
-            editor.$el.appendTo($('#editorPane'));
-        });
+        //$('#content *').tooltip();
     }
    
     // Assemble the interface

@@ -87,7 +87,7 @@
             cm = rq.cm,
             bSaveRec;
         delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
-        console.info("Mothership Received object of type " + cm);
+        console.info(String(cm));
         
         rq.atvt ? (BPError.atvt = new Activity(rq.atvt)) : (BPError.atvt = new Activity("BPMain::OnRequest"));
         
@@ -170,6 +170,10 @@
                 case MOD_CONNECT.cm_getDB:
                     BPError.push("GetDB");
                     funcSendResponse({result:true, dB:MEM_STORE.getDB(rq.dt)});
+                    break;
+                case MOD_CONNECT.cm_getDN:
+                    BPError.push("GetDNode");
+                    funcSendResponse({result:true, dN:MEM_STORE.getDNode(rq.l, rq.dt)});
                     break;
                 default: // do nothing
             }

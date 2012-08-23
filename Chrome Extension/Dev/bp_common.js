@@ -142,17 +142,17 @@ var BP_MOD_COMMON = (function()
         return new Inheritor();
     }
 
-    function clear(obj) 
+    function deleteProps(obj)
     {
         var keys = Object.keys(obj), n;
         for (n=keys.length-1; n >= 0; n--) {
             delete obj[keys[n]];
-        }
+        }        
     }
     
     function copy (src, dst)
     {
-        clear(dst);
+        deleteProps(dst);
         var keys = Object.keys(src),
             n;
         for (n=keys.length-1; n>=0; n--) {
@@ -233,7 +233,7 @@ var BP_MOD_COMMON = (function()
     }
 
     //                      Replaces IterArray
-    // Similar to forEach, but not the same. This is here because forEach is supposed
+    // Similar to forEach, but not the same. This is here because forEach is said
     // to be slower than a for-loop ! Calls func with the array-item as first argument
     // followed by all arguments passed to iterArray.
     // 'this' is mapped to thisArg.
@@ -274,7 +274,8 @@ var BP_MOD_COMMON = (function()
         preventDefault: {value: preventDefault},
         newInherited: {value: newInherited},
         copy: {value: copy},
-        clear: {value: clear},
+        clear: {value: deleteProps},
+        deleteProps: {value: deleteProps},
         iterKeys: {value: iterKeys},
         iterArray: {value: iterArray},
         iterArray2:{value: iterArray2},

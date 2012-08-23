@@ -257,7 +257,7 @@ var BP_MOD_ERROR = (function()
     };
 
     
-    function alert (arg) 
+    function alert (arg)
     {
         var be = new BPError(arg);
         console.log(be.toString());

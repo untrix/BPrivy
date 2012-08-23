@@ -828,7 +828,7 @@ var BP_MOD_MEMSTORE = (function ()
     // e.g. this['www:8080'] = child-node;
 
     /** @constructor */
-    function DNode ()
+    function DNode (_url)
     {
         /* Contains
          * 1) DNODE_TAG properties whose value is one url segment (string) prefixed with the
@@ -839,7 +839,26 @@ var BP_MOD_MEMSTORE = (function ()
          *    vice-versa. So, if you delete records from a DNode then be sure to delte the 'data'
          *    object as well.
          */
+        Object.defineProperty(this, "url", {value:_url, enumerable:true});
     }
+    /** Makes url of child node by extracting its url-segment from its key and 
+     * appending that to this.url */
+    function makeURL(baseURL, childKey)
+    {
+        var tag = childKey.slice(0,2),
+            url;
+        switch (tag)
+        {
+            case DNODE_TAG.HOST:
+                url = childKey.slice(2) + (baseURL ? ("." + baseURL) : "") ;
+                break;
+            case DNODE_TAG.PATH:
+                url = baseURL + "/" + childKey.slice(2);
+                break;
+        }
+        
+        return url;
+    }    
     var DNProto = DNode.prototype;
     DNProto.getData = function(dt) {return this[DNODE_TAG.DATA+dt];};
     DNProto.putData = function(drec)
@@ -865,7 +884,6 @@ var BP_MOD_MEMSTORE = (function ()
             (recsMap[ki] = newActions(dt)).insert(drec);
         }
     };
-    
     DNProto.putETLD = function(drec)
     {
         // Used for a simple map with URL as the key and record as value.
@@ -873,7 +891,7 @@ var BP_MOD_MEMSTORE = (function ()
         this[DNODE_TAG.ETLD] = drec.rec.val;
     };
     
-    function newDNode () {return new DNode();}
+    function newDNode (url) {return new DNode(url);}
     
     /** Helper function to DNProto.insert */
     DNProto.tryInsert = function (drec)
@@ -894,7 +912,7 @@ var BP_MOD_MEMSTORE = (function ()
         {   // continue walking down the trie
             var n = this[k];
             if (!n) {
-                this[k] = (n = newDNode());
+                this[k] = (n = newDNode(makeURL(this.url, k)));
             }
             
             return n; // Non-recursive
@@ -920,29 +938,11 @@ var BP_MOD_MEMSTORE = (function ()
         else {
             n = this[k];
             if (!n) {
-                return undefined; // exact URL match does not exist. We're a substring match.
+                return undefined; // exact URL match does not exist. We're a prefix match.
             }
             else {
                 urli.incr();
-                return n; // Walk this way...
-                //if (n instanceof DNode) {
-                    //urli.incr();
-                    //return n; // Not recursive.
-                    // return n.findBest(urli); Tail recursive.
-                //}
-                /*else {//(instanceof KNode)
-                    var urli2 = n.urli;
-                    var c = compare(urli,urli2.rwnd());
-                    switch (c) {
-                        case DIFFRNT:
-                        case SUBSET:
-                            return this;
-                        
-                        case SUPERSET:
-                        case EQUAL:
-                            return n.next;
-                    }
-                }*/
+                return n; // Next node to visit ...
             }
         }
     };
@@ -1017,22 +1017,38 @@ var BP_MOD_MEMSTORE = (function ()
             if (DNProto.getData.apply(n, [dt_pRecord])) {n2 = n; /*idb = urli.pos();*/}
             n = DNProto.tryFind.apply(n, [urli]);
         } while (n);
-        
-        // in the case of PDB, the data is only useful if it is
-        // below the top-level-domain. Hence we should check urli
-        // to determine that.
-        // Update: Since p-records are collected from actual websites,
-        // the URLs should be correct. Therefore, am not verifying TLD anymore.
-        if (n2) {
-            //urli.seek(idb);
-            //if (urli.isBelowTLD()) {
-                return DNProto.getData.apply(n2, [dt_pRecord]);
-            //}
+
+        // While constructing DURL during insert we've already ensured that
+        // inserts will be below TLD level - and just one level below TLD.
+        // Therefore we need an exact DURL-match, not a substring match here.
+        // TODO: Need to change code to look for exact DURL match instead of
+        // prefix-match.
+        if (n2) 
+        {
+            return DNProto.getData.apply(n2, [dt_pRecord]);
         }
     };
     
     /**
-     * Returns dt_eRecord and dt_pRecord records that best match urli.
+     * Returns DNode with exact DURL match 
+     */
+    DNProto.getDNode = function (l, dt)
+    {
+        var urli = new DURL(l, dt), 
+            n = this, n2;
+        do
+        {
+            n2 = n;
+            n = DNProto.tryFind.apply(n, [urli]);
+        } while (n);
+        
+        if (n===null) {
+            return n2;
+        }
+    };
+    
+    /**
+     * Returns dt_eRecord and dt_pRecord matching loc as per the respective dt traits
      */
     function  getRecs (loc)
     {
@@ -1045,6 +1061,12 @@ var BP_MOD_MEMSTORE = (function ()
         return r;
     }
 
+    function getDNode (l, dt)
+    {
+        if (DNode[dt]) {
+            return DNProto.getDNode.apply(DNode[dt], [l, dt]);
+        }
+    }
     /**
      * @constructor
      * Sets up the supplied record for insertion into the db
@@ -1128,13 +1150,13 @@ var BP_MOD_MEMSTORE = (function ()
         MemStats.stats = new MemStats();
     }
     
-    function DNodeIterHelper(node, up, myKey)
+    function DNodeIterHelper(node, up, myURL)
     {
         return Object.defineProperties(this,
         {
-            myKey:  {value:myKey},
+            myURL:  {value:myURL},
             i:      {value:0, writable:true},
-            keys:   {value:Object.keys(node)},
+            keys:   {value:Object.keys(node).sort()},
             up:     {value:up}
         });
     }
@@ -1154,6 +1176,24 @@ var BP_MOD_MEMSTORE = (function ()
         
         return found? key : undefined;
     };
+    /** Makes url of child node by extracting its url-segment from its key and 
+     * appending that to this.myURL */
+    DNodeIterHelper.prototype.childURL = function (childKey)
+    {
+        var tag = childKey.slice(0,2),
+            url;
+        switch (tag)
+        {
+            case DNODE_TAG.HOST:
+                url = childKey.slice(2) + (this.myURL ? ("." + this.myURL) : "") ;
+                break;
+            case DNODE_TAG.PATH:
+                url = this.myURL + "/" + childKey.slice(2);
+                break;
+        }
+        
+        return url;
+    };
 
     /**
      * Iterate DNodes 
@@ -1170,10 +1210,9 @@ var BP_MOD_MEMSTORE = (function ()
         this.visit(root, undefined); // specifying 'undefined' for self-documentation
     }
     /** Internal Private method */
-    DNodeIterator.prototype.visit = function (node, up, key)
+    DNodeIterator.prototype.visit = function (node, up, url)
     {
-        //node.initIterHelper(up);
-        node[DNODE_TAG.ITER] = new DNodeIterHelper(node, up, key);
+        node[DNODE_TAG.ITER] = new DNodeIterHelper(node, up, url);
         this.node = node;
         return node;
     };
@@ -1195,11 +1234,11 @@ var BP_MOD_MEMSTORE = (function ()
                 break;
             }
         }
-        
+
         // Step down below the node unless we're back at the top of the tree.
         if (key)
         {
-            return this.visit(this.node[key], this.node, notes.myKey?notes.myKey+key:key);// visit a child node
+            return this.visit(this.node[key], this.node, notes.childURL(key));// visit a child node
         }
         // else walk is over; return undefined.
     };
@@ -1277,7 +1316,8 @@ var BP_MOD_MEMSTORE = (function ()
         getDT:       function(dt){return DNode[dt];},
         getStats:    function(){return MemStats.stats;},
         putDB:       function(dNode, dt){DNode[dt] = dNode;},
-        getDB:       function(dt){return DNode[dt];}
+        getDB:       function(dt){return DNode[dt];},
+        getDNode:    getDNode
     });
 
     console.log("loaded memstore");

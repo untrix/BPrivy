@@ -58,7 +58,7 @@ var BP_MOD_FILESTORE = (function()
     function parseSegment (sgmnt)
     {
         var regex = /^(.*)(\.[^.]+)$/;
-        var o = {name: sgmnt};
+        var o = {'name': sgmnt};
         
         if (sgmnt)
         {
@@ -138,7 +138,7 @@ var BP_MOD_FILESTORE = (function()
 
         var mod =
         {
-            dtl: dtl,
+            'dtl': dtl,
             valid_dt: valid_dt,
             fileCap: 100, //File capacity in #recs
             /** File/Dirname extenstions populated later/below */
@@ -256,20 +256,23 @@ var BP_MOD_FILESTORE = (function()
             },
             setDBPath: function (dbPath, dbStats)
             {
+                var i;
                 if (dbPath)
                 {
                     g_dbPath = dbPath;
-                    dtl.forEach(function (dt, i)
+                    for (i=dtl.length-1; i>=0; --i) //TODO: Not tested yet - 8/22
+                    //dtl.forEach(function (dt, i)
                     {
-                        g_path_dt[dt] = g_dbPath + path_sep + dir_dt[dt]+ path_sep + file_dt[dt];
-                    });
+                        g_path_dt[dtl[i]] = g_dbPath + path_sep + dir_dt[dtl[i]]+ path_sep + file_dt[dtl[i]];
+                    }
                 }
                 else {
                     g_dbPath = null;
-                    dtl.forEach(function (dt, i)
+                    for (i=dtl.length-1; i>=0; --i) //TODO: Not tested yet - 8/22
+                    //dtl.forEach(function (dt, i)
                     {
-                        g_path_dt[dt] = null;
-                    });
+                        g_path_dt[dtl[i]] = null;
+                    }
                 }
                 
                 g_dbStats = dbStats;
@@ -304,7 +307,7 @@ var BP_MOD_FILESTORE = (function()
                 }
                 
                 return {
-                    dupes: dupes
+                    'dupes': dupes
                 };
             },
             makeDTFilePath: function (dt, dbPath)
@@ -504,7 +507,7 @@ var BP_MOD_FILESTORE = (function()
             rmFiles: function (dbStats, keepDTFiles)
             {
                 dbStats.iterEnt(this_null, dtl_null, cats_null,
-                function (dt, cat, fname, dirEnt)
+                function anonRmDirEnt(dt, cat, fname, dirEnt)
                 {
                     var o = {},
                         fpath = DB_FS.makeDTDirPath(dt, dbStats.dbPath) + fname;
@@ -519,7 +522,7 @@ var BP_MOD_FILESTORE = (function()
             copy: function (dbMap, db2Path, bClobber)
             {
                 dbMap.iterEnt(this_null, dtl_null, cats_null,
-                function (dt, cat, fname)
+                function anonCopyDirEnt(dt, cat, fname)
                 {
                     var frmPath = DB_FS.makeDTDirPath(dt, dbMap.dbPath)+fname,
                         toPath = DB_FS.makeDTDirPath(dt, db2Path) + fname,
@@ -578,7 +581,7 @@ var BP_MOD_FILESTORE = (function()
             }
         });
         // Setup ext and cat constants
-        iterObj(cat_Load, this_null, function (cat, val)
+        iterObj(cat_Load, this_null, function anonInitCats(cat, val)
         {
             mod.cats_Load.push(val);
         });
@@ -586,253 +589,7 @@ var BP_MOD_FILESTORE = (function()
         return Object.freeze(mod);
     }());
 
-
-    // function DBStats(dbPath, dbSObj)
-    // {
-        // if (dbSObj)
-        // {                
-            // Object.seal(Object.defineProperties(this,
-            // {
-                // dbPath: {value:dbSObj.dbPath, enumerable:true},
-                // fs:     {value: dbSObj.fs, enumerable:true, writable:true}
-            // }));
-//             
-            // // empty out dbSObj
-            // delete dbSObj.fs; //This is a Object object, hence 'fs' should be configurable.
-        // }
-        // else
-        // {
-            // Object.seal(Object.defineProperties(this,
-            // {
-                // dbPath: {value:dbPath, enumerable:true},
-                // fs:     {value: {}, enumerable:true, writable:true}
-            // }));
-            // Object.defineProperty(this.fs, DB_FS.cat_Open, {value: {}, writable:true, enumerable:true});
-            // Object.defineProperty(this.fs, DB_FS.cat_Closed, {value: {}, writable:true, enumerable:true});
-            // Object.defineProperty(this.fs, DB_FS.cat_Temp, {value: {}, writable:true, enumerable:true});
-            // Object.defineProperty(this.fs, DB_FS.cat_Bad, {value: {}, writable:true, enumerable:true});
-        // }
-    // }
-    // DBStats.prototype.getFSCat = function (cat)
-    // {
-        // return this.fs[cat];
-    // };
-    // DBStats.prototype.getFSCatDT = function (cat, dt)
-    // {
-        // if (!this.fs[cat][dt])
-        // {
-            // if (!DB_FS.valid_dt[dt])
-            // {
-                // throw new BPError ('@DBStats.prototype.get', 'InternalError', 'BadArgument');
-            // }
-            // else
-            // {
-                // this.fs[cat][dt] = {};
-            // }
-        // }
-// 
-        // return this.fs[cat][dt];
-    // };
-    // DBStats.prototype.getDTFileEnt = function(dt)
-    // {
-        // return this.getFSCatDT(DB_FS.cat_Open, dt)[DB_FS.getDTFileName(dt)];
-    // };
-    // DBStats.prototype.getFileEnt = function(cat, dt, fname)
-    // {
-        // return this.getFSCatDT(cat, dt)[fname];  
-    // };
-    // DBStats.prototype.num = function (cat)
-    // {
-        // var dtl = Object.keys(this.fs[cat]),
-            // i, num;
-//         
-        // for (num=0,i=dtl.length-1; i>=0; i--)
-        // {
-            // num += Object.keys(this.fs[cat][dtl[i]]).length;
-        // }
-//         
-        // return num;
-    // };
-    // DBStats.prototype.calcDupes = function ()
-    // {
-        // var dupes = 0;
-        // var dts = this.getFSCat(DB_FS.cat_Open);
-        // MOD_COMMON.iterKeys(dts, function (dt, ents, dbStats)
-        // {
-            // dupes += Object.keys(ents).length;
-            // if (ents[DB_FS.getDTFileName(dt)])
-            // {
-                // dupes--;
-            // }
-        // }, this, this);
-// 
-        // return dupes;
-    // };
-    // DBStats.prototype.putCat = function (cat, dt, name, dirent)
-    // {
-        // var ent = dirent || {};
-        // ent.cat = cat;
-        // ent.dt = dt;
-        // this.getFSCatDT(cat, dt)[name]=ent;
-    // };
-    // DBStats.prototype.del = function (cat, dt, name)
-    // {
-        // delete this.getFSCatDT(cat, dt)[name];
-    // };
-    // DBStats.prototype.delDTFileEnt = function (dt)
-    // {
-        // this.del(DB_FS.cat_Open, dt, DB_FS.getDTFileName(dt));
-    // };
-    // DBStats.prototype.delDTFileEnts = function ()
-    // {
-        // var dts = this.getFSCat(DB_FS.cat_Open);
-        // MOD_COMMON.iterKeys(dts, function (dt, ents, dbStats)
-        // {
-            // dbStats.delDTFileEnt(dt);
-        // }, this, this);
-    // };
-    // DBStats.prototype.putBad = function (dt, name, dirent)
-    // {
-        // this.putCat(DB_FS.cat_Bad, dt, name, dirent);
-    // };
-    // DBStats.prototype.numLoaded = function ()
-    // {
-        // var num = 0,
-            // dbStats = this;
-        // MOD_COMMON.iterArray(DB_FS.cats_Load, function (cat)
-        // {
-            // num += dbStats.num(cat);
-        // });
-        // return num;
-    // };
-    // DBStats.prototype.numBad = function ()
-    // {
-        // return this.num(DB_FS.cat_Bad);
-    // };
-    // DBStats.prototype.diff = function (cats, other)
-    // {
-        // /** Helper to diff. Call with thisArg === this */
-        // function doDiff (obj, cat, dt, fname, dirEnt, dtDirPath, args)
-        // {//this, f.cat, f.dt, f.fname, f.dirEnt, dtDirPath[f.dt], ctx]
-            // //obj, cat, dt, fname, dirEnt, dtDirPath, args
-// 
-            // if (!args.other.getFileEnt(cat, dt, fname))
-            // {
-                // args.diffStats.putCat(cat, dt, fname, dirEnt);
-            // }
-//                 
-            // return args.diff;
-        // }
-// 
-        // var diffStats = newDBStats(this.dbPath);
-        // //MOD_COMMON.iterArray(cats || DB_FS.cats_Load, diffCat, {diff:diff, other:other}, this);
-//         
-        // this.walkCats(cats || DB_FS.cats_Load, doDiff, {diffStats:diffStats, other:other}, this);
-        // return diffStats;
-    // };
-    // DBStats.prototype.merge = function (rhs, cats)
-    // {
-        // var lhs = this;
-        // rhs.walkCats(cats || DB_FS.cats_Load, function(rhs, cat, dt, fname, dirEnt, dtDirPath)
-        // {
-            // lhs.putCat(cat, dt, fname, dirEnt);
-        // });
-    // };
-    // /** Returns per-dt, reverse-time-sorted list of files and then concatenates them all
-     // * in DB_FS.dtl order
-     // */
-    // DBStats.prototype.makeRevList = function (cats)
-    // {
-        // //var that = this;
-        // /** Helper to makeSortedList. Does not sort the file list */
-        // // function makeListCat (cat, fList)
-        // // {
-            // // var fsCat = that.getFSCat(cat),
-                // // dtl = Object.keys(fsCat),
-                // // i, j;
-            // // for (i=0; i<dtl.length; i++)
-            // // {
-                // // var dt = dtl[i],
-                    // // //dtDirPath = DB_FS.makeDTDirPath(dt, this.dbPath),
-                    // // fnames = Object.keys(fsCat[dt]),
-                    // // len = fnames.length,
-                    // // fname, dE;
-// //                     
-                // // for (j=0; j<len; j++)
-                // // {
-                    // // fname = fnames[j];
-                    // // dE = fsCat[dt][fname];
-                    // // fList.push({cat:cat, dt:dt, fname:fname, dirEnt:dE});
-                // // }
-            // // }
-// //             
-            // // return fList;
-        // // }
-// 
-        // /**
-         // * Makes a reverse-time sorted list of files belonging to dt===dt and appends it
-         // * to the supplied ctx.fList. Requires 'this' to be mapped to the enclosing 'this'.
-         // */
-        // function makeRevListDT (dt, args)
-        // {
-            // var cats = args.cats,
-                // fList = [],
-                // i, cat, lsf, j, fnames, ent;
-            // for (i=cats.length-1; i>=0; i--)
-            // {
-                // cat = cats[i];
-                // lsf = this.getFSCatDT(cat, dt);
-                // if (lsf)
-                // {
-                    // fnames = Object.keys(lsf);
-                    // for (j=fnames.length-1; j>=0; j--)
-                    // {
-                        // ent = lsf[fnames[j]];
-                        // ent.fname = fnames[j];
-                        // fList.push(ent);
-                    // }
-                // }
-            // }
-//     
-            // fList.sort(function(e1, e2)
-            // {
-                // // We want a reverse-sort, hence flip x and y.
-                // return DB_FS.mtmCmp(e1.dt, e2, e1);
-            // });
-//             
-            // MOD_COMMON.concatArray(args.fList, fList);
-        // }
-// 
-        // var fList = [];
-        // MOD_COMMON.iterArray(DB_FS.dtl, makeRevListDT, {cats:cats, fList:fList}, this);
-//                
-        // return fList;
-    // };
-    // /** Helper Function to walkCats*/
-    // DBStats.prototype.walkList = function (fList, callback, ctx, thisArg)
-    // {       
-        // var len = fList.length,
-            // thisVal = thisArg || this,
-            // f, i,
-            // dtDirPath = [];
-        // for (i=0; i<len; i++)
-        // {
-            // f = fList[i];
-            // if (!dtDirPath[f.dt]) {dtDirPath[f.dt] = DB_FS.makeDTDirPath(f.dt, this.dbPath);}
-            // callback.apply(thisVal, [this, f.cat, f.dt, f.fname, f, dtDirPath[f.dt], ctx]);
-        // }
-    // };
-    // /**
-     // * Walks the specified categories of files in dbStats and calls the callback with
-     // * for each file encountered. Provides arguments relating to the file, followed
-     // * by one additional context argument passed in to walkCats. The file-related arguments
-     // * are (cat, dt, fname, dirEnt, dtDirPath); 
-     // */
-    // DBStats.prototype.walkCats = function (cats, callback, ctx, thisArg)
-    // {
-        // var fList = this.makeRevList(cats);
-        // this.walkList(fList, callback, ctx, thisArg);
-    // };   
+   
     /**
      * Normally invoked with only one argument - dbPath. Constructs a new DBStats object.
      * dbSObj should be an Object object derived after converting DBStats to JSON and back. 
@@ -916,7 +673,7 @@ var BP_MOD_FILESTORE = (function()
         function iterDTM (self, thisArg, dtl, func, ctx) // private, therefore not in prototype
         {
             iterArray2(dtl || DB_FS.dtl, self,
-            function(dt)
+            function anonApplyCatM(dt)
             {
                 var catM = getCatM(self, dt); //self.dtM[dt];
                 if (catM) {
@@ -928,10 +685,10 @@ var BP_MOD_FILESTORE = (function()
         function iterDTCatM (self, thisArg, dtl, catl, func, ctx)// private, therefore not in prototype
         {
             iterDTM (self, self, dtl, 
-            function (dt, catM)
+            function anonVisitCatM(dt, catM)
             {
                 iterArray2(catl || DB_FS.cats_Load, self, 
-                function(cat)
+                function anonApplyEntM (cat)
                 {
                     var entM = catM[cat];
                     if (entM) {
@@ -944,7 +701,7 @@ var BP_MOD_FILESTORE = (function()
         {
             var num = 0;
             iterDTCatM (this, this, this.getDTL(), catl, 
-            function(dt, cat, entM)
+            function anonCountEnts(dt, cat, entM)
             {
                 num += Object.keys(entM).length;
             });
@@ -954,10 +711,10 @@ var BP_MOD_FILESTORE = (function()
         DBMap.prototype.iterEnt = function (thisArg, dtl, catl, func, ctx)
         {
             iterDTCatM(this, this, dtl, catl, 
-            function (dt, cat, entM)
+            function anonIterEntM(dt, cat, entM)
             {                        
                 iterObj(entM, this, 
-                function(fname, dirEnt)
+                function anonVisitDirEnt(fname, dirEnt)
                 {
                     func.apply(thisArg, [dt, cat, fname, dirEnt, ctx]);
                 });
@@ -967,16 +724,16 @@ var BP_MOD_FILESTORE = (function()
         {
             cmp = cmp || DB_FS.mtmCmp;
             iterDTM (this, this, dtl,
-            function (dt, catM)
+            function anonIterCatM(dt, catM)
             {
                 var ents = []; // This will be the sorted list of dirEnts
                 iterArray2(catl|| DB_FS.cats_Load, this,
-                function(cat)
+                function anonIterEntM(cat)
                 {
                     var entM = catM[cat];
                     if (!entM) {return;}
                     iterObj(entM, this,
-                    function (fname, dirEnt)
+                    function anonPushDirEnt(fname, dirEnt)
                     {
                         //Need to do this until we enhance
                         //BP_PLUGIN.ls to insert fname into dirEnt
@@ -991,7 +748,7 @@ var BP_MOD_FILESTORE = (function()
                  return cmp(e1.dt, e2, e1);
                 });
                 iterArray2(ents, this,
-                function(dirEnt)
+                function anonSortedApply(dirEnt)
                 {
                     func.apply(thisArg, [dt, dirEnt.cat, dirEnt.fname, dirEnt, ctx]);
                 });  
@@ -1001,7 +758,7 @@ var BP_MOD_FILESTORE = (function()
         {
             var dupes = 0;
             this.iterEnt(this, DB_FS.dtl, [DB_FS.cat_Open],
-            function(dt, cat, fname, dirEnt)
+            function anonIncrDupe(dt, cat, fname, dirEnt)
             {
                 if (fname !== DB_FS.getDTFileName(dt)) {
                     dupes++;
@@ -1040,7 +797,7 @@ var BP_MOD_FILESTORE = (function()
         {
             var dtl = this.getDTL();
             iterDTCatM(this, this, dtl, [DB_FS.cat_Open],
-            function(dt, cat, entM)
+            function anonDeleteEnt(dt, cat, entM)
             {
                 delete entM[DB_FS.getDTFileName(dt)];
             });
@@ -1061,7 +818,7 @@ var BP_MOD_FILESTORE = (function()
         {
             var diffStats = newDBMap(this.dbPath);
             this.iterEnt(this, null, cats,
-            function(dt, cat, fname, dirEnt)
+            function anonDiffDBStat(dt, cat, fname, dirEnt)
             {
                 if (!other.getFileEnt2(dt, cat, fname))
                 {
@@ -1073,7 +830,7 @@ var BP_MOD_FILESTORE = (function()
         };
         DBMap.prototype.merge = function (rhs, cats)
         {
-            rhs.iterEnt(this, null, cats, function (dt, cat, fname, dirEnt)
+            rhs.iterEnt(this, null, cats, function mergeDBStat(dt, cat, fname, dirEnt)
             {
                 this.put(dt, cat, fname, dirEnt);
             });
@@ -1421,7 +1178,7 @@ var BP_MOD_FILESTORE = (function()
             dnIt = MEM_STORE.newDNodeIterator(dt);
             buf = new RecsBuf();
             
-            dnIt.walk(writeArec, {buf:buf, dt:dt, dbStats:dbStatsCompacted});
+            dnIt.walk(writeArec, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted});
             
             if (buf.length)
             {
@@ -1454,7 +1211,7 @@ var BP_MOD_FILESTORE = (function()
 
         // Import files in reverse chronological order.
         dbSSrc.iterEntSorted(this_null, dtl_null, cats,
-        function (dt, cat, fname, dirEnt)
+        function anonImportFile (dt, cat, fname, dirEnt)
         {
             var dtDirPath = DB_FS.makeDTDirPath(dt, dbSSrc.dbPath),
                 dtOpenEnt = dtFilesDst.getDTFileEnt(dt),
@@ -1474,7 +1231,7 @@ var BP_MOD_FILESTORE = (function()
             }
         });
         
-        BP_MOD_COMMON.iterKeys(bufs, function(dt, buf)
+        BP_MOD_COMMON.iterKeys(bufs, function finalBufFlush(dt, buf)
         {
             if (buf.length)
             {
@@ -1645,7 +1402,7 @@ var BP_MOD_FILESTORE = (function()
         
         buf = new RecsBuf("\n");
         buf.push(traits.csvHeader());
-        MEM_STORE.newDNodeIterator(dt).walkCurr(writeCSV, {buf:buf, fpath:fpath, traits:traits});
+        MEM_STORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits});
         buf.flush(fpath);
     }
     

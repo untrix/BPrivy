@@ -21,7 +21,8 @@ var BP_MOD_WDL = (function ()
     var m;
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
-    var encrypt = IMPORT(m.encrypt),
+    var MOD_COMMON = IMPORT(m),
+        encrypt = IMPORT(m.encrypt),
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
         preventDefault = IMPORT(m.preventDefault),
@@ -273,7 +274,6 @@ var BP_MOD_WDL = (function ()
         var ioItem = w$ctx.ioItem;
         return {
         cons: DButton,
-        //html:'<button type="button"><i class="icon-trash"></i></button>',
         html:'<button type="button"></button>',
         css:{ float:'right', width:'20px' },
         on:{ click:DButton.prototype.onClick },
@@ -368,7 +368,7 @@ var BP_MOD_WDL = (function ()
              }
             ],
         _iface:{ w$ctx:{ u:'u', p:'p' } },
-        _final:{show:true}
+        //_final:{show:true}
         };
     };
     IItemP.prototype = w$defineProto (
@@ -447,7 +447,7 @@ var BP_MOD_WDL = (function ()
                  _iface:{ fn:fn_pass, value:p }
                 }],
             _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } },
-            _final:{show:true}
+            //_final:{show:true}
             };
         }
     };
@@ -494,6 +494,7 @@ var BP_MOD_WDL = (function ()
                 if (res===undefined) 
                 {
                     this.oItem = w$exec(OItemP.wdt, ctx);
+                    MOD_COMMON.deleteProps(ctx); // Clear DOM refs inside the ctx to aid GC
                     if (this.oItem) {
                         delete this.iItem; 
                         iI.die();
@@ -518,6 +519,7 @@ var BP_MOD_WDL = (function ()
             else if (oI)
             { // Create input element, destroy output element
                 this.iItem = w$exec(IItemP.wdt, ctx);
+                MOD_COMMON.deleteProps(ctx); // Clear DOM refs inside the ctx to aid GC
                 if (this.iItem) {
                     delete this.oItem; oI.die();
                     this.append(this.iItem);
@@ -599,14 +601,7 @@ var BP_MOD_WDL = (function ()
         tag:"div",
         attr:{ id:eid_panel },
         css:{ position:'fixed', top:'0px', 'right':"0px" },
-         
         // Post w$el creation steps
-        // Copy props to ctx with values:
-        // 1. Directly from the javascript runtime.
-        // 2. For the props under w$, copy them from the wdl-interpretor runtime. In this case
-        //    the value of the prop defined below should be name of the prop in the wdl-runtime.
-        // 3. Props listed under w$ctx are copied over from the context object - ctx - only makes
-        //    sence when you're copying into something other than the context itself.
         ctx:{ w$:{ panel:"w$el" }, loc:loc },
         iface:{ _reload:reload, id:eid_panel, autoFill:autoFill },
 
@@ -627,9 +622,8 @@ var BP_MOD_WDL = (function ()
         _iface:{ w$:{}, w$ctx:{itemList:'itemList'} },
         _final:{ 
             appendTo:document.body, 
-            show:true, 
+            show:true,
             exec:Panel.prototype.makeDraggable }
-        //_text: <post children text>
         };
     };
     Panel.prototype = w$defineProto( // same syntax as Object.defineProperties
@@ -666,7 +660,9 @@ var BP_MOD_WDL = (function ()
        CT_BP_PASS: CT_BP_PASS,
        NButton: NButton,
        SButton: SButton,
-       PanelList: PanelList
+       PanelList: PanelList,
+       IItemP: IItemP,
+       OItemP: OItemP
     };
     
     console.log("loaded wdl");

@@ -66,7 +66,8 @@ var BP_MOD_CS = (function(g_win)
     var m;
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
-    var encrypt = IMPORT(m.encrypt),
+    var MOD_COMMON = IMPORT(m),
+        encrypt = IMPORT(m.encrypt),
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
         preventDefault = IMPORT(m.preventDefault);
@@ -281,6 +282,7 @@ var BP_MOD_CS = (function(g_win)
                     },
                     panel = w$exec(cs_panel_wdt, ctx);
                 gid_panel = panel.id;
+                MOD_COMMON.deleteProps(ctx); // Clear DOM refs in the ctx to aid GC
             }
             else {
                 // Remember to not keep any data lingering around ! Delete data the moment we're done
@@ -324,6 +326,7 @@ var BP_MOD_CS = (function(g_win)
             };
         var    panel = w$exec(cs_panel_wdt, ctx);
         gid_panel = panel.id;
+        MOD_COMMON.deleteProps(ctx); // Clear DOM refs in the ctx to aid GC
     }
    
     function clickBP (request, sender, sendResponse)

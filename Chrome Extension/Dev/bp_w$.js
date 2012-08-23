@@ -102,6 +102,7 @@ var BP_MOD_W$ = (function ()
     var logwarn = IMPORT(m.logwarn);
     /** @import-module-begin */
     m = BP_MOD_COMMON;
+    var MOD_COMMON = IMPORT(m);
     var newInherited = IMPORT(m.newInherited);
     /** @import-module-end **/    m = null;
 
@@ -128,7 +129,7 @@ var BP_MOD_W$ = (function ()
     };
     WidgetElement.prototype.append = function(w)
     {
-        this.$el.append(w.el); 
+        this.$el.append(w.el);
         //this.children.push(wgt);
     };
     WidgetElement.prototype.prepend = function(w) {this.$el.prepend(w.el);};
@@ -137,13 +138,17 @@ var BP_MOD_W$ = (function ()
     WidgetElement.prototype.show = function() {this.el.style.removeProperty('display');};
     WidgetElement.prototype.hide = function() {this.el.style.display = 'none';};
     WidgetElement.prototype.die = function()
-    {   // Props are being deleted below in order to prevent circular references.
-        delete this.el;
-        delete this.w$;
+    {   // Object-props are being deleted below in order to prevent circular references.
         this.$el.remove();
+        this.clear();
+    };
+    WidgetElement.prototype.clear = function()
+    {
+        delete this.el;
+        MOD_COMMON.clear(this.w$);
+        delete this.w$;
         delete this.$el;
     };
-   
     // Returns an object to be used as a prototype for a widget element.
     function w$defineProto (props) // props has same syntax as Object.defineProperties
     {
@@ -251,7 +256,7 @@ var BP_MOD_W$ = (function ()
         }
         
         var el, $el, i=0, w$el, _final, wcld, keys, key, val, w$ ={},
-            n=0, cwdl;
+            n=0, cwdl, temp_ctx;
 
         // Create the DOM element
         if (wdl.tag) {
@@ -281,7 +286,7 @@ var BP_MOD_W$ = (function ()
             .text(wdl.text || "")
             .prop(wdl.prop || {})
             .css(wdl.css || {})
-            .addClass(wdl.addClass || {});
+            .addClass(wdl.addClass || "");
 
         w$on(w$el, wdl.on, w$eventProxy); // will bind this to e.currentTarget
         w$on(w$el, wdl.onTarget, w$eTargetProxy); // will bind this to e.target
@@ -290,7 +295,7 @@ var BP_MOD_W$ = (function ()
         w$.w$el = w$el;
         
         // Update the context now that the element is created
-        if (!ctx) {ctx={};} // setup a new context if one is not provided
+        if (!ctx) {temp_ctx = ctx={};} // setup a new context if one is not provided
         if (wdl.ctx)  {
             w$evalProps(wdl.ctx, w$, ctx, ctx);
         }
@@ -325,6 +330,8 @@ var BP_MOD_W$ = (function ()
             } catch (e) {
                 logwarn(e);
             }}
+            
+            it = null;
         }
         
         // Populate w$el's interface post-children
@@ -349,7 +356,10 @@ var BP_MOD_W$ = (function ()
                 $el.appendTo(_final.appendTo); 
             }
         }
-                
+         
+        // Clear DOM refs inside the temp_ctx to aid GC
+        (!temp_ctx) || (MOD_COMMON.deleteProps(temp_ctx));
+            
         return w$el;
     }
 
