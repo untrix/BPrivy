@@ -1144,9 +1144,9 @@ var BP_MOD_MEMSTORE = (function ()
         var resp = xhr.response;        ETLD = JSON.parse(resp);
     }
         
-    function clear ()
+    function clear (dtl)
     {
-        var i, dt,            dtList = Object.keys(DT_TRAITS.traits),            n = dtList.length;        for (i=0; i<n; i++)        {            dt = dtList[i];            DNode[dt] = newDNode();        }
+        var i, dt,            dtList = dtl || Object.keys(DT_TRAITS.traits),            n = dtList.length;        for (i=0; i<n; i++)        {            dt = dtList[i];            DNode[dt] = newDNode();        }
         MemStats.stats = new MemStats();
     }
     

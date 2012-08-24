@@ -40,7 +40,7 @@ var BP_MOD_MANAGE = (function ()
     /** @import-module-end **/ m = null;
     
     /** @globals-begin */
-    var g_editor, g_dbName;
+    var g_editor, g_dbName, g_dbPath;
     /** @globals-end **/ 
     
     function createDB (dbName, dbDir, callbackFunc)
@@ -133,7 +133,10 @@ var BP_MOD_MANAGE = (function ()
                     localStorage['db.path'] = resp.dbPath;
                 }
             }
+
             g_dbName = cullDBName(resp.dbPath);
+            if (g_dbPath !== resp.dbPath) {clearEditor();}
+            
             $('[data-dbName]').text(g_dbName||"No Open Wallet").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
             $('[data-db-path]').val(resp.dbPath||"No Open Wallet").attr('data-path', resp.dbPath);
 
@@ -195,6 +198,14 @@ var BP_MOD_MANAGE = (function ()
         }
     }
 
+    function clearEditor()
+    {
+        MEMSTORE.clear([dt_pRecord]);
+        if (g_editor) {
+            g_editor.die();
+            g_editor = null;
+        }
+    }
     function reloadEditor()
     {
         $('#refreshEditor').button('loading');
@@ -212,21 +223,21 @@ var BP_MOD_MANAGE = (function ()
                 editor = BP_MOD_W$.w$exec(BP_MOD_EDITOR.EditorWdl_wdt, ctx),
                 temp;
             
-            MOD_COMMON.deleteProps(ctx); // Clear DOM refs inside the ctx to aid GC
+            MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
             if (g_editor) {
-                g_editor.$el.replaceWith(editor.$el);
+                g_editor.replaceWith(editor);
                 temp = g_editor;    
-                temp.clear();
+                temp.clearRefs();
                 g_editor = editor;
                 //g_editor.$el.appendTo($('#editorPane'));
             }
             else {
                 g_editor = editor;
-                g_editor.$el.appendTo($('#editorPane'));
+                $(g_editor.el).appendTo($('#editorPane'));
             }
             
             $('#refreshEditor').button('reset');
-            //$('#editorPane *').tooltip(); // leaks DOM nodes :(. I wonder what else in bootstrap does.
+            //$('#editorPane *').tooltip(); // leaks DOM nodes :(. I wonder what else in bootstrap leaks.
         });
     }
     
@@ -506,7 +517,7 @@ var BP_MOD_MANAGE = (function ()
                 {
                     updateDash(resp);
                     if (id === 'dbClose2') {
-                        reloadEditor();
+                        clearEditor();
                     }
                     BP_MOD_ERROR.success('UWallet has been closed');
                 }

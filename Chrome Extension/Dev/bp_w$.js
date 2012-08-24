@@ -118,7 +118,7 @@ var BP_MOD_W$ = (function ()
         {   // Properties are kept configurable so that they may be deleted by the
             // destructor. This is necessary in order to remove circular references.
             el: {value: $el[0], configurable:true}, // pointer to DOM element object
-            $el: {value: $el, configurable:true}, // pointer to jquery wrapped DOM element object
+            //$el: {value: $el, writable:false, configurable:true}, // pointer to jquery wrapped DOM element object
             w$: {value: {}, configurable:true}, //Meant for saving event handlers
             // Other properties and functions will be inserted here through wdl.
             // That will serve as the JS-interface of the WidgetElement
@@ -129,25 +129,46 @@ var BP_MOD_W$ = (function ()
     };
     WidgetElement.prototype.append = function(w)
     {
-        this.$el.append(w.el);
+        $(this.el).append(w.el);
         //this.children.push(wgt);
     };
-    WidgetElement.prototype.prepend = function(w) {this.$el.prepend(w.el);};
+    WidgetElement.prototype.prepend = function(w) {$(this.el).prepend(w.el);};
     WidgetElement.prototype.appendTo = function(w) {w.append(this);};
     WidgetElement.prototype.prependTo = function(w) {w.prepend(this);};
+    WidgetElement.prototype.insertAfter = function(w) 
+    {
+        $(this.el).insertAfter(w.el);
+        //w.el.after(this.el);
+    };
+    WidgetElement.prototype.replaceWith = function(w) 
+    {
+        $(this.el).replaceWith(w.el);
+        //this.el.replace(w.el);
+    };
     WidgetElement.prototype.show = function() {this.el.style.removeProperty('display');};
     WidgetElement.prototype.hide = function() {this.el.style.display = 'none';};
     WidgetElement.prototype.die = function()
-    {   // Object-props are being deleted below in order to prevent circular references.
-        this.$el.remove();
-        this.clear();
-    };
-    WidgetElement.prototype.clear = function()
     {
-        delete this.el;
-        MOD_COMMON.clear(this.w$);
-        delete this.w$;
-        delete this.$el;
+        // This is a destructor, but unfortunately a new jQuery object is being created here.
+        $(this.el).remove(); // This will hopefully clear data from the entire subtree rooted here.
+        
+        // Object-props are being deleted below in order to prevent circular references.
+        this.clearRefs();
+    };
+    WidgetElement.prototype.clearRefs = function()
+    {
+        MOD_COMMON.delProps(this.w$);
+        MOD_COMMON.delProps(this);
+    };
+    WidgetElement.prototype.addClass = function (className)
+    {
+        $(this.el).addClass(className);
+        //this.el.classList.add(className);  
+    };
+    WidgetElement.prototype.removeClass = function (className)
+    {
+        $(this.el).removeClass(className);
+        //this.el.classList.remove(className);
     };
     // Returns an object to be used as a prototype for a widget element.
     function w$defineProto (props) // props has same syntax as Object.defineProperties
@@ -358,7 +379,7 @@ var BP_MOD_W$ = (function ()
         }
          
         // Clear DOM refs inside the temp_ctx to aid GC
-        (!temp_ctx) || (MOD_COMMON.deleteProps(temp_ctx));
+        (!temp_ctx) || (MOD_COMMON.delProps(temp_ctx));
             
         return w$el;
     }

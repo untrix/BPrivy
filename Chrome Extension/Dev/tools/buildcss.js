@@ -126,9 +126,9 @@ function makeRecessCback2 (fpath)
 var devTarget = abs(SRC, 'bp.css'), 
     releaseTarget = abs(DST, 'release', 'bp.css'),
     distTarget = abs(DST, 'dist', 'bp.css'),
-    devTarget2 = abs(SRC, 'bp_editor.css'),
-    releaseTarget2 = abs(DST, 'release', 'bp_editor.css'),
-    distTarget2 = abs(DST, 'dist', 'bp_editor.css'),
+    devTarget2 = abs(SRC, 'bp_manage.css'),
+    releaseTarget2 = abs(DST, 'release', 'bp_manage.css'),
+    distTarget2 = abs(DST, 'dist', 'bp_manage.css'),
     srcFiles=[];
     
 // Ensure that the build dirs exist.
@@ -148,15 +148,15 @@ if (doBuild(srcFiles, distTarget)) {
     recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(distTarget)));
 }
 
-var srcFile=SRC+'bp.less';
+var srcFile=SRC+'bp_manage.less';
 if (doBuild([srcFile], devTarget2)) {
     recess(srcFile, {compile:true, compress:false}, async.runHere(makeRecessCback2(devTarget2)));
 }
-if (doBuild(srcFiles, releaseTarget2)) { 
-    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget2)));
+if (doBuild([srcFile], releaseTarget2)) { 
+    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget2)));
 }
-if (doBuild(srcFiles, distTarget2)) {
-    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget2)));
+if (doBuild([srcFile], distTarget2)) {
+    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget2)));
 }
 
 

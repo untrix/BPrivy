@@ -1,0 +1,18 @@
+Useful Google Chrome Command Line Switches taken from:
+http://src.chromium.org/viewvc/chrome/trunk/src/chrome/common/chrome_switches.cc?view=markup
+
+
+// Allows reporting memory info (JS heap size) to page.
+const char kEnableMemoryInfo[]              = "enable-memory-info";
+
+// Enables dynamic loading of the Memory Profiler DLL, which will trace all
+// memory allocations during the run.
+const char kMemoryProfiling[]               = "memory-profile";
+
+// Adds a "Purge memory" button to the Task Manager, which tries to dump as
+// much memory as possible. This is mostly useful for testing how well the
+// MemoryPurger functionality works.
+//
+// NOTE: This is only implemented for Views.
+const char kPurgeMemoryButton[]             = "purge-memory-button";
+

@@ -84,22 +84,84 @@ var BP_MOD_EDITOR = (function ()
         return {
             tag:'a',
             attr:{ href:"http://"+host },
-            css:{ display:'inline-block' },
-            text:host,
+            addClass: "com-untrix-dNodeTitle",
+            //text:host,
             iface:{ "url":"http://"+host },
             on:{ click: function (e)
                 {
                     window.open(this.url);
                     e.preventDefault();
                     e.stopPropagation();
-                }}
-                // children:[
-                // {
-                    // tag:"h6",
-                    // text: host
-                // }]
+                }},
+                children:[
+                {
+                    tag:"h6",
+                    text: host
+                }]
         };
     }
+
+    /**
+     * Expand/Collapse button 
+     */
+    function EButton () {}
+    EButton.prototype = w$defineProto(
+    {
+        onClick: {value: function (e)
+        {
+            e.stopPropagation(); // We don't want the enclosing web-page to interefere
+            e.preventDefault(); // Causes event to get cancelled if cancellable
+            if (this.panel.itemList)
+            {
+                if (this.isOpen) {
+                    this.panel.itemList.hide();
+                    this.setClosed();
+                }
+                else {
+                    this.panel.itemList.show();
+                    this.setOpen();
+                }
+            }
+            else 
+            {
+                this.panel.createList();
+                this.setOpen();
+            }
+        }},
+        setOpen: {value: function()
+        {
+            this.isOpen = true;
+            this.icon.removeClass('icon-resize-full');
+            this.icon.addClass('icon-resize-small');
+        }},
+        setClosed: {value: function() 
+        {
+            this.isOpen = false;
+            this.icon.removeClass('icon-resize-small');
+            this.icon.addClass('icon-resize-full');
+        }}
+    });
+    EButton.wdt = function (w$ctx)
+    {
+        var bList = w$ctx.bList;
+        
+        return {
+        cons: EButton,
+        tag: 'a',
+        on:{ click:EButton.prototype.onClick },
+        addClass: 'com-untrix-B',
+        iface:{ isOpen:bList },
+        attr:{ href:"#", title:"Expand" },
+            children:[
+            {tag:"i",
+            addClass: bList ? 'icon-resize-small' : 'icon-resize-full',
+            ctx:{ w$:{ icon:'w$el' } }
+            }],
+
+        _iface:{ w$ctx:{ panel:'panel', icon:'icon' } },
+        _text: " "
+        };
+    };
 
     /**
      * New Item button 
@@ -107,11 +169,14 @@ var BP_MOD_EDITOR = (function ()
     function NButton () {}
     NButton.prototype = w$defineProto(
     {
-        newItem: {value: function (e)
+        onClick: {value: function (e)
         {
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
             e.preventDefault(); // Causes event to get cancelled if cancellable
-            this.panel.itemList.newItem();
+            if (this.panel.itemList)
+            {
+                this.panel.itemList.newItem();
+            }
         }}
     });
     NButton.wdt = function (w$ctx)
@@ -119,14 +184,15 @@ var BP_MOD_EDITOR = (function ()
         return {
         cons: NButton,
         tag: 'a',
-        on:{ click:NButton.prototype.newItem },
-        attr:{ href:"#", title:"New Username / Password" },
+        on:{ click:NButton.prototype.onClick },
+        addClass: 'com-untrix-B',
+        ctx:{ w$:{ nB:'w$el' } },
+        attr:{ href:"#", title:"New Password" },
             children:[
             {tag:"i",
-            addClass:'icon-plus',
+            addClass:'icon-plus ',
             }],
-        _iface:{ w$ctx:{ panel:'panel' } },
-        _text: " "
+        _iface:{ w$ctx:{ panel:'panel' } }
         };
     };
 
@@ -138,10 +204,9 @@ var BP_MOD_EDITOR = (function ()
         cons: DButton,
         tag:'a',
         attr:{ href:"#", title:"Delete Username" },
-        css:{ display:'inline-block' },
-        //addClass: "span1",
+        addClass: 'com-untrix-B com-untrix-rB',
         on:{ click:DButton.prototype.onClick },
-        _iface:{ ioItem:ioItem },
+        _iface:{ 'ioItem':ioItem },
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
@@ -167,15 +232,14 @@ var BP_MOD_EDITOR = (function ()
         var bInp = w$ctx.io_bInp;
         return {
          cons: TButton,
-         tag: 'a',
-         attr:{ href:"#", title:"Edit Password" },
-         css:{ display:'inline-block' },
-         //addClass: "span1",
-         on:{ click:TButton.prototype.toggleButton },
+         tag: 'button',
+         attr:{ href:"#", title:"Edit Password", type:'submit' },
+         addClass: "com-untrix-B",
+         on:{ click:TButton.prototype.toggle },
+         ctx: { w$:{ tButton:'w$el' } },
             children:[
             {tag:"i",
-            css:{ 'vertical-align':'middle' },
-            addClass:bInp? "icon-ok" :"icon-pencil",
+            addClass:bInp ? "icon-ok" : "icon-pencil",
             ctx:{ w$:{icon:'w$el'} }
             }],
          _iface:{ w$ctx:{ ioItem:"ioItem", icon:'icon' } }
@@ -183,17 +247,17 @@ var BP_MOD_EDITOR = (function ()
     };
     TButton.prototype = w$defineProto(
     {
-        toggleButton: {value: function (e) 
+        toggle: {value: function (e) 
         {
             var bInp = this.ioItem.toggleIO();
-            if (bInp) {
-                this.icon.$el.removeClass('icon-pencil');
-                this.icon.$el.addClass('icon-ok');
-            }
-            else {
-                this.icon.$el.removeClass('icon-ok');
-                this.icon.$el.addClass('icon-pencil');                    
-            }
+            // if (bInp) {
+                // this.icon.removeClass('icon-pencil');
+                // this.icon.addClass('icon-ok');
+            // }
+            // else {
+                // this.icon.removeClass('icon-ok');
+                // this.icon.addClass('icon-pencil');                    
+            // }
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
             e.preventDefault(); // Causes event to get cancelled if cancellable
         }}
@@ -205,7 +269,7 @@ var BP_MOD_EDITOR = (function ()
         onsubmit: {value: function(e)
         {
             console.log("NewRecord.onsubmit invoked");
-            var loc = MOD_COMMON.parseURL(this.urlF.$el.val());
+            var loc = MOD_COMMON.parseURL($(this.urlF.el).val());
             console.log("NewRecord.onsubmit: url=" + JSON.stringify(loc));
             e.stopPropagation();
             e.preventDefault();// Prevents default action and causes event to get cancelled if cancellable
@@ -248,29 +312,33 @@ var BP_MOD_EDITOR = (function ()
         }
         return {
         cons: IItemP,
-        tag:'div',
-        css:{ display:'inline-block' },
+        tag:'form', attr:{ action:"#" },
+        addClass: 'com-untrix-ioItem',
         prop:{ 'data-iitem':true },
-        ctx:{ w$:{iItem:'w$el'} },
+        ctx:{ io_bInp:true, w$:{iItem:'w$el'} },
+        on:{ submit:IItemP.prototype.onSubmit },
         iface:{ ioItem:ioItem },
             children: [
+            TButton.wdt,
             {tag:'input',
-             attr:{ type:'text', value:u, placeholder:'Username' },
-             prop:{ disabled:u?true:false },
+             attr:{ type:'text', value:u, placeholder:'Username', name:'u' },
+             prop:{ required:true /*,disabled:(u?true:false)*/},
              //addClass:css_class_field+css_class_userIn,
              addClass: "input-large",
              ctx:{ w$:{u:'w$el' } },
              _iface:{ value: u } 
             },
             {tag:'input',
-             attr:{ type:'password', value:p, placeholder:'Password' },
+             attr:{ type:'password', value:p, placeholder:'Password', name:'p' },
+             prop:{ required:true },
              //addClass:css_class_field+css_class_passIn,
              addClass: "input-large",
              ctx:{ w$:{p:'w$el'} },
              _iface:{ value: p },
-             }
+            }
+            //,{tag:'a', attr:{ type:'submit', href:'#' } }
             ],
-        _iface:{ w$ctx:{ u:'u', p:'p' } }
+        _iface:{ w$ctx:{ u:'u', p:'p', tButton:'tButton' } }
         };
     };
     IItemP.prototype = w$defineProto (
@@ -313,6 +381,13 @@ var BP_MOD_EDITOR = (function ()
             if (dt === dt_pRecord) {
                 deleteRecord({loc:this.ioItem.loc, u:key});
             }
+        }},
+        onSubmit: {value: function(e)
+        {
+            console.log("IITemP.onSubmit invoked");
+            this.tButton.toggle.apply(this.tButton,[e]);
+            e.stopPropagation();
+            e.preventDefault();
         }}
     });
     
@@ -324,39 +399,51 @@ var BP_MOD_EDITOR = (function ()
             autoFill = w$ctx.autoFill,
             ioItem = w$ctx.ioItem,
             pRec = (ioItem && ioItem.rec) ? ioItem.rec:undefined;
-        if (pRec) {
+        if (pRec) 
+        {
             u = pRec.u;
             p = pRec.p;
-
+            
             return {
             cons: OItemP,
             tag:'div', 
-            css:{ 'display':'inline-block' },
+            addClass: 'com-untrix-ioItem',
             prop:{ 'data-oitem':true },
-            ctx:{ w$:{ oItem:'w$el' } },
+            on:{ dblclick:OItemP.prototype.onDblClick },
+            ctx:{ io_bInp:false, w$:{ oItem:'w$el' } },
                 children:[
                 //autoFill ? FButton.wdt : w$undefined,
+                TButton.wdt,
                 {tag:'span',
-                 attr:{ draggable:true },
+                 //attr:{ draggable:true },
                  //addClass:css_class_field+css_class_userOut,
-                 addClass: "input-large uneditable-input",
+                 addClass: "input-large uneditable-input com-untrix-oItem",
                  text:u,
                  ctx:{ w$:{ u:'w$el' } },
                  _iface:{ fn:fn_userid, value:u }
                 },
                 {tag:'span',
-                 attr:{ draggable:true },
+                 //attr:{ draggable:true },
                  //addClass:css_class_field+css_class_passOut,
-                 addClass: "input-large uneditable-input",
+                 addClass: "input-large uneditable-input com-untrix-oItem",
                  text:'*****',
                  ctx:{ w$:{p:'w$el' } },
                  _iface:{ fn:fn_pass, value:p }
                 }],
-            _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } }
+            _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p', tButton:'tButton' } }
             };
         }
     };
-    OItemP.prototype = w$defineProto ({});
+    OItemP.prototype = w$defineProto (
+    {
+        onDblClick: {value: function(e)
+        {
+            console.log("OITemP.onDblClick invoked");
+            this.tButton.toggle.apply(this.tButton,[e]);
+            e.stopPropagation();
+            e.preventDefault();
+        }}
+    });
     
     function IoItem () {}
     IoItem.wdi = function (w$ctx)
@@ -365,17 +452,17 @@ var BP_MOD_EDITOR = (function ()
             rec = acns? acns.curr: undefined,
             loc = w$ctx.loc,
             panel = w$ctx.panel,
-            bInp = w$ctx.io_bInp,
-            autoFill = panel.autoFill;
+            bInp = w$ctx.io_bInp;
+            //autoFill = panel.autoFill;
         return {
         cons: IoItem,
         tag:'div', 
         //addClass: "span8",
         ctx:{ w$:{ ioItem:'w$el' } },
-        iface: { acns:acns, rec:rec, loc:loc, panel:panel, bInp:bInp },
+        iface: { 'acns':acns, 'rec':rec, 'loc':loc, 'panel':panel, 'bInp':bInp },
         on: {mousedown:stopPropagation},
             children:[
-            TButton.wdt,
+            //TButton.wdt,
             bInp ? IItemP.wdt : OItemP.wdt,
             DButton.wdt
             ],
@@ -389,7 +476,7 @@ var BP_MOD_EDITOR = (function ()
         {
             var iI = this.iItem, 
                 oI = this.oItem,
-                ctx={ioItem:this, autoFill:this.panel.autoFill},
+                ctx={ioItem:this /*,autoFill:this.panel.autoFill*/},
                 res,
                 self = this;
             if (iI)
@@ -398,10 +485,10 @@ var BP_MOD_EDITOR = (function ()
                 if (res===undefined) 
                 {
                     this.oItem = w$exec(OItemP.wdt, ctx);
-                    MOD_COMMON.deleteProps(ctx); // Clear DOM refs inside the ctx to aid GC
+                    MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                     if (this.oItem) {
                         delete this.iItem; // only removes the object-prop
-                        this.oItem.$el.insertAfter(iI.$el);
+                        this.oItem.insertAfter(iI);
                         iI.die();
                         //this.append(this.oItem);
                         this.bInp = false;
@@ -412,11 +499,11 @@ var BP_MOD_EDITOR = (function ()
                     iI.saveInput(function(resp)
                     {
                         if (resp.result===true) {
-                            self.panel.reload();
+                            self.panel.reload(true);
                         }
                         else {
                             BP_MOD_ERROR.warn(resp.err);
-                            self.panel.reload();
+                            self.panel.reload(true);
                         }
                     });
                 }
@@ -424,10 +511,10 @@ var BP_MOD_EDITOR = (function ()
             else if (oI)
             { // Create input element, destroy output element
                 this.iItem = w$exec(IItemP.wdt, ctx);
-                MOD_COMMON.deleteProps(ctx); // Clear DOM refs inside the ctx to aid GC
+                MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                 if (this.iItem) {
                     delete this.oItem;
-                    this.iItem.$el.insertAfter(oI.$el); 
+                    this.iItem.insertAfter(oI); 
                     oI.die();
                     //this.append(this.iItem);
                     this.bInp = true;
@@ -447,20 +534,21 @@ var BP_MOD_EDITOR = (function ()
         return {
         cons: PanelList,
         tag:'div',
-        ctx:{ io_bInp:false, w$:{ itemList:'w$el' } },
+        ctx:{ io_bInp:true, w$:{ itemList:'w$el' } },
         iface:{ loc:loc, panel:panel },
-             iterate:{ it:it, wdi:IoItem.wdi }
+            children:[ NButton.wdt ],
+            iterate:{ it:it, wdi:IoItem.wdi },
+        _iface:{ w$ctx:{ nB:'nB' } }
         };
     };
     PanelList.prototype = w$defineProto(
     {
         newItem: {value: function()
         {
-            if (!this.newItemCreated) {
-                w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc, panel:this.panel }).appendTo(this);
-                this.newItemCreated = true;    
-            }
-            
+            //if (!this.newItemCreated) {
+                w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc, panel:this.panel }).insertAfter(this.nB);
+                //this.newItemCreated = true;    
+            //}
         }}
     });
 
@@ -470,6 +558,8 @@ var BP_MOD_EDITOR = (function ()
     {
         var dNode = w$ctx.w$rec,
             dt = w$ctx.dt,
+            //bList = w$ctx.bList,
+            bList = true,
             recs = DNProto.getData.apply(dNode, [dt]);//dNode.getData(dt)
 
         // If this node has no data, then have it be skipped.    
@@ -485,18 +575,18 @@ var BP_MOD_EDITOR = (function ()
         addClass: "well",         
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:{hostname:H}, it:rIt },
-        // Copy props to the Wel object as its top-level properties.
-        iface:{ H:H, dt:dt },
+        // Copy props to the Wel object for future use.
+        iface:{ 'H':H, 'dt':dt, 'rIt':rIt, 'loc':{hostname:H},  w$:{ panel:"w$el" } },
 
             // Create children
             children:[
             {tag:"div",
                 children:[
-                NButton.wdt,
+                EButton.wdt,
                 dNodeTitleText_wdt
                 ]
             },
-            PanelList.wdt
+            bList ? PanelList.wdt : w$undefined
             ],
 
         // Post processing steps
@@ -505,28 +595,40 @@ var BP_MOD_EDITOR = (function ()
     };
     DNodeWdl.prototype = w$defineProto( // same syntax as Object.defineProperties
     {
-        reload: {value: function() 
+        reload: {value: function(bList)
         {
             var l = {H:this.H},
                 self = this;
-            getDNode(l, this.dt,
-            function (resp)
+            getDNode(l, this.dt, function (resp)
             {
                 if (!resp.result) {callbackHandleError(resp); return;}
                 
                 var ctx = {
-                    w$rec: resp.dN,
-                    dt: self.dt,
+                        w$rec: resp.dN,
+                        dt: self.dt,
+                        bList: bList
                     },
                     wel = w$exec(DNodeWdl.wdi, ctx);
-                    MOD_COMMON.deleteProps(ctx); // Clear DOM refs inside the ctx to aid GC
+                    MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                     if (wel) {
-                        self.$el.replaceWith(wel.$el);
+                        self.replaceWith(wel);
                     }
                     self.die();
             });
             console.log("DNode->reload invoked");
         }},
+        createList: {value: function()
+        {
+            if (!this.itemList)
+            {
+                var panelList = w$exec(PanelList.wdt, {it:this.rIt, loc:this.loc, panel:this.panel});
+                if (panelList && (panelList!==w$undefined))
+                {
+                    this.append(panelList);
+                    this.itemList = panelList;
+                }
+            }
+        }}
     });
 
     function EditorWdl () {}

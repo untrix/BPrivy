@@ -119,7 +119,7 @@
                     break;
                 case MOD_CONNECT.cm_unloadDB:
                     BPError.push("UnloadDB");
-                    dbPath = FILE_STORE.unloadDB(rq.dbPath);
+                    dbPath = FILE_STORE.unloadDB();
                     funcSendResponse(makeDashResp(true));
                     break;
                 case MOD_CONNECT.cm_mergeInDB:

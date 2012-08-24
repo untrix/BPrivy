@@ -282,7 +282,7 @@ var BP_MOD_CS = (function(g_win)
                     },
                     panel = w$exec(cs_panel_wdt, ctx);
                 gid_panel = panel.id;
-                MOD_COMMON.deleteProps(ctx); // Clear DOM refs in the ctx to aid GC
+                MOD_COMMON.delProps(ctx); // Clear DOM refs in the ctx to aid GC
             }
             else {
                 // Remember to not keep any data lingering around ! Delete data the moment we're done
@@ -326,7 +326,7 @@ var BP_MOD_CS = (function(g_win)
             };
         var    panel = w$exec(cs_panel_wdt, ctx);
         gid_panel = panel.id;
-        MOD_COMMON.deleteProps(ctx); // Clear DOM refs in the ctx to aid GC
+        MOD_COMMON.delProps(ctx); // Clear DOM refs in the ctx to aid GC
     }
    
     function clickBP (request, sender, sendResponse)

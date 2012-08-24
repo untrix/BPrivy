@@ -320,12 +320,12 @@ var BP_MOD_WDL = (function ()
         {
             var bInp = this.ioItem.toggleIO();
             if (bInp) {
-                this.icon.$el.removeClass('icon-pencil');
-                this.icon.$el.addClass('icon-ok');
+                this.icon.removeClass('icon-pencil');
+                this.icon.addClass('icon-ok');
             }
             else {
-                this.icon.$el.removeClass('icon-ok');
-                this.icon.$el.addClass('icon-pencil');                    
+                this.icon.removeClass('icon-ok');
+                this.icon.addClass('icon-pencil');                    
             }
         }}
     });
@@ -494,7 +494,7 @@ var BP_MOD_WDL = (function ()
                 if (res===undefined) 
                 {
                     this.oItem = w$exec(OItemP.wdt, ctx);
-                    MOD_COMMON.deleteProps(ctx); // Clear DOM refs inside the ctx to aid GC
+                    MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                     if (this.oItem) {
                         delete this.iItem; 
                         iI.die();
@@ -519,7 +519,7 @@ var BP_MOD_WDL = (function ()
             else if (oI)
             { // Create input element, destroy output element
                 this.iItem = w$exec(IItemP.wdt, ctx);
-                MOD_COMMON.deleteProps(ctx); // Clear DOM refs inside the ctx to aid GC
+                MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                 if (this.iItem) {
                     delete this.oItem; oI.die();
                     this.append(this.iItem);
@@ -638,7 +638,7 @@ var BP_MOD_WDL = (function ()
             // var left = (winW-panelW);
             // left = (left>0)? left: 0;
             // this.$el.css({position: 'fixed', top: '0px', 'left': left + "px"});               
-            this.$el.draggable();
+            $(this.el).draggable();
         }},
         reload: {value: function() 
         { //TODO: Implement this
