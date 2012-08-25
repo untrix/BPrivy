@@ -186,7 +186,7 @@ var BP_MOD_MEMSTORE = (function ()
         },
         toPersist: function (notes)
         {
-            return (notes.isRecentUnique || (notes.isNewRepeat && this.persist_asserts));
+            return (notes.isRecentUnique || (notes.isNewRepeat && ((notes.causedCurrChange) || this.persist_asserts)));
         }
     });
 
@@ -462,9 +462,10 @@ var BP_MOD_MEMSTORE = (function ()
      * list-visit order. Therefore we'll just visit from position 0 onwards because that
      * is convenient for coding.
      */
-    Actions.prototype.updateTm = function (arec, tm)
+    Actions.prototype.updateTm = function (arec, tm, notes)
     {
-        var arecs = this.arecs, i;
+        var arecs = this.arecs, 
+            i, bDone;
 
         i = arecs.indexOf(arec);
         if (i !== -1)
@@ -476,13 +477,19 @@ var BP_MOD_MEMSTORE = (function ()
                 arecs.splice(i, 1);
 
                 // Reposition item.
-                for (i--; i>=0; i--)
+                for (bDone=false,--i; i>=0; --i)
                 {
                     if (arec.tm<=arecs[i].tm) {
                         // insert one item
                         arecs.splice(i+1, 0, arec);
+                        bDone = true;
                         break;
                     }
+                }
+                if (!bDone) {
+                    arecs.splice(0, 0, arec);
+                    this.curr = arecs[0];
+                    notes.causedCurrChange = true;
                 }
             }
             // else the item is already at the top. Can't be upgraded anymore than this
@@ -573,13 +580,13 @@ var BP_MOD_MEMSTORE = (function ()
                 // if a user wanted to roll-back in time, we can't do that. Sure the user
                 // won't loose any data, and we will be able to show her the older values
                 // but we won't have the capability to one-click-go-back in time. The
-                // utility of that use-case is very debatable especially since the user
+                // usefulness of that feature however, is debatable especially since the user
                 // will have access to her older passwords immediately after a sync/merge.
                 // It does, however bring in a lot of complexity and fluff. Further more, this
                 // use-case can easily be made possible by changing the code in this section
                 // to not forget repeated values. Hence for now we'll go with the simpler
                 // leaner arguably smarter but certainly novel approach.
-                drec.notes.isNewRepeat = true;
+                drec.notes.isNewRepeat = true; // NOTE: May or may not causeCurrChange...
                 // In loadCSV case all record-timestamps are Date.now and therefore are
                 // latest. Hence any value in the csv record will appear like a new value
                 // or an upgrade. We don't want that to spoil the chronology of the DB
@@ -593,7 +600,7 @@ var BP_MOD_MEMSTORE = (function ()
                     // We'll save only the latest record. So, we need to remove the old record
                     // and insert the new one at the right location in the sorted list. This
                     // constitutes an upgrade of the old record with a newer timestamp.
-                    this.updateTm(oarec, arec.tm);
+                    this.updateTm(oarec, arec.tm, drec.notes);
                 }
             }
         }
@@ -1052,11 +1059,10 @@ var BP_MOD_MEMSTORE = (function ()
      */
     function  getRecs (loc)
     {
-        var kdb, pdb, r,
-            l = newL(loc);
+        var kdb, pdb, r;
         r = {};
-        r.eRecsMapArray = DNProto.findERecsMapArray.apply(DNode[dt_eRecord], [l]);
-        r.pRecsMap = DNProto.findPRecsMap.apply(DNode[dt_pRecord],[l]);
+        r.eRecsMapArray = DNProto.findERecsMapArray.apply(DNode[dt_eRecord], [newL(loc,dt_eRecord)]);
+        r.pRecsMap = DNProto.findPRecsMap.apply(DNode[dt_pRecord],[newL(loc,dt_pRecord)]);
 
         return r;
     }

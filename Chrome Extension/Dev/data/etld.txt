@@ -924,6 +924,8 @@ net.gn
 
 // gov : http://en.wikipedia.org/wiki/.gov
 gov
+*.gov
+!usa.gov
 
 // gp : http://www.nic.gp/index.php?lang=en
 gp

@@ -187,7 +187,7 @@ var BP_MOD_EDITOR = (function ()
         on:{ click:NButton.prototype.onClick },
         addClass: 'com-untrix-B',
         ctx:{ w$:{ nB:'w$el' } },
-        attr:{ href:"#", title:"New Password" },
+        attr:{ href:"#", title:"New Entry" },
             children:[
             {tag:"i",
             addClass:'icon-plus ',
@@ -534,6 +534,7 @@ var BP_MOD_EDITOR = (function ()
         return {
         cons: PanelList,
         tag:'div',
+        addClass: 'accordion-body',
         ctx:{ io_bInp:true, w$:{ itemList:'w$el' } },
         iface:{ loc:loc, panel:panel },
             children:[ NButton.wdt ],
@@ -558,8 +559,7 @@ var BP_MOD_EDITOR = (function ()
     {
         var dNode = w$ctx.w$rec,
             dt = w$ctx.dt,
-            //bList = w$ctx.bList,
-            bList = true,
+            bList = w$ctx.bList,
             recs = DNProto.getData.apply(dNode, [dt]);//dNode.getData(dt)
 
         // If this node has no data, then have it be skipped.    
@@ -570,9 +570,9 @@ var BP_MOD_EDITOR = (function ()
             
         return {
         cons:DNodeWdl, // w$el constructor
-        tag:"div",
+        tag:"tr",
         css:{ display:'block', padding:5, 'margin-bottom':2 },
-        addClass: "well",         
+        addClass: "accordion-group", // "well"         
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:{hostname:H}, it:rIt },
         // Copy props to the Wel object for future use.
@@ -581,8 +581,11 @@ var BP_MOD_EDITOR = (function ()
             // Create children
             children:[
             {tag:"div",
+             addClass: "com-untrix-accHead accordion-heading",
+             on:{ click:function(e){this.panel.toggle(e);} },
+             iface:{ w$ctx:{ panel:'panel' } },
                 children:[
-                EButton.wdt,
+                //EButton.wdt,
                 dNodeTitleText_wdt
                 ]
             },
@@ -628,6 +631,36 @@ var BP_MOD_EDITOR = (function ()
                     this.itemList = panelList;
                 }
             }
+        }},
+        toggle: {value: function (e)
+        {
+            e.stopPropagation(); // We don't want the enclosing web-page to interefere
+            e.preventDefault(); // Causes event to get cancelled if cancellable
+            if (this.itemList)
+            {
+                if (this.isOpen) {
+                    this.itemList.hide();
+                    this.setClosed();
+                }
+                else {
+                    this.itemList.show();
+                    this.setOpen();
+                }
+            }
+            else 
+            {
+                this.createList();
+                this.setOpen();
+            }
+        }},
+        setOpen: {value: function()
+        {
+            this.isOpen = true;
+
+        }},
+        setClosed: {value: function() 
+        {
+            this.isOpen = false;
         }}
     });
 
@@ -638,10 +671,15 @@ var BP_MOD_EDITOR = (function ()
         
         return {
         cons:EditorWdl,
-        tag:"div",
+        tag:"table",
+        addClass: "table table-bordered table-striped",
         attr:{ id:'com-bprivy-panel'},
         //css:{ 'background-color':"#e3f1ff" },
-            iterate:{ it:dnIt, wdi:DNodeWdl.wdi }
+            children:[
+            {tag:'tbody',
+                iterate:{ it:dnIt, wdi:DNodeWdl.wdi }
+            }
+            ]
         };
     };
     EditorWdl.prototype = w$defineProto(
