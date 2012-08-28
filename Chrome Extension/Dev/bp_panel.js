@@ -185,7 +185,7 @@ var BP_MOD_WDL = (function ()
     {
         return {
         tag: 'a',
-        attr:{ class:css_class_xButton, href:BP_MOD_CS_PLAT.getURL("/bp_manage.html") },
+        attr:{ class:css_class_xButton, href:BP_MOD_CS_PLAT.getURL("/bp_manage.html"), target:"_blank" },
         css:{ width:'20px' },
             children:[
             {tag:"i",
@@ -658,11 +658,7 @@ var BP_MOD_WDL = (function ()
        CT_BP_PREFIX: CT_BP_PREFIX,
        CT_BP_USERID: CT_BP_USERID,
        CT_BP_PASS: CT_BP_PASS,
-       NButton: NButton,
-       SButton: SButton,
-       PanelList: PanelList,
-       IItemP: IItemP,
-       OItemP: OItemP
+       image_wdt: image_wdt
     };
     
     console.log("loaded wdl");

@@ -433,6 +433,7 @@ var BP_MOD_CS = (function(g_win)
         {
             if (r.dtMatched) {
                 e.dataTransfer.dropEffect= 'copy';
+                //$(e.currentTarget).focus();
             }
             else {
                 e.dataTransfer.dropEffect = 'none'; // Prevent drop here.

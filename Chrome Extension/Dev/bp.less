@@ -11,6 +11,10 @@
               margin: 0px;
               padding: 0px;
               border: none;
+              box-shadow:none;
+              -moz-box-shadow: none;
+              -webkit-box-shadow: none;
+              background-image: none;
               width: auto;
               height: auto;
               text-indent: 0;
@@ -27,17 +31,23 @@
                 //background: none;
                 cursor: default;
             }
+            
+            button, input[type="button"] {
+              box-shadow:none;
+              -moz-box-shadow: none;
+              -webkit-box-shadow: none;              
+            }
 }
 
-  div#com-bprivy-panel	{
-                display: block;
-                width: 325px;
-                //background-color: rgb(200, 200, 200);
-                font-size: 13px;
-                border: thin solid #0060bf;
-                opacity: 1;
-                z-index: 9007199254740992;
-                border-radius: 2px;
+#com-bprivy-panel	{
+        display: block;
+        width: 325px;
+        //background-color: rgb(200, 200, 200);
+        font-size: 13px;
+        border: thin solid #0060bf;
+        opacity: 1;
+        z-index: 9007199254740992;
+        border-radius: 2px;
 				padding: 2px;
 				color: black;
 				cursor: default;
@@ -103,16 +113,22 @@
             }
 
 
-#com-bprivy-panelList {
-    
-.com-bprivy-li {
+  #com-bprivy-panelList {
+
+    button, input[type="button"] {
+      box-shadow:none;
+      -moz-box-shadow: none;
+      -webkit-box-shadow: none;              
+    }
+                
+    .com-bprivy-li {
                 display: block;
                 border-collapse:collapse;
                 vertical-align: middle;
             }
 
 
-.com-bprivy-tB {
+    .com-bprivy-tB {
                 display: inline-block;
                 vertical-align: middle;
                 text-align: center;
@@ -120,28 +136,28 @@
                 cursor: default;
             }
 
-.com-bprivy-io-fieldset {
+    .com-bprivy-io-fieldset {
                 display: inline-block;
                 border: none;
 }
 
-.com-bprivy-user-in {
+    .com-bprivy-user-in {
                 border: 1px;
                 //background-color: white;
 }
 
-.com-bprivy-pass-in {
+    .com-bprivy-pass-in {
                 border: 1px;
                 //background-color: white;
 }
 
-.com-bprivy-user-out{
+    .com-bprivy-user-out{
                 border: 1px solid #0060bf;
                 //background-color: light-gray;
                 cursor: move;
  		 	}
 
-.com-bprivy-pass-out {
+    .com-bprivy-pass-out {
                 border: 1px solid #0060bf;
                 //background-color: light-gray;
                 cursor: move;

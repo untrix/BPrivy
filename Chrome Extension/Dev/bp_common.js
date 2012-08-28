@@ -56,7 +56,7 @@ var BP_MOD_COMMON = (function()
            // attribute DOMString search;
            // attribute DOMString hash;
     // Parses URL into components as in the Location object.
-    function parseURL(url) // TODO: Incorporate this into URL class
+    function parseURL(url)
     {
         var segs = g_url_regexp.exec(url);
 

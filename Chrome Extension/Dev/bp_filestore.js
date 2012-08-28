@@ -1409,13 +1409,16 @@ var BP_MOD_FILESTORE = (function()
     function exportCSV(dirPath, obfuscated)
     {
         var dtl=[dt_pRecord, dt_eRecord],
-            i, fpath;
+            i, fpath, fnames=[];
             
         for (i=dtl.length-1; i>=0; i--) // would rather use foEach, but that is reportedly slower
         {
             fpath = DB_FS.makeCsvFilePath(dtl[i], dirPath);
             exportCsvDT(dtl[i], fpath);
+            fnames.push(fpath);
         }
+        
+        return fnames;
     }
     
     function createDB(name, dir) // throws

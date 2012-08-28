@@ -67,7 +67,8 @@ var BP_MOD_MEMSTORE = (function ()
             ETLD: 'E', // ETLD rule marker. 0=> regular ETLD rule, 1 implies an override 
                        // (e.g. !educ.ar). See publicsuffix.org for details.
             DATA: 'D', // Prefix for data - e.g. De for E-Rec, Dp for P-Rec etc.
-            ITER: "I" // Property used by DNodeIterator to save notes
+            ITER: "I", // Property used by DNodeIterator to save notes
+            URL:  "U",
             //PORT: 'NO',
             //HTTP: 'NS',
             //HTTPS: 'NS'
@@ -846,10 +847,10 @@ var BP_MOD_MEMSTORE = (function ()
          *    vice-versa. So, if you delete records from a DNode then be sure to delte the 'data'
          *    object as well.
          */
-        Object.defineProperty(this, "url", {value:_url, enumerable:true});
+        Object.defineProperty(this, DNODE_TAG.URL, {value:_url, enumerable:true});
     }
     /** Makes url of child node by extracting its url-segment from its key and 
-     * appending that to this.url */
+     * appending that to this[DNODE_TAG.URL] */
     function makeURL(baseURL, childKey)
     {
         var tag = childKey.slice(0,2),
@@ -891,6 +892,13 @@ var BP_MOD_MEMSTORE = (function ()
             (recsMap[ki] = newActions(dt)).insert(drec);
         }
     };
+    DNProto.makeRecsMap = function (dt)
+    {
+        var d = DNODE_TAG.DATA + dt;
+        if (!this[d]) { // ensure that a data node has been allocated
+            this[d] = {};
+        }
+    };
     DNProto.putETLD = function(drec)
     {
         // Used for a simple map with URL as the key and record as value.
@@ -919,7 +927,7 @@ var BP_MOD_MEMSTORE = (function ()
         {   // continue walking down the trie
             var n = this[k];
             if (!n) {
-                this[k] = (n = newDNode(makeURL(this.url, k)));
+                this[k] = (n = newDNode(makeURL(this[DNODE_TAG.URL], k)));
             }
             
             return n; // Non-recursive

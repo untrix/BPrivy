@@ -43,7 +43,8 @@ var BP_MOD_EDITOR = (function ()
     var newPRecord = IMPORT(m.newPRecord),
         saveRecord = IMPORT(m.saveRecord),
         deleteRecord = IMPORT(m.deleteRecord),
-        cm_getDN = IMPORT(m.cm_getDN);
+        cm_getDN = IMPORT(m.cm_getDN),
+        newL = IMPORT(m.newL);
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
@@ -57,10 +58,17 @@ var BP_MOD_EDITOR = (function ()
         dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin */
     m = IMPORT(BP_MOD_WDL);
+    var CT_BP_FN = IMPORT(m.CT_BP_FN),
+        CT_BP_PASS = IMPORT(m.CT_BP_PASS),
+        CT_BP_USERID = IMPORT(m.CT_BP_USERID),
+        CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN),
+        CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX),
+        image_wdt = IMPORT(m.image_wdt);
 
     /** @import-module-begin */
     m = IMPORT(BP_MOD_MEMSTORE);
-    var DNODE_TAG = IMPORT(m.DNODE_TAG),
+    var MEMSTORE = IMPORT(m),
+        DNODE_TAG = IMPORT(m.DNODE_TAG),
         DNProto = IMPORT(m.DNProto);
         /** @import-module-end **/    m = null;
 
@@ -80,19 +88,18 @@ var BP_MOD_EDITOR = (function ()
     function dNodeTitleText_wdt(ctx)
     {
         var loc = ctx.loc,
-            host = loc.H || loc.hostname;
+            host = loc.hostname; // TODO: This is a hack.
         return {
             tag:'a',
-            attr:{ href:"http://"+host },
+            attr:{ href:"http://"+host, target:"_blank" },
             addClass: "com-untrix-dNodeTitle",
-            //text:host,
             iface:{ "url":"http://"+host },
             on:{ click: function (e)
                 {
-                    window.open(this.url);
-                    e.preventDefault();
+                    //window.open(this.url);
+                    //e.preventDefault();
                     e.stopPropagation();
-                }},
+                }},
                 children:[
                 {
                     tag:"h6",
@@ -143,18 +150,18 @@ var BP_MOD_EDITOR = (function ()
     });
     EButton.wdt = function (w$ctx)
     {
-        var bList = w$ctx.bList;
+        var bOpen = w$ctx.bOpen;
         
         return {
         cons: EButton,
         tag: 'a',
         on:{ click:EButton.prototype.onClick },
         addClass: 'com-untrix-B',
-        iface:{ isOpen:bList },
+        iface:{ isOpen:bOpen },
         attr:{ href:"#", title:"Expand" },
             children:[
             {tag:"i",
-            addClass: bList ? 'icon-resize-small' : 'icon-resize-full',
+            addClass: bOpen ? 'icon-resize-small' : 'icon-resize-full',
             ctx:{ w$:{ icon:'w$el' } }
             }],
 
@@ -181,18 +188,21 @@ var BP_MOD_EDITOR = (function ()
     });
     NButton.wdt = function (w$ctx)
     {
+        var bOpen = w$ctx.bOpen;
+        
         return {
         cons: NButton,
         tag: 'a',
         on:{ click:NButton.prototype.onClick },
-        addClass: 'com-untrix-B',
+        addClass: 'com-untrix-B com-untrix-lB',
         ctx:{ w$:{ nB:'w$el' } },
         attr:{ href:"#", title:"New Entry" },
             children:[
             {tag:"i",
             addClass:'icon-plus ',
             }],
-        _iface:{ w$ctx:{ panel:'panel' } }
+        _iface:{ w$ctx:{ panel:'panel' } },
+        _final:{ show:bOpen}
         };
     };
 
@@ -415,7 +425,7 @@ var BP_MOD_EDITOR = (function ()
                 //autoFill ? FButton.wdt : w$undefined,
                 TButton.wdt,
                 {tag:'span',
-                 //attr:{ draggable:true },
+                 attr:{ draggable:true },
                  //addClass:css_class_field+css_class_userOut,
                  addClass: "input-large uneditable-input com-untrix-oItem",
                  text:u,
@@ -423,7 +433,7 @@ var BP_MOD_EDITOR = (function ()
                  _iface:{ fn:fn_userid, value:u }
                 },
                 {tag:'span',
-                 //attr:{ draggable:true },
+                 attr:{ draggable:true },
                  //addClass:css_class_field+css_class_passOut,
                  addClass: "input-large uneditable-input com-untrix-oItem",
                  text:'*****',
@@ -530,14 +540,15 @@ var BP_MOD_EDITOR = (function ()
     {
         var loc = ctx.loc,
             panel = ctx.panel,
-            it = ctx.it;
+            it = ctx.it,
+            io_bInp = ctx.io_bInp;
+            
         return {
         cons: PanelList,
         tag:'div',
-        addClass: 'accordion-body',
-        ctx:{ io_bInp:true, w$:{ itemList:'w$el' } },
+        addClass: 'accordion-body accordion-inner',
+        ctx:{ 'io_bInp':io_bInp, w$:{ itemList:'w$el' } },
         iface:{ loc:loc, panel:panel },
-            children:[ NButton.wdt ],
             iterate:{ it:it, wdi:IoItem.wdi },
         _iface:{ w$ctx:{ nB:'nB' } }
         };
@@ -546,10 +557,8 @@ var BP_MOD_EDITOR = (function ()
     {
         newItem: {value: function()
         {
-            //if (!this.newItemCreated) {
-                w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc, panel:this.panel }).insertAfter(this.nB);
-                //this.newItemCreated = true;    
-            //}
+            //w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc, panel:this.panel }).insertAfter(this.nB);
+            w$exec(IoItem.wdi, { io_bInp:true, loc:this.loc, panel:this.panel }).prependTo(this);
         }}
     });
 
@@ -559,48 +568,56 @@ var BP_MOD_EDITOR = (function ()
     {
         var dNode = w$ctx.w$rec,
             dt = w$ctx.dt,
-            bList = w$ctx.bList,
+            bOpen = w$ctx.bOpen,
             recs = DNProto.getData.apply(dNode, [dt]);//dNode.getData(dt)
 
         // If this node has no data, then have it be skipped.    
         if (!recs) {return w$undefined;}
+        if (dt!==dt_pRecord) {
+            BPError.logwarn("DNodeWdl.wdi&editwdl.js: bad dt-type passed in");
+            return w$undefined;
+        }
 
-        var H = dNode.url, //dNode[DNODE_TAG.ITER].myURL,
-            rIt = new BP_MOD_TRAITS.RecsIterator(recs);
+        var loc = MOD_COMMON.parseURL('http://' + dNode[DNODE_TAG.URL]),
+            rIt = new BP_MOD_TRAITS.RecsIterator(recs),
+            H = loc.hostname;
             
         return {
         cons:DNodeWdl, // w$el constructor
-        tag:"tr",
-        css:{ display:'block', padding:5, 'margin-bottom':2 },
-        addClass: "accordion-group", // "well"         
-        // Post w$el creation steps
-        ctx:{ w$:{ panel:"w$el" }, loc:{hostname:H}, it:rIt },
+        tag:"div",
+        attr:{ id:H },
+        //css:{ display:'block', padding:5, 'margin-bottom':2 },
+        addClass: "accordion-group com-untrix-dnode",         
+        // Post w$el creation steps.
+        ctx:{ w$:{ panel:"w$el" }, loc:loc, it:rIt },// TODO: populate loc and rIt directly.
         // Copy props to the Wel object for future use.
-        iface:{ 'H':H, 'dt':dt, 'rIt':rIt, 'loc':{hostname:H},  w$:{ panel:"w$el" } },
+        // NOTE: rIt references MEMSTORE indirectly.
+        iface:{ 'dt':dt, 'rIt':rIt, 'loc':loc,  w$:{ panel:"w$el" } },
 
             // Create children
             children:[
             {tag:"div",
-             addClass: "com-untrix-accHead accordion-heading",
+             addClass: "com-untrix-dnodeHead accordion-heading",
              on:{ click:function(e){this.panel.toggle(e);} },
              iface:{ w$ctx:{ panel:'panel' } },
                 children:[
                 //EButton.wdt,
+                NButton.wdt,
                 dNodeTitleText_wdt
                 ]
             },
-            bList ? PanelList.wdt : w$undefined
+            bOpen ? PanelList.wdt : w$undefined
             ],
 
         // Post processing steps
-        _iface:{ w$ctx:{itemList:'itemList'} }
+        _iface:{ w$ctx:{itemList:'itemList', nB:'nB' } }
         };
     };
     DNodeWdl.prototype = w$defineProto( // same syntax as Object.defineProperties
     {
-        reload: {value: function(bList)
+        reload: {value: function(bOpen)
         {
-            var l = {H:this.H},
+            var l = newL(this.loc, this.dt),
                 self = this;
             getDNode(l, this.dt, function (resp)
             {
@@ -609,7 +626,7 @@ var BP_MOD_EDITOR = (function ()
                 var ctx = {
                         w$rec: resp.dN,
                         dt: self.dt,
-                        bList: bList
+                        bOpen: bOpen
                     },
                     wel = w$exec(DNodeWdl.wdi, ctx);
                     MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
@@ -639,11 +656,9 @@ var BP_MOD_EDITOR = (function ()
             if (this.itemList)
             {
                 if (this.isOpen) {
-                    this.itemList.hide();
                     this.setClosed();
                 }
                 else {
-                    this.itemList.show();
                     this.setOpen();
                 }
             }
@@ -655,11 +670,15 @@ var BP_MOD_EDITOR = (function ()
         }},
         setOpen: {value: function()
         {
+            this.itemList.show();
+            this.nB.show();
             this.isOpen = true;
 
         }},
         setClosed: {value: function() 
         {
+            this.nB.hide();
+            this.itemList.hide();
             this.isOpen = false;
         }}
     });
@@ -668,31 +687,76 @@ var BP_MOD_EDITOR = (function ()
     EditorWdl.wdt = function (ctx)
     {
         var dnIt = ctx.dnIt;
+        if (!ctx.bOpen) {ctx.bOpen = false;} // An undefined or null value implies no-op in case of '_final.show'.
         
         return {
         cons:EditorWdl,
-        tag:"table",
-        addClass: "table table-bordered table-striped",
+        tag:"div",
+        onTarget:{ dragstart:EditorWdl.prototype.handleDragStart,
+        drag:EditorWdl.prototype.handleDrag, 
+        dragend:EditorWdl.prototype.handleDragEnd },
         attr:{ id:'com-bprivy-panel'},
-        //css:{ 'background-color':"#e3f1ff" },
-            children:[
-            {tag:'tbody',
-                iterate:{ it:dnIt, wdi:DNodeWdl.wdi }
-            }
-            ]
+            iterate:{ it:dnIt, wdi:DNodeWdl.wdi }
         };
     };
     EditorWdl.prototype = w$defineProto(
     {
-        newRecord: {value: function()
-        {
-            //if (this.wel_newURL) {return;}
+        handleDragStart: {value: function handleDragStart (e)
+        {   // CAUTION: 'this' is bound to e.target
             
-            var wel = w$exec(NewRecord.wdt);
+            //console.info("DragStartHandler entered");
+            e.dataTransfer.effectAllowed = "copy";
+            var data = this.value;
+            if (this.fn === fn_pass) {
+                data = decrypt(this.value);
+            }
+            
+            e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
+            e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
+            e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
+            e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon16.png"}).el, 0, 0);
+            e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
+            //console.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+            //return true;
+        }},
+        handleDrag: {value: function handleDrag(e)
+        {   // CAUTION: 'this' is bound to e.target
+            //console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
+            e.stopImmediatePropagation();
+        }},
+        handleDragEnd: {value: function handleDragEnd(e)
+        {   // CAUTION: 'this' is bound to e.target
+            //console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
+            //return true;
+        }},
+        newRecord: {value: function(site)
+        {
+            //TODO: verify and sanitize the url. Ensure it has a valid ETLD and remove
+            // the path.
+            var dNode = MEMSTORE.newDNode(site),
+                dt = dt_pRecord,
+                bOpen = true;
+                
+            dNode.makeRecsMap(dt_pRecord);
+            
+            var wel = w$exec(DNodeWdl.wdi, {w$rec:dNode, dt:dt, bOpen:bOpen});
             if (wel) {
                 this.prepend(wel);
-                //this.wel_newURL = wel;
             }
+        }},
+        filter: {value: function(site)
+        {
+            console.log("g_editor: filter invoked on " + site);
+            var $coll = $('.com-untrix-dnode', this.el),
+                $show = site ? $coll.filter('[id*="'+site+'"]') : $coll,
+                $hide = site ? $coll.not($show) : $();
+                
+            $hide.hide();
+            $show.show();
+                
+            return $show;    
         }}
     });
     

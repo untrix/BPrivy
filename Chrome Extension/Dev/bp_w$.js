@@ -170,6 +170,7 @@ var BP_MOD_W$ = (function ()
         $(this.el).removeClass(className);
         //this.el.classList.remove(className);
     };
+    WidgetElement.prototype.$ = function () {return $(this.el); };
     // Returns an object to be used as a prototype for a widget element.
     function w$defineProto (props) // props has same syntax as Object.defineProperties
     {

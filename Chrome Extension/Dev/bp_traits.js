@@ -14,7 +14,7 @@
 /**
  * @ModuleBegin Traits
  */
-var BP_MOD_TRAITS = (function () 
+var BP_MOD_TRAITS = (function ()
 {
     "use strict";
     //////////// HAVE DEPENDENCIES ON MOD_COMMON ONLY, NOTHING ELSE ///////////////////

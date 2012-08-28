@@ -83,7 +83,7 @@
     
     function onRequest(rq, sender, funcSendResponse)
     {
-        var result, recs, dbPath, dbStats, resp,
+        var result, recs, dbPath, dbStats, resp, fnames,
             cm = rq.cm,
             bSaveRec;
         delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
@@ -164,8 +164,8 @@
                     break;
                 case MOD_CONNECT.cm_exportCSV:
                     BPError.push("ExportCSV");
-                    result = FILE_STORE.exportCSV(rq.dirPath, rq.obfuscated);
-                    funcSendResponse({result: result});
+                    fnames = FILE_STORE.exportCSV(rq.dirPath, rq.obfuscated);
+                    funcSendResponse({result: (fnames.length>0), 'fnames':fnames});
                     break;
                 case MOD_CONNECT.cm_getDB:
                     BPError.push("GetDB");

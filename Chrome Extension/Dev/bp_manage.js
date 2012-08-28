@@ -124,7 +124,7 @@ var BP_MOD_MANAGE = (function ()
     function updateDash (resp)
     {
         var fluff, gbg, loaded;
-        if (resp.result) 
+        if (resp && resp.result) 
         {
             resp.dbPath = resp.dbPath || "";
             if ($('#dbSaveLocation:checked').length) 
@@ -242,7 +242,12 @@ var BP_MOD_MANAGE = (function ()
     }
     
     function onload()
-    {               
+    {              
+        MOD_CONNECT.getDBPath(function(resp)
+        {
+            updateDash(resp);
+        });
+
         if (localStorage.dbSaveLocation) {
             $('#dbSaveLocation')[0].checked = true;
         }
@@ -539,17 +544,36 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#newDNode', 'click', 
         function(e)
         {
+            var site, show;
             if (g_dbName) {
-                g_editor.newRecord();
+                site = $('#dnSearch').val();
+                if (!site){
+                    BP_MOD_ERROR.alert("Please enter a web-site first");
+                }
+                else 
+                {
+                    show=g_editor.filter(site);
+                     if (!show.length) {
+                        g_editor.newRecord(site);
+                    }
+                    else {
+                        show.focus();
+                    }
+                }
             }
             else {
                 BP_MOD_ERROR.alert("Please open a wallet first");
             }
         });
         
-        MOD_CONNECT.getDBPath(function(resp)
+        addEventListeners('#dnSearch', 'input', function(e)
         {
-            updateDash(resp);
+            console.log("#dnSearch: oninput invoked");
+            if (g_editor) {
+                g_editor.filter(this.value);
+            }
+            e.stopPropagation();
+            e.preventDefault();
         });
         //$('#content *').tooltip();
     }
