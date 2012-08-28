@@ -81,7 +81,7 @@ var BP_MOD_MEMSTORE = (function ()
             // }},
         }),
         ETLD = {}, // in case loading the ETLD file fails
-        ETLDProto =
+        MOD_ETLD =
         {
             // truncates supplied hostname array to its domain part - i.e. one more than ETLD.
             cullDomain: function (ha) // hostname array - reversed
@@ -105,12 +105,26 @@ var BP_MOD_MEMSTORE = (function ()
                         // We're at an etld. One more segment is allowable.
                         // Truncate ha and exit.
                         ha.length = (j+2)>n?n:(j+2);
+                        return true;
                     }
                     else { // value === 2 means an override. Refer to build_tools.html
                         // We're at the domain. Truncate ha and exit.
                         ha.length = j+1;
+                        return true;
                     }
                 }                
+            },
+            getDomain: function (loc)
+            {
+                // Split hostname into an array of strings.       
+                var ha = loc.hostname.split('.');
+                ha.reverse();
+                if (MOD_ETLD.cullDomain(ha)) {
+                    return ha.reverse().join('.');
+                }
+                else {
+                    return null;
+                }
             }
         };
 
@@ -669,7 +683,7 @@ var BP_MOD_MEMSTORE = (function ()
             
             if (dictTraits.domain_only) 
             {
-                ETLDProto.cullDomain(ha);
+                MOD_ETLD.cullDomain(ha);
             }
         }
         
@@ -1331,7 +1345,8 @@ var BP_MOD_MEMSTORE = (function ()
         getStats:    function(){return MemStats.stats;},
         putDB:       function(dNode, dt){DNode[dt] = dNode;},
         getDB:       function(dt){return DNode[dt];},
-        getDNode:    getDNode
+        getDNode:    getDNode,
+        MOD_ETLD:    MOD_ETLD
     });
 
     console.log("loaded memstore");

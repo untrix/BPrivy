@@ -545,6 +545,8 @@ var BP_MOD_MANAGE = (function ()
         function(e)
         {
             var site, show;
+            e.preventDefault();
+            e.stopPropagation();
             if (g_dbName) {
                 site = $('#dnSearch').val();
                 if (!site){
@@ -568,7 +570,7 @@ var BP_MOD_MANAGE = (function ()
         
         addEventListeners('#dnSearch', 'input', function(e)
         {
-            console.log("#dnSearch: oninput invoked");
+            //console.log("#dnSearch: oninput invoked");
             if (g_editor) {
                 g_editor.filter(this.value);
             }

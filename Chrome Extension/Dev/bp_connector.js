@@ -46,7 +46,8 @@ var BP_MOD_CONNECT = (function ()
         cm_compactDB    = "cm_cmDB",
         cm_cleanDB      = "cm_clnDB",
         cm_getDB        = "cm_getDB",
-        cm_getDN        = "cm_getDN";
+        cm_getDN        = "cm_getDN",
+        cm_getDomn      = "cm_getDomn";
 
     var DICT_TRAITS={};
    
@@ -221,6 +222,7 @@ var BP_MOD_CONNECT = (function ()
             cm_cleanDB: {value: cm_cleanDB},
             cm_getDB:   {value: cm_getDB},
             cm_getDN:   {value: cm_getDN},
+            cm_getDomn: {value: cm_getDomn},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
             newERecord: {value: newERecord},

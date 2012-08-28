@@ -264,6 +264,11 @@ var BP_MOD_ERROR = (function()
         window.alert(be.message || "Something went wrong :(");
     }
     
+    function confirm (str)
+    {
+        return window.confirm(str);
+    }
+    
     function log (arg)
     {
         var be = new BPError(arg);
@@ -287,6 +292,7 @@ var BP_MOD_ERROR = (function()
         alert: alert,
         warn: alert,
         success: alert,
+        confirm: confirm,
         log: log,
         loginfo: log,
         logdebug: log,

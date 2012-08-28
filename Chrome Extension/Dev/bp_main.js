@@ -32,7 +32,9 @@
     var cm_createDB = IMPORT(m.cm_createDB);
     var cm_getDBPath = IMPORT(m.cm_getDBPath);
     /** @import-module-begin MemStore */
-    var MEM_STORE = IMPORT(BP_MOD_MEMSTORE);
+    m = BP_MOD_MEMSTORE;
+    var MEM_STORE = IMPORT(m),
+        MOD_ETLD = IMPORT(m.MOD_ETLD);
     var FILE_STORE = IMPORT(BP_MOD_FILESTORE);
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
@@ -174,6 +176,10 @@
                 case MOD_CONNECT.cm_getDN:
                     BPError.push("GetDNode");
                     funcSendResponse({result:true, dN:MEM_STORE.getDNode(rq.l, rq.dt)});
+                    break;
+                case MOD_CONNECT.cm_getDomn:
+                    BPError.push("GetDomain");
+                    funcSendResponse({result:true, domn:MOD_ETLD.getDomain(rq.loc)});
                     break;
                 default: // do nothing
             }

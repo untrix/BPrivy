@@ -44,6 +44,7 @@ var BP_MOD_EDITOR = (function ()
         saveRecord = IMPORT(m.saveRecord),
         deleteRecord = IMPORT(m.deleteRecord),
         cm_getDN = IMPORT(m.cm_getDN),
+        cm_getDomn = IMPORT(m.cm_getDomn),
         newL = IMPORT(m.newL);
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
@@ -84,7 +85,11 @@ var BP_MOD_EDITOR = (function ()
     {
         rpcToMothership({cm:cm_getDN, l:l, dt:dt}, cback);
     }
-
+    function getDomain(loc, cback)
+    {
+        rpcToMothership({cm:cm_getDomn, loc:loc}, cback);
+    }
+    
     function dNodeTitleText_wdt(ctx)
     {
         var loc = ctx.loc,
@@ -733,22 +738,31 @@ var BP_MOD_EDITOR = (function ()
         }},
         newRecord: {value: function(site)
         {
-            //TODO: verify and sanitize the url. Ensure it has a valid ETLD and remove
-            // the path.
-            var dNode = MEMSTORE.newDNode(site),
-                dt = dt_pRecord,
-                bOpen = true;
+            var loc = MOD_COMMON.parseURL('http://' + site),
+                self = this;
+            getDomain(loc, function(resp)
+            {
+                if (!resp.domn) {
+                    resp = BP_MOD_ERROR.confirm('Unrecognized website ['+site+']. Are you sure you want to proceed?');
+                }
                 
-            dNode.makeRecsMap(dt_pRecord);
-            
-            var wel = w$exec(DNodeWdl.wdi, {w$rec:dNode, dt:dt, bOpen:bOpen});
-            if (wel) {
-                this.prepend(wel);
-            }
+                if (!resp) {return;}
+                
+                var dNode = MEMSTORE.newDNode(site),
+                    dt = dt_pRecord,
+                    bOpen = true;
+                    
+                dNode.makeRecsMap(dt_pRecord);
+                
+                var wel = w$exec(DNodeWdl.wdi, {w$rec:dNode, dt:dt, bOpen:bOpen});
+                if (wel) {
+                    self.prepend(wel);
+                }                
+            });
         }},
         filter: {value: function(site)
         {
-            console.log("g_editor: filter invoked on " + site);
+            //console.log("g_editor: filter invoked on " + site);
             var $coll = $('.com-untrix-dnode', this.el),
                 $show = site ? $coll.filter('[id*="'+site+'"]') : $coll,
                 $hide = site ? $coll.not($show) : $();
