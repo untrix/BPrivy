@@ -45,8 +45,8 @@ function minify(SRC, DST)
     for (i=0,n=files.length; i<n; i++)
     {
         f = files[i];
-        ext = f.slice(f.lastIndexOf(".")).toLowerCase();
-        if (ext===".js")
+        ext = f.slice(f.lastIndexOf(".cat.")).toLowerCase();
+        if (ext===".cat.js")
         {
             df = DST + f;
             sf = SRC + f;

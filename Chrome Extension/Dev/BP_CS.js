@@ -18,51 +18,7 @@
 
 var BP_MOD_CS = (function(g_win)
 {
-    'use strict';
-    /** @export-module-begin */
-    var g_dnd = {};
-    var g_db = {
-        ingest: function(db) {
-            if (db) 
-            {
-                BP_MOD_COMMON.copy(db, this);
-                //this.pRecsMap = db.pRecsMap; 
-                //this.eRecsMapArray = db.eRecsMapArray;
-                //this.dbName = db.dbName;
-                // this.dbPath = db.dbPath;
-                delete this.numUserids; // requird because the property is unmodifiable.
-                if (this.pRecsMap) {
-                    this.numUserids = Object.keys(this.pRecsMap).length;
-                }
-                else {
-                    this.numUserids = 0;
-                }
-                Object.defineProperty(this, "numUserids", {writable: false, configurable:true, enumerable:true});
-            }
-        },
-        clear: function() 
-        {
-            BP_MOD_COMMON.clear(this);
-        }
-    };
-    Object.defineProperties(g_db,
-    {
-        ingest: {enumerable:false, writable:false, configurable:false},
-        clear: {enumerable:false, writable:false, configurable:false}
-    });
-    /** Returns true if the BPrivy control panel should be created in the supplied browsing context */
-    function isTopLevel(win) {
-        return (win.top === win.self);
-    }
-    var BP_MOD_CS = {};
-    Object.defineProperties(BP_MOD_CS, 
-    {
-        g_dnd: {value: g_dnd, enumerable:true},
-        g_db: {value: g_db, enumerable:true}
-    });
-    Object.freeze(BP_MOD_CS);
-    /** @export-module-end **/
-   
+    'use strict';  
     var m;
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
@@ -74,7 +30,8 @@ var BP_MOD_CS = (function(g_win)
     /** @import-module-begin CSPlatform */
     m = BP_MOD_CS_PLAT;
     var registerMsgListener = IMPORT(m.registerMsgListener);
-    var addEventListener = IMPORT(m.addEventListener); // Compatibility function
+    var addEventListener = IMPORT(m.addEventListener), // Compatibility function
+        trigger = IMPORT(m.trigger);
     /** @import-module-begin Traits */
     m = IMPORT(BP_MOD_TRAITS);
     var RecsIterator = IMPORT(m.RecsIterator),
@@ -86,11 +43,8 @@ var BP_MOD_CS = (function(g_win)
     var getRecs = IMPORT(m.getRecs),
         deleteRecord = IMPORT(m.deleteRecord),
         saveRecord = IMPORT(m.saveRecord),
-        newERecord = IMPORT(m.newERecord);
-    /** @import-module-begin Panel */
-    //m = BP_MOD_PANEL;
-    //var createPanel = IMPORT(m.createPanel);
-    //var deletePanel = IMPORT(m.deletePanel);
+        newERecord = IMPORT(m.newERecord),
+        panelClosed = IMPORT(m.panelClosed);
     /** @import-module-begin */
     m = BP_MOD_WDL;
     var prop_value = IMPORT(m.prop_value),
@@ -101,7 +55,8 @@ var BP_MOD_CS = (function(g_win)
         CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX),
         CT_BP_USERID = IMPORT(m.CT_BP_USERID),
         CT_BP_PASS = IMPORT(m.CT_BP_PASS),
-        cs_panel_wdt = IMPORT(m.cs_panel_wdt);
+        cs_panel_wdt = IMPORT(m.cs_panel_wdt),
+        MiniDB = IMPORT(m.MiniDB);
     /** @import-module-begin W$ */
         m = IMPORT(BP_MOD_W$);
     var w$exec = IMPORT(m.w$exec),
@@ -118,64 +73,152 @@ var BP_MOD_CS = (function(g_win)
     var gid_panel; // id of created panel if any
     var settings = {AutoFill:true, ShowPanelIfNoFill: true}; // User Settings
     var g_bFillable; // Indicates that the page was found to be autofillable.
+    var g_uElSel =  "[name=userid],[name=username],#userid,#username,[name=id],[name=uid],#id,#uid,[name=user],[name=uname],#user,#uname," +
+                    "[name*=login],[name*=identity],[name*=accountname],[name*=signin]," +
+                    "[name*=username],[name*=user_name],[name*=userid],[name*=logon],[name*=user_id]," +
+                    "[id*=login],[id*=identity],[id*=accountname],[id*=signin]," +
+                    "[id*=username],[id*=user_name],[id*=userid],[id*=logon],[id*=user_id]";
+
+    // var g_uIdSel2 = "input[name=id i],input[name=uid i],input[name=user i],input[name=uname i],input[id=id i],input[id=uid i],input[id=user i],input[id=uname i]";
+    // var g_uPattSel2="input[name*=login i],input[name*=identity i],input[name*=accountname i],input[name*=signin i]," +
+                    // "input[name*=username i],input[name*=user_name i],input[name*=email i],input[name*=userid i],input[name*=logon i]," +
+                    // "input[id*=login i],input[id*=identity i],input[id*=accountname i],input[id*=signin i]," +
+                    // "input[id*=username i],input[id*=user_name i],input[id*=email i],input[id*=userid i],input[id*=logon i]";
     /** @globals-end **/
+
+    /** @export-module-begin */
+    var g_db = new MiniDB();
+    /** Returns true if the BPrivy control panel should be created in the supplied browsing context */
+    function isTopLevel(win) {
+        return (win.top === win.self);
+    }
+    // var BP_MOD_CS = {};
+    // Object.defineProperties(BP_MOD_CS, 
+    // {
+        // g_db: {value: g_db, enumerable:true}
+    // });
+    // Object.freeze(BP_MOD_CS);
+    /** @export-module-end **/
 
     /**
      * Autofills element described by 'er' with string 'str'.
      * if dcrpt is true, then decrypts the data before autofilling.
      */
     function autoFillEl (er, str, dcrpt) {
-        var nl, el, doc = g_doc, i, ell = [];
-        if (er.id) 
-        {
-            el = doc.getElementById(er.id);
-            if (!el) {el = null;}
-        }
-        if((el === undefined) && er.n) // (!er.id), therefore search based on field name
-        {
-            nl = doc.getElementsByName(er.n);
+        var $el, sel, selVisible;
 
-            for (i=0; i<nl.length; i++) 
-            {
-                if (nl.item(i).tagName !== er.t) {
-                        continue;
-                }
-                if ((er.y) && 
-                    (nl.item(i).type !== er.y)) {
-                        continue;
-                }
-                ell.push(nl.item(i));
-            }
-            
-            // if (ell.length === 1) {                // el = ell[0];            // }            // else {                // el = null;            // }
-            if (ell.length > 0) {
-                // One or more elements had the same name,type and tagName. We'll fill
-                // them all because this is probably a pattern wherein alternate forms are
-                // declared on the page for the same purpose but different environments
-                // e.g. with JS/ without JS (twitter has such a page).
-                el = ell[0];
-            }
-            else {
-                el = null;
-            }
+        if (er.id)
+        {
+            sel = er.t + '[id="'+ er.id + '"]'; // Do not tack-on type here. Some fields omit type
+                                     // which defaults to text when reading but not when selecting.
         }
+        else if (er.n) // (!er.id), therefore search based on field name
+        {
+            sel = er.t + '[name="' + er.n + '"]' + (er.y? ('[type="'+ er.y + '"]') : '');
+        }
+        
+        selVisible = ':not([hidden])';
+        //$el = $(sel).filter(':visible');
+        $el = $(sel);//.filter(selVisible);
+        $el.each(function(i)
+        {
+            // NOTE: IE supposedly throws error if you focus hidden fields. If we encounter
+            // that, then remove the focus() call from below.
+            trigger(this, 'click');
+            $(this).val(dcrpt ? decrypt(str) : str);
+            trigger(this, 'input');
+            trigger(this, 'change');
+        });
 
-        if (el) {
-            // We found the element(s). AutoFill it/them. We're assuming that it is an 'input'
-            // element, hence values will go into its .value IDL attribute. If we start filling
-            // other elements (such as textarea) then this assumption won't hold anymore.
-            el.value = dcrpt ? decrypt(str) : str;
-            if (ell.length > 1) {
-                for (i=1; i<ell.length; i++)
-                {
-                    ell[i].value = dcrpt ? decrypt(str) : str;
-                }
-            }
+        // One or more elements may have the same name,type and tagName. We'll fill
+        // them all because this is probably a pattern wherein alternate forms are
+        // declared on the page for the same purpose but different environments
+        // e.g. with JS/ without JS (twitter has such a page).
+        
+        if ($el.length) {
             return true;
         }
     }
     
+    // Helper function to autoFill. Argument must be supplied even if empty string.
+    // Returns true if username could be autofilled.
+    function autoFillUHeuristic(u)
+    {
+        var $uel, rval;
+        if ((u===undefined || u===null))
+        {
+            return false;
+        }
+        
+        $uel = $('input[type="text"],input[type=email]').filter(g_uElSel);//.filter(':visible');
 
+        if ($uel.length) 
+        {
+            $uel.each(function(index)
+            {
+                trigger(this, 'click');
+                $(this).val(u);
+                trigger(this, 'input');
+                trigger(this, 'change');
+            });
+            //$uel.click().val(u);
+            rval = true;
+        }
+        if (rval !== true)
+        {
+            // try case-insensitive match
+            $uel = $('input[type="text"],input[type=email]');
+            $uel.each(function(index)
+            {
+                var id = this.id? this.id.toLowerCase() : "",
+                    nm = this.name? this.name.toLowerCase() : "",
+                    found = false,
+                    copy = g_doc.createElement('input'),
+                    $copy = $(copy).attr({type:'text', 'id':id, 'name':name});
+                    //$copy2 = $('<input type=text' + (id?(' id='+id):('')) + (nm?(' name='+nm):('')) + ' >');
+                    
+                if ($copy.is(g_uElSel))
+                {
+                    trigger(this, 'click');
+                    $(this).val(u);
+                    trigger(this, 'input');
+                    trigger(this, 'change');                    
+                    rval = true;
+                }
+            });
+        }
+        return rval;
+    }
+
+    // Helper function to autoFill. Argument must be supplied even if empty string.
+    // Returns true if password could be autofilled.
+    function autoFillPHeuristic(p)
+    {
+        var $pel, rval;
+        
+        if (p===undefined || p===null)
+        {
+            return false;
+        }
+
+        $pel = $('input[type=password]');//.filter(':visible');
+        
+        if ($pel.length) 
+        {
+            $pel.each(function()
+            {
+                trigger(this, 'click');
+                $(this).val(decrypt(p));
+                trigger(this, 'input');
+                trigger(this, 'change');
+            });
+            //$pel.click().val(p);
+            rval = true;
+        }
+        
+        return rval;        
+    }
+    
     function autoFill(userid, pass) // if arguments are not supplied, takes them from global
     {
         var eRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone, pRecsMap, test;
@@ -204,7 +247,7 @@ var BP_MOD_CS = (function(g_win)
             }
         }
         
-        if ((u!==undefined) && (p!==undefined) && (g_db.eRecsMapArray)) 
+        if ((u!==undefined) && (p!==undefined) && (g_db.eRecsMapArray))
         {
             // Cycle through eRecords starting with the
             // best URL matching node.
@@ -215,7 +258,8 @@ var BP_MOD_CS = (function(g_win)
                 
                 if (eRecsMap[fn_userid]) { uer = eRecsMap[fn_userid].curr;}
                 if (eRecsMap[fn_pass]) {per = eRecsMap[fn_pass].curr;}
-                if ((!uDone) && uer) {
+                if ((!uDone) && uer) 
+                {
                     uDone = autoFillEl(uer, u);
                     if (!uDone && (i===0)) {
                         // The data in the E-Record was an exact URL match
@@ -245,7 +289,10 @@ var BP_MOD_CS = (function(g_win)
             }
         }  
 
-        if (uDone || pDone) {
+        uDone = uDone || autoFillUHeuristic(u);
+        pDone = pDone || autoFillPHeuristic(p);
+        if (uDone || pDone) 
+        {
             g_bFillable = true;
             if (!test) {
                 return true;
@@ -253,11 +300,15 @@ var BP_MOD_CS = (function(g_win)
         }
     }
     
-    function getRecsCallback () 
+    function getRecsAsync ()
     {
-        getRecs(g_win.location, asyncShowPanel);
+        getRecs(g_loc, cbackShowPanel);
     }
     
+    function onClosed()
+    {
+        panelClosed(g_loc);
+    }
     /** 
      * Invoked upon receipt of DB records from the MemStore module.
      * @param {db}  Holds DB records relevant to this page. 
@@ -269,13 +320,21 @@ var BP_MOD_CS = (function(g_win)
             var db = resp.db;
             console.info("bp_cs retrieved DB-Records\n" /*+ JSON.stringify(db)*/);
             g_db.ingest(db);
-            var filled = autoFill();
+            try
+            {
+                var filled = autoFill();
+            }
+            catch (err)
+            {
+                BP_MOD_ERROR.logwarn(err);
+            }
         
             if ((!filled) && g_bFillable && g_db.numUserids && settings.ShowPanelIfNoFill)
             {
                 var ctx = {
                     it: new RecsIterator(g_db.pRecsMap), 
-                    reload:getRecsCallback, 
+                    reload:getRecsAsync,
+                    onClosed:onClosed,
                     autoFill:g_bFillable?autoFill:undefined, 
                     dbName:resp.dbName, //g_db.dbName,
                     dbPath:resp.dbPath //g_db.dbPath
@@ -283,6 +342,7 @@ var BP_MOD_CS = (function(g_win)
                     panel = w$exec(cs_panel_wdt, ctx);
                 gid_panel = panel.id;
                 MOD_COMMON.delProps(ctx); // Clear DOM refs in the ctx to aid GC
+                // TODO: should probably clear DB here
             }
             else {
                 // Remember to not keep any data lingering around ! Delete data the moment we're done
@@ -297,17 +357,25 @@ var BP_MOD_CS = (function(g_win)
         }        
     }
     
-    /** 
+    /**
      * Invoked upon receipt of DB records from the MemStore module.
      * @param {db}  Holds DB records relevant to this page. 
      */
-    function asyncShowPanel (resp)
+    function cbackShowPanel (resp)
     {
         if (resp.result === true)
         {
             var db = resp.db;
             console.info("bp_cs retrieved DB-Records\n"/* + JSON.stringify(db)*/);
             g_db.ingest(db);
+            try
+            {
+                autoFill();
+            }
+            catch (err)
+            {
+                BP_MOD_ERROR.logwarn(err);
+            }
         }
         else
         {
@@ -319,7 +387,8 @@ var BP_MOD_CS = (function(g_win)
         // TODO: Since this is async, maybe we should check if the panel already exists?
         var ctx = {
             it: new RecsIterator(g_db.pRecsMap), 
-            reload:getRecsCallback, 
+            reload:getRecsAsync,
+            onClosed:onClosed,
             autoFill:g_bFillable?autoFill:undefined, 
             dbName:resp.dbName, //g_db.dbName,
             dbPath:resp.dbPath //g_db.dbPath
@@ -327,26 +396,40 @@ var BP_MOD_CS = (function(g_win)
         var    panel = w$exec(cs_panel_wdt, ctx);
         gid_panel = panel.id;
         MOD_COMMON.delProps(ctx); // Clear DOM refs in the ctx to aid GC
+        try
+        {
+            setupDNDWatchers(g_win);
+        }
+        catch (err)
+        {
+            BP_MOD_ERROR.logwarn(err);
+        }
+        // TODO: should probably clear DB here
     }
    
     function clickBP (request, sender, sendResponse)
     {
-        if(isTopLevel(g_win)) 
-        {
+        //if (isTopLevel(g_win)) 
+        //{
             var panel;
             // var el = g_doc.getElementById(gid_panel);            // if (el)            // {                // // Need to do this using jquery so that it cleans up all related $.data attrs                // $(el).remove();            // }
             if (gid_panel && (panel = w$get('#'+gid_panel))) {
-                panel.die();
+                panel.destroy();
                 gid_panel = null;
                 // Remember to not keep any data lingering around ! Delete data the moment we're done
                 // using it. Data should not be stored in the page if it is not visible to the user.
                 g_db.clear();
             }
-            else {
+            else 
+            {
+                gid_panel = null;
+                (!g_db) || g_db.clear();
                 // Post a message to MemStore to retrieve the set of recs afresh.
-                getRecs(g_win.location, asyncShowPanel);
+                // getRecs(g_loc, cbackShowPanel);
+                request.result = true; // Make this look like a response for the callback.
+                cbackShowPanel(request);
             }
-        }
+        //}
         
         sendResponse({ack:true});
     }
@@ -425,9 +508,8 @@ var BP_MOD_CS = (function(g_win)
     
     function dragoverHandler(e)
     {
-        //console.info("dragoverHandler(type = " + e.type + ") invoked ! effectAllowed/dropEffect = " +
-        //                e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
-
+        // console.info("dragoverHandler(type = " + e.type + ") invoked ! effectAllowed/dropEffect = " +
+                        // e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
         var r = matchDTwField(e);
         if (r.isBPDrag)
         {
@@ -462,13 +544,13 @@ var BP_MOD_CS = (function(g_win)
                 // Abort the drop.
                 // prevent browser from dropping the password into a visible field.
                 // or prevent browser from dropping userid into a password field.
-                e.dataTransfer.dropEffect = 'none';                    
+                e.dataTransfer.dropEffect = 'none';
             }                     
             else {
                 // Tell browser to set vlaue of 'current drag operation' to 'copy'
                 e.dataTransfer.dropEffect = 'copy';
 
-                console.log("dropHandler:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+                //console.log("dropHandler:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
                 // Save an ERecord.
                 var eRec = newERecord(e.target.ownerDocument.location,
                                       Date.now(),
@@ -482,6 +564,8 @@ var BP_MOD_CS = (function(g_win)
                 data = e.dataTransfer.getData(CT_TEXT_PLAIN);
                 if (data) {
                     e.target.value = data;
+                    trigger(e.target, 'input');
+                    trigger(e.target, 'change');
                 }
             }
         }
@@ -499,6 +583,8 @@ var BP_MOD_CS = (function(g_win)
                 addEventListener(el, "dragenter", dragoverHandler);
                 addEventListener(el, "dragover", dragoverHandler);
                 addEventListener(el, "drop", dropHandler);
+                addEventListener(el, "input", function(e){console.log("Input event");});
+                addEventListener(el, "change", function(e){console.log("Change event");});
                 if (u) {
                     w.ct = CT_BP_USERID;
                 } else {
@@ -510,19 +596,91 @@ var BP_MOD_CS = (function(g_win)
         }); 
     }
     
+    function loadCSXHR ()
+    {
+        var xhr = new XMLHttpRequest();
+        
+        xhr.open("GET", BP_MOD_CS_PLAT.getURL('/bp_load_cs.js'), false);
+        xhr.send();
+        var resp = xhr.response;
+        eval(resp);
+        if (BP_MOD_BOOTSTRAP && BP_MOD_BOOTSTRAP.bootstrap) {
+            console.log("JS Load successful !");
+        }
+    }
+    
+    function loadCSJQ ()
+    {
+        $.getScript(BP_MOD_CS_PLAT.getURL('/bp_load_cs.js'), function(data, textStatus, jqxhr)
+        {
+            if (BP_MOD_BOOTSTRAP && BP_MOD_BOOTSTRAP.bootstrap) {
+                console.log("JS Load successful !");
+            }
+        });
+    }
+    
+    function loadCS ()
+    {
+        var script = document.getElementById('bp_load_cs'),
+            head = document.head || document.getElementsByTagName( "head" )[0] || document.documentElement;
+            
+        if (!script) {
+            script = document.createElement('script');
+            $(script).attr({type:'text/javascript', src:BP_MOD_CS_PLAT.getURL('/bp_load_cs.js')});
+        }
+        else {return;}
+        
+        // Attach handlers for all browsers
+        script.onload = script.onreadystatechange = function( _, isAbort ) 
+        {
+
+            if ( isAbort || !script.readyState || /loaded|complete/.test( script.readyState ) ) 
+            {
+
+                // // Handle memory leak in IE
+                // script.onload = script.onreadystatechange = null;
+// 
+                // // Remove the script
+                // if ( head && script.parentNode ) {
+                    // head.removeChild( script );
+                // }
+// 
+                // // Dereference the script
+                // script = undefined;
+
+                // Callback if not abort
+                if ( !isAbort ) {
+                    console.log("Script element loaded");
+                    if (BP_MOD_BOOTSTRAP && BP_MOD_BOOTSTRAP.bootstrap) {
+                        console.log("JS Load successful !");
+                    }                    
+                }
+            }
+        };
+        head.insertBefore( script, head.firstChild );
+    }
+    
     function main()
     {
-        if(isTopLevel(g_win)) 
+        if(isTopLevel(g_win))
         {
-            console.log("BP_CS entered on page " + location.href);
-            getRecs(g_win.location, initialGetDB);
+            console.log("BP_CS entered on page " + g_loc.href);
+            // NOTE: Am turning off getDB, setupDNDWatchers and autoFill until user explicitly
+            // requests. Will also reduce load on browser because all these functions will
+            // not be unnecessarily invoked on each page load. bp_cs code will get injected
+            // into the page, but that is probably very fast because Chrome may cache the
+            // compiled code. If that became a problem, then we can delay that also until
+            // the user clicks the main button.
+            //getRecs(g_loc, initialGetDB);
+            //setupDNDWatchers(g_win);
             registerMsgListener(clickBP);
-            setupDNDWatchers(g_win);
-            // chrome.tabs.getCurrent(function (tab)
-            // {
-                // chrome.pageAction.show(tab.id);
-            // });
         }
+        else {
+            console.log("BP_CS entered in frame " + g_loc.href);
+            setupDNDWatchers(g_win);
+            registerMsgListener(clickBP);
+        }
+        //loadCS();
     }
     
     console.log("loaded CS");

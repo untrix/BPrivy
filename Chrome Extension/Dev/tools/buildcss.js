@@ -17,6 +17,9 @@ var fs = require('fs.extra'),
     recess = require('recess'),
     events = require('events'),
     bp = require('./bp.js'),
+    doBuild = bp.doBuild,
+    zero = bp.zero,
+    catIfNeeded = bp.catIfNeeded,
     pendingItems=1;
     
     if (argv.length < 2) 
@@ -29,49 +32,6 @@ var fs = require('fs.extra'),
         TMPDIR = abs(DST, 'tmp') + path.sep,
         TYPE = argv[2];
 
-function zero(path)
-{   'use strict';
-    var fd = fs.openSync(path, 'w'); // truncate the file.
-    fs.closeSync(fd);
-    return path;
-}
-
-function doBuild(files, target)
-{
-    var srcTime;
-    if (!fs.existsSync(target)) {return true;}
-    
-    files.forEach(function (f, i, files)
-    {
-        var mtime = fs.lstatSync(f).mtime;
-        if (!srcTime) { srcTime = mtime;}
-        else if (mtime>srcTime) {srcTime = mtime;}
-    });
-    
-    return srcTime > fs.lstatSync(target).mtime;
-}
-
-function catIfNeeded(srcFiles, dest)
-{
-    'use strict';
-    var i, n, data;
-    
-    if (!doBuild(srcFiles, dest)) {
-        return;
-    }
-    
-    if (fs.existsSync(dest)) {
-        zero(dest); // truncate the file.
-    }
-    
-    console.log('Cating ' + dest);
-    srcFiles.forEach(function (f, i, srcFiles)
-    {
-        //console.log('Processing file ' + f);
-        data = fs.readFileSync(f);
-        fs.appendFileSync(dest, data);
-    });
-}
 
 // cat([SRC+'dev_header.less', SRC+'bp_bootstrap.less', SRC+'bp_bootstrap-responsive.less', SRC+'bp.less'], 'bp.dev.less');// cat([SRC+'release_header.less', SRC+'bp_bootstrap.less', SRC+'bp_bootstrap-responsive.less', SRC+'bp.less'], 'bp.release.less');
 if (!fs.existsSync(abs('dev_header.less')) || !fs.existsSync(abs('release_header.less'))) {
@@ -125,39 +85,68 @@ function makeRecessCback2 (fpath)
 }
 var devTarget = abs(SRC, 'bp.css'), 
     releaseTarget = abs(DST, 'release', 'bp.css'),
-    distTarget = abs(DST, 'dist', 'bp.css'),
-    devTarget2 = abs(SRC, 'bp_manage.css'),
-    releaseTarget2 = abs(DST, 'release', 'bp_manage.css'),
-    distTarget2 = abs(DST, 'dist', 'bp_manage.css'),
-    srcFiles=[];
+    distTarget = abs(DST, 'dist', 'bp.css');
     
 // Ensure that the build dirs exist.
 fs.mkdirp(abs(DST, 'release'));
 fs.mkdirp(abs(DST, 'dist'));
 
-srcFiles=[SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dev.less'];
-if (doBuild(srcFiles, devTarget)) {    recess(srcFiles, {compile:true, compress:false}, async.runHere(makeRecessCback(devTarget)));}
-
-srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.release.less'];
-if (doBuild(srcFiles, releaseTarget)) { 
-    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(releaseTarget)));
+// srcFiles=[SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dev.less'];
+// if (doBuild(srcFiles, devTarget)) {
+    // recess(srcFiles, {compile:true, compress:false}, async.runHere(makeRecessCback(devTarget)));
+// }
+// 
+// srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.release.less'];
+// if (doBuild(srcFiles, releaseTarget)) { 
+    // recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(releaseTarget)));
+// }
+// 
+// srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dist.less'];
+// if (doBuild(srcFiles, distTarget)) {
+    // recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(distTarget)));
+// }
+var srcFile=SRC+'bp.less';
+if (doBuild([srcFile], devTarget)) {
+    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(devTarget)));
 }
 
-srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dist.less'];
-if (doBuild(srcFiles, distTarget)) {
-    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(distTarget)));
+if (doBuild([srcFile], releaseTarget)) { 
+    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget)));
 }
 
-var srcFile=SRC+'bp_manage.less';
+//srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dist.less'];
+if (doBuild([srcFile], distTarget)) {
+    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget)));
+}
+
+
+var srcFile=SRC+'bp_manage.less',
+    devTarget2 = abs(SRC, 'bp_manage.css'),
+    releaseTarget2 = abs(DST, 'release', 'bp_manage.css'),
+    distTarget2 = abs(DST, 'dist', 'bp_manage.css');
+
 if (doBuild([srcFile], devTarget2)) {
-    recess(srcFile, {compile:true, compress:false}, async.runHere(makeRecessCback2(devTarget2)));
+    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(devTarget2)));
 }
 if (doBuild([srcFile], releaseTarget2)) { 
     recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget2)));
 }
 if (doBuild([srcFile], distTarget2)) {
     recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget2)));
-}
+}var srcFile=SRC+'bp.less',
+    devTarget3 = abs(SRC, 'bp_panel.css'),
+    releaseTarget3 = abs(DST, 'release', 'bp_panel.css'),
+    distTarget3 = abs(DST, 'dist', 'bp_panel.css');
+if (doBuild([srcFile], devTarget3)) {
+    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(devTarget3)));
+}
+if (doBuild([srcFile], releaseTarget3)) { 
+    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget3)));
+}
+if (doBuild([srcFile], distTarget3)) {
+    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget3)));
+}
+
 
 
 async.end();

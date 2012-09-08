@@ -202,7 +202,7 @@ var BP_MOD_MANAGE = (function ()
     {
         MEMSTORE.clear([dt_pRecord]);
         if (g_editor) {
-            g_editor.die();
+            g_editor.destroy();
             g_editor = null;
         }
     }

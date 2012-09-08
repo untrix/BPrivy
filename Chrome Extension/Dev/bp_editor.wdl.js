@@ -8,7 +8,7 @@
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
   BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_WDL */
- 
+
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -93,22 +93,23 @@ var BP_MOD_EDITOR = (function ()
     function dNodeTitleText_wdt(ctx)
     {
         var loc = ctx.loc,
-            host = loc.hostname; // TODO: This is a hack.
+            host = loc.hostname,
+            i = ++(ctx.editor.i);
         return {
             tag:'a',
             attr:{ href:"http://"+host, target:"_blank" },
             addClass: "com-untrix-dNodeTitle",
             iface:{ "url":"http://"+host },
             on:{ click: function (e)
-                {
-                    //window.open(this.url);
-                    //e.preventDefault();
-                    e.stopPropagation();
-                }},
+            {
+                //window.open(this.url);
+                //e.preventDefault();
+                e.stopPropagation();
+            }},
                 children:[
                 {
                     tag:"h6",
-                    text: host
+                    text: i + ". " + host
                 }]
         };
     }
@@ -117,7 +118,7 @@ var BP_MOD_EDITOR = (function ()
      * Expand/Collapse button 
      */
     function EButton () {}
-    EButton.prototype = w$defineProto(
+    EButton.prototype = w$defineProto(EButton,
     {
         onClick: {value: function (e)
         {
@@ -179,7 +180,7 @@ var BP_MOD_EDITOR = (function ()
      * New Item button 
      */
     function NButton () {}
-    NButton.prototype = w$defineProto(
+    NButton.prototype = w$defineProto(NButton,
     {
         onClick: {value: function (e)
         {
@@ -229,13 +230,13 @@ var BP_MOD_EDITOR = (function ()
             }]
         };
     };
-    DButton.prototype = w$defineProto(
+    DButton.prototype = w$defineProto(DButton,
     {
         onClick: {value: function(e)
         {
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
             e.preventDefault(); // Causes event to get cancelled if cancellable
-            this.ioItem.die();
+            this.ioItem.destroy();
         }}
     });
         
@@ -254,13 +255,13 @@ var BP_MOD_EDITOR = (function ()
          ctx: { w$:{ tButton:'w$el' } },
             children:[
             {tag:"i",
-            addClass:bInp ? "icon-ok" : "icon-pencil",
+            addClass:bInp ? "icon-eye-close" : "icon-eye-open",
             ctx:{ w$:{icon:'w$el'} }
             }],
          _iface:{ w$ctx:{ ioItem:"ioItem", icon:'icon' } }
         };
     };
-    TButton.prototype = w$defineProto(
+    TButton.prototype = w$defineProto(TButton,
     {
         toggle: {value: function (e) 
         {
@@ -279,7 +280,7 @@ var BP_MOD_EDITOR = (function ()
     });
     
     function NewRecord() {}
-    NewRecord.prototype = w$defineProto(
+    NewRecord.prototype = w$defineProto(NewRecord,
     {
         onsubmit: {value: function(e)
         {
@@ -288,7 +289,7 @@ var BP_MOD_EDITOR = (function ()
             console.log("NewRecord.onsubmit: url=" + JSON.stringify(loc));
             e.stopPropagation();
             e.preventDefault();// Prevents default action and causes event to get cancelled if cancellable
-            this.die();
+            this.destroy();
         }}
     });
     NewRecord.wdt = function (ctx)
@@ -344,7 +345,7 @@ var BP_MOD_EDITOR = (function ()
              _iface:{ value: u } 
             },
             {tag:'input',
-             attr:{ type:'password', value:p, placeholder:'Password', name:'p' },
+             attr:{ type:'text', value:p, placeholder:'Password', name:'p' },
              prop:{ required:true },
              //addClass:css_class_field+css_class_passIn,
              addClass: "input-large",
@@ -356,7 +357,7 @@ var BP_MOD_EDITOR = (function ()
         _iface:{ w$ctx:{ u:'u', p:'p', tButton:'tButton' } }
         };
     };
-    IItemP.prototype = w$defineProto (
+    IItemP.prototype = w$defineProto (IItemP,
     {
         checkInput: {value: function() 
         {
@@ -410,7 +411,7 @@ var BP_MOD_EDITOR = (function ()
     {}
     OItemP.wdt = function (w$ctx)
     {
-        var u, p, 
+        var u, p, d,
             autoFill = w$ctx.autoFill,
             ioItem = w$ctx.ioItem,
             pRec = (ioItem && ioItem.rec) ? ioItem.rec:undefined;
@@ -418,6 +419,7 @@ var BP_MOD_EDITOR = (function ()
         {
             u = pRec.u;
             p = pRec.p;
+            d = new Date(pRec.tm);
             
             return {
             cons: OItemP,
@@ -444,12 +446,17 @@ var BP_MOD_EDITOR = (function ()
                  text:'*****',
                  ctx:{ w$:{p:'w$el' } },
                  _iface:{ fn:fn_pass, value:p }
-                }],
+                },
+                {tag:'span',
+                 addClass: "input-medium uneditable-input",
+                 text:d.toDateString()
+                }
+                ],
             _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p', tButton:'tButton' } }
             };
         }
     };
-    OItemP.prototype = w$defineProto (
+    OItemP.prototype = w$defineProto (OItemP,
     {
         onDblClick: {value: function(e)
         {
@@ -485,7 +492,7 @@ var BP_MOD_EDITOR = (function ()
          _iface:{ w$ctx:{oItem:"oItem", iItem:"iItem"} }
         };
     };
-    IoItem.prototype = w$defineProto( // same syntax as Object.defineProperties
+    IoItem.prototype = w$defineProto(IoItem, // same syntax as Object.defineProperties
     {
         toggleIO: {value: function() 
         {
@@ -504,7 +511,7 @@ var BP_MOD_EDITOR = (function ()
                     if (this.oItem) {
                         delete this.iItem; // only removes the object-prop
                         this.oItem.insertAfter(iI);
-                        iI.die();
+                        iI.destroy();
                         //this.append(this.oItem);
                         this.bInp = false;
                     }
@@ -530,7 +537,7 @@ var BP_MOD_EDITOR = (function ()
                 if (this.iItem) {
                     delete this.oItem;
                     this.iItem.insertAfter(oI); 
-                    oI.die();
+                    oI.destroy();
                     //this.append(this.iItem);
                     this.bInp = true;
                 }
@@ -558,7 +565,7 @@ var BP_MOD_EDITOR = (function ()
         _iface:{ w$ctx:{ nB:'nB' } }
         };
     };
-    PanelList.prototype = w$defineProto(
+    PanelList.prototype = w$defineProto(PanelList,
     {
         newItem: {value: function()
         {
@@ -618,7 +625,7 @@ var BP_MOD_EDITOR = (function ()
         _iface:{ w$ctx:{itemList:'itemList', nB:'nB' } }
         };
     };
-    DNodeWdl.prototype = w$defineProto( // same syntax as Object.defineProperties
+    DNodeWdl.prototype = w$defineProto(DNodeWdl,// same syntax as Object.defineProperties
     {
         reload: {value: function(bOpen)
         {
@@ -638,7 +645,7 @@ var BP_MOD_EDITOR = (function ()
                     if (wel) {
                         self.replaceWith(wel);
                     }
-                    self.die();
+                    self.destroy();
             });
             console.log("DNode->reload invoked");
         }},
@@ -701,10 +708,12 @@ var BP_MOD_EDITOR = (function ()
         drag:EditorWdl.prototype.handleDrag, 
         dragend:EditorWdl.prototype.handleDragEnd },
         attr:{ id:'com-bprivy-panel'},
+        iface:{ i:0 },
+        ctx:{ w$:{ editor:'w$el' } },
             iterate:{ it:dnIt, wdi:DNodeWdl.wdi }
         };
     };
-    EditorWdl.prototype = w$defineProto(
+    EditorWdl.prototype = w$defineProto(EditorWdl,
     {
         handleDragStart: {value: function handleDragStart (e)
         {   // CAUTION: 'this' is bound to e.target

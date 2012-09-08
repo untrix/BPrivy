@@ -14,12 +14,10 @@
   "content_scripts": [
 	{
 	"matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
-	"js": [
-	   "tp/jquery.js", "tp/jquery-ui.js", "bp_error.js", "bp_common.js", "bp_traits.js", 
-	   "bp_cs_platform_chrome.js", "bp_connector.js", "bp_w$.js", "bp_panel.js",
-	   "bp_cs.js"
-    ],
-	"css": ["bp.css"]
+    "js": ["tp/jquery.js", "bp_cs.cat.js"],
+	"css": ["bp.css"],
+	"all_frames": true,
+	"run_at": "document_start"
 	}
   ],
   "browser_action": {
@@ -30,5 +28,6 @@
   "web_accessible_resources": [
     "icons/icon16.png",
     "tp/bootstrap/img/glyphicons-halflings.png",
-    "tp/bootstrap/img/glyphicons-halflings-white.png"]
+    "tp/bootstrap/img/glyphicons-halflings-white.png",
+    "bp_load_cs.js"]
 }

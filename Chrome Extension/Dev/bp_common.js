@@ -76,7 +76,7 @@ var BP_MOD_COMMON = (function()
                 if (!loc.pathname) {loc.pathname = "/";}
                 return loc;
             }
-            else {return;} // Without protocol, hostname and pathname we deem this string a non-URL for our purposes.
+            else {return;} // Without protocol and hostname we deem this string a non-URL for our purposes.
         }
     }
     

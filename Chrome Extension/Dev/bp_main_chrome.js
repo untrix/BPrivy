@@ -17,11 +17,18 @@ var  BP_MOD_PLAT = (function()
 {
     "use strict"; //TODO: Remove this from prod. build
     
-    var g = {contextMenuID: null};
+    var g = {contextMenuID: null, mW: null},
+        MOD_WIN, 
+        JS_INJECT_DETAILS = {allFrames:true, runAt:'document_start', file:'bp_cs.cat.js'},
+        JQ_INJECT_DETAILS = {allFrames:true, runAt:'document_start', file:"tp/jquery.js"},
+        CSS_INJECT_DETAILS = {file:'bp.css'};
 
-    function bpClick(tab)
+    function bpClick(tab, frameUrl)
     {
-        chrome.tabs.sendMessage(tab.id, {click: true}, 
+        var req = MOD_WIN.clickReq(frameUrl || tab.url);
+        req.click = true;
+        if (frameUrl) {req.frameUrl = frameUrl;} // Direct message to the frame where the click happened.
+        chrome.tabs.sendMessage(tab.id, req,
         function(resp)
         {
             if (!resp) 
@@ -38,35 +45,61 @@ var  BP_MOD_PLAT = (function()
                         chrome.browserAction.setBadgeText({text:"oops", tabId:tab.id});
                         chrome.browserAction.setTitle({title:"Empty or restricted page", tabId:tab.id});
                         break;
-                }                    
+                }
+                
+                // var url = "bp_panel.html",
+                    // args = "location=0,menubar=0,resizable=yes,status=0,titlebar=0,toolbar=0,width=350,height=96";
+                // var createData = {
+                    // url: "bp_panel.html",
+                    // width: 350,
+                    // height: 96,
+                    // focused: true,
+                    // type: "panel"
+                // };
+                // if (g.mW) {g.mW.close();}
+                // g.mW = window.open(url, 'mini-wallet', args, true);
+                // if (window.focus) {g.mW.focus();}
+                // if (g.mW){chrome.windows.update(g.mW, {focused:true});}
+                // else {g.mW = chrome.windows.create(createData, function (w){g.mW = w.id;});}
+                //chrome.browserAction.setPopup({popup:url});
             }
-            else { // Unset badge text
+            else
+            { // Unset badge text
                 chrome.browserAction.setBadgeText({text:"", tabId:tab.id});
                 chrome.browserAction.setTitle({title:"", tabId:tab.id});
+                MOD_WIN.clickResp(tab.url);
             }
         });
     }  
     
     function bpMenuClick(info, tab)
     {
-        if (info.menuItemId === g.ContextMenuID)
+        if (info.menuItemId === g.contextMenuID)
         {
+            bpClick(tab, info.frameUrl);
             //console.info("BPMenuItem was clicked on page " + info.pageUrl);
-            bpClick(tab);
+            // chrome.tabs.insertCSS(tab.id, CSS_INJECT_DETAILS, function()
+            // {
+                // chrome.tabs.executeScript(tab.id, JS_INJECT_DETAILS, function()
+                // {
+                    // bpClick(tab, info.frameUrl);
+                // });
+            // });
         }
     }
 
-    function main(doc) 
+    function initScaffolding(doc, mod_win) 
     {          
-        var menuProperties = {"type": "normal", "title": "BPrivy", "contexts": ["all"], "onclick": bpMenuClick, "documentUrlPatterns": document.url};
+        var menuProperties = {"type": "normal", "title": "BPrivy", "contexts": ["all"], 
+                              "onclick": bpMenuClick/*, "documentUrlPatterns": document.url*/};
         var menu_id = chrome.contextMenus.create(menuProperties);
         //console.info("Menu Item ID " + menu_id + " Created");
     
         chrome.browserAction.onClicked.addListener(bpClick);
-        doc.designMode = 'on';// enables saving the document
        
-        g.ContextMenuID = menu_id;
-        //console.info("Menu Item ID = " + g.ContextMenuID);
+        g.contextMenuID = menu_id;
+        MOD_WIN = mod_win;
+        //console.info("Menu Item ID = " + g.contextMenuID);
     }
 
     var module =
@@ -80,7 +113,7 @@ var  BP_MOD_PLAT = (function()
             chrome.tabs.sendRequest(tabID, obj);
         },
         
-        init: main
+        initScaffolding: initScaffolding
     };
     
     Object.seal(module);

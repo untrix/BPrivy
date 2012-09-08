@@ -123,7 +123,34 @@ var BP_MOD_WDL = (function ()
     var u_cir_X = '\u24CD';
     /** @globals-end **/
        
-   
+    function MiniDB()
+    {}
+    MiniDB.prototype = Object.freeze(
+    {
+        ingest: function(db)
+        {
+            if (db) 
+            {
+                BP_MOD_COMMON.copy(db, this);
+                //this.pRecsMap = db.pRecsMap; 
+                //this.eRecsMapArray = db.eRecsMapArray;
+                //this.dbName = db.dbName;
+                // this.dbPath = db.dbPath;
+                delete this.numUserids; // required because the property is unmodifiable.
+                if (this.pRecsMap) {
+                    this.numUserids = Object.keys(this.pRecsMap).length;
+                }
+                else {
+                    this.numUserids = 0;
+                }
+                Object.defineProperty(this, "numUserids", {writable: false, configurable:true, enumerable:true});
+            }
+        },
+        clear: function ()
+        {
+            BP_MOD_COMMON.clear(this);
+        }
+    });
     function image_wdt(ctx)
     {
         var imgPath = ctx.imgPath;
@@ -147,7 +174,7 @@ var BP_MOD_WDL = (function ()
      * New Item button 
      */
     function NButton () {}
-    NButton.prototype = w$defineProto(
+    NButton.prototype = w$defineProto(NButton,
     {
         newItem: {value: function ()
         {
@@ -170,12 +197,6 @@ var BP_MOD_WDL = (function ()
         _iface:{ w$ctx:{ panel:'panel' } }
         };
     };
-
-
-    /**
-     * Shortcut to Options->Open button 
-     */
-    // function OButton () {}    // OButton.wdt = function (w$ctx)    // {        // // make sure panel is captured into private closure, so we won't lose it.        // // values inside ctx will get changed as other wdls and wdts are executed.        // var panel = w$ctx.panel;//         // return {        // cons: OButton,        // html:'<button type="button"></button>',        // css:{ float:'right' },        // //attr:{ /*class:css_class_xButton,*/ },        // //text:u_cir_X,        // on:{ click:OButton.prototype.go },        // iface:{ panel:panel },            // children:[            // {tag:"i",            // css:{ 'vertical-align':'middle' },            // addClass:'icon-folder-open'            // }]        // };    // };    // OButton.prototype = w$defineProto (    // {        // go: {value: function click (e)        // {            // if (this.panel) {                               // e.stopPropagation(); // We don't want the enclosing web-page to interefere                // e.preventDefault(); // Causes event to get cancelled if cancellable                // this.panel.die();                // BP_MOD_CS_PLAT.getURL("bp_manage.html?open=true");                // return false; // Causes the event to be cancelled (except mouseover event).            // }        // }}    // });
     
     /**
      * Settings/Options page link 
@@ -220,14 +241,14 @@ var BP_MOD_WDL = (function ()
             }]
         };
     };
-    XButton.prototype = w$defineProto (
+    XButton.prototype = w$defineProto (XButton,
     {
         x: {value: function click (e)
         {
             if (this.panel) {               
                 e.stopPropagation(); // We don't want the enclosing web-page to interefere
                 e.preventDefault(); // Causes event to get cancelled if cancellable
-                this.panel.die();
+                this.panel.close();
                 return false; // Causes the event to be cancelled (except mouseover event).
             }
         }}
@@ -237,11 +258,11 @@ var BP_MOD_WDL = (function ()
      * AutoFill button 
      */
     function FButton(){}
-    FButton.prototype =  w$defineProto(
+    FButton.prototype =  w$defineProto(FButton,
     {
         onClick: {value: function(ev)
         {
-            if (!this.ioItem.bInp) { 
+            if (!this.ioItem.bInp) {
                 this._autoFill(this.ioItem.oItem.u.value, this.ioItem.oItem.p.value);
             }
             else {
@@ -285,11 +306,11 @@ var BP_MOD_WDL = (function ()
             }]
         };
     };
-    DButton.prototype = w$defineProto(
+    DButton.prototype = w$defineProto(DButton,
     {
         onClick: {value: function(ev)
         {
-            this.ioItem.die();
+            this.ioItem.destroy();
         }}
     });
         
@@ -308,24 +329,24 @@ var BP_MOD_WDL = (function ()
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
-            addClass:bInp? "icon-ok" :"icon-pencil",
+            addClass:bInp? "icon-eye-close" :"icon-eye-open",
             ctx:{ w$:{icon:'w$el'} }
             }],
          _iface:{ w$ctx:{ ioItem:"ioItem", icon:'icon' } }
         };
     };
-    TButton.prototype = w$defineProto(
+    TButton.prototype = w$defineProto(TButton,
     {
         toggleIO2: {value: function (ev) 
         {
             var bInp = this.ioItem.toggleIO();
             if (bInp) {
-                this.icon.removeClass('icon-pencil');
-                this.icon.addClass('icon-ok');
+                this.icon.removeClass('icon-eye-open');
+                this.icon.addClass('icon-eye-close');
             }
             else {
-                this.icon.removeClass('icon-ok');
-                this.icon.addClass('icon-pencil');                    
+                this.icon.removeClass('icon-eye-close');
+                this.icon.addClass('icon-eye-open');                    
             }
         }}
     });
@@ -357,11 +378,11 @@ var BP_MOD_WDL = (function ()
              attr:{ type:'text', value:u, placeholder:'Username' },
              prop:{ disabled:u?true:false },
              addClass:css_class_field+css_class_userIn,
-             ctx:{ w$:{u:'w$el' } },
+             ctx:{ w$:{ u:'w$el' } },
              _iface:{ value: u } 
             },
             {tag:'input',
-             attr:{ type:'password', value:p, placeholder:'Password' },
+             attr:{ type:'text', value:p, placeholder:'Password' },
              addClass:css_class_field+css_class_passIn,
              ctx:{ w$:{p:'w$el'} },
              _iface:{ value: p },
@@ -371,7 +392,7 @@ var BP_MOD_WDL = (function ()
         //_final:{show:true}
         };
     };
-    IItemP.prototype = w$defineProto (
+    IItemP.prototype = w$defineProto (IItemP,
     {
         checkInput: {value: function() 
         {
@@ -451,7 +472,7 @@ var BP_MOD_WDL = (function ()
             };
         }
     };
-    OItemP.prototype = w$defineProto ({});
+    OItemP.prototype = w$defineProto (OItemP, {});
     
     function IoItem () {}
     IoItem.wdi = function (w$ctx)
@@ -479,7 +500,7 @@ var BP_MOD_WDL = (function ()
          _iface:{ w$ctx:{oItem:"oItem", iItem:"iItem"} }
         };
     };
-    IoItem.prototype = w$defineProto( // same syntax as Object.defineProperties
+    IoItem.prototype = w$defineProto(IoItem, // same syntax as Object.defineProperties
     {
         toggleIO: {value: function() 
         {
@@ -497,7 +518,7 @@ var BP_MOD_WDL = (function ()
                     MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                     if (this.oItem) {
                         delete this.iItem; 
-                        iI.die();
+                        iI.destroy();
                         this.append(this.oItem);
                         this.bInp = false;
                     }
@@ -521,7 +542,7 @@ var BP_MOD_WDL = (function ()
                 this.iItem = w$exec(IItemP.wdt, ctx);
                 MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                 if (this.iItem) {
-                    delete this.oItem; oI.die();
+                    delete this.oItem; oI.destroy();
                     this.append(this.iItem);
                     this.bInp = true;
                 }
@@ -548,7 +569,7 @@ var BP_MOD_WDL = (function ()
              iterate:{ it:it, wdi:IoItem.wdi }
         };
     };
-    PanelList.prototype = w$defineProto(
+    PanelList.prototype = w$defineProto(PanelList,
     {
         handleDragStart: {value: function handleDragStart (e)
         {   // CAUTION: 'this' is bound to e.target
@@ -595,7 +616,8 @@ var BP_MOD_WDL = (function ()
     {
         var loc = ctx.loc || g_loc,
             reload = ctx.reload,
-            autoFill = ctx.autoFill;
+            autoFill = ctx.autoFill,
+            onClosed = ctx.onClosed;
         return {
         cons:Panel, // static prototype object.
         tag:"div",
@@ -603,7 +625,7 @@ var BP_MOD_WDL = (function ()
         css:{ position:'fixed', top:'0px', 'right':"0px" },
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:loc },
-        iface:{ _reload:reload, id:eid_panel, autoFill:autoFill },
+        iface:{ _reload:reload, id:eid_panel, autoFill:autoFill, onClosed:onClosed },
 
             // Create children
             children:[
@@ -622,11 +644,12 @@ var BP_MOD_WDL = (function ()
         _iface:{ w$:{}, w$ctx:{itemList:'itemList'} },
         _final:{ 
             appendTo:document.body, 
-            show:true,
-            exec:Panel.prototype.makeDraggable }
+            show:true
+            //,exec:Panel.prototype.makeDraggable 
+            }
         };
     };
-    Panel.prototype = w$defineProto( // same syntax as Object.defineProperties
+    w$defineProto( Panel, // same syntax as Object.defineProperties
     {
         makeDraggable: {value: function(ctx, w$)
         {
@@ -641,14 +664,22 @@ var BP_MOD_WDL = (function ()
             $(this.el).draggable();
         }},
         reload: {value: function() 
-        { //TODO: Implement this
-            this.die();
-            this._reload();
+        {
+            var reload = this._reload; // save the func because destroy will delete it from this
+            this.destroy();//panel should be destroyed before a new one is created.
+            reload();
         }},
-    });
+        close: {value: function()
+        {
+            var onClosed = this.onClosed;
+            this.destroy();
+            onClosed();
+        }}
+    });
       
     var iface = 
     {
+       MiniDB: MiniDB,
        cs_panel_wdt: Panel.wdt,
        prop_value: prop_value,
        prop_fieldName: prop_fieldName,

@@ -47,7 +47,8 @@ var BP_MOD_CONNECT = (function ()
         cm_cleanDB      = "cm_clnDB",
         cm_getDB        = "cm_getDB",
         cm_getDN        = "cm_getDN",
-        cm_getDomn      = "cm_getDomn";
+        cm_getDomn      = "cm_getDomn",
+        cm_closed       = "cm_closed";
 
     var DICT_TRAITS={};
    
@@ -197,6 +198,11 @@ var BP_MOD_CONNECT = (function ()
             return new PRecord(loc, date, userid, pass);
         }
         
+        function panelClosed(loc)
+        {
+            postMsgToMothership({cm:cm_closed, loc:loc});   
+        }
+        
         //Assemble the interface    
         var iface = {};
         Object.defineProperties(iface, 
@@ -223,12 +229,14 @@ var BP_MOD_CONNECT = (function ()
             cm_getDB:   {value: cm_getDB},
             cm_getDN:   {value: cm_getDN},
             cm_getDomn: {value: cm_getDomn},
+            cm_closed:  {value: cm_closed},
             saveRecord: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
             newERecord: {value: newERecord},
             newPRecord: {value: newPRecord},
             getRecs: {value: getRecs},
-            getDBPath: {value: getDBPath}
+            getDBPath: {value: getDBPath},
+            panelClosed: {value: panelClosed}
         });
         Object.freeze(iface);
 

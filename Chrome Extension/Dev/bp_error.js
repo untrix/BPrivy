@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 /* Global declaration for JSLint */
-/*global document */
+/*global document, com_untrix_bp_loaded */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 

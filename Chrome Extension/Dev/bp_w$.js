@@ -147,7 +147,7 @@ var BP_MOD_W$ = (function ()
     };
     WidgetElement.prototype.show = function() {this.el.style.removeProperty('display');};
     WidgetElement.prototype.hide = function() {this.el.style.display = 'none';};
-    WidgetElement.prototype.die = function()
+    WidgetElement.prototype.destroy = function()
     {
         // This is a destructor, but unfortunately a new jQuery object is being created here.
         $(this.el).remove(); // This will hopefully clear data from the entire subtree rooted here.
@@ -172,10 +172,14 @@ var BP_MOD_W$ = (function ()
     };
     WidgetElement.prototype.$ = function () {return $(this.el); };
     // Returns an object to be used as a prototype for a widget element.
-    function w$defineProto (props) // props has same syntax as Object.defineProperties
+    function w$defineProto (cons, props) // props has same syntax as Object.defineProperties
     {
-        // var proto = newInherited(WidgetElement.prototype);        // Object.defineProperties(proto, props);        // return proto;
-        return Object.create(WidgetElement.prototype, props);
+        // var proto = newInherited(WidgetElement.prototype);
+        // Object.defineProperties(proto, props);
+        // return proto;
+        cons.prototype = Object.create(WidgetElement.prototype, props);
+        cons.prototype.constructor = cons;
+        return cons.prototype;
     }
     
     function copyIndirect (sk, sv, dst) 

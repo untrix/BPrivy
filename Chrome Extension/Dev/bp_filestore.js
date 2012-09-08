@@ -1686,11 +1686,10 @@ var BP_MOD_FILESTORE = (function()
         }
     }
        
-    function init (p_sep)
+    function init ()
     {
         BP_PLUGIN = document.getElementById(eid_bp);
-        DB_FS.putPathSep(p_sep);
-        //path_sep = p_sep || (BP_PLUGIN && BP_PLUGIN.pathSeparator) ? BP_PLUGIN.pathSeparator() : undefined;        
+        DB_FS.putPathSep(BP_PLUGIN.pathSeparator());
     }
                   
     //Assemble the interface    
@@ -1721,5 +1720,4 @@ var BP_MOD_FILESTORE = (function()
 
     console.log("loaded filestore");
     return iface;
-
 }());

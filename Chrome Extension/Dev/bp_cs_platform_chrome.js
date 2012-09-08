@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global chrome, BP_MOD_ERROR, $ */
+/*global chrome, BP_MOD_ERROR, BP_MOD_COMMON, $ */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -15,8 +15,15 @@
  */
 var BP_MOD_CS_PLAT = (function() 
 {
-    "use strict"; //TODO: Remove this from prod. build
+    "use strict";
     
+    function isTopLevel(win) 
+    {
+        return (win.top === win.self);
+    }
+
+    var g_frameUrl = isTopLevel(window) ? null : window.location.href;
+        
     var module =
     {
         DIR_SEP: "\\", // TODO: This needs to be dynamically determined based on OS
@@ -50,7 +57,40 @@ var BP_MOD_CS_PLAT = (function()
         
         registerMsgListener: function(foo)
         {
-            chrome.extension.onMessage.addListener(foo);
+            chrome.extension.onMessage.addListener(function(req, sender, callback)
+            {
+                if (req.frameUrl)
+                { 
+                    if (g_frameUrl === req.frameUrl) 
+                    {
+                        console.log("MsgListener@bp_cs_platform_chrome: Directing received message to frame: " + g_frameUrl);
+                        foo(req, sender, callback);
+                    }
+                    // else if (!g_frameUrl)
+                    // {
+                        // // We're the top-level frame
+                        // var found = Array.prototype.some.apply(window, [function(win)
+                        // {
+                            // if (win && (win.location.href === req.frameUrl)) {
+                                // console.log("Found Frame");
+                                // return true; // exit the loop
+                            // }
+                        // }]);
+                        // if (!found) {
+                            // console.log("Frame not Found :(");
+                        // }
+                    // }
+                }
+                else if (!g_frameUrl)
+                {
+                    console.log("MsgListener@bp_cs_platform_chrome: Directing received message to top-level frame");
+                    foo(req, sender, callback);
+                }
+                else
+                {
+                    console.log("MsgListener@bp_cs_platform_chrome: Dropping received message");
+                }
+            });
         },
         
         getURL: function(path)
@@ -88,6 +128,13 @@ var BP_MOD_CS_PLAT = (function()
             {
                 el.addEventListener(k, on[k]);
             }
+        },
+        
+        trigger: function (el, eventType, eventInterface)
+        {
+            var ev = document.createEvent(eventInterface || 'HTMLEvents');
+            ev.initEvent(eventType, true, true);
+            el.dispatchEvent(ev);
         }
     };
     
