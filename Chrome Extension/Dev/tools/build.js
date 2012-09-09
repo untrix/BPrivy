@@ -94,7 +94,8 @@ var src = abs(argv[0]),
     release_js = [
     'bp_cs.cat.js',
     'bp_main.cat.js',
-    'bp_manage.cat.js'
+    'bp_manage.cat.js',
+    'bp_cs_boot.out.js'
     ],
     release_cs_js = [
        "bp_error.js", "bp_common.js", "bp_traits.js", 

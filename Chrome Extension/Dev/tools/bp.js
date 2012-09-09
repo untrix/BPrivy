@@ -165,7 +165,9 @@ function catIfNeeded(srcFiles, dest)
     {
         //console.log('Processing file ' + f);
         data = fs.readFileSync(f);
-        fs.appendFileSync(dest, "\n");
+        if (i>0) {
+            fs.appendFileSync(dest, "\n");
+        }
         fs.appendFileSync(dest, data);
     });
 }

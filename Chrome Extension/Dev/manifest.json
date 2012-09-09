@@ -1,6 +1,6 @@
 {
   "name": "BPrivy",
-  "version": "0.5.13",
+  "version": "0.5.14",
   "manifest_version": 2,
   "minimum_chrome_version": "7",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
@@ -14,10 +14,9 @@
   "content_scripts": [
 	{
 	"matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
-    "js": ["tp/jquery.js", "bp_cs.cat.js"],
-	"css": ["bp.css"],
-	"all_frames": true,
-	"run_at": "document_start"
+    "js": ["bp_cs_boot.out.js"],
+	"run_at": "document_start",
+	"all_frames": true
 	}
   ],
   "browser_action": {
@@ -29,5 +28,8 @@
     "icons/icon16.png",
     "tp/bootstrap/img/glyphicons-halflings.png",
     "tp/bootstrap/img/glyphicons-halflings-white.png",
-    "bp_load_cs.js"]
+    "tp/jquery.js",
+    "tp/jquery-ui.js",
+    "bp_cs.cat.js",
+    "bp.css"]
 }

@@ -27,7 +27,8 @@ function uglify(orig_code)
     var ast = jsp.parse(orig_code); // parse code and get the initial AST
     ast = pro.ast_lift_variables(ast);
     ast = pro.ast_mangle(ast); // get a new AST with mangled names
-    ast = pro.ast_squeeze(ast, {dead_code:false}); // get an AST with compression optimizations
+    //ast = pro.ast_squeeze(ast, {dead_code:false}); // get an AST with compression optimizations
+    ast = pro.ast_squeeze(ast); // trying with dead_code=true. Should remove dead-code.
     return pro.gen_code(ast); // compressed code here
 }
 
@@ -40,13 +41,14 @@ function readFileCallback(err, data, ctx)
 function minify(SRC, DST)
 {
     var files = fs.readdirSync(SRC),
-        i, n, d, f, df, sf, ext;
+        i, n, d, f, df, sf, ext, ext2;
         
     for (i=0,n=files.length; i<n; i++)
     {
         f = files[i];
         ext = f.slice(f.lastIndexOf(".cat.")).toLowerCase();
-        if (ext===".cat.js")
+        ext2= f.slice(f.lastIndexOf(".out.")).toLowerCase();
+        if ((ext===".cat.js") || (ext2===".out.js"))
         {
             df = DST + f;
             sf = SRC + f;

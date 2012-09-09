@@ -40,9 +40,11 @@ if (!fs.existsSync(abs('dev_header.less')) || !fs.existsSync(abs('release_header
 }
 // Ensure that the tmp dir exists.
 fs.mkdirp(TMPDIR);
-catIfNeeded(['dev_header.less', SRC+'bp_bootstrap.less'], TMPDIR+'bp.dev.less');
-catIfNeeded(['release_header.less', SRC+'bp_bootstrap.less'], TMPDIR+'bp.release.less');
-catIfNeeded(['dist_header.less', SRC+'bp_bootstrap.less'], TMPDIR+'bp.dist.less');
+// catIfNeeded(['dev_header.less', SRC+'bp_bootstrap.less'], TMPDIR+'bp.dev.less');
+// catIfNeeded(['release_header.less', SRC+'bp_bootstrap.less'], TMPDIR+'bp.release.less');
+// catIfNeeded(['dist_header.less', SRC+'bp_bootstrap.less'], TMPDIR+'bp.dist.less');catIfNeeded(['dev_header.less', SRC+'bp.less'], TMPDIR+'bp.dev.less');
+catIfNeeded(['release_header.less', SRC+'bp.less'], TMPDIR+'bp.release.less');
+catIfNeeded(['dist_header.less', SRC+'bp.less'], TMPDIR+'bp.dist.less');
 /*
  var recess = require('recess')
 
@@ -91,30 +93,32 @@ var devTarget = abs(SRC, 'bp.css'),
 fs.mkdirp(abs(DST, 'release'));
 fs.mkdirp(abs(DST, 'dist'));
 
-// srcFiles=[SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dev.less'];
+// //var srcFiles=[SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dev.less'];
+// var srcFiles=[SRC+'bp.less', 'dev_header.less']; // reverse order of concatenation
 // if (doBuild(srcFiles, devTarget)) {
     // recess(srcFiles, {compile:true, compress:false}, async.runHere(makeRecessCback(devTarget)));
 // }
 // 
-// srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.release.less'];
+// //srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.release.less'];
+// srcFiles=[SRC+'bp.less', 'release_header.less']; // reverse order of concatenation
 // if (doBuild(srcFiles, releaseTarget)) { 
     // recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(releaseTarget)));
 // }
 // 
-// srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dist.less'];
+// //srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dist.less'];
+// srcFiles=[SRC+'bp.less', 'dist_header.less']; // reverse order of concatenation
 // if (doBuild(srcFiles, distTarget)) {
     // recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(distTarget)));
 // }
-var srcFile=SRC+'bp.less';
+var srcFile=TMPDIR+'bp.dev.less';
 if (doBuild([srcFile], devTarget)) {
-    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(devTarget)));
+    recess(srcFile, {compile:true, compress:false}, async.runHere(makeRecessCback2(devTarget)));
 }
-
+srcFile=TMPDIR+'bp.release.less';
 if (doBuild([srcFile], releaseTarget)) { 
     recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget)));
 }
-
-//srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dist.less'];
+srcFile=TMPDIR+'bp.dist.less';
 if (doBuild([srcFile], distTarget)) {
     recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget)));
 }
@@ -126,26 +130,26 @@ var srcFile=SRC+'bp_manage.less',
     distTarget2 = abs(DST, 'dist', 'bp_manage.css');
 
 if (doBuild([srcFile], devTarget2)) {
-    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(devTarget2)));
+    recess(srcFile, {compile:true, compress:false}, async.runHere(makeRecessCback2(devTarget2)));
 }
 if (doBuild([srcFile], releaseTarget2)) { 
     recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget2)));
 }
 if (doBuild([srcFile], distTarget2)) {
     recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget2)));
-}var srcFile=SRC+'bp.less',
-    devTarget3 = abs(SRC, 'bp_panel.css'),
-    releaseTarget3 = abs(DST, 'release', 'bp_panel.css'),
-    distTarget3 = abs(DST, 'dist', 'bp_panel.css');
-if (doBuild([srcFile], devTarget3)) {
-    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(devTarget3)));
-}
-if (doBuild([srcFile], releaseTarget3)) { 
-    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget3)));
-}
-if (doBuild([srcFile], distTarget3)) {
-    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget3)));
-}
+}    // srcFile=SRC+'bp.less';
+// var devTarget3 = abs(SRC, 'bp_panel.css'),
+    // releaseTarget3 = abs(DST, 'release', 'bp_panel.css'),
+    // distTarget3 = abs(DST, 'dist', 'bp_panel.css');
+// if (doBuild([srcFile], devTarget3)) {
+    // recess(srcFile, {compile:true, compress:false}, async.runHere(makeRecessCback2(devTarget3)));
+// }
+// if (doBuild([srcFile], releaseTarget3)) { 
+    // recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget3)));
+// }
+// if (doBuild([srcFile], distTarget3)) {
+    // recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget3)));
+// }
 
 
 
