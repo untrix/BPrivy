@@ -93,18 +93,14 @@ var BP_MOD_WDL = (function ()
     var css_class_nButton = "com-bprivy-nB ";
     var css_class_xButton = "com-bprivy-xB ";
 
-    // These are 'data' attribute names. If implemented as jQuery data
-    // these won't manifest as HTML content attributes, hence won't
-    // clash with other HTML elements. However, their names could clash
-    // with jQuery. Hence they are placed here so that they maybe easily
-    // changed if needed.
-    var prop_value = "bpValue";
-    var prop_fieldName = "bpDataType";
-    var prop_peerID = 'bpPeerID';
-    var prop_panelID = 'bpPanelID';
-    var prop_ctx = 'bpPanelCtx';
+    // These are 'data' attribute names.
+    //var prop_value = "bpValue";
+    //var prop_fieldName = "bprivy_FN";
+    //var prop_peerID = 'bpPID';
+    //var prop_panelID = 'bpPanelID';
+    //var prop_ctx = 'bpPanelCtx';
     var CT_TEXT_PLAIN = 'text/plain';
-    var CT_BP_PREFIX = 'application/x-bprivy-';
+    var CT_BP_PREFIX = 'application/x-untrix-';
     var CT_BP_FN = CT_BP_PREFIX + 'fn';
     var CT_BP_PASS = CT_BP_PREFIX + fn_pass;
     var CT_BP_USERID = CT_BP_PREFIX + fn_userid;
@@ -127,11 +123,13 @@ var BP_MOD_WDL = (function ()
     {}
     MiniDB.prototype = Object.freeze(
     {
-        ingest: function(db)
+        ingest: function(db, dbInfo)
         {
             if (db) 
             {
-                BP_MOD_COMMON.copy(db, this);
+                BP_MOD_COMMON.clear(this);
+                BP_MOD_COMMON.copy2(db, this);
+                BP_MOD_COMMON.copy2(dbInfo, this);
                 //this.pRecsMap = db.pRecsMap; 
                 //this.eRecsMapArray = db.eRecsMapArray;
                 //this.dbName = db.dbName;
@@ -145,12 +143,17 @@ var BP_MOD_WDL = (function ()
                 }
                 Object.defineProperty(this, "numUserids", {writable: false, configurable:true, enumerable:true});
             }
+            else 
+            { 
+                this.clear(); 
+            }
         },
         clear: function ()
         {
             BP_MOD_COMMON.clear(this);
         }
     });
+    
     function image_wdt(ctx)
     {
         var imgPath = ctx.imgPath;
@@ -230,7 +233,7 @@ var BP_MOD_WDL = (function ()
         cons: XButton,
         html:'<button type="button"></button>',
         css:{ float:'right' },
-        attr:{ /*class:css_class_xButton,*/ accesskey:'q'},
+        //attr:{ /*class:css_class_xButton,*/},
         //text:u_cir_X,
         on:{ click:XButton.prototype.x },
         iface:{ panel:panel },
@@ -645,7 +648,7 @@ var BP_MOD_WDL = (function ()
         _final:{ 
             appendTo:document.body, 
             show:true
-            //,exec:Panel.prototype.makeDraggable 
+            ,exec:Panel.prototype.makeDraggable 
             }
         };
     };
@@ -674,16 +677,18 @@ var BP_MOD_WDL = (function ()
             var onClosed = this.onClosed;
             this.destroy();
             onClosed();
-        }}
+        }},
+        tempRecord: {value: function(u, p) // TODO
+        {
+            
+        }},
+        editRecord: {value: function(u, p){}} // TODO
     });
       
     var iface = 
     {
        MiniDB: MiniDB,
        cs_panel_wdt: Panel.wdt,
-       prop_value: prop_value,
-       prop_fieldName: prop_fieldName,
-       prop_peerID: prop_peerID,
        CT_BP_FN: CT_BP_FN,
        CT_TEXT_PLAIN: CT_TEXT_PLAIN,
        CT_BP_PREFIX: CT_BP_PREFIX,

@@ -669,13 +669,13 @@ var BP_MOD_MEMSTORE = (function ()
         // Note: We need scheme and hostname at a minimum for a valid URL. We also need
         // pathname before we insert into TRIE, hence we'll append a "/" if path is missing.
         // But first ensure that this is indeed a URL.
-        if (! (l && 
-                (typeof l.H === "string") && (l.H.length > 0) ) )
+        if (! (l /*&& 
+                (typeof l.H === "string") && (l.H.length > 0)*/ ) )
             {throw new BPError(JSON.stringify(l), "BadURL");}
         
         //scm = (l.S?l.S.toLowerCase():null);
 
-        if (dictTraits.url_host)
+        if (dictTraits.url_host && l.H)
         {
             // Split hostname into an array of strings.       
             ha = l.H.split('.');

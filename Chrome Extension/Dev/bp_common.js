@@ -38,7 +38,8 @@ var BP_MOD_COMMON = (function()
     /** @constant */
     var PROTO_HTTPS = "https:";
     /** Global url regexpression used for all invocations of parseURL. Remember that lastIndex prop. and flags are shared ! */
-    var g_url_regexp = /^(?:([A-Za-z]+):)(\/\/)?([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
+    //var g_url_regexp = /^(?:([A-Za-z]+):)(\/\/)?([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
+    var g_url_regexp = /^(?:([A-Za-z]+):\/\/)(?:([0-9.\-A-Za-z]+)(?::(\d+))?)?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
     /** @globals-end **/
    
    
@@ -65,18 +66,18 @@ var BP_MOD_COMMON = (function()
             var loc = {};
             //['url', 'scheme', 'slash', 'host', 'port', 'path', 'query', 'hash']
             if (segs[1]) { loc.protocol = segs[1] + ":";} // ':' is appended in order to stay consistent with Google Chrome
-            if (segs[3]) { loc.hostname = segs[3];}
-            if (segs[4]) { loc.port = segs[4];}
-            if (segs[5]) { loc.pathname = segs[5];}
-            if (segs[6]) { loc.search = segs[6];}
-            if (segs[7]) { loc.hash = segs[7];}
+            if (segs[2]) { loc.hostname = segs[2];}
+            if (segs[3]) { loc.port = segs[3];}
+            if (segs[4]) { loc.pathname = segs[4];}
+            if (segs[5]) { loc.search = segs[5];}
+            if (segs[6]) { loc.hash = segs[6];}
             
             if (loc.protocol && loc.hostname) {
                 // Browsers tack-on a '/' in case it is missing so we need to be consistent for URL-comparison purposes.
                 if (!loc.pathname) {loc.pathname = "/";}
                 return loc;
             }
-            else {return;} // Without protocol and hostname we deem this string a non-URL for our purposes.
+            else {return loc;} // Without protocol and hostname we deem this string a non-URL for our purposes.
         }
     }
     
@@ -158,9 +159,9 @@ var BP_MOD_COMMON = (function()
         }        
     }
     
-    function copy (src, dst)
+    function copy2 (src, dst)
     {
-        clear(dst);
+        //clear(dst);
         var keys = Object.keys(src),
             n;
         for (n=keys.length-1; n>=0; n--) {
@@ -281,7 +282,7 @@ var BP_MOD_COMMON = (function()
         stopPropagation: {value: stopPropagation},
         preventDefault: {value: preventDefault},
         newInherited: {value: newInherited},
-        copy: {value: copy},
+        copy2: {value: copy2},
         clear: {value: clear},
         delProps: {value: delProps},
         iterKeys: {value: iterKeys},

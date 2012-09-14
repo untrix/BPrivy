@@ -94,7 +94,7 @@ var BP_MOD_EDITOR = (function ()
     {
         var loc = ctx.loc,
             host = loc.hostname,
-            i = ++(ctx.editor.i);
+            i = ctx.editor ? ++(ctx.editor.i): undefined;
         return {
             tag:'a',
             attr:{ href:"http://"+host, target:"_blank" },
@@ -109,7 +109,7 @@ var BP_MOD_EDITOR = (function ()
                 children:[
                 {
                     tag:"h6",
-                    text: i + ". " + host
+                    text: (i ? (i+". ") : "") + host
                 }]
         };
     }
@@ -219,7 +219,7 @@ var BP_MOD_EDITOR = (function ()
         return {
         cons: DButton,
         tag:'a',
-        attr:{ href:"#", title:"Delete Username" },
+        attr:{ href:"#", title:"Delete Entry" },
         addClass: 'com-untrix-B com-untrix-rB',
         on:{ click:DButton.prototype.onClick },
         _iface:{ 'ioItem':ioItem },
@@ -239,7 +239,35 @@ var BP_MOD_EDITOR = (function ()
             this.ioItem.destroy();
         }}
     });
-        
+
+    function DButton2 () {}
+    DButton2.wdt = function(w$ctx)
+    {
+        var dNode = w$ctx.panel;
+        return {
+        cons: DButton2,
+        tag:'a',
+        attr:{ href:"#", title:"Delete Entry" },
+        addClass: 'com-untrix-B com-untrix-rB2',
+        on:{ click:DButton2.prototype.onClick },
+        _iface:{ 'dNode':dNode },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle' },
+            addClass:"icon-trash",
+            }]
+        };
+    };
+    DButton2.prototype = w$defineProto(DButton2,
+    {
+        onClick: {value: function(e)
+        {
+            e.stopPropagation(); // We don't want the enclosing web-page to interefere
+            e.preventDefault(); // Causes event to get cancelled if cancellable
+            this.dNode.destroy();
+        }}
+    });
+    
     function isValidInput(str) {return Boolean(str);}
     
     function TButton () {}
@@ -615,7 +643,8 @@ var BP_MOD_EDITOR = (function ()
                 children:[
                 //EButton.wdt,
                 NButton.wdt,
-                dNodeTitleText_wdt
+                dNodeTitleText_wdt,
+                DButton2.wdt
                 ]
             },
             bOpen ? PanelList.wdt : w$undefined

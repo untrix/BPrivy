@@ -34,9 +34,8 @@ var PANEL_MAIN = (function ()
     var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     /** @import-module-begin */
     m = BP_MOD_WDL;
-    var /*prop_value = IMPORT(m.prop_value),
-        prop_fieldName = IMPORT(m.prop_fieldName),
-        prop_peerID = IMPORT(m.prop_peerID),
+    var /*
+        data_fieldName = IMPORT(m.data_fieldName),
         CT_BP_FN = IMPORT(m.CT_BP_FN),
         CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN),
         CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX),

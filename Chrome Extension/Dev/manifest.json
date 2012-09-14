@@ -1,6 +1,6 @@
 {
   "name": "BPrivy",
-  "version": "0.5.14",
+  "version": "0.5.17",
   "manifest_version": 2,
   "minimum_chrome_version": "7",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
@@ -12,12 +12,24 @@
   "permissions": ["contextMenus", "tabs", "webRequest", "<all_urls>"],
   "background": {"page": "bp_Main.html"},
   "content_scripts": [
-	{
-	"matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
+    {
+    "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     "js": ["bp_cs_boot.out.js"],
-	"run_at": "document_start",
-	"all_frames": true
-	}
+    "run_at": "document_end",
+    "all_frames": true
+    }
+  ],
+  "content_scripts2": [
+    {
+    "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
+    "js": ["tp/jquery.js",
+           "tp/jquery-ui.js",
+           "bp_cs_boot_stub.js",
+           "bp_cs.cat.js"],
+    "run_at": "document_end",
+    "all_frames": true,
+    "css": ["bp.css"]
+    }
   ],
   "browser_action": {
 	"default_icon": "icons/icon16.png"
@@ -31,5 +43,7 @@
     "tp/jquery.js",
     "tp/jquery-ui.js",
     "bp_cs.cat.js",
-    "bp.css"]
+    "bp.css",
+    "bp_cs_boot.out.js"],
+  "incognito": "spanning"
 }
