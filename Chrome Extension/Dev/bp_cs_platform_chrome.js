@@ -17,12 +17,12 @@ var BP_MOD_CS_PLAT = (function()
 {
     "use strict";
     
-    function isTopLevel(win) 
-    {
-        return (win.top === win.self);
-    }
-
-    var g_frameUrl = isTopLevel(window) ? null : window.location.href;
+    // function isTopLevel(win)
+    // {
+        // return (win.top === win.self);
+    // }
+    var g_bTopLevel = (window.top === window.self), 
+        g_frameUrl = g_bTopLevel ? null : window.location.href;
         
     var module =
     {
@@ -61,35 +61,32 @@ var BP_MOD_CS_PLAT = (function()
             {
                 if (req.frameUrl)
                 { 
-                    if (g_frameUrl === req.frameUrl) 
+                    if (g_frameUrl !== req.frameUrl)
                     {
-                        console.log("MsgListener@bp_cs_platform_chrome: Directing received message to frame: " + g_frameUrl);
-                        foo(req, sender, callback);
+                        return;
                     }
-                    // else if (!g_frameUrl)
-                    // {
-                        // // We're the top-level frame
-                        // var found = Array.prototype.some.apply(window, [function(win)
-                        // {
-                            // if (win && (win.location.href === req.frameUrl)) {
-                                // console.log("Found Frame");
-                                // return true; // exit the loop
-                            // }
-                        // }]);
-                        // if (!found) {
-                            // console.log("Frame not Found :(");
-                        // }
-                    // }
                 }
-                else if (!g_frameUrl)
+                else // frame url not provided
                 {
-                    console.log("MsgListener@bp_cs_platform_chrome: Directing received message to top-level frame");
-                    foo(req, sender, callback);
+                    var tag = document.activeElement.tagName.toLowerCase();
+                    if (document.hasFocus())
+                    {
+                        if (tag==='iframe')
+                        {
+                            return;
+                        }
+                    }
+                    else // document not focussed
+                    {
+                        if (!g_bTopLevel)
+                        {
+                            return;
+                        }
+                    }
                 }
-                else
-                {
-                    console.log("MsgListener@bp_cs_platform_chrome: Dropping received message");
-                }
+                
+                console.log("MsgListener@bp_cs_platform_chrome: Handling received message in document " + document.location.href);
+                foo(req, sender, callback);
             });
         },
         

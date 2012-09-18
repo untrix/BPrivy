@@ -50,16 +50,16 @@ var BP_MOD_TRAITS = (function ()
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
     /** @constant */
-    var fn_userid = "u";   // Represents field userid. Copy value from P_UI_TRAITS.
-    /** @constant */
-    var fn_pass = "p";       // Represents field password. Copy value from P_UI_TRAITS.
+    var fn_userid = "u", // Represents field userid. Copy value from P_UI_TRAITS.
+        fn_userid2= "u2",// userid field of signup/register forms for auto-capture but not autofill.
+        fn_pass = "p",   // Represents field password. Copy value from P_UI_TRAITS.
+        fn_pass2= "p2";  // password field of signup/register forms for auto-capture but not autofill
 
     var FT = Object.freeze({
         text: 1,
         pass: 2
     });
     var UI_TRAITS={};
-    var EMPTY_OBJECT = Object.freeze({});
     /** @globals-end **/
     
     function DefaultUiTraits ()
@@ -134,7 +134,7 @@ var BP_MOD_TRAITS = (function ()
     
     function RecsIterator (recsMap)
     {
-        var k = recsMap ? Object.keys(recsMap).sort() : EMPTY_OBJECT;
+        var k = recsMap ? Object.keys(recsMap).sort() : BP_MOD_COMMON.EMPTY_ARRAY;
         Object.defineProperties(this,
         {
             _o: {value: recsMap},
@@ -154,54 +154,56 @@ var BP_MOD_TRAITS = (function ()
         }
     };
     
-    function DTIterator (dnode)
-    {
-        var a = [], dts = UI_TRAITS.getAllDT(), i, dt;
-        
-        for (i=dts.length-1; i>=0; i--)
-        {
-            dt = dts[i];
-            if (dnode.data[dt]) {
-                a.push(new RecsIterator(dnode.data[dt]));
-            }
-        }
-        
-        Object.defineProperties(this,
-        {
-            _a: {value: a},
-            _n: {value: a.length},
-            _i: {value:0, writable:true}
-        });
-        Object.seal(this);
-    }
-    DTIterator.prototype.next = function ()
-    {
-        if (this._i < this._n) {
-            return this._a[this._i++];
-        }
-        else {
-            return null;
-        }
-    };
-
-    function DNodeIterator (root) // Walks dictionary and returns DNodes that have data.
-    {
-        
-    }
+    // function DTIterator (dnode)
+    // {
+        // var a = [], dts = UI_TRAITS.getAllDT(), i, dt;
+//         
+        // for (i=dts.length-1; i>=0; i--)
+        // {
+            // dt = dts[i];
+            // if (dnode.data[dt]) {
+                // a.push(new RecsIterator(dnode.data[dt]));
+            // }
+        // }
+//         
+        // Object.defineProperties(this,
+        // {
+            // _a: {value: a},
+            // _n: {value: a.length},
+            // _i: {value:0, writable:true}
+        // });
+        // Object.seal(this);
+    // }
+    // DTIterator.prototype.next = function ()
+    // {
+        // if (this._i < this._n) {
+            // return this._a[this._i++];
+        // }
+        // else {
+            // return null;
+        // }
+    // };
+// 
+    // function DNodeIterator (root) // Walks dictionary and returns DNodes that have data.
+    // {
+//         
+    // }
 
     var iface = {};
     Object.defineProperties(iface,
     {
         UI_TRAITS: {value: UI_TRAITS},
         RecsIterator: {value: RecsIterator},
-        DTIterator: {value: DTIterator},
+        //DTIterator: {value: DTIterator},
         dt_eRecord: {value: dt_eRecord},
         dt_pRecord: {value: dt_pRecord},
         dt_etld: {value: dt_etld},
         dt_settings:{value: dt_settings},
         dt_default: {value: dt_default},
         fn_userid: {value: fn_userid},
-        fn_pass: {value: fn_pass}
+        fn_userid2:{value: fn_userid2},
+        fn_pass: {value: fn_pass},
+        fn_pass2:{value: fn_pass2}
     }); Object.freeze(iface);
     
     console.log("loaded traits");

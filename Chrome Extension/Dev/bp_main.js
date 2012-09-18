@@ -251,14 +251,8 @@
 
         function clickReq (url)
         {
-            var req;
-            //if (!g_tabs[url]) {
-                req = getRecs(BP_MOD_COMMON.parseURL(url));
-            // }
-            // else {
-                // req = {};
-            // }
-            return req;
+            //return getRecs(BP_MOD_COMMON.parseURL(url));
+            return {};
         }
         
         function clickResp (url) 

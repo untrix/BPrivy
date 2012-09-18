@@ -33,10 +33,11 @@ var BP_MOD_COMMON = (function()
     var uid_aliases = ['username', 'userid','user', 'id', 'signon','loginid', 'logonid'];
     var pass_aliases = ['password', 'passphrase', 'credentials'];
     var url_aliases = ['url', 'location', 'href', 'src', 'formSubmitURL'];
-    /** @constant */
-    var PROTO_HTTP = "http:";
-    /** @constant */
-    var PROTO_HTTPS = "https:";
+    /** @constants */
+    var PROTO_HTTP = "http:",
+        PROTO_HTTPS = "https:",
+        EMPTY_OBJECT = Object.freeze({}),
+        EMPTY_ARRAY  = Object.freeze([]);
     /** Global url regexpression used for all invocations of parseURL. Remember that lastIndex prop. and flags are shared ! */
     //var g_url_regexp = /^(?:([A-Za-z]+):)(\/\/)?([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
     var g_url_regexp = /^(?:([A-Za-z]+):\/\/)(?:([0-9.\-A-Za-z]+)(?::(\d+))?)?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
@@ -289,7 +290,9 @@ var BP_MOD_COMMON = (function()
         iterArray: {value: iterArray},
         iterArray2:{value: iterArray2},
         iterObj:{value:iterObj},
-        concatArray: {value: concatArray}
+        concatArray: {value: concatArray},
+        EMPTY_OBJECT: {value: EMPTY_OBJECT},
+        EMPTY_ARRAY: {value: EMPTY_ARRAY}
     });
     Object.freeze(iface);
 

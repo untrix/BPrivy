@@ -120,37 +120,52 @@ var BP_MOD_WDL = (function ()
     /** @globals-end **/
        
     function MiniDB()
-    {}
+    {
+        this.init();
+    }
     MiniDB.prototype = Object.freeze(
     {
         ingest: function(db, dbInfo)
         {
             if (db) 
             {
-                BP_MOD_COMMON.clear(this);
-                BP_MOD_COMMON.copy2(db, this);
-                BP_MOD_COMMON.copy2(dbInfo, this);
-                //this.pRecsMap = db.pRecsMap; 
-                //this.eRecsMapArray = db.eRecsMapArray;
-                //this.dbName = db.dbName;
-                // this.dbPath = db.dbPath;
-                delete this.numUserids; // required because the property is unmodifiable.
-                if (this.pRecsMap) {
-                    this.numUserids = Object.keys(this.pRecsMap).length;
+                this.empty();
+                if (db.pRecsMap) {this.pRecsMap = db.pRecsMap;} 
+                if (db.eRecsMapArray) {this.eRecsMapArray = db.eRecsMapArray;}
+                if (this.pRecsMap) {this.numUserids = Object.keys(this.pRecsMap).length;}
+                else {this.numUserids = 0;}
+                if (dbInfo) {
+                    if (dbInfo.dbName) {this.dbName = dbInfo.dbName;}
+                    if (dbInfo.dbPath) {this.dbPath = dbInfo.dbPath;}
                 }
-                else {
-                    this.numUserids = 0;
-                }
-                Object.defineProperty(this, "numUserids", {writable: false, configurable:true, enumerable:true});
+                this.preventEdits();
             }
-            else 
+            else
             { 
-                this.clear(); 
+                this.init();
             }
         },
-        clear: function ()
+        init: function ()
+        {
+            this.empty();
+            this.preventEdits();
+        },
+        empty: function ()
         {
             BP_MOD_COMMON.clear(this);
+            this.eRecsMapArray = BP_MOD_COMMON.EMPTY_ARRAY;
+            this.pRecsMap = BP_MOD_COMMON.EMPTY_OBJECT;
+            this.numUserids = 0;
+        },
+        preventEdits: function ()
+        {
+            Object.defineProperties(this,
+            {
+                eRecsMapArray: {configurable:true, enumerable:true},
+                pRecsMap: {configurable:true, enumerable:true},
+                dbName: {configurable:true, enumerable:true},
+                dbPath: {configurable:true, enumerable:true}
+            });
         }
     });
     
@@ -668,15 +683,15 @@ var BP_MOD_WDL = (function ()
         }},
         reload: {value: function() 
         {
-            var reload = this._reload; // save the func because destroy will delete it from this
-            this.destroy();//panel should be destroyed before a new one is created.
-            reload();
+            var _reload = this._reload; // save the func because destroy will delete it from this
+            this.close();//panel should be destroyed before a new one is created.
+            _reload();
         }},
         close: {value: function()
         {
-            var onClosed = this.onClosed;
+            var _onClosed = this.onClosed;
             this.destroy();
-            onClosed();
+            _onClosed();
         }},
         tempRecord: {value: function(u, p) // TODO
         {

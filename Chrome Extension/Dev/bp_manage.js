@@ -98,22 +98,21 @@ var BP_MOD_MANAGE = (function ()
         rpcToMothership({cm: MOD_CONNECT.cm_getDB, dt:dt}, cback);
     }
     
-    function fillOptions(eid, dir)
-    {
-        var o={hide:true}, d, i=0, n=0;
-        eid = '#' + eid;
-        $(eid).empty(); // Empty the selector list anyway.
-        if (BP_PLUGIN.ls(dir, o) && (o.lsd) && (d=(o.lsd)) && d.d) {
-            var keys = Object.keys(d.d);
-            if ((n = keys.length) > 0) {
-                $(eid).append($(document.createElement('option')).text('Browse Files'));
-                for (i=0; i<n; ++i) {
-                    $(eid).append($(document.createElement('option')).val(keys[i]).text(keys[i]));
-                }
-            }
-        }
-    }
-
+    // function fillOptions(eid, dir)
+    // {
+        // var o={hide:true}, d, i=0, n=0;
+        // eid = '#' + eid;
+        // $(eid).empty(); // Empty the selector list anyway.
+        // if (BP_PLUGIN.ls(dir, o) && (o.lsd) && (d=(o.lsd)) && d.d) {
+            // var keys = Object.keys(d.d);
+            // if ((n = keys.length) > 0) {
+                // $(eid).append($(document.createElement('option')).text('Browse Files'));
+                // for (i=0; i<n; ++i) {
+                    // $(eid).append($(document.createElement('option')).val(keys[i]).text(keys[i]));
+                // }
+            // }
+        // }
+    // }
     function callbackHandleError (resp)
     {
         if (resp.result===false) {
@@ -248,11 +247,11 @@ var BP_MOD_MANAGE = (function ()
             updateDash(resp);
         });
 
-        if (localStorage.dbSaveLocation) {
-            $('#dbSaveLocation')[0].checked = true;
+        if (localStorage.dbDontSaveLocation) {
+            $('#dbSaveLocation')[0].checked = false;
         }
         else {
-            $('#dbSaveLocation')[0].checked = false;
+            $('#dbSaveLocation')[0].checked = true;
         }
         // Enable button toggling effects
         $('.nav-tabs').button();
@@ -309,7 +308,8 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#csvExport', 'click', function (e)
         {
             var o={dtitle:"BPrivy: CSV Export",
-                   dbutton: "Select Folder"};
+                   dbutton: "Select Folder",
+                   clrHist: true};
             $('#csvExportSpinner').show();
             if (BP_PLUGIN.chooseFolder(o)) {
                 console.log("ChooseFolder returned:" + o.path);
@@ -369,7 +369,8 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#dbMergeIn', 'click', function (e)
         {
             var o={dtitle:"BPrivy: Select Other Wallet",
-                   dbutton: "Select Other Wallet"};
+                   dbutton: "Select Other Wallet",
+                   clrHist: true};
             if (BP_PLUGIN.chooseFolder(o)) 
             {
                 console.log("ChooseFolder returned:" + o.path);
@@ -391,7 +392,8 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#dbMerge', 'click', function (e)
         {
             var o={dtitle:"BPrivy: Select Other Wallet",
-                   dbutton: "Select Other Wallet"};
+                   dbutton: "Select Other Wallet",
+                   clrHist: true};
             if (BP_PLUGIN.chooseFolder(o)) 
             {
                 console.log("ChooseFolder returned:" + o.path);
@@ -413,7 +415,8 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#dbMergeOut', 'click', function (e)
         {
             var o={dtitle:"BPrivy: Select Other Wallet",
-                   dbutton: "Select Other Wallet"};
+                   dbutton: "Select Other Wallet",
+                   clrHist: true};
             if (BP_PLUGIN.chooseFolder(o)) 
             {
                 console.log("ChooseFolder returned:" + o.path);
@@ -435,7 +438,8 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#dbChooseLoad, #dbChooseLoad2', 'click', function (e)
         {
             var o={dtitle:"BPrivy: Select Wallet Folder",
-                   dbutton: "Select Wallet Folder"},
+                   dbutton: "Select Wallet Folder",
+                   clrHist: true},
                    //capture the id in the closure for using from callback
                    id = e.currentTarget.id;
             $('#dbChooseLoad, #dbChooseLoad2').button('loading');
@@ -471,7 +475,8 @@ var BP_MOD_MANAGE = (function ()
                 return;
             }
             var o={dtitle:"BPrivy: Select a Folder to contain the Wallet",
-                   dbutton: "Select Folder"};
+                   dbutton: "Select Folder",
+                   clrHist: true};
             if (BP_PLUGIN.chooseFolder(o)) {
                 console.log("ChooseFolder returned:" + o.path);
                 createDB(dbName, o.path, function (resp)
@@ -490,24 +495,23 @@ var BP_MOD_MANAGE = (function ()
             }
         });
         
-        addEventListeners('[data-path-select]', 'change', function (e) 
-        {
-            var inp = $('[data-path]', this.form)[0];
-            inp.value = inp.value + this.value + DIR_SEP;
-            fillOptions(this.id, inp.value);
-            //$(this).trigger('click');
-            this.focus();
-        });
-        
+        // addEventListeners('[data-path-select]', 'change', function (e) 
+        // {
+            // var inp = $('[data-path]', this.form)[0];
+            // inp.value = inp.value + this.value + DIR_SEP;
+            // fillOptions(this.id, inp.value);
+            // //$(this).trigger('click');
+            // this.focus();
+        // });
         addEventListeners('#dbSaveLocation', 'change', function (e)
         {
             if (this.checked) {
                 localStorage["db.path"] = $('#dbPath').attr('data-path');
-                localStorage['dbSaveLocation'] = 'true';
+                localStorage['dbDontSaveLocation'] = '';
             }
             else {
                 localStorage["db.path"] = '';
-                localStorage['dbSaveLocation'] = '';
+                localStorage['dbDontSaveLocation'] = 'true';
             }
         });
 
@@ -584,7 +588,7 @@ var BP_MOD_MANAGE = (function ()
     var iface = {};
     Object.defineProperties(iface, 
     {
-        fillOptions: {value: fillOptions},
+//        fillOptions: {value: fillOptions},
         onload: {value: onload}
     });
     Object.freeze(iface);

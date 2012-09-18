@@ -95,8 +95,9 @@ var src = abs(argv[0]),
     'bp_cs.cat.js',
     'bp_main.cat.js',
     'bp_manage.cat.js',
-    'bp_cs_boot.out.js'
+    'bp_cs_boot.cat.js'
     ],
+    release_cs_boot_js = ["bp_cs_boot_head.js", "bp_cs_boot.js"],
     release_cs_js = [
        "bp_error.js", "bp_common.js", "bp_traits.js", 
        "bp_cs_platform_chrome.js", "bp_connector.js", "bp_w$.js", "bp_panel.wdl.js",
@@ -152,6 +153,7 @@ function mkdirp(dirs)
 mkdirp(Object.keys(lsSkel(release, release_others)));
 mkdirp(Object.keys(lsSkel(dist, release_others)));
 
+catIfNeeded(qualifyA(src,release_cs_boot_js), src + path.sep + 'bp_cs_boot.cat.js');
 catIfNeeded(qualifyA(src,release_cs_js), src + path.sep + 'bp_cs.cat.js');
 catIfNeeded(qualifyA(src,release_main_js), src + path.sep + 'bp_main.cat.js');
 catIfNeeded(qualifyA(src,release_manage_js), src + path.sep + 'bp_manage.cat.js');

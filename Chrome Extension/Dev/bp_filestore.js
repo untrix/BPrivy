@@ -75,7 +75,7 @@ var BP_MOD_FILESTORE = (function()
         
         return o;
     }
-        
+
     function parsePath(path)
     {
         var regex = /(?:^[\/\\]*)?(?:([^\\\/]+)[\\\/]+)/g;
@@ -120,7 +120,8 @@ var BP_MOD_FILESTORE = (function()
             dtl = [dt_settings, dt_eRecord, dt_pRecord],
             DOT = '.',
             ext = {
-                ext_Root: ".3ab",
+                //ext_Root: ".3ab",
+                ext_Root: ".uwallet",
                 ext_Dict: ".3ad",
                 ext_Open: ".3ao",
                 ext_Closed:".3ac",

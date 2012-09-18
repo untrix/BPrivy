@@ -31,9 +31,9 @@ var BP_MOD_MEMSTORE = (function ()
         dt_etld    = IMPORT(m.dt_etld);
     /** @import-module-begin Connector */
     m = IMPORT(BP_MOD_CONNECT);
-    var cm_getRecs = IMPORT(m.cm_getRecs),
-        newPRecord = IMPORT(m.newPRecord),
-        newERecord = IMPORT(m.newERecord),
+    var //cm_getRecs = IMPORT(m.cm_getRecs),
+        //newPRecord = IMPORT(m.newPRecord),
+        //newERecord = IMPORT(m.newERecord),
         newL = IMPORT(m.newL),
         DICT_TRAITS = IMPORT(m.DICT_TRAITS);
     /** @import-module-end **/    m = null;
@@ -277,7 +277,9 @@ var BP_MOD_MEMSTORE = (function ()
                     if (rec1.t === rec2.t &&
                         rec1.id === rec2.id &&
                         rec1.n === rec2.n &&
-                        rec1.y === rec2.y)
+                        rec1.y === rec2.y &&
+                        rec1.fid === rec2.fid && // since 0.5.19
+                        rec1.fnm === rec2.fnm)   // since 0.5.19
                         {
                             return EQUAL;
                         }
@@ -290,7 +292,7 @@ var BP_MOD_MEMSTORE = (function ()
             }},
             valStr: {value: function(rec)
             {
-                var str;
+                var str = "";
                 if (rec.t) {
                     str += "T}" + rec.t;
                 }
@@ -303,20 +305,28 @@ var BP_MOD_MEMSTORE = (function ()
                 if (rec.y) {
                     str += "Y}" + rec.y;
                 }
+                if (rec.fid) { // since 0.5.19
+                    str += "F}" + rec.fid;
+                }
+                if (rec.fnm) { // since 0.5.19
+                    str += "G}" + rec.fnm;
+                }
                 return str;
             }},
             csvHeader: {value: function ()
             {
-                return "url,fieldName,tagName,id,name,type";
+                return "url,fieldName,tagName,id,name,type,formId,formName";
             }},
             toCSV: {value: function(rec)
             {
                 return  (rec.l.H + (rec.l.P || "")) + COMMA + 
-                        (rec.f || "") + COMMA +
-                        (rec.t || "") + COMMA +
-                        (rec.id|| "") + COMMA +
-                        (rec.n|| "") + COMMA +
-                        (rec.y|| "");
+                        (rec.f  || "") + COMMA +
+                        (rec.t  || "") + COMMA +
+                        (rec.id || "") + COMMA +
+                        (rec.n  || "") + COMMA +
+                        (rec.y  || "") + COMMA +
+                        (rec.fid|| "") + COMMA + // since 0.5.19
+                        (rec.fnm|| ""); // since 0.5.19
             }}
         }));
     }

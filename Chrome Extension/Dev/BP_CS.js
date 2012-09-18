@@ -6,7 +6,7 @@
  */
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT,
-  BP_MOD_ERROR, BP_MOD_WDL, BP_MOD_W$, BP_MOD_TRAITS, DLL_INIT, DLL_INIT_ASYNC */
+  BP_MOD_ERROR, BP_MOD_WDL, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_BOOT */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 /* members el.type,
@@ -36,6 +36,8 @@
     var RecsIterator = IMPORT(m.RecsIterator),
         dt_eRecord = IMPORT(m.dt_eRecord),
         fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
+        fn_userid2= IMPORT(m.fn_userid2),
+        fn_pass2 = IMPORT(m.fn_pass2),
         fn_pass = IMPORT(m.fn_pass);        // Represents data-type password
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
@@ -73,6 +75,10 @@
                                // if the normalized name needs to be used in querySelector
                                // of whether the IDL name will suffice. For the time being
                                // I am steering clear of hyphens and uppercase.
+        sel_fn_u = "[data-"+data_fn+"="+fn_userid+']',
+        sel_fn_p = "[data-"+data_fn+"="+fn_pass+']',
+        sel_ct_u = "[data-"+data_ct+"="+CT_BP_USERID+']',
+        sel_ct_p = "[data-"+data_ct+"="+CT_BP_PASS+']',
         MOD_DB = new MiniDB(),
         MOD_DND,
         MOD_FILL,
@@ -102,10 +108,99 @@
                             // "input[id*=username i],input[id*=user_name i],input[id*=email i],input[id*=userid i],input[id*=logon i]";
 
             m_info = {
-                autoFillable: false
+                autoFillable: false,
+                fill: [],
+                capture: [],
+                clear: function ()
+                {
+                    this.autoFillable = false;
+                    this.fill = [];
+                    this.capture = [];
+                }
             };
         
         function info() {return m_info;}
+        
+        function getCntnr(el, n)
+        {
+            var i, 
+            p = $(el).offsetParent();
+
+            if (p) {
+                return p;
+            }
+            // Return ancestor n levels above
+            for (i=0, p=el.parentElement; (i<n)&&p; i++, p=el.parentElement)
+            {
+                el = p;
+            }
+            
+            return el;
+        }
+        
+        function findPeerU(el)
+        {
+            var peers = [], $peers, 
+                cntnr = el.form || getCntnr(el,6),
+                bVerify, 
+                tabIndex = el.tabIndex,
+                $el = $(el),
+                pos, pos2, h, w;
+            if (cntnr)
+            {
+                //if (fn===fn_pass) {
+                $peers = $(sel_fn_u, cntnr);
+                if ($peers.length === 0) {
+                    // cast a wider net
+                    $peers = $(sel_ct_u);
+                    bVerify = true; // This selection is tentative
+                }
+                //}
+                // else if (fn === fn_userid) {
+                    // $peers = $('[data-untrix_fn=p]', cntnr);
+                // }
+                
+                if ($peers.length > 0)
+                {
+                    if (($peers.length>1) || (bVerify))
+                    {
+                        pos = $el.position();
+                        h = $el.outerHeight();
+                        w = $el.outerWidth();
+                        $peers.each(function(i)
+                        {
+                            if (tabIndex) { 
+                                if (this.tabIndex < tabIndex) {
+                                    peers.push(this);
+                                }
+                            }
+                            else { 
+                                // no tabIndex
+                                pos2 = $(this).position();
+                                if (pos.left === pos2.left) {
+                                    if ((pos.top > pos2.top) && (w===$(this).outerWidth())) {
+                                        // this and el are positioned in a column and this is above el
+                                        peers.push(this);
+                                    }
+                                }
+                                else if (pos.top === pos2.top) {
+                                    if ((pos.left > pos2.left) && (h === $(this).outerHeight())) {
+                                        // this and el are positioned in a row and this is to the left of el
+                                        peers.push(this);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    else // only one verified peer match
+                    {
+                        peers.push($peers[0]);
+                    }
+                }
+            }
+            
+            return peers;
+        }
         
         function onChange(ev)
         {
@@ -120,7 +215,7 @@
                     //$u = $('input[type="text"],input[type="email"],input[type="tel"],input[type="number"]', el.form.elements);
                     // TODO: Take tabindex into account when looking for peer element
                     // TODO: Implement a findPeerElement method that will find the peer element based
-                    // TODO: on tabindex in addition to other cues. tabindex seems to be a very reliable
+                    // TODO: on tabindex in addition to other clues. tabindex seems to be a very reliable
                     // TODO: hint. It may even be used during the initial scan.
                     $u = $('[data-untrix_fn=u]', el.form);
                     if ($u.length === 1)
@@ -349,7 +444,7 @@
                     
                     if (eRecsMap[fn_userid]) { uer = eRecsMap[fn_userid].curr;}
                     if (eRecsMap[fn_pass]) {per = eRecsMap[fn_pass].curr;}
-                    if ((!uDone) && uer) 
+                    if ((!uDone) && uer)
                     {
                         uDone = autoFillEl(uer, u, false, test);
                         if (!uDone && (i===0)) {
@@ -363,7 +458,7 @@
                             //deleteRecord(uer); // TODO: implement deleteRecord
                         }
                     }
-                    if ((!pDone) && per) 
+                    if ((!pDone) && per)
                     {
                         pDone = autoFillEl(per, p, true, test);
                         if (!pDone && (i===0)) {
@@ -389,6 +484,114 @@
                     return true;
                 }
             }
+        }
+        
+        function findPeerP() {}     // TODO
+        function findPeerU() {}     // TODO
+        function scanFillH() {}     // TODO
+        function scanCaptureH(){}   // TODO
+        function scan()
+        {
+            var forms, i, j, l, uEl, uEl2, pEl, pEl2,
+                loc = BP_MOD_CONNECT.newL(g_loc, dt_eRecord);
+            m_info.clear();
+            
+            if (MOD_DB.eRecsMapArray)
+            {
+                // Cycle through eRecords starting with the best URL matching node.
+                l = MOD_DB.eRecsMapArray.length;
+                for (i=0, j=l-1; (i<l) && ((!uEl && !pEl) || (!uEl2 && !pEl2)); ++i, j--)
+                {
+                    eRecsMap = MOD_DB.eRecsMapArray[j];
+                    
+                    if (eRecsMap[fn_userid]) { uer = eRecsMap[fn_userid].curr;}
+                    if (eRecsMap[fn_userid2]) { uer2 = eRecsMap[fn_userid2].curr;}
+                    if (eRecsMap[fn_pass]) {per = eRecsMap[fn_pass].curr;}
+                    if (eRecsMap[fn_pass2]) {per2 = eRecsMap[fn_pass2].curr;}
+                    if ((!uEl)&&(!pEl))
+                    {
+                        if (uer)
+                        {
+                            uEl = findEl(uer);
+                            if (!uEl && (i===0) && loc.equal(uer.l)) {
+                                // The data in the E-Record was an exact URL match
+                                // yet, it has been shown to be not useful.
+                                // Therefore purge it from the K-DB.
+                                deleteRecord(uer); // TODO: implement deleteRecord
+                            }
+                        }
+                        if (per)
+                        {
+                            pEl = findEl(per);
+                            if (!pEl && (i===0) && loc.equal(per.l)) {
+                                // The data in the E-Record was an exact URL match
+                                // yet, it has been shown to be not useful.
+                                // Therefore purge it from the K-DB.
+                                deleteRecord(per); // TODO: implement deleteRecord
+                            }
+                        }
+                    }
+                    
+                    if ((!uEl2) && (!pEl2))
+                    {
+                        if (uer2)
+                        {
+                            uEl2 = findEl(uer2);
+                            if (!uEl2 && (i===0) && loc.equal(uer2.l)) {
+                                // The data in the E-Record was an exact URL match
+                                // yet, it has been shown to be not useful.
+                                // Therefore purge it from the K-DB.
+                                deleteRecord(uer2); // TODO: implement deleteRecord
+                            }
+                        }
+                        if (per2)
+                        {
+                            pEl2 = findEl(per2);
+                            if (!pEl2 && (i===0) && loc.equal(per2.l)) {
+                                // The data in the E-Record was an exact URL match
+                                // yet, it has been shown to be not useful.
+                                // Therefore purge it from the K-DB.
+                                deleteRecord(per2); // TODO: implement deleteRecord
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (uEl && (!pEl)) {
+                pEl = findPeerP(uEl);
+            }
+            else if (pEl && (!uEl)) {
+                uEl = findPeerU(pEl);
+            }
+            else if ((!uEl) && (!pEl)) 
+            {
+                scanFillH();
+            }
+            
+            if (uEl2 && (!pEl2)) {
+                pEl2 = findPeerP(uEl2);
+            }
+            else if (pEl2 && (!uEl2)) {
+                uEl2 = findPeerU(pEl2);
+            }
+            else if ((!uEl2) && (!pEl2)) 
+            {
+                scanCaptureH();
+            }
+                
+            if (uEl||pEl||uEl2||pEl2) {
+                m_info.autoFillable = true;
+            }
+
+            if (uEl || pEl) 
+            {
+                m_info.fill.push({form:getForm(uEl, pEl), 'uEl':uEl, 'pEl':pEl });
+            }
+            if (uEl2 || pEl2)
+            {
+                m_info.capture.push({form:getForm(uEl2,pEl2), 'uEl':uEl2, 'pEl':pEl2});
+            }   
         }
         
         function init()
@@ -500,7 +703,9 @@
         {
             //console.info("dropHandler invoked ! effectAllowed/dropEffect = " + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
      
-            var data, r = matchDTwField(e);
+            var data, 
+                r = matchDTwField(e),
+                el, form;
             
             if (r.isBPDrag) {
                 // Cancel event to tell browser that we've handled it and to prevent it from
@@ -514,7 +719,10 @@
                     // or prevent browser from dropping userid into a password field.
                     e.dataTransfer.dropEffect = 'none';
                 }                     
-                else {
+                else 
+                {
+                    el = e.currentTarget;
+                    form = el.form;
                     // Tell browser to set vlaue of 'current drag operation' to 'copy'
                     e.dataTransfer.dropEffect = 'copy';
     
@@ -523,19 +731,22 @@
                     var eRec = newERecord(e.target.ownerDocument.location,
                                           Date.now(),
                                           e.dataTransfer.getData(CT_BP_FN), // fieldName
-                                          e.target.tagName,
-                                          e.target.id,
-                                          e.target.name,
-                                          e.target.type);
+                                          el.tagName,
+                                          el.id,
+                                          el.name,
+                                          el.type,
+                                          form&&form.id? form.id : undefined,
+                                          form&&form.name? form.name:undefined);
                     saveRecord(eRec, dt_eRecord);
     
                     data = e.dataTransfer.getData(CT_TEXT_PLAIN);
-                    if (data) {
-                        e.target.focus();
-                        e.target.click();
-                        e.target.value = data;
-                        trigger(e.target, 'input');
-                        trigger(e.target, 'change');
+                    if (data) 
+                    {
+                        el.focus();
+                        el.click();
+                        el.value = data;
+                        trigger(el, 'input');
+                        trigger(el, 'change');
                     }
                 }
             }
@@ -601,7 +812,7 @@
                 m_panel = null;
                 // Remember to not keep any data lingering around ! Delete data the moment we're done
                 // using it. Data should not be stored in the page if it is not visible to the user.
-                MOD_DB.clear();
+                MOD_DB.init();
                 return true;
             }
             
@@ -667,7 +878,7 @@
             }
             else 
             {
-                MOD_DB.clear(); // Just to be on the safe side
+                MOD_DB.init(); // Just to be on the safe side
                 BP_MOD_ERROR.logdebug(resp.err);
             }
     
@@ -679,17 +890,18 @@
          * Should do the following:
          * 1. Scan the page for DND and autofill if not already done.
          * 2. Destroy the panel if it is displaying.
-         * 3. Else, ingest DB and show panel.
+         * 3. Else, send a request to get db from background page.
          */
-        function onDllLoad (request)
+        function onDllLoad ()
         {
             MOD_FILL.init(); // scans only if not already done
             MOD_DND.init(); // init only if not already done
     
             if (!MOD_PANEL.destroy()) // destroy returns true if a panel existed and was destroyed
             {
-                MOD_DB.ingest(request.db, request.dbInfo);
-                MOD_PANEL.create();
+                // MOD_DB.ingest(request.db, request.dbInfo);
+                // MOD_PANEL.create();
+                showPanelAsync();
             }
         }
 
@@ -699,7 +911,7 @@
          * Should do the following:
          * 1. Scan the page for DND and autofill if not already done.
          * 2. Destroy the panel if it is displaying.
-         * 3. Else, ingest DB and show panel.
+         * 3. Else, send a request to get db from background page.
          */
         function onClickBP (request, _ /*sender*/, sendResponse)
         {
@@ -717,7 +929,7 @@
          * Should do the following:
          * 1. Scan the page for DND and autofill if not already done.
          * 2. Destroy the panel if it is displaying.
-         * 3. Else, send a request to get dbInfo from background page.
+         * 3. Else, send a request to get db from background page.
          */
         function onClickComm (/*ev*/)
         {
@@ -739,6 +951,7 @@
                 com = document.createElement('command');
                 com.type="command";
                 com.accessKey = 'q';
+                com.tabindex = -1;// ensures that the command won't get sequentially focussed.
                 com.id = "com-untrix-uwallet-click";
                 com.addEventListener('click', func);
                 head.insertBefore(com, head.firstChild);
@@ -747,30 +960,23 @@
             }
         }
         
-        function init()
+        function main()
         {
-            if(isTopLevel(g_win))
-            {
-                registerMsgListener(onClickBP);
-                setupCommand(g_doc, onClickComm);
-            }
-            else
-            {
-                registerMsgListener(onClickBP);
-                setupCommand(g_doc, onClickComm);
-            }
+            registerMsgListener(onClickBP);
+            setupCommand(g_doc, onClickComm);
+            BP_DLL.onClickComm = onClickComm;
+            BP_DLL.onDllLoad = onDllLoad;
         }
 
-        DLL_INIT_ASYNC = onClickComm;
-        DLL_INIT = onDllLoad;
-        
         return Object.freeze(
         {
-            init: init,
+            main: main,
             showPanelAsync: showPanelAsync
         });
     }());
     
-    MOD_CS.init();
+    MOD_CS.main();
     console.log("loaded CS");    
 }(window));
+
+

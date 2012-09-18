@@ -88,22 +88,25 @@ var BP_MOD_CONNECT = (function ()
         url_path:{value:false}
     }));
     
-    function newL (loc, dt)
+    function L(loc, dt)
     {
-        var out = {};
-        if (loc.hostname) {
-            out.H = loc.hostname;
-        }
-        if (DICT_TRAITS[dt].url_path && loc.pathname && (loc.pathname !== "/")) 
+        Object.defineProperties(
         {
-            out.P = loc.pathname;
-        }
-
-        //TODO: URL saved for CSV exports, could be removed to save on memory/storage/processing overhead
-        //out.U = loc.href;
-        return out;
+            H: {enumerable:true,
+                value: (loc.hostname?loc.hostname:undefined)},
+            P: {enumerable:true,
+                value: (DICT_TRAITS[dt].url_path && loc.pathname && (loc.pathname !== "/"))?loc.pathname:undefined}
+            //U = loc.href; Was introduced for CSV exports. Removed later for performance.
+        });
+        Object.seal(this);
     }
-    
+    L.prototype.equal = function(l2)
+    {
+        return ((this.H===l2.H) && (this.P===l2.P));
+    };
+
+    function newL (loc, dt) { return new L(loc,dt); }
+
     /** Pseudo Inheritance */
     function ARec(dt, loc, date)
     {
@@ -122,12 +125,10 @@ var BP_MOD_CONNECT = (function ()
             // as well as on disk and processing cycles as well. This becomes important when one has to
             // ingest thousands of records (ETLD has about 7K records)
             l: {value: newL(loc, dt), enumerable: true},
-            /** USECASE TRAITS PROPERTIES (prefixed with 'ut') */
-            // utNoTmUpdates: {writable:true} // not enumerable so that it won't end-up in the db.
         });
     }
     
-    function ERecord(loc, date, fieldName, tagName, id, name, type)
+    function ERecord(loc, date, fieldName, tagName, id, name, type, formId, formNm)
     {
         ARec.apply(this, [dt_eRecord, loc, date]);
         Object.defineProperties(this, 
@@ -136,7 +137,9 @@ var BP_MOD_CONNECT = (function ()
             t: {value: tagName, enumerable: true},
             id: {value: id, enumerable: true},
             n: {value: name, enumerable: true},
-            y: {value: type, enumerable: true}
+            y: {value: type, enumerable: true},
+            fid:{value: formId, enumerable: true}, // introduced in 0.5.19
+            fnm:{value: formNm, enumerable: true}  // introduced in 0.5.19
         });
         Object.seal(this);
     }
@@ -145,8 +148,8 @@ var BP_MOD_CONNECT = (function ()
     {
         return JSON.stringify(this, null, 2);
     };
-    function newERecord(loc, date, fieldName, tagName, id, name, type) {
-        return new ERecord(loc, date, fieldName, tagName, id, name, type);    
+    function newERecord(loc, date, fieldName, tagName, id, name, type, formId, formNm) {
+        return new ERecord(loc, date, fieldName, tagName, id, name, type, formId, formNm);    
     }
 
     function PRecord(loc, date, userid, pass)

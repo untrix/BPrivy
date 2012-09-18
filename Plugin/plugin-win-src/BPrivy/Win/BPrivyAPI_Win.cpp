@@ -701,16 +701,39 @@ bool BPrivyAPI::_chooseFileXP(bp::JSObject* p)
 	ZeroMemory(&ofn, sizeof(ofn));
 	ofn.lStructSize = sizeof(ofn);
 	//ofn.hwndOwner = hwnd;
-	ofn.lpstrFile = szFile;
 	// Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
 	// use the contents of szFile to initialize itself.
+	ofn.lpstrFile = szFile; // buffer required.
 	ofn.lpstrFile[0] = '\0';
 	ofn.nMaxFile = sizeof(szFile);
 	ofn.lpstrFilter = L"All\0*.*\0Text\0*.TXT\0";
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFileTitle = NULL;
 	ofn.nMaxFileTitle = 0;
-	ofn.lpstrInitialDir = NULL; // We're not specifying any initial directory. Let the system decide.
+	ofn.lpstrInitialDir = NULL; // We're not specifying any initial directory. Let the system decide. See below.
+/*
+	lpstrInitialDir
+LPCTSTR
+The initial directory. The algorithm for selecting the initial directory varies on different platforms.
+
+Windows 7:
+
+If lpstrInitialDir has the same value as was passed the first time the application used an Open or Save As dialog box, the path most recently selected by the user is used as the initial directory. 
+Otherwise, if lpstrFile contains a path, that path is the initial directory. 
+Otherwise, if lpstrInitialDir is not NULL, it specifies the initial directory. 
+If lpstrInitialDir is NULL and the current directory contains any files of the specified filter types, the initial directory is the current directory. 
+Otherwise, the initial directory is the personal files directory of the current user.
+Otherwise, the initial directory is the Desktop folder.
+
+Windows 2000/XP/Vista:
+
+If lpstrFile contains a path, that path is the initial directory. 
+Otherwise, lpstrInitialDir specifies the initial directory. 
+Otherwise, if the application has used an Open or Save As dialog box in the past, the path most recently used is selected as the initial directory. However, if an application is not run for a long time, its saved selected path is discarded. 
+If lpstrInitialDir is NULL and the current directory contains any files of the specified filter types, the initial directory is the current directory. 
+Otherwise, the initial directory is the personal files directory of the current user.
+Otherwise, the initial directory is the Desktop folder.
+*/
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_LONGNAMES | OFN_SHAREAWARE | OFN_DONTADDTORECENT;
 	std::wstring filter;
 	std::wstring title;
@@ -770,7 +793,7 @@ bool BPrivyAPI::_chooseFolderXP(bp::JSObject* p)
 	BROWSEINFOW bi;
 	wchar_t name[MAX_PATH];
 	ZeroMemory(&bi, sizeof(bi));
-	bi.pidlRoot = NULL; // // We're not specifying any initial directory. Let the system decide. (Desktop by default).
+	bi.pidlRoot = NULL; // // We're not specifying any initial directory. A value of null specifies that the namespace root (the Desktop folder) is used..
 	bi.pszDisplayName = name;
 	if (p->HasProperty(PROP_DIALOG_TITLE))
 	try {
