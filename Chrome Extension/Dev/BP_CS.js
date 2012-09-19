@@ -108,99 +108,18 @@
                             // "input[id*=username i],input[id*=user_name i],input[id*=email i],input[id*=userid i],input[id*=logon i]";
 
             m_info = {
-                autoFillable: false,
-                fill: [],
-                capture: [],
+                autoFillable: undefined,
+                signin: undefined,
+                signup: undefined,
                 clear: function ()
                 {
-                    this.autoFillable = false;
-                    this.fill = [];
-                    this.capture = [];
+                    this.autoFillable = undefined;
+                    this.signin = undefined;
+                    this.signup = undefined;
                 }
             };
         
         function info() {return m_info;}
-        
-        function getCntnr(el, n)
-        {
-            var i, 
-            p = $(el).offsetParent();
-
-            if (p) {
-                return p;
-            }
-            // Return ancestor n levels above
-            for (i=0, p=el.parentElement; (i<n)&&p; i++, p=el.parentElement)
-            {
-                el = p;
-            }
-            
-            return el;
-        }
-        
-        function findPeerU(el)
-        {
-            var peers = [], $peers, 
-                cntnr = el.form || getCntnr(el,6),
-                bVerify, 
-                tabIndex = el.tabIndex,
-                $el = $(el),
-                pos, pos2, h, w;
-            if (cntnr)
-            {
-                //if (fn===fn_pass) {
-                $peers = $(sel_fn_u, cntnr);
-                if ($peers.length === 0) {
-                    // cast a wider net
-                    $peers = $(sel_ct_u);
-                    bVerify = true; // This selection is tentative
-                }
-                //}
-                // else if (fn === fn_userid) {
-                    // $peers = $('[data-untrix_fn=p]', cntnr);
-                // }
-                
-                if ($peers.length > 0)
-                {
-                    if (($peers.length>1) || (bVerify))
-                    {
-                        pos = $el.position();
-                        h = $el.outerHeight();
-                        w = $el.outerWidth();
-                        $peers.each(function(i)
-                        {
-                            if (tabIndex) { 
-                                if (this.tabIndex < tabIndex) {
-                                    peers.push(this);
-                                }
-                            }
-                            else { 
-                                // no tabIndex
-                                pos2 = $(this).position();
-                                if (pos.left === pos2.left) {
-                                    if ((pos.top > pos2.top) && (w===$(this).outerWidth())) {
-                                        // this and el are positioned in a column and this is above el
-                                        peers.push(this);
-                                    }
-                                }
-                                else if (pos.top === pos2.top) {
-                                    if ((pos.left > pos2.left) && (h === $(this).outerHeight())) {
-                                        // this and el are positioned in a row and this is to the left of el
-                                        peers.push(this);
-                                    }
-                                }
-                            }
-                        });
-                    }
-                    else // only one verified peer match
-                    {
-                        peers.push($peers[0]);
-                    }
-                }
-            }
-            
-            return peers;
-        }
         
         function onChange(ev)
         {
@@ -264,246 +183,496 @@
          * Autofills element described by 'er' with string 'str'.
          * if dcrpt is true, then decrypts the data before autofilling.
          */
-        function autoFillEl (er, str, dcrpt, test) {
-            var $el, sel, selVisible;
-    
-            if (er.id)
-            {
-                sel = er.t + '[id="'+ er.id + '"]'; // Do not tack-on type here. Some fields omit type
-                                         // which defaults to text when reading but not when selecting.
-            }
-            else if (er.n) // (!er.id), therefore search based on field name
-            {
-                sel = er.t + '[name="' + er.n + '"]' + (er.y? ('[type="'+ er.y + '"]') : '');
-            }
-            
-            selVisible = ':not([hidden])';
-            //$el = $(sel).filter(':visible');
-            $el = $(sel);//.filter(selVisible);
-    
-            $el.each(function(i)
-            {
-                if (!test)
-                {
-                    // NOTE: IE supposedly throws error if you focus hidden fields. If we encounter
-                    // that, then remove the focus() call from below.
-                    this.focus();
-                    this.click();
-                    $(this).val(dcrpt ? decrypt(str) : str);
-                    trigger(this, 'input');
-                    trigger(this, 'change');
-                }
-                //if (er.f === fn_pass) {
-                    BP_MOD_CS_PLAT.addEventListener(this,'change', onChange);
-                //}
-                this.dataset[data_fn] = er.f; // mark the field for access via. selectors.
-            });
-    
-            // One or more elements may have the same name,type and tagName. We'll fill
-            // them all because this is probably a pattern wherein alternate forms are
-            // declared on the page for the same purpose but different environments
-            // e.g. with JS/ without JS (twitter has such a page).
-            
-            if ($el.length) {
-                return true;
-            }
-        }
+        // function autoFillEl (er, str, dcrpt, test) {
+            // var $el, sel, selVisible;
+//     
+            // if (er.id)
+            // {
+                // sel = er.t + '[id="'+ er.id + '"]'; // Do not tack-on type here. Some fields omit type
+                                         // // which defaults to text when reading but not when selecting.
+            // }
+            // else if (er.n) // (!er.id), therefore search based on field name
+            // {
+                // sel = er.t + '[name="' + er.n + '"]' + (er.y? ('[type="'+ er.y + '"]') : '');
+            // }
+//             
+            // selVisible = ':not([hidden])';
+            // //$el = $(sel).filter(':visible');
+            // $el = $(sel);//.filter(selVisible);
+//     
+            // $el.each(function(i)
+            // {
+                // if (!test)
+                // {
+                    // // NOTE: IE supposedly throws error if you focus hidden fields. If we encounter
+                    // // that, then remove the focus() call from below.
+                    // this.focus();
+                    // this.click();
+                    // $(this).val(dcrpt ? decrypt(str) : str);
+                    // trigger(this, 'input');
+                    // trigger(this, 'change');
+                // }
+                // //if (er.f === fn_pass) {
+                    // BP_MOD_CS_PLAT.addEventListener(this,'change', onChange);
+                // //}
+                // this.dataset[data_fn] = er.f; // mark the field for access via. selectors.
+            // });
+//     
+            // // One or more elements may have the same name,type and tagName. We'll fill
+            // // them all because this is probably a pattern wherein alternate forms are
+            // // declared on the page for the same purpose but different environments
+            // // e.g. with JS/ without JS (twitter has such a page).
+//             
+            // if ($el.length) {
+                // return true;
+            // }
+        // }
         
         // Helper function to autoFill. Argument must be supplied even if empty string.
         // Returns true if username could be autofilled.
-        function autoFillUHeuristic(u, test)
+        // function autoFillUHeuristic(u, test)
+        // {
+            // var $uel, rval;
+            // if ((u===undefined || u===null) && (!test))
+            // {
+                // return false;
+            // }
+//             
+            // $uel = $('input[type="text"],input[type=email],input[type="tel"],input[type="number"]').filter(g_uElSel);//.filter(':visible');
+//     
+            // if ($uel.length) 
+            // {
+                // $uel.each(function(index)
+                // {
+                    // if (!test) 
+                    // {
+                        // this.focus();
+                        // this.click();
+                        // $(this).val(u);
+                        // trigger(this, 'input');
+                        // trigger(this, 'change');
+                    // }
+                    // this.dataset[data_fn] = fn_userid; // mark the field for access via. selectors.
+                    // BP_MOD_CS_PLAT.addEventListener(this,'change', onChange);
+                // });
+//                 
+                // rval = true;
+            // }
+            // if (rval !== true)
+            // {
+                // // try case-insensitive match
+                // $uel = $('input[type="text"],input[type=email]');
+                // $uel.each(function(index) // should be $uel.some in case of test.
+                // {
+                    // var id = this.id? this.id.toLowerCase() : "",
+                        // nm = this.name? this.name.toLowerCase() : "",
+                        // found = false,
+                        // copy = g_doc.createElement('input'),
+                        // $copy = $(copy).attr({type:'text', 'id':id, 'name':nm});
+                        // //$copy2 = $('<input type=text' + (id?(' id='+id):('')) + (nm?(' name='+nm):('')) + ' >');
+//                         
+                    // if ($copy.is(g_uElSel))
+                    // {
+                        // if (!test)
+                        // {
+                            // this.focus();
+                            // this.click();
+                            // $(this).val(u);
+                            // trigger(this, 'input');
+                            // trigger(this, 'change');
+                        // }             
+                        // rval = true;
+                        // this.dataset[data_fn] = fn_userid; // mark the field for access via. selectors.
+                        // BP_MOD_CS_PLAT.addEventListener(this,'change', onChange);
+                    // }
+                // });
+            // }
+            // return rval;
+        // }
+    
+        // Helper function to autoFill. Argument must be supplied even if empty string.
+        // Returns true if password could be autofilled.
+        // function autoFillPHeuristic(p, test)
+        // {
+            // var $pel, rval;
+//             
+            // if ((p===undefined || p===null) && (!test))
+            // {
+                // return false;
+            // }
+//     
+            // $pel = $('input[type=password]');//.filter(':visible');
+//             
+            // if ($pel.length) 
+            // {
+                // $pel.each(function()
+                // {
+                    // if (!test)
+                    // {
+                        // this.focus();
+                        // this.click();
+                        // $(this).val(decrypt(p));
+                        // trigger(this, 'input');
+                        // trigger(this, 'change');
+                    // }
+                    // BP_MOD_CS_PLAT.addEventListener(this,'change', onChange);
+                    // this.dataset[data_fn] = fn_pass; // mark the field for access via. selectors.
+                // });
+//             
+                // rval = true;
+            // }
+//             
+            // return rval;        
+        // }
+//         
+        // function autoFill(userid, pass, test) // if arguments are not supplied, takes them from global
+        // {
+            // var eRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone, pRecsMap;
+            // // auto-fill
+            // // if we don't have a stored username/password, then there is nothing
+            // // to autofill.
+//             
+            // if (userid && pass) {
+                // u = userid; p = pass;
+            // }
+            // else if ((!test) && (pRecsMap = MOD_DB.pRecsMap)) 
+            // {
+                // ua = Object.keys(pRecsMap); 
+                // if (ua) 
+                // {
+                    // if (ua.length === 1) {
+                        // u = ua[0];
+                        // p = pRecsMap[ua[0]].curr.p;
+                    // }
+                    // else /*if (ua.length > 1)*/ {
+                        // // if there is more than one username, do not autofill, but
+                        // // try to determine if autofilling is possible.
+                        // test = true;
+                    // }
+                // }
+            // }
+//             
+            // if ((test || (u&&p)) && (MOD_DB.eRecsMapArray))
+            // {
+                // // Cycle through eRecords starting with the
+                // // best URL matching node.
+                // l = MOD_DB.eRecsMapArray.length; uDone=false; pDone=false;
+                // for (i=0, j=l-1; (i<l) && (!pDone) && (!uDone); ++i, j--)
+                // {
+                    // eRecsMap = MOD_DB.eRecsMapArray[j];
+//                     
+                    // if (eRecsMap[fn_userid]) { uer = eRecsMap[fn_userid].curr;}
+                    // if (eRecsMap[fn_pass]) {per = eRecsMap[fn_pass].curr;}
+                    // if ((!uDone) && uer)
+                    // {
+                        // uDone = autoFillEl(uer, u, false, test);
+                        // if (!uDone && (i===0)) {
+                            // // The data in the E-Record was an exact URL match
+                            // // yet, it has been shown to be not useful.
+                            // // Therefore purge it form the K-DB.
+//                           
+                            // // TODO: Can't assume that i===0 implies full url match.
+                            // // Need to construct a URLA from uer.loc and compare it with
+                            // // g_loc. Commenting out for the time being.
+                            // //deleteRecord(uer); // TODO: implement deleteRecord
+                        // }
+                    // }
+                    // if ((!pDone) && per)
+                    // {
+                        // pDone = autoFillEl(per, p, true, test);
+                        // if (!pDone && (i===0)) {
+                            // // The data in the E-Record was an exact URL match
+                            // // yet, it has been shown to be not useful.
+                            // // Therefore purge it form the K-DB.
+//     
+                            // // TODO: Can't assume that i===0 implies full url match.
+                            // // Need to construct a URLA from uer.loc and compare it with
+                            // // g_loc. Commenting out for the time being.
+                            // //deleteRecord(per); // TODO: implement deleteRecord
+                        // }
+                    // }
+                // }
+            // }  
+//     
+            // uDone = uDone || autoFillUHeuristic(u, test);
+            // pDone = pDone || autoFillPHeuristic(p, test);
+            // if (uDone || pDone) 
+            // {
+                // m_info.autoFillable = true;
+                // if (!test) {
+                    // return true;
+                // }
+            // }
+        // }
+        
+        function getCntnr(el, n)
         {
-            var $uel, rval;
-            if ((u===undefined || u===null) && (!test))
+            var i, 
+            p = $(el).offsetParent();
+
+            if (p) {
+                return p;
+            }
+            // Return ancestor n levels above
+            for (i=0, p=el.parentElement; (i<n)&&p; i++, p=el.parentElement)
             {
-                return false;
+                el = p;
             }
             
-            $uel = $('input[type="text"],input[type=email],input[type="tel"],input[type="number"]').filter(g_uElSel);//.filter(':visible');
-    
-            if ($uel.length) 
-            {
-                $uel.each(function(index)
-                {
-                    if (!test) 
-                    {
-                        this.focus();
-                        this.click();
-                        $(this).val(u);
-                        trigger(this, 'input');
-                        trigger(this, 'change');
-                    }
-                    this.dataset[data_fn] = fn_userid; // mark the field for access via. selectors.
-                    BP_MOD_CS_PLAT.addEventListener(this,'change', onChange);
-                });
-                
-                rval = true;
+            return el;
+        }
+        
+        // Returns a jQuery object containing matching fn_userid elements within cntnr
+        function uCandidates(cntnr, bStrict)
+        {
+            var $el, rval, els=[];
+            $el = $('input[type="text"],input[type=email],input[type="tel"],input[type="number"]', $(cntnr));//.filter(':visible');
+            
+            if (bStrict) {
+                $el = $el.filter(g_uElSel);
             }
-            if (rval !== true)
+            
+            if (!$el.length)
             {
                 // try case-insensitive match
-                $uel = $('input[type="text"],input[type=email]');
-                $uel.each(function(index) // should be $uel.some in case of test.
+                $el = $('input[type="text"],input[type=email]', $(cntnr));
+                $el.each(function(index)
                 {
                     var id = this.id? this.id.toLowerCase() : "",
                         nm = this.name? this.name.toLowerCase() : "",
                         found = false,
                         copy = g_doc.createElement('input'),
                         $copy = $(copy).attr({type:'text', 'id':id, 'name':nm});
-                        //$copy2 = $('<input type=text' + (id?(' id='+id):('')) + (nm?(' name='+nm):('')) + ' >');
                         
                     if ($copy.is(g_uElSel))
                     {
-                        if (!test)
+                        els.push(this);
+                    }
+                });
+                
+                $el = $(els);
+            }
+            
+            return $el;
+        }
+
+        // Returns a jQuery object containing matching fn_pass elements within cntnr
+        function pCandidates(cntnr)
+        {
+            return $('input[type=password]', cntnr);//.filter(':visible');
+        }
+
+        // return true if pos1/w1 is above pos2/w2 in the same column
+        function isAbove(pos1, w1, pos2, w2)
+        {
+            return ((pos1.left===pos2.left) &&
+                    (w1===w2) &&
+                    (pos1.top < pos2.top));
+        }
+        
+        function isBelow(pos1, w1, pos2, w2)
+        {
+            return isAbove(pos2, w2, pos1, w1);
+        }
+        
+        function onLeft(pos1, h1, pos2, h2)
+        {
+            return ((pos1.top===pos2.top) &&
+                    (pos1.left < pos2.left) &&
+                    (h1===h2));
+        }
+        
+        function onRight(pos1, h1, pos2, h2)
+        {
+            return onLeft(pos2, h2, pos1, h1);
+        }
+        
+        function findPeers(fn, el)
+        {
+            var peers = [], $peers, 
+                cntnr = el.form || getCntnr(el,6),
+                tabIndex = el.tabIndex,
+                $el = $(el),
+                pos, pos2, h, w;
+            if (cntnr)
+            {
+                if (fn === fn_userid) {
+                    $peers = $(uCandidates(cntnr));
+                }
+                else if (fn === fn_pass) {
+                    $peers = $(pCandidates(cntnr));
+                }
+                
+                if ($peers && ($peers.length > 0))
+                {
+                    if ($peers.length>1)
+                    {
+                        pos = $el.position();
+                        h = $el.outerHeight();
+                        w = $el.outerWidth();
+                        $peers.each(function(i)
                         {
-                            this.focus();
-                            this.click();
-                            $(this).val(u);
-                            trigger(this, 'input');
-                            trigger(this, 'change');
-                        }             
-                        rval = true;
-                        this.dataset[data_fn] = fn_userid; // mark the field for access via. selectors.
-                        BP_MOD_CS_PLAT.addEventListener(this,'change', onChange);
+                            if (tabIndex) 
+                            {
+                                if (fn===fn_userid) {
+                                    if (this.tabIndex < tabIndex) {
+                                        peers.push(this);
+                                    }
+                                }
+                                else if (fn===fn_pass) {
+                                    if (this.tabIndex > tabIndex) {
+                                        peers.push(this);
+                                    }
+                                }
+                            }
+                            else 
+                            { 
+                                // no tabIndex
+                                pos2 = $(this).position();
+                                if (fn===fn_userid) 
+                                {
+                                    if ((isAbove(pos2, $(this).outerWidth(), pos, w)) ||
+                                        (onLeft(pos2, $(this).outerHeight(), pos, h)))
+                                    {
+                                        // this and el are positioned in a column and this is above el
+                                        peers.push(this);
+                                    }
+                                }
+                                else if (fn===fn_pass)
+                                {
+                                    if ((isBelow(pos2, $(this).outerWidth(), pos, w)) ||
+                                        (onRight(pos2, $(this).outerHeight(), pos, h)))
+                                    {
+                                        // this and el are positioned in a column and this is above el
+                                        peers.push(this);
+                                    }                                    
+                                }
+                            }
+                        });
                     }
-                });
-            }
-            return rval;
-        }
-    
-        // Helper function to autoFill. Argument must be supplied even if empty string.
-        // Returns true if password could be autofilled.
-        function autoFillPHeuristic(p, test)
-        {
-            var $pel, rval;
-            
-            if ((p===undefined || p===null) && (!test))
-            {
-                return false;
-            }
-    
-            $pel = $('input[type=password]');//.filter(':visible');
-            
-            if ($pel.length) 
-            {
-                $pel.each(function()
-                {
-                    if (!test)
+                    else // only one verified peer match
                     {
-                        this.focus();
-                        this.click();
-                        $(this).val(decrypt(p));
-                        trigger(this, 'input');
-                        trigger(this, 'change');
-                    }
-                    BP_MOD_CS_PLAT.addEventListener(this,'change', onChange);
-                    this.dataset[data_fn] = fn_pass; // mark the field for access via. selectors.
-                });
-            
-                rval = true;
-            }
-            
-            return rval;        
-        }
-        
-        function autoFill(userid, pass, test) // if arguments are not supplied, takes them from global
-        {
-            var eRecsMap, uer, per, ua, u, p, j, i, l, uDone, pDone, pRecsMap;
-            // auto-fill
-            // if we don't have a stored username/password, then there is nothing
-            // to autofill.
-            
-            if (userid && pass) {
-                u = userid; p = pass;
-            }
-            else if ((!test) && (pRecsMap = MOD_DB.pRecsMap)) 
-            {
-                ua = Object.keys(pRecsMap); 
-                if (ua) 
-                {
-                    if (ua.length === 1) {
-                        u = ua[0];
-                        p = pRecsMap[ua[0]].curr.p;
-                    }
-                    else /*if (ua.length > 1)*/ {
-                        // if there is more than one username, do not autofill, but
-                        // try to determine if autofilling is possible.
-                        test = true;
+                        peers.push($peers[0]);
                     }
                 }
             }
             
-            if ((test || (u&&p)) && (MOD_DB.eRecsMapArray))
+            return peers;
+        }
+        
+        function findEl(eRec)
+        {
+            var $form = $((eRec.fid?('#'+eRec.fid):'') + (eRec.fnm?('[name='+eRec.fnm+']'):'') );
+            return $(eRec.t + (eRec.id?('#'+eRec.id):'') + (eRec.n?('[name='+eRec.n+']'):'') + (eRec.y? ('[type='+eRec.y+']') : ''), $form)[0];
+        }
+        
+        function isSignUp(cntnr, $u, $p)
+        {
+            // TODO: Add pattern match of form name (cntnr.name)
+            return ($p.length>1); // 2 password fields expected in a sign-up form.
+        }
+        
+        function scanHeuristic()
+        {
+            var cntnrs = g_doc.forms, i,
+                info1 = [], info2 = [];
+            
+            if (m_info.done()) {return;}
+            
+            //if (!cntnrs) {cntnrs = [g_doc];}
+            MOD_COMMON.iterArray2(cntnrs,  function (cntnr, i)
             {
-                // Cycle through eRecords starting with the
-                // best URL matching node.
-                l = MOD_DB.eRecsMapArray.length; uDone=false; pDone=false;
-                for (i=0, j=l-1; (i<l) && (!pDone) && (!uDone); ++i, j--)
+                var $p = pCandidates(cntnr), $u,
+                    form = {form:cntnr};
+                
+                // Skip the form if its already been seen before.
+                if (!m_info.contains(cntnr))
                 {
-                    eRecsMap = MOD_DB.eRecsMapArray[j];
+                    if ($p.length>0) 
+                    {
+                        form.ps = $p;
+                        // Multiple password fields found inside this form.
+                        // Loop through password fields and collect all peer userid fields.
+                        MOD_COMMON.iterArray2($p, function(p, i)
+                        {
+                            var $u2 = $(findPeers(fn_userid, p));
+                            if ($u2.length)
+                            {
+                                form.us = $u2.add(form.us); // returns a union of the sets.
+                            }
+                        });
+                        info1.push(form);
+                    }
+                    else 
+                    {   // No password fields found inside this form. Do a strict match for userid fields.
+                        // Strict matching will leave out email fields though. We pick only one of the
+                        // matched fields.
+                        $u = uCandidates(cntnr, true);
+                        if ($u.length>0)
+                        {
+                            form.us = $u;
+                            info2.push(form);
+                        }
+                    }
+                }
+            });
+            
+            if (info1.length || info2.length)
+            {
+                if (!(m_info.signin || m_info.signup))
+                {   // We have niether signin nor signup forms. We don't expect more than
+                    // two entries in info1 and info2 combined.
+                    if (info1.length>1) 
+                    {
+                        i = (info1[0].count > info1[1].count) ? 1 : 0;
+                        m_info.signin = info1[i];
+                        m_info.signup = info1[1-i];
+                    }
+                    else if (info1.length===1)
+                    {
+                        if (info2.length) {
+                            m_info.signup = info1.pop();
+                            m_info.signin = info2.pop();
+                        }
+                        else {
+                            m_info.signin = info1.pop();
+                        }
+                    }
+                    else if (info2.length>1) 
+                    {
+                        i = (info2[0].count > info2[1].count) ? 1 : 0;
+                        m_info.signin = info2[i];
+                        m_info.signin = info2[1-i];
+                    }
+                    else if (info2.length===1) {
+                        m_info.signin = info2.pop();
+                    }
+                }
+                else if (!m_info.signin)
+                {
                     
-                    if (eRecsMap[fn_userid]) { uer = eRecsMap[fn_userid].curr;}
-                    if (eRecsMap[fn_pass]) {per = eRecsMap[fn_pass].curr;}
-                    if ((!uDone) && uer)
-                    {
-                        uDone = autoFillEl(uer, u, false, test);
-                        if (!uDone && (i===0)) {
-                            // The data in the E-Record was an exact URL match
-                            // yet, it has been shown to be not useful.
-                            // Therefore purge it form the K-DB.
-                          
-                            // TODO: Can't assume that i===0 implies full url match.
-                            // Need to construct a URLA from uer.loc and compare it with
-                            // g_loc. Commenting out for the time being.
-                            //deleteRecord(uer); // TODO: implement deleteRecord
-                        }
-                    }
-                    if ((!pDone) && per)
-                    {
-                        pDone = autoFillEl(per, p, true, test);
-                        if (!pDone && (i===0)) {
-                            // The data in the E-Record was an exact URL match
-                            // yet, it has been shown to be not useful.
-                            // Therefore purge it form the K-DB.
-    
-                            // TODO: Can't assume that i===0 implies full url match.
-                            // Need to construct a URLA from uer.loc and compare it with
-                            // g_loc. Commenting out for the time being.
-                            //deleteRecord(per); // TODO: implement deleteRecord
-                        }
-                    }
-                }
-            }  
-    
-            uDone = uDone || autoFillUHeuristic(u, test);
-            pDone = pDone || autoFillPHeuristic(p, test);
-            if (uDone || pDone) 
-            {
-                m_info.autoFillable = true;
-                if (!test) {
-                    return true;
                 }
             }
         }
-        
-        function findPeerP() {}     // TODO
-        function findPeerU() {}     // TODO
-        function scanFillH() {}     // TODO
-        function scanCaptureH(){}   // TODO
+
         function scan()
         {
-            var forms, i, j, l, uEl, uEl2, pEl, pEl2,
+            var i, j, l, uEl, uEl2, pEl, pEl2, eRecsMap, uer, per, uer2, per2,
                 loc = BP_MOD_CONNECT.newL(g_loc, dt_eRecord);
             m_info.clear();
             
-            if (MOD_DB.eRecsMapArray)
+            if (MOD_DB.eRecsMapArray.length)
             {
                 // Cycle through eRecords starting with the best URL matching node.
+                // By assumption, there can be at the most signin form and one signup
+                // form in a frame. Therefore, by design, we capture at most one set of
+                // signin eRecords and at most one set of signup eRecords. These assumptions
+                // are embodied in the following code.
                 l = MOD_DB.eRecsMapArray.length;
                 for (i=0, j=l-1; (i<l) && ((!uEl && !pEl) || (!uEl2 && !pEl2)); ++i, j--)
                 {
                     eRecsMap = MOD_DB.eRecsMapArray[j];
-                    
+
                     if (eRecsMap[fn_userid]) { uer = eRecsMap[fn_userid].curr;}
                     if (eRecsMap[fn_userid2]) { uer2 = eRecsMap[fn_userid2].curr;}
                     if (eRecsMap[fn_pass]) {per = eRecsMap[fn_pass].curr;}
@@ -531,7 +700,7 @@
                             }
                         }
                     }
-                    
+
                     if ((!uEl2) && (!pEl2))
                     {
                         if (uer2)
@@ -559,46 +728,63 @@
             }
 
             if (uEl && (!pEl)) {
-                pEl = findPeerP(uEl);
+                pEl = findPeers(fn_pass, uEl)[0];
             }
             else if (pEl && (!uEl)) {
-                uEl = findPeerU(pEl);
-            }
-            else if ((!uEl) && (!pEl)) 
-            {
-                scanFillH();
+                uEl = findPeers(fn_userid, pEl)[0];
             }
             
             if (uEl2 && (!pEl2)) {
-                pEl2 = findPeerP(uEl2);
+                pEl2 = findPeers(fn_pass, uEl2)[0];
             }
             else if (pEl2 && (!uEl2)) {
-                uEl2 = findPeerU(pEl2);
-            }
-            else if ((!uEl2) && (!pEl2)) 
-            {
-                scanCaptureH();
+                uEl2 = findPeers(fn_userid, pEl2)[0];
             }
                 
-            if (uEl||pEl||uEl2||pEl2) {
-                m_info.autoFillable = true;
-            }
-
             if (uEl || pEl) 
             {
-                m_info.fill.push({form:getForm(uEl, pEl), 'uEl':uEl, 'pEl':pEl });
+                m_info.signin = {form:uEl.form, 'us':[uEl], 'ps':[pEl] };
             }
             if (uEl2 || pEl2)
             {
-                m_info.capture.push({form:getForm(uEl2,pEl2), 'uEl':uEl2, 'pEl':pEl2});
-            }   
+                m_info.signup = {form:uEl2.form, 'us':[uEl2], 'ps':[pEl2]};
+            }
+            
+            if ( !((uEl || pEl) && (uEl2 || pEl2)) )
+            {
+                scanHeuristic();
+            }
+            
+            m_info.autoFillable = Boolean(m_info.signin);
         }
         
+        // Assumes input element and fills it
+        function fill(inp, val)
+        {
+            // NOTE: IE supposedly throws error if you focus hidden fields. If we encounter
+            // that, then remove the focus() call from below.
+            inp.focus();
+            inp.click();
+            $(inp).val(val);
+            trigger(inp, 'input');
+            trigger(inp, 'change');
+        }
+        
+        function autoFill(userid, pass)
+        {
+            var u, p, pRecsMap;
+
+            if (m_info.signin)
+            {
+                if (m_info.signin.uEl) {fill(m_info.signin.uEl, userid);}
+                if (m_info.signin.pEl) {fill(m_info.signin.pEl, decrypt(pass));}
+            }        }
+
         function init()
         {
             if (!g_bInited) {try
             {
-                mod_fill.autoFill(null, null, true); // test only, do not actually fill
+                scan();
                 g_bInited = true;
             }
             catch (ex)

@@ -636,11 +636,12 @@ var BP_MOD_WDL = (function ()
             reload = ctx.reload,
             autoFill = ctx.autoFill,
             onClosed = ctx.onClosed;
+        
         return {
         cons:Panel, // static prototype object.
         tag:"div",
         attr:{ id:eid_panel },
-        css:{ position:'fixed', top:'0px', 'right':"0px" },
+        css:{ position:'fixed', top:'0px', 'right':'0px' },
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:loc },
         iface:{ _reload:reload, id:eid_panel, autoFill:autoFill, onClosed:onClosed },

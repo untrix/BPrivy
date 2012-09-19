@@ -90,10 +90,10 @@ var BP_MOD_CONNECT = (function ()
     
     function L(loc, dt)
     {
-        Object.defineProperties(
+        Object.defineProperties(this,
         {
             H: {enumerable:true,
-                value: (loc.hostname?loc.hostname:undefined)},
+                value: (loc.hostname || undefined)},
             P: {enumerable:true,
                 value: (DICT_TRAITS[dt].url_path && loc.pathname && (loc.pathname !== "/"))?loc.pathname:undefined}
             //U = loc.href; Was introduced for CSV exports. Removed later for performance.
@@ -105,7 +105,9 @@ var BP_MOD_CONNECT = (function ()
         return ((this.H===l2.H) && (this.P===l2.P));
     };
 
-    function newL (loc, dt) { return new L(loc,dt); }
+    function newL (loc, dt) { 
+        return (new L(loc,dt)); 
+    }
 
     /** Pseudo Inheritance */
     function ARec(dt, loc, date)

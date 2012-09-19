@@ -688,7 +688,7 @@ var BP_MOD_FILESTORE = (function()
             iterDTM (self, self, dtl, 
             function anonVisitCatM(dt, catM)
             {
-                iterArray2(catl || DB_FS.cats_Load, self, 
+                iterArray2(catl || DB_FS.cats_Load, self,
                 function anonApplyEntM (cat)
                 {
                     var entM = catM[cat];

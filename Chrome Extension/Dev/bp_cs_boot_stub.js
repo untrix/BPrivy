@@ -5,5 +5,5 @@
  */
 if (BP_MOD_BOOT.scan(document))
 {
-    BP_DLL.cs_init_async();
+    BP_DLL.onClickComm();
 }

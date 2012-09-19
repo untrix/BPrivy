@@ -246,14 +246,17 @@ var BP_MOD_COMMON = (function()
     // Similar to forEach, but not the same. This is here because forEach is said
     // to be slower than a for-loop ! Calls func with the array-item as first argument
     // followed by all arguments passed to iterArray.
-    // 'this' is mapped to thisArg.
+    // 'this' is mapped to thisArg. A return value of true from func will break the
+    // loop.
     //
     function iterArray2 (a, thisArg, func, ctx)
     {
         var n = a.length, i;
         for (i=0; i<n; i++)
         {
-            func.apply(thisArg, [a[i], ctx]);
+            if (func.apply(thisArg, [a[i], ctx]) === true) {
+                break;
+            }
         } 
     }
     

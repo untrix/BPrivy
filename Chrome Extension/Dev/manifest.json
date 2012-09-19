@@ -11,7 +11,7 @@
 	   },
   "permissions": ["contextMenus", "tabs", "webRequest", "<all_urls>"],
   "background": {"page": "bp_Main.html"},
-  "content_scripts": [
+  "content_scripts1": [
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     "js": ["bp_cs_boot.cat.js"],
@@ -19,7 +19,7 @@
     "all_frames": true
     }
   ],
-  "content_scripts2": [
+  "content_scripts": [
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     "js": ["tp/jquery.js",
@@ -28,7 +28,6 @@
            "bp_cs.cat.js",
            "bp_cs_boot_stub.js"],
     "run_at": "document_end",
-    "all_frames": true,
     "css": ["bp.css"]
     }
   ],
