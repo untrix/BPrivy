@@ -212,17 +212,17 @@ var BP_MOD_COMMON = (function()
     // 'this' is mapped to thisArg.
     //
     // DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED
-    function iterArray (a, func, ctx, thisArg)
-    {
-        var n = a.length,
-            i;
-            // convert arguments into an array. Omit 'o', 'this' and 'func' arguments.
-            //ctx = Array.prototype.slice.apply(arguments, [3]);
-        for (i=0; i<n; i++)
-        {
-            func.apply(thisArg, [a[i], ctx]);
-        } 
-    }    
+    // function iterArray (a, func, ctx, thisArg)
+    // {
+        // var n = a.length,
+            // i;
+            // // convert arguments into an array. Omit 'o', 'this' and 'func' arguments.
+            // //ctx = Array.prototype.slice.apply(arguments, [3]);
+        // for (i=0; i<n; i++)
+        // {
+            // func.apply(thisArg, [a[i], ctx]);
+        // } 
+    // }    
     
     /**
      *                  Replaces IterKeys
@@ -260,13 +260,13 @@ var BP_MOD_COMMON = (function()
         } 
     }
     
-    function concatArray (dst, frag)
-    {
-        iterArray(frag, function (item, dst)
-        {
-            dst.push(item);
-        }, dst);
-    }
+    // function concatArray (dst, frag)
+    // {
+        // iterArray2(frag, null, function (item, dst)
+        // {
+            // dst.push(item);
+        // }, dst);
+    // }
     
     var iface = {};
     Object.defineProperties(iface, 
@@ -290,10 +290,9 @@ var BP_MOD_COMMON = (function()
         clear: {value: clear},
         delProps: {value: delProps},
         iterKeys: {value: iterKeys},
-        iterArray: {value: iterArray},
         iterArray2:{value: iterArray2},
         iterObj:{value:iterObj},
-        concatArray: {value: concatArray},
+        //concatArray: {value: concatArray},
         EMPTY_OBJECT: {value: EMPTY_OBJECT},
         EMPTY_ARRAY: {value: EMPTY_ARRAY}
     });

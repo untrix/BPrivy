@@ -93,8 +93,47 @@
 
     MOD_FILL = (function()
     {
-        var mod_fill,
-            g_bInited,
+        function FormInfo(form, us, ps)
+        {
+            Object.defineProperties(this,
+            {
+                'form': {value:form, writable:true, enumerable:true},// form DOM element
+                'us': {value:us, writable:true, enumerable:true}, // array-like collection of userid field DOM elements
+                'ps': {value:ps, writable:true, enumerable:true}, // array-like collection of password field DOM elements
+            });
+        }
+        FormInfo.prototype.count = function ()
+        {
+            if (this.form) {return this.form.elements.length;}
+            else {return (this.us?this.us.length:0) + (this.ps?this.ps.length:0);}
+        };
+        
+        function FillInfo()
+        {
+            Object.defineProperties(this,
+            {
+                autoFillable: {writable:true, enumerable:true},
+                signin: {writable:true, enumerable:true}, // object of type FormInfo
+                signup: {writable:true, enumerable:true} // object of type FormInfo
+            });
+        }
+        FillInfo.prototype.clear = function ()
+        {
+            this.autoFillable = undefined;
+            this.signin = undefined;
+            this.signup = undefined;
+        };
+        FillInfo.prototype.done = function ()
+        {
+            return (this.signin && this.signup);
+        };
+        FillInfo.prototype.contains = function (form)
+        {
+            return ((this.signin && (this.signin.form===form)) ||
+                    (this.signup && (this.signup.form===form))  );
+        };
+        
+        var g_bInited,
             g_uElSel =  "[name=userid],[name=username],#userid,#username,[name=id],[name=uid],#id,#uid,[name=user],[name=uname],#user,#uname," +
                         "[name*=login],[name*=identity],[name*=accountname],[name*=signin]," +
                         "[name*=username],[name*=user_name],[name*=userid],[name*=logon],[name*=user_id]," +
@@ -107,18 +146,8 @@
                             // "input[id*=login i],input[id*=identity i],input[id*=accountname i],input[id*=signin i]," +
                             // "input[id*=username i],input[id*=user_name i],input[id*=email i],input[id*=userid i],input[id*=logon i]";
 
-            m_info = {
-                autoFillable: undefined,
-                signin: undefined,
-                signup: undefined,
-                clear: function ()
-                {
-                    this.autoFillable = undefined;
-                    this.signin = undefined;
-                    this.signup = undefined;
-                }
-            };
-        
+            m_info = new FillInfo();
+
         function info() {return m_info;}
         
         function onChange(ev)
@@ -423,20 +452,26 @@
         }
         
         // Returns a jQuery object containing matching fn_userid elements within cntnr
-        function uCandidates(cntnr, bStrict)
+        function uCandidates(cntxt, bStrict)
         {
-            var $el, rval, els=[];
-            $el = $('input[type="text"],input[type=email],input[type="tel"],input[type="number"]', $(cntnr));//.filter(':visible');
+            var $el, rval, els=[], $el1;
+            //$el = 
+            if (cntxt.elements) {
+                $el1 = $(cntxt.elements).filter('input[type="text"],input[type="email"],input[type="tel"],input[type="number"]');
+            }
+            else {
+                $el1 = $('input[type="text"],input[type="email"],input[type="tel"],input[type="number"]', $(cntxt));//.filter(':visible');
+            }
             
             if (bStrict) {
-                $el = $el.filter(g_uElSel);
+                $el = $el1.filter(g_uElSel);
             }
+            else { $el = $el1; }
             
             if (!$el.length)
             {
-                // try case-insensitive match
-                $el = $('input[type="text"],input[type=email]', $(cntnr));
-                $el.each(function(index)
+                // try case-insensitive filtering
+                $el1.each(function(index)
                 {
                     var id = this.id? this.id.toLowerCase() : "",
                         nm = this.name? this.name.toLowerCase() : "",
@@ -457,9 +492,14 @@
         }
 
         // Returns a jQuery object containing matching fn_pass elements within cntnr
-        function pCandidates(cntnr)
+        function pCandidates(cntxt)
         {
-            return $('input[type=password]', cntnr);//.filter(':visible');
+            if (cntxt.elements) {
+                return $(cntxt.elements || cntxt).filter('input[type=password]');
+            }
+            else {
+                return $('input[type=password]', $(cntxt));//.filter(':visible');
+            }
         }
 
         // return true if pos1/w1 is above pos2/w2 in the same column
@@ -574,34 +614,35 @@
         
         function scanHeuristic()
         {
-            var cntnrs = g_doc.forms, i,
-                info1 = [], info2 = [];
+            var cntnrs = g_doc.forms,
+                info1 = [], // forms with one or more password fields 
+                info2 = []; // forms without any password fields
             
             if (m_info.done()) {return;}
             
             //if (!cntnrs) {cntnrs = [g_doc];}
-            MOD_COMMON.iterArray2(cntnrs,  function (cntnr, i)
+            MOD_COMMON.iterArray2(cntnrs, null, function (cntnr)
             {
                 var $p = pCandidates(cntnr), $u,
-                    form = {form:cntnr};
+                    fmInfo = new FormInfo(cntnr);
                 
                 // Skip the form if its already been seen before.
                 if (!m_info.contains(cntnr))
                 {
                     if ($p.length>0) 
                     {
-                        form.ps = $p;
+                        fmInfo.ps = $p;
                         // Multiple password fields found inside this form.
                         // Loop through password fields and collect all peer userid fields.
-                        MOD_COMMON.iterArray2($p, function(p, i)
+                        MOD_COMMON.iterArray2($p, null, function(p)
                         {
                             var $u2 = $(findPeers(fn_userid, p));
                             if ($u2.length)
                             {
-                                form.us = $u2.add(form.us); // returns a union of the sets.
+                                fmInfo.us = $u2.add(fmInfo.us); // union of the two sets.
                             }
                         });
-                        info1.push(form);
+                        info1.push(fmInfo);
                     }
                     else 
                     {   // No password fields found inside this form. Do a strict match for userid fields.
@@ -610,8 +651,8 @@
                         $u = uCandidates(cntnr, true);
                         if ($u.length>0)
                         {
-                            form.us = $u;
-                            info2.push(form);
+                            fmInfo.us = $u;
+                            info2.push(fmInfo);
                         }
                     }
                 }
@@ -619,38 +660,57 @@
             
             if (info1.length || info2.length)
             {
-                if (!(m_info.signin || m_info.signup))
-                {   // We have niether signin nor signup forms. We don't expect more than
-                    // two entries in info1 and info2 combined.
-                    if (info1.length>1) 
-                    {
-                        i = (info1[0].count > info1[1].count) ? 1 : 0;
-                        m_info.signin = info1[i];
-                        m_info.signup = info1[1-i];
-                    }
-                    else if (info1.length===1)
-                    {
-                        if (info2.length) {
-                            m_info.signup = info1.pop();
-                            m_info.signin = info2.pop();
-                        }
-                        else {
-                            m_info.signin = info1.pop();
-                        }
-                    }
-                    else if (info2.length>1) 
-                    {
-                        i = (info2[0].count > info2[1].count) ? 1 : 0;
-                        m_info.signin = info2[i];
-                        m_info.signin = info2[1-i];
-                    }
-                    else if (info2.length===1) {
-                        m_info.signin = info2.pop();
-                    }
-                }
-                else if (!m_info.signin)
-                {
+                var req = (m_info.signin?0:1) + (m_info.signup?0:1),
+                    sel1, i,
+                    info;
                     
+                if (req)
+                {
+                    if (req===1) // One form has already been assigned
+                    {
+                        // In this situation info1 and info2 combined should have at the 
+                        // most one form between them. So we go with that assumption and
+                        // check info1 first because it has password fields, while info2
+                        // doesn't.
+                        sel1 = info1.length? info1[0] : info2[0];
+                        if (!m_info.signin) {m_info.signin = sel1;}
+                        else if (!m_info.signup) {m_info.signup = sel1;}
+                    }
+                    else if (req===2) // both form types remain to be assigned
+                    {
+                        info = info1.concat(info2);
+                        // In this situation info1 and info2 combined should normally have
+                        // at the most two forms. That is we expect (tot<=2). But of course
+                        // make sure to not error-out if tot>2.
+                        if (info.length>1)
+                        {   // There are two or more matching forms on the page.
+
+                            // We assume that (info.length <= 2)
+                            i = (info[0].count() > info[1].count()) ? 1 : 0;
+                            m_info.signin = info[i];  // form with lesser fields of the two
+                            m_info.signup = info[1-i];// from with more fields of the two
+                        }
+                        else if (info.length===1)
+                        {   // There is only one matching form on the page. We need to
+                            // categorize it either as a signin or a signup form.
+
+                            // We assume that a signup form will have two password fields
+                            // and a sign-in form will have only one password field. However
+                            // that may not be always true. And in those cases we'll depend
+                            // on eRecords being either generated by the user or pre-canned
+                            // by us.
+                            // In at least one sign-in form I've seen two password
+                            // fields (the second one was for pin number). But mostly
+                            // only signup froms have two passwords on them. However,
+                            // on Facebook's signup form, there is only one password field.
+                            if (info[0].ps.length>1) {
+                                m_info.signup = info[0];
+                            }
+                            else {
+                                m_info.signin = info[0];
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -743,11 +803,11 @@
                 
             if (uEl || pEl) 
             {
-                m_info.signin = {form:uEl.form, 'us':[uEl], 'ps':[pEl] };
+                m_info.signin = new FormInfo(uEl.form, [uEl], [pEl]);//{form:uEl.form, 'us':[uEl], 'ps':[pEl] };
             }
             if (uEl2 || pEl2)
             {
-                m_info.signup = {form:uEl2.form, 'us':[uEl2], 'ps':[pEl2]};
+                m_info.signup = new FormInfo(uEl2.form, [uEl2], [pEl2]);//{form:uEl2.form, 'us':[uEl2], 'ps':[pEl2]};
             }
             
             if ( !((uEl || pEl) && (uEl2 || pEl2)) )
@@ -759,15 +819,18 @@
         }
         
         // Assumes input element and fills it
-        function fill(inp, val)
+        function fill(inps, val)
         {
             // NOTE: IE supposedly throws error if you focus hidden fields. If we encounter
             // that, then remove the focus() call from below.
-            inp.focus();
-            inp.click();
-            $(inp).val(val);
-            trigger(inp, 'input');
-            trigger(inp, 'change');
+            MOD_COMMON.iterArray2(inps, null, function(inp)
+            {
+                inp.focus();
+                inp.click();
+                $(inp).val(val);
+                trigger(inp, 'input');
+                trigger(inp, 'change');
+            });
         }
         
         function autoFill(userid, pass)
@@ -776,8 +839,8 @@
 
             if (m_info.signin)
             {
-                if (m_info.signin.uEl) {fill(m_info.signin.uEl, userid);}
-                if (m_info.signin.pEl) {fill(m_info.signin.pEl, decrypt(pass));}
+                if (m_info.signin.us) {fill(m_info.signin.us, userid);}
+                if (m_info.signin.ps) {fill(m_info.signin.ps, decrypt(pass));}
             }        }
 
         function init()
@@ -793,14 +856,12 @@
             }}
         }
         
-        mod_fill = Object.freeze(
+        return Object.freeze(
         {
             info: info,
             autoFill: autoFill,
             init: init
         });
-        
-        return mod_fill;
     }());
 
     MOD_DND = (function()
@@ -1059,7 +1120,7 @@
             if (resp.result===true)
             {
                 var db = resp.db;
-                console.info("cbachShowPanel@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
+                console.info("cbackShowPanel@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
                 MOD_DB.ingest(resp.db, resp.dbInfo);
             }
             else 

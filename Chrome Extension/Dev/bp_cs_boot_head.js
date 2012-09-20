@@ -4,8 +4,7 @@ var BP_MOD_BOOT = (function()
     /** Intelligently returns true if the element is a password field */
     function isPassword(el)
     {
-       if (el.tagName.toLowerCase() !== 'input') {return false;}
-       return (el.type === "password");
+       return ((el.tagName.toLowerCase() === 'input') && (el.type === "password"));
     }
 
     // function isButton(el)
@@ -17,9 +16,10 @@ var BP_MOD_BOOT = (function()
     
     function hasPass(form)
     {
-        return Array.prototype.some.apply(form.elements,[function(con,i)
+        return Array.prototype.some.apply(form.elements,[function(el)
         {
-            if (isPassword(con)) {return true;}
+            //if (isPassword(con)) {return true;}
+            return ((el.tagName.toLowerCase() === 'input') && (el.type === "password"));
         }]);
     }
     
