@@ -166,6 +166,10 @@ var BP_MOD_WDL = (function ()
                 dbName: {configurable:true, enumerable:true},
                 dbPath: {configurable:true, enumerable:true}
             });
+        },
+        has: function (username)
+        {
+            return (Object.keys(this.pRecsMap).indexOf(username) !== (-1));
         }
     });
     

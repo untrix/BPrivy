@@ -22,6 +22,7 @@
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
     var MOD_COMMON = IMPORT(m),
+        iterArray2 = IMPORT(m.iterArray2),
         encrypt = IMPORT(m.encrypt),
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
@@ -30,11 +31,13 @@
     m = BP_MOD_CS_PLAT;
     var registerMsgListener = IMPORT(m.registerMsgListener);
     var addEventListener = IMPORT(m.addEventListener), // Compatibility function
+        addEventListeners = IMPORT(m.addEventListeners),
         trigger = IMPORT(m.trigger);
     /** @import-module-begin Traits */
     m = IMPORT(BP_MOD_TRAITS);
     var RecsIterator = IMPORT(m.RecsIterator),
         dt_eRecord = IMPORT(m.dt_eRecord),
+        dt_pRecord = IMPORT(m.dt_pRecord),
         fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
         fn_userid2= IMPORT(m.fn_userid2),
         fn_pass2 = IMPORT(m.fn_pass2),
@@ -44,7 +47,9 @@
     var getRecs = IMPORT(m.getRecs),
         deleteRecord = IMPORT(m.deleteRecord),
         saveRecord = IMPORT(m.saveRecord),
+        tempRec = IMPORT(m.tempRec),
         newERecord = IMPORT(m.newERecord),
+        newPRecord = IMPORT(m.newPRecord),
         panelClosed = IMPORT(m.panelClosed);
     /** @import-module-begin */
     m = BP_MOD_WDL;
@@ -93,52 +98,16 @@
 
     MOD_FILL = (function()
     {
-        function FormInfo(form, us, ps)
-        {
-            Object.defineProperties(this,
-            {
-                'form': {value:form, writable:true, enumerable:true},// form DOM element
-                'us': {value:us, writable:true, enumerable:true}, // array-like collection of userid field DOM elements
-                'ps': {value:ps, writable:true, enumerable:true}, // array-like collection of password field DOM elements
-            });
-        }
-        FormInfo.prototype.count = function ()
-        {
-            if (this.form) {return this.form.elements.length;}
-            else {return (this.us?this.us.length:0) + (this.ps?this.ps.length:0);}
-        };
-        
-        function FillInfo()
-        {
-            Object.defineProperties(this,
-            {
-                autoFillable: {writable:true, enumerable:true},
-                signin: {writable:true, enumerable:true}, // object of type FormInfo
-                signup: {writable:true, enumerable:true} // object of type FormInfo
-            });
-        }
-        FillInfo.prototype.clear = function ()
-        {
-            this.autoFillable = undefined;
-            this.signin = undefined;
-            this.signup = undefined;
-        };
-        FillInfo.prototype.done = function ()
-        {
-            return (this.signin && this.signup);
-        };
-        FillInfo.prototype.contains = function (form)
-        {
-            return ((this.signin && (this.signin.form===form)) ||
-                    (this.signup && (this.signup.form===form))  );
-        };
-        
-        var g_bInited,
-            g_uElSel =  "[name=userid],[name=username],#userid,#username,[name=id],[name=uid],#id,#uid,[name=user],[name=uname],#user,#uname," +
+        var data_finfo = 'finfo',
+            g_bInited,
+            g_uSel = 'input[type="text"],input:not([type]),input[type="email"],input[type="tel"],input[type="number"]',
+            g_uSel2 =  "[name=userid],[name=username],#userid,#username,[name=id],[name=uid],#id,#uid,[name=user],[name=uname],#user,#uname," +
                         "[name*=login],[name*=identity],[name*=accountname],[name*=signin]," +
                         "[name*=username],[name*=user_name],[name*=userid],[name*=logon],[name*=user_id]," +
                         "[id*=login],[id*=identity],[id*=accountname],[id*=signin]," +
                         "[id*=username],[id*=user_name],[id*=userid],[id*=logon],[id*=user_id]",
+            g_uSel3 = "[name*=email],[name*=phone],[id*=email],[id*=phone]",
+            DECISION_TAB = []; // Defined later
 
             // var g_uIdSel2 = "input[name=id i],input[name=uid i],input[name=user i],input[name=uname i],input[id=id i],input[id=uid i],input[id=user i],input[id=uname i]";
             // var g_uPattSel2="input[name*=login i],input[name*=identity i],input[name*=accountname i],input[name*=signin i]," +
@@ -146,67 +115,366 @@
                             // "input[id*=login i],input[id*=identity i],input[id*=accountname i],input[id*=signin i]," +
                             // "input[id*=username i],input[id*=user_name i],input[id*=email i],input[id*=userid i],input[id*=logon i]";
 
-            m_info = new FillInfo();
+        function FormInfo(form, us, ps, buddys)
+        {
+            Object.defineProperties(this,
+            {
+                'form':   {value:form || [], writable:true, enumerable:true},// form DOM element. Could be a non-form element too.
+                // An array or jQuery object of userid field DOM elements.
+                'us':     {value: us || [], writable:true, enumerable:true},
+                // An array or jQuery object of password field DOM elements
+                'ps':     {value: ps || [], writable:true, enumerable:true},
+                'buddys': {value: buddys || [], writable:true, enumerable:true},
+                'bTabbed':{writable:true, enumerable:true}, // true if a child input has positive tabIndex.
+                'tabIndex':{writable:true, enumerable:true} // similiar to tabIndex IDL attrib of elements.
+            });
+        }
+        FormInfo.getVal = function(els)
+        {
+            var val;
+            iterArray2(els, null, function(el)
+            {
+                if (el.value) {
+                    val = el.value;
+                    return true;
+                }
+            });
+            
+            return val;
+        };
+        FormInfo.prototype.count = function ()
+        {
+            return ( (this.form && this.form.elements) ? (this.form.elements.length||0) : 
+                     ((this.us?(this.us.length||0):0) + (this.ps?(this.ps.length||0):0)) );
+        };
+        FormInfo.prototype.hook = function ()
+        {   // Listen for change events for auto-capture. We only hook-up if we have a
+            // userid field and a password field, because onChange requires both.
+            if (this.buddys.length)
+            {   // We'll only put hooks on the first pair.
+                var pair = this.buddys[0], $el;
+                
+                $el = $(pair.u);
+                addEventListener(pair.u, 'change', MOD_FILL.onChange);
+                $el.data(data_finfo, this);
+                $el.data(data_fn, fn_userid);
+                $el.css({'background-color':'blue'});
+
+                $el = $(pair.p);
+                addEventListener(pair.p, 'change', MOD_FILL.onChange);
+                $el.data(data_finfo, this);
+                $el.data(data_fn, fn_pass);
+                $el.css({'background-color':'green'});
+            }
+        };
+        FormInfo.prototype.destroy = function()
+        {
+            $(this).removeData();
+        };
+        FormInfo.prototype.getUid = function()
+        {
+            return FormInfo.getVal(this.us);
+        };
+        FormInfo.prototype.getPass = function()
+        {
+            return FormInfo.getVal(this.ps);
+        };
+        FormInfo.prototype.isVisible = function()
+        {
+            return ($(this.form).is(':visible') || ($(this.us).filter(':visible').length) || ($(this.ps).filter(':visible').length) );
+        };
+        FormInfo.prototype.isFocussable = function ()
+        {
+            return (this.getTabIndex() >= 0);
+        };
+        /*
+         * Roughly mimics the tabIndex IDL attribute of input elements, but applied to the
+         * entire form. Returns:
+         * -1 if form is deemed not focussable - i.e. all of its constituents have tabIndex=0.
+         * 0  if form is deemed focussable but tabIndex is zero for all its constituent fields
+         * +n A number equal to the lowest positive tabIndex of its constituents. In this
+         *    case the form is deemed focussable.
+         */
+        FormInfo.prototype.getTabIndex = function ()
+        {
+            var t, t1, t2, bFocussable, ar;
+                
+            if (this.tabIndex !== undefined) {
+                return this.tabIndex;
+            }
+
+            //ar = this.form.elements || (this.us.concat(this.ps));
+            ar = this.us.concat(this.ps);
+            iterArray2(ar, null, function(item)
+            {
+                t = item.tabIndex;
+                // We do not want to include negative tabIndex values because per the
+                // (confusing section 8.4.1 of) HTML5 spec. it either means that the
+                // element is either not tab-navigable or that it is not focussable at
+                // all.
+                if (t>0)
+                {
+                    bFocussable = true;
+                    if ((t1===undefined) || (t < t1)) {
+                        t1 = t;
+                    }
+                }
+                else if (t===0) {
+                    bFocussable = true;
+                }
+                else if (t<0) {
+                    if ((t2===undefined) || (t < t2)) {
+                        t2 = t;
+                    }
+                }
+            });
+            
+            if (!bFocussable) {this.tabIndex = t2 || (-1);}
+            else {this.tabIndex = t1 || 0;}
+            
+            return this.tabIndex;
+        };
+        
+        function Forms()
+        {
+            Object.defineProperties(this,
+                {
+                    _a: {value:[], writable:true}
+                });
+        }
+        Forms.prototype.clear = function ()
+        {
+            this._a.length = 0;
+        };
+        Forms.prototype.length = function () {return this._a.length;};
+        Forms.prototype.get = function (i) {return this._a[i];};
+        Forms.prototype.push = function (info) {this._a.push(info);};
+        Forms.prototype.walk = function (func)
+        {
+            iterArray2(this._a, this, function(fInfo)
+            {
+                func.apply(fInfo);
+            });
+        };
+        Forms.prototype.append = function (forms)
+        {
+            if (forms && forms._a && forms._a.length)
+            {
+                this._a = this._a.concat(forms._a);
+            }
+        };
+        Forms.prototype.rm = function (fInfo) // removes fInfo from collection
+        {
+            return this._a.some(function(item, i, ar)
+            {
+                if (item===fInfo) {
+                    ar.splice(i,1);
+                    return true;
+                }
+            });
+        };
+        Forms.prototype.getVisible = function ()
+        {
+            var out = new Forms(),
+                i, fInfo;
+            iterArray2(this._a, null, function(fInfo)
+            {
+                if (fInfo.isVisible()) {
+                    out.push(fInfo);
+                }
+            });
+            return out;
+        };
+        // Forms.prototype.getTabbed = function ()
+        // {
+            // var out;
+            // iterArray2(this._a, null, function(item)
+            // {
+                // if (item.bTabbed) {
+                    // out.push(item);
+                // }
+            // });
+            // return out;
+        // };
+        Forms.prototype.getFirstFocussed = function ()
+        {
+            var first, focussable=[], t, t1;
+            if (this.length())
+            {
+                iterArray2(this._a, null, function(item) // iterate in tree order
+                {
+                    t = item.getTabIndex();
+                    if (t>0) {
+                        focussable.push(item);
+                        if ((t1===undefined) || (t < t1)) {
+                            t1 = t;
+                            first = item;
+                        }
+                    }
+                    else if (t===0) {
+                        focussable.push(item);
+                    }
+                });
+            }
+
+            return (first || focussable[0]);
+        };
+        // Forms.prototype.rmWithPass = function (n)
+        // {
+            // var out = new Forms(),
+                // i, fInfo;
+            // // Iteration order is in reverse since we will remove elements
+            // for (i=this._a.length-1; i>=0; i--)
+            // {
+                // fInfo = this._a[i];
+                // if (fInfo.ps && fInfo.ps.length) 
+                // {
+                    // if (fInfo.ps.length === n) {
+                        // out.push(fInfo);
+                        // this._a.splice(i,1);
+                    // }
+                // }
+            // }
+//             
+            // return out;
+        // };
+        // Forms.prototype.rmSmallest = function ()
+        // {
+            // var j = 0, i;
+            // for (i=this._a.length-1; i>=0; i--)
+            // {
+                // if (this._a[i].count() < this._a[j].count()) {
+                    // j = i;
+                // }
+            // }
+//             
+            // return this._a.splice(j,1)[0];
+        // };
+        
+        function FillInfo()
+        {
+            Object.defineProperties(this,
+            {
+                signin: {value: new Forms()},
+                signup: {value: new Forms()}
+            });
+        }
+        FillInfo.prototype.clear = function ()
+        {
+            this.signin.clear();
+            this.signup.clear();
+        };
+        FillInfo.prototype.done = function ()
+        {
+            return (this.signin.length() && this.signup.length());
+        };
+        FillInfo.prototype.contains = function (form)
+        {
+            return ( (this.signin._a.indexOf(form)!==(-1)) ||
+                     (this.signup._a.indexOf(form)!==(-1))  );
+        };
+        FillInfo.prototype.autoFillable = function () 
+        {
+            return (this.signin.length()>0) && this.signin.get(0).isVisible();
+        };
+        FillInfo.prototype.hook = function ()
+        {
+            this.signin.walk(FormInfo.prototype.hook);
+            this.signup.walk(FormInfo.prototype.hook);
+        };
+
+        var m_info = new FillInfo();
 
         function info() {return m_info;}
         
         function onChange(ev)
         {
-            var el = ev.currentTarget, //= this
-                $u, fn = el.dataset[data_fn],
-                u, actn, p;
-
-            if (fn === fn_pass)
-            {   // Find the accompanying userid element
-                if (el.form)
-                {
-                    //$u = $('input[type="text"],input[type="email"],input[type="tel"],input[type="number"]', el.form.elements);
-                    // TODO: Take tabindex into account when looking for peer element
-                    // TODO: Implement a findPeerElement method that will find the peer element based
-                    // TODO: on tabindex in addition to other clues. tabindex seems to be a very reliable
-                    // TODO: hint. It may even be used during the initial scan.
-                    $u = $('[data-untrix_fn=u]', el.form);
-                    if ($u.length === 1)
-                    {
-                        u = $u[0].value;
-                        actn = MOD_DB.pRecsMap[u];
-                        
-                        if (!actn) {
-                            console.log("New userid " + u + " entered");
-                            MOD_PANEL.getc().tempRecord(u, el.value);
-                        }
-                        else {
-                            p = actn.curr.p;
-                            if (p !== encrypt(el.value)) {
-                                console.log("Password changed for userid " + u);
-                                MOD_PANEL.getc().editRecord(u, el.value);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        console.log("Password field changed inside form with no userid");
-                    }
-                }
-                else 
-                {
-                    console.log("Password field changed without form");
-                }
-            }
-            else if (fn === fn_userid)
+            var $this = $(ev.currentTarget),
+                fn = $this.data(data_fn),
+                fInfo = $this.data(data_finfo),
+                uid, pass;
+                
+            if (fn === fn_userid)
             {
-                // TODO: In some cases the password may get filled first and then the username
-                // TODO: example, if the user mistyped the username, filled in the password
-                // TODO: but then went back to change the username. In this case, the password
-                // TODO: peer element will need to be discovered and the tempRecord updated.
-                // TODO: Also bear in mind that in many cases page training may not exist
-                // TODO: since the user would be populating the password into BP for the first
-                // TODO: time.
-                // findPeerElement(el, fn);
-                console.log("Username changed to " + el.value);
-                MOD_PANEL.getc().tempRecord(el.value);
+                uid = $this.val();
+                pass = encrypt(fInfo.getPass());
+            }
+            else if (fn === fn_pass)
+            {
+                uid = fInfo.getUid();
+                pass = encrypt($this.val());
+            }
+            
+            if (uid && pass)
+            {
+                if (!MOD_DB.has(uid))
+                {
+                    console.log("Saving in mem, " + uid + " and " + pass);
+                    tempRec(newPRecord(g_loc, Date.now(), uid, pass), dt_pRecord);
+                }
+                else {
+                    console.log("Autofill?");
+                }
             }
         }
+        
+        // function onChangeOld(ev)
+        // {
+            // var el = ev.currentTarget, //= this
+                // $u, fn = el.dataset[data_fn],
+                // u, actn, p;
+// 
+            // if (fn === fn_pass)
+            // {   // Find the accompanying userid element
+                // if (el.form)
+                // {
+                    // //$u = $('input[type="text"],input[type="email"],input[type="tel"],input[type="number"]', el.form.elements);
+                    // // TODO: Take tabindex into account when looking for peer element
+                    // // TODO: Implement a findPeerElement method that will find the peer element based
+                    // // TODO: on tabindex in addition to other clues. tabindex seems to be a very reliable
+                    // // TODO: hint. It may even be used during the initial scan.
+                    // $u = $('[data-untrix_fn=u]', el.form);
+                    // if ($u.length === 1)
+                    // {
+                        // u = $u[0].value;
+                        // actn = MOD_DB.pRecsMap[u];
+//                         
+                        // if (!actn) {
+                            // console.log("New userid " + u + " entered");
+                            // MOD_PANEL.getc().tempRecord(u, el.value);
+                        // }
+                        // else {
+                            // p = actn.curr.p;
+                            // if (p !== encrypt(el.value)) {
+                                // console.log("Password changed for userid " + u);
+                                // MOD_PANEL.getc().editRecord(u, el.value);
+                            // }
+                        // }
+                    // }
+                    // else
+                    // {
+                        // console.log("Password field changed inside form with no userid");
+                    // }
+                // }
+                // else 
+                // {
+                    // console.log("Password field changed without form");
+                // }
+            // }
+            // else if (fn === fn_userid)
+            // {
+                // // TODO: In some cases the password may get filled first and then the username
+                // // TODO: example, if the user mistyped the username, filled in the password
+                // // TODO: but then went back to change the username. In this case, the password
+                // // TODO: peer element will need to be discovered and the tempRecord updated.
+                // // TODO: Also bear in mind that in many cases page training may not exist
+                // // TODO: since the user would be populating the password into BP for the first
+                // // TODO: time.
+                // // findPeerElement(el, fn);
+                // console.log("Username changed to " + el.value);
+                // MOD_PANEL.getc().tempRecord(el.value);
+            // }
+        // }
 
         /**
          * Autofills element described by 'er' with string 'str'.
@@ -267,7 +535,7 @@
                 // return false;
             // }
 //             
-            // $uel = $('input[type="text"],input[type=email],input[type="tel"],input[type="number"]').filter(g_uElSel);//.filter(':visible');
+            // $uel = $('input[type="text"],input[type=email],input[type="tel"],input[type="number"]').filter(g_uSel2);//.filter(':visible');
 //     
             // if ($uel.length) 
             // {
@@ -300,7 +568,7 @@
                         // $copy = $(copy).attr({type:'text', 'id':id, 'name':nm});
                         // //$copy2 = $('<input type=text' + (id?(' id='+id):('')) + (nm?(' name='+nm):('')) + ' >');
 //                         
-                    // if ($copy.is(g_uElSel))
+                    // if ($copy.is(g_uSel2))
                     // {
                         // if (!test)
                         // {
@@ -432,69 +700,128 @@
                     // return true;
                 // }
             // }
-        // }
+        // }
         
-        function getCntnr(el, n)
+        /**
+         *  Returns ancestor of input element that wraps input elements in the neighborhood
+         *  of el. The returned element itself may not be a form element (such is the case
+         *  with about 2-3% websites tested).
+         */
+        function formAncestor(el)
         {
             var i, 
-            p = $(el).offsetParent();
+            p = el.form;
 
+            if ((!p) && (el.tabIndex>=0)) {
+                // el is focussable, therefore visible. Find its positioned ancestor.
+                p = $(el).offsetParent();
+                // Did we grab any input elements?
+                if (p && ($('input', p).length<=1)) {
+                    // oops, nothing here.
+                    p = null;
+                }
+            }
+            
             if (p) {
                 return p;
             }
-            // Return ancestor n levels above
-            for (i=0, p=el.parentElement; (i<n)&&p; i++, p=el.parentElement)
+
+            // Return ancestor upto 5 levels above
+            for (i=0, p=p||el.parentElement; (i<5)&&p; i++, p=p.parentElement)
             {
-                el = p;
+                if ($('input',p).length>1) {
+                    break;
+                }
             }
             
-            return el;
-        }
-        
-        // Returns a jQuery object containing matching fn_userid elements within cntnr
-        function uCandidates(cntxt, bStrict)
+            return p;
+        }
+        /**
+         * Apply case-insensitive filter to $el1 assuming these are all input[type=text]
+         * elements. Selector should be all lower-case. Assumed that only id and text
+         * properties are matched against.
+         * 
+         * DO NOT CHANGE the order of the supplied elements.
+         */
+        function idFilter($el1, sel)
         {
-            var $el, rval, els=[], $el1;
+            var $el, els=[];
+
+            // try case-insensitive filtering
+            $el1.each(function(index)
+            {
+                var id = this.id? this.id.toLowerCase() : "",
+                    nm = this.name? this.name.toLowerCase() : "",
+                    found = false,
+                    copy = g_doc.createElement('input'),
+                    $copy = $(copy).attr({type:'text', 'id':id, 'name':nm});
+                    
+                if ($copy.is(sel))
+                {
+                    // Make sure we maintain element order.
+                    els.push(this);
+                }
+            });
+            
+            return $(els);
+        }
+
+        // Returns a jQuery object containing matching fn_userid elements within cntxt.
+        // @param cntxt can be a form element or a container/ancestor element. If it is a
+        // non-form element, search will be performed on its descendents. If it is a form
+        // element then form.elements set will be searched for matches (not their descendents).
+        // If hasPass is true then it will be more lax in matching unless more than one
+        // element is found. This is useful in cases where there was only one text field
+        // besides the password field in a form (e.g. type===email) in which case, that
+        // is probably the username field.
+        //
+        // IMPORTANT: Results must be sorted in tree-order.
+        function uCandidates(cntxt, hasPass)
+        {
+            var $el, rval, $el1;
             //$el = 
-            if (cntxt.elements) {
-                $el1 = $(cntxt.elements).filter('input[type="text"],input[type="email"],input[type="tel"],input[type="number"]');
+            if (cntxt.elements) { // cntxt is a form element
+                $el1 = $(cntxt.elements).filter(g_uSel);
             }
             else {
-                $el1 = $('input[type="text"],input[type="email"],input[type="tel"],input[type="number"]', $(cntxt));//.filter(':visible');
+                $el1 = $(g_uSel, $(cntxt));//.filter(':visible');
             }
             
-            if (bStrict) {
-                $el = $el1.filter(g_uElSel);
+            if (!hasPass) {
+                // Since the container doesn't have a password field, apply a strict filter.
+                // Note: container may be the entire document itself.
+                $el = idFilter($el1, g_uSel2);
             }
-            else { $el = $el1; }
-            
-            if (!$el.length)
-            {
-                // try case-insensitive filtering
-                $el1.each(function(index)
-                {
-                    var id = this.id? this.id.toLowerCase() : "",
-                        nm = this.name? this.name.toLowerCase() : "",
-                        found = false,
-                        copy = g_doc.createElement('input'),
-                        $copy = $(copy).attr({type:'text', 'id':id, 'name':nm});
-                        
-                    if ($copy.is(g_uElSel))
-                    {
-                        els.push(this);
+            else
+            {   // Container form has a password field, therefore we can be more lax
+                // in the comparison. Try varying levels of strictness and pick the strickest
+                // possible one.
+                if ($el1.length>1) // We have more than one candidate username fields
+                {   // Try and see if further filtration helps.
+                    $el = idFilter($el1, g_uSel2); // strickest filter
+                    if ($el.length===0) {
+                        // Nope, further filtering erased the entire set.
+                        // Try including email and phone fields now.
+                        $el = idFilter($el1, g_uSel3); // search for email and phone fields
+                        if ($el.length===0) {
+                            // This didn't succeed either. Roll back. 
+                            $el = $el1;
+                        }
                     }
-                });
-                
-                $el = $(els);
+                }
+                else {
+                    $el = $el1;    
+                }
             }
-            
+
             return $el;
         }
 
-        // Returns a jQuery object containing matching fn_pass elements within cntnr
+        // Returns a jQuery object containing matching fn_pass elements within cntxt.
+        // IMPORTANT: Results must be sorted in tree-order.
         function pCandidates(cntxt)
         {
-            if (cntxt.elements) {
+            if (cntxt.elements) { // cntxt is a form element
                 return $(cntxt.elements || cntxt).filter('input[type=password]');
             }
             else {
@@ -502,92 +829,199 @@
             }
         }
 
-        // return true if pos1/w1 is above pos2/w2 in the same column
-        function isAbove(pos1, w1, pos2, w2)
+        /**
+         * Find forms inside the context element and return them in tree order. 
+         */
+        function findForms(ctxEl)
         {
-            return ((pos1.left===pos2.left) &&
-                    (w1===w2) &&
-                    (pos1.top < pos2.top));
+            var forms = ctxEl.forms || $(ctxEl).find('form'),
+                $candids, f, $forms;
+
+            if (!forms) 
+            {
+                $forms = $([]);
+                // jQuery ensures that .add operation is a union operation, not a blind
+                // concat. Also, the results are sorted in tree-order ! That's exactly
+                // what we want.
+                $candids = uCandidates(ctxEl).add(pCandidates(ctxEl));
+                $candids.each(function(i)
+                {
+                    f = formAncestor(this);
+                    if (f) {
+                        // union operation, not a blind concat. Tree order is guaranteed.
+                        $forms.add(f);
+                    }
+                });
+            }
+
+            return forms || $forms.toArray();
         }
         
-        function isBelow(pos1, w1, pos2, w2)
+        // // return true if pos1/w1 is above pos2/w2 in the same column
+        // function isAbove($el1, $el2)
+        // {
+            // var pos1 = $el1.position(), 
+                // w1 = $el1.outerWidth(), 
+                // pos2 = $el2.position(), 
+                // w2 = $el2.outerWidth();
+            // return ((pos1.left===pos2.left) &&
+                    // (w1===w2) &&
+                    // (pos1.top < pos2.top));
+        // }
+//         
+        // function isDirectlyAbove($el1, $el2)
+        // {
+            // var pos1 = $el1.position(),
+                // w1 = $el1.outerWidth(),
+                // h1 = $el1.outerHeight(), 
+                // pos2 = $el2.position(),
+                // w2 = $el2.outerWidth(),
+                // h2 = $el2.outerHeight(),
+                // h = (h1<h2) ? h1: h2;
+            // return ((pos1.left===pos2.left) &&
+                    // (w1===w2) &&
+                    // (pos1.top < pos2.top) && 
+                    // ((pos2.top - (pos1.top + h1)) < h));
+        // }
+//         
+        // function isBelow($el1, $el2)
+        // {
+            // return isAbove($el2, $el1);
+        // }
+//         
+        // function isDirectlyBelow($el1, $el2)
+        // {
+            // return isDirectlyAbove($el2, $el1);
+        // }
+//         
+        // function onLeft($el1, $el2)
+        // {
+            // var pos1 = $el1.position(),
+                // h1 = $el1.outerHeight(),
+                // pos2 = $el2.position(),
+                // h2 = $el2.outerHeight();
+            // return ((pos1.top===pos2.top) &&
+                    // (pos1.left < pos2.left) &&
+                    // (h1===h2));
+        // }
+//         
+        // function isUpLeft($el1, $el2)
+        // {
+//             
+        // }
+//         
+        // function immediateLeft($el1, $el2)
+        // {  
+            // var pos1 = $el1.position(),
+                // h1 = $el1.outerHeight(),
+                // w1 = $el1.outerWidth(),
+                // pos2 = $el2.position(),
+                // h2 = $el2.outerHeight(),
+                // w2 = $el2.outerWidth(),
+                // w = (w1<w2) ? w1 : w2;
+            // return ((pos1.top===pos2.top) &&
+                    // (pos1.left < pos2.left) &&
+                    // (h1===h2) &&
+                    // ((pos2.left - (pos1.left + w1)) < w));
+        // }
+//         
+        // function onRight($el1, $el2)
+        // {
+            // return onLeft($el2, $el1);
+        // }
+//         
+        // function immediateRight($el1, $el2)
+        // {
+            // return immediateLeft($el2, $el1);
+        // }
+//         
+        // function nearest(fn, el, peersLR, peersUD, peersDiag)
+        // {
+            // var h = el.outerHeight(),
+                // w = el.outerWidth(),
+                // lr= nearestLR(fn, el, peersLR),
+                // ud= nearestUD(fn, el, peersUD);
+//                 
+// 
+            // if (lr) {
+                // // in tree order, lr gets preference over ud.
+                // return lr.el;
+            // }
+            // else if (ud) {
+                // return ud.el;
+            // }
+        // }
+        /**
+         * Returns true if lhs preceds rhs in tree-order.
+         * const unsigned short DOCUMENT_POSITION_DISCONNECTED = 0x01;
+         * const unsigned short DOCUMENT_POSITION_PRECEDING = 0x02;
+         * const unsigned short DOCUMENT_POSITION_FOLLOWING = 0x04;
+         * const unsigned short DOCUMENT_POSITION_CONTAINS = 0x08;
+         * const unsigned short DOCUMENT_POSITION_CONTAINED_BY = 0x10;
+         * const unsigned short DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20; // historical
+         */
+        function isBefore(lhs, rhs)
         {
-            return isAbove(pos2, w2, pos1, w1);
+            if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
+                return (lhs.tabIndex < rhs.tabIndex);
+            }
+
+            return (lhs.compareDocumentPosition(rhs) & lhs.DOCUMENT_POSITION_FOLLOWING);
         }
-        
-        function onLeft(pos1, h1, pos2, h2)
+        /**
+         * Returns true if lhs follows rhs in tree-order.
+         */
+        function isAfter(lhs, rhs)
         {
-            return ((pos1.top===pos2.top) &&
-                    (pos1.left < pos2.left) &&
-                    (h1===h2));
+            if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
+                return (lhs.tabIndex > rhs.tabIndex);
+            }
+            
+            return (lhs.compareDocumentPosition(rhs) & lhs.DOCUMENT_POSITION_PRECEDING);
         }
-        
-        function onRight(pos1, h1, pos2, h2)
+
+        // @param fn Field-Type to find.
+        // @param el The element that has been found.
+        function findPeers(fn, el, _form)
         {
-            return onLeft(pos2, h2, pos1, h1);
-        }
-        
-        function findPeers(fn, el)
-        {
-            var peers = [], $peers, 
-                cntnr = el.form || getCntnr(el,6),
-                tabIndex = el.tabIndex,
+            var peers = [], 
+                buddy,
+                $peers,
+                form = _form || formAncestor(el),
+                //tabIndex = el.tabIndex,
                 $el = $(el),
                 pos, pos2, h, w;
-            if (cntnr)
+
+            if (form)
             {
                 if (fn === fn_userid) {
-                    $peers = $(uCandidates(cntnr));
+                    // $peers is sorted in tree order
+                    $peers = $(uCandidates(form, true));
                 }
                 else if (fn === fn_pass) {
-                    $peers = $(pCandidates(cntnr));
+                    // $peers is sorted in tree order
+                    $peers = $(pCandidates(form));
                 }
                 
                 if ($peers && ($peers.length > 0))
                 {
                     if ($peers.length>1)
                     {
-                        pos = $el.position();
-                        h = $el.outerHeight();
-                        w = $el.outerWidth();
                         $peers.each(function(i)
                         {
-                            if (tabIndex) 
+                            if (fn===fn_userid)
                             {
-                                if (fn===fn_userid) {
-                                    if (this.tabIndex < tabIndex) {
-                                        peers.push(this);
-                                    }
-                                }
-                                else if (fn===fn_pass) {
-                                    if (this.tabIndex > tabIndex) {
-                                        peers.push(this);
-                                    }
+                                if (isBefore(this, el)) {
+                                    peers.push(this);
                                 }
                             }
-                            else 
-                            { 
-                                // no tabIndex
-                                pos2 = $(this).position();
-                                if (fn===fn_userid) 
-                                {
-                                    if ((isAbove(pos2, $(this).outerWidth(), pos, w)) ||
-                                        (onLeft(pos2, $(this).outerHeight(), pos, h)))
-                                    {
-                                        // this and el are positioned in a column and this is above el
-                                        peers.push(this);
-                                    }
-                                }
-                                else if (fn===fn_pass)
-                                {
-                                    if ((isBelow(pos2, $(this).outerWidth(), pos, w)) ||
-                                        (onRight(pos2, $(this).outerHeight(), pos, h)))
-                                    {
-                                        // this and el are positioned in a column and this is above el
-                                        peers.push(this);
-                                    }                                    
+                            else if (fn===fn_pass)
+                            {
+                                if (isAfter(this, el)) {
+                                    peers.push(this);
                                 }
                             }
+
                         });
                     }
                     else // only one verified peer match
@@ -596,131 +1030,198 @@
                     }
                 }
             }
+
+            if (peers.length === 1) {
+                buddy = peers[0];
+            }
+            else if (peers.length > 1) {
+                if (fn === fn_userid) {
+                    // select the last element of the tree-order list since that will be
+                    // closest to the password element.
+                    buddy = peers[peers.length-1];
+                }
+                else if (fn===fn_pass) {
+                    // select the first element of the tree-order list since that will be
+                    // closest to the userid element.
+                    buddy = peers[0];
+                }
+            }
             
-            return peers;
+            return {peers:peers, buddy:buddy};
         }
         
-        function findEl(eRec)
+        function findEl(eRec, ctxEl)
         {
-            var $form = $((eRec.fid?('#'+eRec.fid):'') + (eRec.fnm?('[name='+eRec.fnm+']'):'') );
-            return $(eRec.t + (eRec.id?('#'+eRec.id):'') + (eRec.n?('[name='+eRec.n+']'):'') + (eRec.y? ('[type='+eRec.y+']') : ''), $form)[0];
+            //var $form = $((eRec.fid?('#'+eRec.fid):'') + (eRec.fnm?('[name='+eRec.fnm+']'):'') );
+            var $ctx = ctxEl ? $(ctxEl) : undefined;
+            return $(eRec.t + (eRec.id?('#'+eRec.id):'') + (eRec.n?('[name='+eRec.n+']'):'') + (eRec.y? ('[type='+eRec.y+']') : ''), $ctx)[0];
         }
         
-        function isSignUp(cntnr, $u, $p)
+        function scrapeForms(ctxEl)
         {
-            // TODO: Add pattern match of form name (cntnr.name)
-            return ($p.length>1); // 2 password fields expected in a sign-up form.
-        }
-        
-        function scanHeuristic()
-        {
-            var cntnrs = g_doc.forms,
-                info1 = [], // forms with one or more password fields 
-                info2 = []; // forms without any password fields
+            var forms,
+                onePass = new Forms(),
+                multiPass = new Forms(),
+                noPass = new Forms(),
+                noUser = new Forms(),
+                tabbed=new Forms(),
+                visible =new Forms(),
+                all = new Forms();
             
-            if (m_info.done()) {return;}
-            
-            //if (!cntnrs) {cntnrs = [g_doc];}
-            MOD_COMMON.iterArray2(cntnrs, null, function (cntnr)
+            if (ctxEl) 
             {
-                var $p = pCandidates(cntnr), $u,
-                    fmInfo = new FormInfo(cntnr);
-                
+                if (ctxEl.tagName.toLowerCase() === 'form') {
+                    forms = [ctxEl];
+                }
+                else {
+                    forms = findForms(ctxEl);
+                }
+            }
+            else {
+                forms = findForms(g_doc);
+            }
+
+            iterArray2(forms, null, function (form)
+            {
+                var $p, $u, o, fmInfo;
+
                 // Skip the form if its already been seen before.
-                if (!m_info.contains(cntnr))
+                if (!m_info.contains(form))
                 {
-                    if ($p.length>0) 
+                    $p = pCandidates(form);
+                    fmInfo = new FormInfo(form);
+
+                    if ($p.length>0)
                     {
-                        fmInfo.ps = $p;
-                        // Multiple password fields found inside this form.
+                        fmInfo.ps = $p.toArray();
+                        // One or more password fields found inside this form.
                         // Loop through password fields and collect all peer userid fields.
-                        MOD_COMMON.iterArray2($p, null, function(p)
+                        iterArray2($p, null, function(p)
                         {
-                            var $u2 = $(findPeers(fn_userid, p));
-                            if ($u2.length)
+                            o = findPeers(fn_userid, p, form);
+                            if (o.buddy)
                             {
-                                fmInfo.us = $u2.add(fmInfo.us); // union of the two sets.
+                                fmInfo.buddys.push({u:o.buddy, p:p});
+                                // union of the two sets. tree-order is maintained by jQuery
+                                fmInfo.us = $(fmInfo.us).add(o.peers).toArray();
                             }
                         });
-                        info1.push(fmInfo);
+
+                        if (fmInfo.buddys.length) {
+                            if (fmInfo.ps.length===1) {
+                                onePass.push(fmInfo);
+                            }
+                            else {
+                                multiPass.push(fmInfo);
+                            }
+                        }
+                        else {
+                            noUser.push(fmInfo);                            
+                        }
+                        
+                        all.push(fmInfo);
                     }
                     else 
                     {   // No password fields found inside this form. Do a strict match for userid fields.
                         // Strict matching will leave out email fields though. We pick only one of the
                         // matched fields.
-                        $u = uCandidates(cntnr, true);
+                        $u = uCandidates(form, false);
                         if ($u.length>0)
                         {
-                            fmInfo.us = $u;
-                            info2.push(fmInfo);
+                            fmInfo.us = $u.toArray();
+                            noPass.push(fmInfo);
+                            all.push(fmInfo);
                         }
                     }
                 }
             });
-            
-            if (info1.length || info2.length)
+
+            // var situationVector = {
+                // tot:      all.length() + m_info.signin.length() + m_info.signup.length(), // num total forms
+                // unC:      all.length(), // num uncategorized forms
+                // signin:   m_info.signin.length(),
+                // signup:   m_info.signin.length(),
+                // onePass:  onePass.length(),
+                // multiPass: multiPass.length(),
+                // noUser:   noUser.length(),
+                // noPass:   noPass.length(),
+                // tabbed: tabbed.length(),
+                // visible:  visible.length()
+            // };
+//             
+            return {
+                //sitVec:   situationVector,
+                onePass:  onePass,
+                multiPass: multiPass,
+                noPass:   noPass,
+                noUser:   noUser,
+                //tabbed: tabbed,
+                //visible:  visible,
+                all:      all                
+            };
+        }
+
+        // Scans the document to heuristically detect signin/signup forms as needed.
+        // ctxEl argument binds the extent of the search to a single element. Used for
+        // incremental scans when an element is dynamically added into a page.
+        function scrape(ctxEl)
+        {
+            var formScan = scrapeForms(ctxEl),
+                signin, 
+                visible;
+
+            if (formScan.all.length())
             {
-                var req = (m_info.signin?0:1) + (m_info.signup?0:1),
-                    sel1, i,
-                    info;
-                    
-                if (req)
-                {
-                    if (req===1) // One form has already been assigned
+                if (!m_info.signin.length())
+                {   // Try to isolate a signin form
+                    visible = formScan.onePass.getVisible();
+                    if (visible.length()===1)
                     {
-                        // In this situation info1 and info2 combined should have at the 
-                        // most one form between them. So we go with that assumption and
-                        // check info1 first because it has password fields, while info2
-                        // doesn't.
-                        sel1 = info1.length? info1[0] : info2[0];
-                        if (!m_info.signin) {m_info.signin = sel1;}
-                        else if (!m_info.signup) {m_info.signup = sel1;}
+                        signin = visible.get(0);
                     }
-                    else if (req===2) // both form types remain to be assigned
+                    else if (visible.length()>1)
                     {
-                        info = info1.concat(info2);
-                        // In this situation info1 and info2 combined should normally have
-                        // at the most two forms. That is we expect (tot<=2). But of course
-                        // make sure to not error-out if tot>2.
-                        if (info.length>1)
-                        {   // There are two or more matching forms on the page.
-
-                            // We assume that (info.length <= 2)
-                            i = (info[0].count() > info[1].count()) ? 1 : 0;
-                            m_info.signin = info[i];  // form with lesser fields of the two
-                            m_info.signup = info[1-i];// from with more fields of the two
+                         signin = visible.getFirstFocussed();
+                    }
+                    else
+                    {
+                        // The onePass forms are not visible. Try to see if there is
+                        // a visible noPass form. If yes, then that becomes the signin
+                        // form, otherwise the onePass one.
+                        visible = formScan.noPass.getVisible();
+                        if (visible.length()>1) {
+                            // one could also get the smallest form, but this works better.
+                            signin = visible.getFirstFocussed();
                         }
-                        else if (info.length===1)
-                        {   // There is only one matching form on the page. We need to
-                            // categorize it either as a signin or a signup form.
-
-                            // We assume that a signup form will have two password fields
-                            // and a sign-in form will have only one password field. However
-                            // that may not be always true. And in those cases we'll depend
-                            // on eRecords being either generated by the user or pre-canned
-                            // by us.
-                            // In at least one sign-in form I've seen two password
-                            // fields (the second one was for pin number). But mostly
-                            // only signup froms have two passwords on them. However,
-                            // on Facebook's signup form, there is only one password field.
-                            if (info[0].ps.length>1) {
-                                m_info.signup = info[0];
-                            }
-                            else {
-                                m_info.signin = info[0];
-                            }
+                        else if (visible.length()===1) {
+                            signin = visible.get(0);
                         }
+                        else {
+                            signin = formScan.onePass.getFirstFocussed();
+                        }
+                    }
+                    
+                    if (signin) {
+                        m_info.signin.push(signin);
                     }
                 }
+
+                if (signin) {
+                    formScan.all.rm(signin);    
+                }
+                // Collect the remaining forms for auto-capture
+                m_info.signup.append(formScan.all);
             }
         }
 
-        function scan()
+        function scan(ctxEl)
         {
             var i, j, l, uEl, uEl2, pEl, pEl2, eRecsMap, uer, per, uer2, per2,
                 loc = BP_MOD_CONNECT.newL(g_loc, dt_eRecord);
-            m_info.clear();
             
+            if (!ctxEl) {
+                m_info.clear();
+            }            
             if (MOD_DB.eRecsMapArray.length)
             {
                 // Cycle through eRecords starting with the best URL matching node.
@@ -733,16 +1234,15 @@
                 {
                     eRecsMap = MOD_DB.eRecsMapArray[j];
 
-                    if (eRecsMap[fn_userid]) { uer = eRecsMap[fn_userid].curr;}
-                    if (eRecsMap[fn_userid2]) { uer2 = eRecsMap[fn_userid2].curr;}
-                    if (eRecsMap[fn_pass]) {per = eRecsMap[fn_pass].curr;}
-                    if (eRecsMap[fn_pass2]) {per2 = eRecsMap[fn_pass2].curr;}
-                    if ((!uEl)&&(!pEl))
+                    if ((!m_info.signin.length()) && (!uEl) && (!pEl))
                     {
+                        if (eRecsMap[fn_userid]) { uer = eRecsMap[fn_userid].curr;}
+                        if (eRecsMap[fn_pass]) {per = eRecsMap[fn_pass].curr;}
+
                         if (uer)
                         {
-                            uEl = findEl(uer);
-                            if (!uEl && (i===0) && loc.equal(uer.l)) {
+                            uEl = findEl(uer, ctxEl);
+                            if (!uEl && (i===0) && (!ctxEl) && loc.equal(uer.l)) {
                                 // The data in the E-Record was an exact URL match
                                 // yet, it has been shown to be not useful.
                                 // Therefore purge it from the K-DB.
@@ -751,8 +1251,8 @@
                         }
                         if (per)
                         {
-                            pEl = findEl(per);
-                            if (!pEl && (i===0) && loc.equal(per.l)) {
+                            pEl = findEl(per, ctxEl);
+                            if (!pEl && (i===0) && (!ctxEl) && loc.equal(per.l)) {
                                 // The data in the E-Record was an exact URL match
                                 // yet, it has been shown to be not useful.
                                 // Therefore purge it from the K-DB.
@@ -761,12 +1261,15 @@
                         }
                     }
 
-                    if ((!uEl2) && (!pEl2))
+                    if ((!m_info.signup.length()) && (!uEl2) && (!pEl2))
                     {
+                        if (eRecsMap[fn_userid2]) { uer2 = eRecsMap[fn_userid2].curr;}
+                        if (eRecsMap[fn_pass2]) {per2 = eRecsMap[fn_pass2].curr;}
+
                         if (uer2)
                         {
-                            uEl2 = findEl(uer2);
-                            if (!uEl2 && (i===0) && loc.equal(uer2.l)) {
+                            uEl2 = findEl(uer2, ctxEl);
+                            if (!uEl2 && (i===0) && (!ctxEl) && loc.equal(uer2.l)) {
                                 // The data in the E-Record was an exact URL match
                                 // yet, it has been shown to be not useful.
                                 // Therefore purge it from the K-DB.
@@ -775,8 +1278,8 @@
                         }
                         if (per2)
                         {
-                            pEl2 = findEl(per2);
-                            if (!pEl2 && (i===0) && loc.equal(per2.l)) {
+                            pEl2 = findEl(per2, ctxEl);
+                            if (!pEl2 && (i===0) && (!ctxEl) && loc.equal(per2.l)) {
                                 // The data in the E-Record was an exact URL match
                                 // yet, it has been shown to be not useful.
                                 // Therefore purge it from the K-DB.
@@ -787,67 +1290,81 @@
                 }
             }
 
-            if (uEl && (!pEl)) {
-                pEl = findPeers(fn_pass, uEl)[0];
+            var o, fmInfo, fmInfo2;
+            
+            if (uEl && pEl) {
+                fmInfo = new FormInfo(uEl.form, [uEl], [pEl], {u:uEl, p:pEl});
+            }
+            else if (uEl && (!pEl)) {
+                o = findPeers(fn_pass, uEl);
+                fmInfo = new FormInfo(uEl.form, [uEl], o.peers, {u:uEl, p:o.buddy});
             }
             else if (pEl && (!uEl)) {
-                uEl = findPeers(fn_userid, pEl)[0];
+                o = findPeers(fn_userid, pEl);
+                fmInfo = new FormInfo(pEl.form, o.peers, [pEl], {u:o.buddy, p:pEl});
             }
             
-            if (uEl2 && (!pEl2)) {
-                pEl2 = findPeers(fn_pass, uEl2)[0];
+            if (uEl2 && pEl2) {
+                fmInfo2 = new FormInfo(uEl2.form, [uEl2], [pEl2], {u:uEl2, p:pEl2});
+            }
+            else if (uEl2 && (!pEl2)) {
+                o = findPeers(fn_pass, uEl2);
+                fmInfo2 = new FormInfo(uEl2.form, [uEl2], o.peers, {u:uEl2, p:o.buddy});
             }
             else if (pEl2 && (!uEl2)) {
-                uEl2 = findPeers(fn_userid, pEl2)[0];
+                o = findPeers(fn_userid, pEl2);
+                fmInfo2 = new FormInfo(pEl2.form, o.peers, [pEl2], {u:o.buddy, p:pEl2});
             }
                 
-            if (uEl || pEl) 
+            if (fmInfo)
             {
-                m_info.signin = new FormInfo(uEl.form, [uEl], [pEl]);//{form:uEl.form, 'us':[uEl], 'ps':[pEl] };
+                m_info.signin.push(fmInfo);
             }
-            if (uEl2 || pEl2)
+
+            if (fmInfo2)
             {
-                m_info.signup = new FormInfo(uEl2.form, [uEl2], [pEl2]);//{form:uEl2.form, 'us':[uEl2], 'ps':[pEl2]};
-            }
-            
-            if ( !((uEl || pEl) && (uEl2 || pEl2)) )
-            {
-                scanHeuristic();
+                m_info.signup.push(fmInfo2);
             }
             
-            m_info.autoFillable = Boolean(m_info.signin);
+            if ( !m_info.done() )
+            {
+                scrape(ctxEl);
+            }
+            
+            m_info.hook();
         }
         
         // Assumes input element and fills it
-        function fill(inps, val)
+        function fill(inp, val)
         {
             // NOTE: IE supposedly throws error if you focus hidden fields. If we encounter
             // that, then remove the focus() call from below.
-            MOD_COMMON.iterArray2(inps, null, function(inp)
-            {
-                inp.focus();
-                inp.click();
-                $(inp).val(val);
-                trigger(inp, 'input');
-                trigger(inp, 'change');
-            });
+
+            inp.focus();
+            inp.click();
+            $(inp).val(val);
+            trigger(inp, 'input');
+            trigger(inp, 'change');
         }
         
         function autoFill(userid, pass)
         {
-            var u, p, pRecsMap;
+            var u, p, pRecsMap, fInfo;
 
-            if (m_info.signin)
+            if (m_info.signin.length())
             {
-                if (m_info.signin.us) {fill(m_info.signin.us, userid);}
-                if (m_info.signin.ps) {fill(m_info.signin.ps, decrypt(pass));}
+                fInfo = m_info.signin.get(0);
+                if (fInfo.isVisible()) {
+                    if (fInfo.buddys.length) {fill(fInfo.buddys[0].u, userid);}
+                    if (fInfo.buddys.length) {fill(fInfo.buddys[0].p, pass);}
+                }
             }        }
 
         function init()
         {
             if (!g_bInited) {try
             {
-                scan();
+                //scan();
                 g_bInited = true;
             }
             catch (ex)
@@ -858,9 +1375,11 @@
         
         return Object.freeze(
         {
-            info: info,
-            autoFill: autoFill,
-            init: init
+            'info': info,
+            'scan': scan,
+            'autoFill': autoFill,
+            'init': init,
+            'onChange': onChange
         });
     }());
 
@@ -982,8 +1501,8 @@
                                           el.id,
                                           el.name,
                                           el.type,
-                                          form&&form.id? form.id : undefined,
-                                          form&&form.name? form.name:undefined);
+                                          ((form&&form.id)? form.id : undefined),
+                                          ((form&&form.name)? form.name:undefined));
                     saveRecord(eRec, dt_eRecord);
     
                     data = e.dataTransfer.getData(CT_TEXT_PLAIN);
@@ -1080,7 +1599,7 @@
                 it: new RecsIterator(MOD_DB.pRecsMap), 
                 reload:MOD_CS.showPanelAsync,
                 onClosed:onClosed,
-                autoFill: (MOD_FILL.info().autoFillable?MOD_FILL.autoFill:undefined), 
+                autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined), 
                 dbName:MOD_DB.dbName,
                 dbPath:MOD_DB.dbPath
             };
@@ -1121,6 +1640,7 @@
             {
                 var db = resp.db;
                 console.info("cbackShowPanel@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
+                MOD_FILL.scan();
                 MOD_DB.ingest(resp.db, resp.dbInfo);
             }
             else 

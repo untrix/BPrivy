@@ -251,7 +251,7 @@ var BP_MOD_COMMON = (function()
     //
     function iterArray2 (a, thisArg, func, ctx)
     {
-        var n = a.length, i;
+        var n = (a?a.length:0), i;
         for (i=0; i<n; i++)
         {
             if (func.apply(thisArg, [a[i], ctx]) === true) {

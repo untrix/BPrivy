@@ -236,6 +236,7 @@ var BP_MOD_CONNECT = (function ()
             cm_getDomn: {value: cm_getDomn},
             cm_closed:  {value: cm_closed},
             saveRecord: {value: saveRecord},
+            tempRec: {value: saveRecord},
             deleteRecord: {value: deleteRecord},
             newERecord: {value: newERecord},
             newPRecord: {value: newPRecord},
