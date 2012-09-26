@@ -28,7 +28,8 @@
            "bp_cs.cat.js",
            "bp_cs_boot_stub.js"],
     "run_at": "document_end",
-    "css": ["bp.css"]
+    "css": ["bp.css"],
+    "all_frames": true
     }
   ],
   "browser_action": {

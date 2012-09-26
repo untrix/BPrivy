@@ -5,5 +5,5 @@
  */
 if (BP_MOD_BOOT.scan(document))
 {
-    BP_DLL.onClickComm();
+    BP_DLL.onDllLoad();
 }

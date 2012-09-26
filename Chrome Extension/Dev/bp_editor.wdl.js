@@ -747,6 +747,9 @@ var BP_MOD_EDITOR = (function ()
         handleDragStart: {value: function handleDragStart (e)
         {   // CAUTION: 'this' is bound to e.target
             
+            if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
+                return;
+            }
             //console.info("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
             var data = this.value;
@@ -764,12 +767,18 @@ var BP_MOD_EDITOR = (function ()
         }},
         handleDrag: {value: function handleDrag(e)
         {   // CAUTION: 'this' is bound to e.target
+            if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
+                return;
+            }
             //console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
             e.stopImmediatePropagation();
         }},
         handleDragEnd: {value: function handleDragEnd(e)
         {   // CAUTION: 'this' is bound to e.target
+            if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
+                return;
+            }
             //console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //return true;

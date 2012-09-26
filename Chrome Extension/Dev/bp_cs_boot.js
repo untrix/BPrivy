@@ -106,13 +106,24 @@
         // });
     // }
 //
-    function activate()
+    function onClickComm()
     {
         loadBP_CS(function()
         {
             if (BP_DLL.onClickComm) 
             {
                 BP_DLL.onClickComm();
+            }
+        });
+    }
+
+    function onDllLoad()
+    {
+        loadBP_CS(function()
+        {
+            if (BP_DLL.onDllLoad) 
+            {
+                BP_DLL.onDllLoad();
             }
         });
     }
@@ -154,12 +165,12 @@
 
         console.log("onMessage@bp_cs_boot: Handling received message in document " + document.location.href);
         sendResp({ack:true});
-        loadBP_CS(function(){if (BP_DLL.onDllLoad) {BP_DLL.onDllLoad();}});
+        loadBP_CS(function(){if (BP_DLL.onClickBP) {BP_DLL.onClickBP();}});
     }
 
     chrome.extension.onMessage.addListener(onMessage);
-    setupCommand(document, activate);
+    setupCommand(document, onClickComm);
     if (BP_MOD_BOOT.scan(document)) {
-        activate();
+        onDllLoad();
     }
 }());

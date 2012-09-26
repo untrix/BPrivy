@@ -106,7 +106,7 @@
                         "[name*=username],[name*=user_name],[name*=userid],[name*=logon],[name*=user_id]," +
                         "[id*=login],[id*=identity],[id*=accountname],[id*=signin]," +
                         "[id*=username],[id*=user_name],[id*=userid],[id*=logon],[id*=user_id]",
-            g_uSel3 = "[name*=email],[name*=phone],[id*=email],[id*=phone]",
+            g_uSel3 = "[name*=email],[name*=phone],[id*=email],[id*=phone],[name*=number],[id*=number]",
             DECISION_TAB = []; // Defined later
 
             // var g_uIdSel2 = "input[name=id i],input[name=uid i],input[name=user i],input[name=uname i],input[id=id i],input[id=uid i],input[id=user i],input[id=uname i]";
@@ -158,13 +158,13 @@
                 addEventListener(pair.u, 'change', MOD_FILL.onChange);
                 $el.data(data_finfo, this);
                 $el.data(data_fn, fn_userid);
-                $el.css({'background-color':'blue'});
+                $el.css({'background-color':'#e3f1ff'});
 
                 $el = $(pair.p);
                 addEventListener(pair.p, 'change', MOD_FILL.onChange);
                 $el.data(data_finfo, this);
                 $el.data(data_fn, fn_pass);
-                $el.css({'background-color':'green'});
+                $el.css({'background-color':'#e3f144'});
             }
         };
         FormInfo.prototype.destroy = function()
@@ -248,7 +248,46 @@
         };
         Forms.prototype.length = function () {return this._a.length;};
         Forms.prototype.get = function (i) {return this._a[i];};
+        /**
+         * Be careful when using this method. It won't guarantee tree-order
+         * sort order. It merely pushes the item to the end of the list. 
+         */
         Forms.prototype.push = function (info) {this._a.push(info);};
+        Forms.prototype.hasForm = function (form)
+        {
+            return this._a.some(function(fInfo)
+            {
+                if (fInfo.form===form) {
+                    return true;
+                }
+            });
+        };
+        /**
+         * Inserts fInfo in tree-order unless it is already present in the collection.
+         * Returns true if insertion was successful, false otherwise. 
+         */
+        Forms.prototype.insert = function (fInfo) 
+        {
+            var i, n, done=false, rVal=false;
+            for (i=0, n=this._a.length-1; i<n; i++) {
+                if (fInfo.form===this._a[i].form) {
+                    done = true;
+                    break;
+                }
+                if (isBefore(fInfo.form, this._a[i].form)) {
+                    this._a.splice(i,0,fInfo);
+                    done = true;
+                    break;
+                }
+            }
+            
+            if (!done) {
+                this._a.push(fInfo);
+                rVal = true;
+            }
+            
+            return rVal;
+        };
         Forms.prototype.walk = function (func)
         {
             iterArray2(this._a, this, function(fInfo)
@@ -256,11 +295,18 @@
                 func.apply(fInfo);
             });
         };
-        Forms.prototype.append = function (forms)
+        /**
+         * Inserts elements of forms into this collection in tree-order. 
+         */
+        Forms.prototype.merge = function (forms)
         {
-            if (forms && forms._a && forms._a.length)
+            var host = this;
+            if (forms)
             {
-                this._a = this._a.concat(forms._a);
+                forms.walk(function()
+                {
+                    host.insert(this);
+                });
             }
         };
         Forms.prototype.rm = function (fInfo) // removes fInfo from collection
@@ -285,23 +331,16 @@
             });
             return out;
         };
-        // Forms.prototype.getTabbed = function ()
-        // {
-            // var out;
-            // iterArray2(this._a, null, function(item)
-            // {
-                // if (item.bTabbed) {
-                    // out.push(item);
-                // }
-            // });
-            // return out;
-        // };
         Forms.prototype.getFirstFocussed = function ()
         {
             var first, focussable=[], t, t1;
             if (this.length())
             {
-                iterArray2(this._a, null, function(item) // iterate in tree order
+                // The array should be always kept sorted in tree-order in order to
+                // ensure that the first element of the array is the first one in
+                // sequential navigation unless overridden by positive tab-index values
+                // on some elements.
+                iterArray2(this._a, null, function(item)
                 {
                     t = item.getTabIndex();
                     if (t>0) {
@@ -319,6 +358,17 @@
 
             return (first || focussable[0]);
         };
+        // Forms.prototype.getTabbed = function ()
+        // {
+            // var out;
+            // iterArray2(this._a, null, function(item)
+            // {
+                // if (item.bTabbed) {
+                    // out.push(item);
+                // }
+            // });
+            // return out;
+        // };
         // Forms.prototype.rmWithPass = function (n)
         // {
             // var out = new Forms(),
@@ -356,10 +406,11 @@
             Object.defineProperties(this,
             {
                 signin: {value: new Forms()},
-                signup: {value: new Forms()}
+                signup: {value: new Forms()},
+                scraped:{value: {all: new Forms()}}
             });
         }
-        FillInfo.prototype.clear = function ()
+        FillInfo.prototype.clearAssignment = function ()
         {
             this.signin.clear();
             this.signup.clear();
@@ -368,10 +419,11 @@
         {
             return (this.signin.length() && this.signup.length());
         };
-        FillInfo.prototype.contains = function (form)
+        FillInfo.prototype.hasForm = function (form)
         {
-            return ( (this.signin._a.indexOf(form)!==(-1)) ||
-                     (this.signup._a.indexOf(form)!==(-1))  );
+            return ( this.signin.hasForm(form) ||
+                     this.signup.hasForm(form) ||
+                     this.scraped.all.hasForm(form) );
         };
         FillInfo.prototype.autoFillable = function () 
         {
@@ -409,8 +461,8 @@
             {
                 if (!MOD_DB.has(uid))
                 {
-                    console.log("Saving in mem, " + uid + " and " + pass);
-                    tempRec(newPRecord(g_loc, Date.now(), uid, pass), dt_pRecord);
+                    BP_MOD_ERROR.alert("Saving in mem, " + uid + " and " + pass);
+                    //tempRec(newPRecord(g_loc, Date.now(), uid, pass), dt_pRecord);
                 }
                 else {
                     console.log("Autofill?");
@@ -712,7 +764,7 @@
             var i, 
             p = el.form;
 
-            if ((!p) && (el.tabIndex>=0)) {
+            if ((!p) && $(el).is(':visible')) {
                 // el is focussable, therefore visible. Find its positioned ancestor.
                 p = $(el).offsetParent();
                 // Did we grab any input elements?
@@ -776,7 +828,7 @@
         // is probably the username field.
         //
         // IMPORTANT: Results must be sorted in tree-order.
-        function uCandidates(cntxt, hasPass)
+        function uCandidates(cntxt, passEl)
         {
             var $el, rval, $el1;
             //$el = 
@@ -787,13 +839,18 @@
                 $el1 = $(g_uSel, $(cntxt));//.filter(':visible');
             }
             
-            if (!hasPass) {
+            if (!passEl) {
                 // Since the container doesn't have a password field, apply a strict filter.
                 // Note: container may be the entire document itself.
                 $el = idFilter($el1, g_uSel2);
             }
-            else
-            {   // Container form has a password field, therefore we can be more lax
+            else // if (passEl)
+            {   
+                // First filter out elements that come after the password element in the
+                // form. Username always preceeds password.
+                $el1 = getElsBefore(passEl, $el1);
+                
+                // Container form has a password field, therefore we can be more lax
                 // in the comparison. Try varying levels of strictness and pick the strickest
                 // possible one.
                 if ($el1.length>1) // We have more than one candidate username fields
@@ -834,12 +891,12 @@
          */
         function findForms(ctxEl)
         {
-            var forms = ctxEl.forms || $(ctxEl).find('form'),
+            var forms,// = ctxEl.forms || $(ctxEl).find('form'),
                 $candids, f, $forms;
 
             if (!forms) 
             {
-                $forms = $([]);
+                $forms = $();
                 // jQuery ensures that .add operation is a union operation, not a blind
                 // concat. Also, the results are sorted in tree-order ! That's exactly
                 // what we want.
@@ -847,9 +904,9 @@
                 $candids.each(function(i)
                 {
                     f = formAncestor(this);
-                    if (f) {
+                    if (f && (!m_info.hasForm(f))) {
                         // union operation, not a blind concat. Tree order is guaranteed.
-                        $forms.add(f);
+                        $forms = $forms.add(f);
                     }
                 });
             }
@@ -979,7 +1036,23 @@
             
             return (lhs.compareDocumentPosition(rhs) & lhs.DOCUMENT_POSITION_PRECEDING);
         }
-
+        /**
+         * From the provided collection $el, return elements (as jQuery object) that lie
+         * before el in sequential navigation order. Returned elements are sorted in the
+         * same order in which they were present in $el.
+         */
+        function getElsBefore(el, $el)
+        {
+            var out = [];
+            $el.each(function(i)
+            {
+                if (isBefore(this, el)) {
+                    out.push(this);
+                }
+            });
+            
+            return $(out);
+        }
         // @param fn Field-Type to find.
         // @param el The element that has been found.
         function findPeers(fn, el, _form)
@@ -996,7 +1069,7 @@
             {
                 if (fn === fn_userid) {
                     // $peers is sorted in tree order
-                    $peers = $(uCandidates(form, true));
+                    $peers = $(uCandidates(form, el));
                 }
                 else if (fn === fn_pass) {
                     // $peers is sorted in tree order
@@ -1011,9 +1084,9 @@
                         {
                             if (fn===fn_userid)
                             {
-                                if (isBefore(this, el)) {
-                                    peers.push(this);
-                                }
+                                //if (isBefore(this, el)) {
+                                peers.push(this);
+                                //}
                             }
                             else if (fn===fn_pass)
                             {
@@ -1086,7 +1159,7 @@
                 var $p, $u, o, fmInfo;
 
                 // Skip the form if its already been seen before.
-                if (!m_info.contains(form))
+                if (!m_info.hasForm(form))
                 {
                     $p = pCandidates(form);
                     fmInfo = new FormInfo(form);
@@ -1125,7 +1198,7 @@
                     {   // No password fields found inside this form. Do a strict match for userid fields.
                         // Strict matching will leave out email fields though. We pick only one of the
                         // matched fields.
-                        $u = uCandidates(form, false);
+                        $u = uCandidates(form);
                         if ($u.length>0)
                         {
                             fmInfo.us = $u.toArray();
@@ -1149,16 +1222,48 @@
                 // visible:  visible.length()
             // };
 //             
-            return {
-                //sitVec:   situationVector,
-                onePass:  onePass,
-                multiPass: multiPass,
-                noPass:   noPass,
-                noUser:   noUser,
-                //tabbed: tabbed,
-                //visible:  visible,
-                all:      all                
-            };
+            if (m_info.scraped.onePass) {
+                m_info.scraped.onePass.merge(onePass);
+            }
+            else {
+                m_info.scraped.onePass = onePass;
+            }
+            if (m_info.scraped.multiPass) {
+                m_info.scraped.multiPass.merge(multiPass);
+            }
+            else {
+                m_info.scraped.multiPass = multiPass;
+            }
+            if (m_info.scraped.noPass) {
+                m_info.scraped.noPass.merge(noPass);
+            }
+            else {
+                m_info.scraped.noPass = noPass;
+            }
+            if (m_info.scraped.noUser) {
+                m_info.scraped.noUser.merge(noUser);
+            }
+            else {
+                m_info.scraped.noUser = noUser;
+            }
+            if (m_info.scraped.all) {
+                m_info.scraped.all.merge(all);
+            }
+            else {
+                m_info.scraped.all = all;
+            }
+            
+            return m_info.scraped;
+            // return {
+                // //sitVec:   situationVector,
+                // onePass:  onePass,
+                // multiPass: multiPass,
+                // noPass:   noPass,
+                // noUser:   noUser,
+                // //tabbed: tabbed,
+                // //visible:  visible,
+                // all:      all                
+            // };
         }
 
         // Scans the document to heuristically detect signin/signup forms as needed.
@@ -1187,7 +1292,8 @@
                     {
                         // The onePass forms are not visible. Try to see if there is
                         // a visible noPass form. If yes, then that becomes the signin
-                        // form, otherwise the onePass one.
+                        // form, otherwise we won't label any because we don't want to
+                        // autoFill invisible forms. That would be confusing to the user.
                         visible = formScan.noPass.getVisible();
                         if (visible.length()>1) {
                             // one could also get the smallest form, but this works better.
@@ -1196,9 +1302,9 @@
                         else if (visible.length()===1) {
                             signin = visible.get(0);
                         }
-                        else {
-                            signin = formScan.onePass.getFirstFocussed();
-                        }
+                        // else {
+                            // signin = formScan.onePass.getFirstFocussed();
+                        // }
                     }
                     
                     if (signin) {
@@ -1206,11 +1312,11 @@
                     }
                 }
 
+                // Save the remaining forms for auto-capture
+                m_info.signup.merge(formScan.all);
                 if (signin) {
-                    formScan.all.rm(signin);    
+                    m_info.signup.rm(signin);
                 }
-                // Collect the remaining forms for auto-capture
-                m_info.signup.append(formScan.all);
             }
         }
 
@@ -1219,9 +1325,7 @@
             var i, j, l, uEl, uEl2, pEl, pEl2, eRecsMap, uer, per, uer2, per2,
                 loc = BP_MOD_CONNECT.newL(g_loc, dt_eRecord);
             
-            if (!ctxEl) {
-                m_info.clear();
-            }            
+            m_info.clearAssignment();            
             if (MOD_DB.eRecsMapArray.length)
             {
                 // Cycle through eRecords starting with the best URL matching node.
@@ -1634,7 +1738,7 @@
         /*
          * Show panel using the dbInfo returned in the response.
          */
-        function cbackShowPanel (resp)
+        function cbackShowPanel (resp, bConditional)
         {
             if (resp.result===true)
             {
@@ -1648,8 +1752,25 @@
                 MOD_DB.init(); // Just to be on the safe side
                 BP_MOD_ERROR.logdebug(resp.err);
             }
-    
-            MOD_PANEL.create();
+
+            if ((!bConditional) || MOD_FILL.info().autoFillable()) {
+                MOD_PANEL.create();
+            }
+        }
+        
+        function showPanelConditional (resp)
+        {
+            cbackShowPanel(resp, true);
+        }
+        
+        function showPanelAsync(bConditional)
+        {
+            if (bConditional) {
+                getRecs(g_loc, showPanelConditional);
+            }
+            else {
+                getRecs(g_loc, cbackShowPanel);
+            }
         }
         
         /*
@@ -1657,18 +1778,16 @@
          * Should do the following:
          * 1. Scan the page for DND and autofill if not already done.
          * 2. Destroy the panel if it is displaying.
-         * 3. Else, send a request to get db from background page.
+         * 3. Else, send a request to get db from background page and
+         *    display the panel if a signin page was found.
          */
         function onDllLoad ()
         {
             MOD_FILL.init(); // scans only if not already done
             MOD_DND.init(); // init only if not already done
-    
             if (!MOD_PANEL.destroy()) // destroy returns true if a panel existed and was destroyed
             {
-                // MOD_DB.ingest(request.db, request.dbInfo);
-                // MOD_PANEL.create();
-                showPanelAsync();
+                showPanelAsync(true);
             }
         }
 
@@ -1682,15 +1801,10 @@
          */
         function onClickBP (request, _ /*sender*/, sendResponse)
         {
-            onDllLoad(request);
+            onClickComm();
             sendResponse({ack:true});
         }
     
-        function showPanelAsync()
-        {
-            getRecs(g_loc, cbackShowPanel);
-        }
-        
         /**
          * Invoked for showing panel the first time and for toggling it afterwards.
          * Should do the following:
@@ -1705,6 +1819,7 @@
             
             if (!MOD_PANEL.destroy()) // destroy returns true if a panel existed and was destroyed
             {
+                MOD_FILL.scan();
                 showPanelAsync();
             }
         }
@@ -1733,6 +1848,7 @@
             setupCommand(g_doc, onClickComm);
             BP_DLL.onClickComm = onClickComm;
             BP_DLL.onDllLoad = onDllLoad;
+            BP_DLL.onClickBP = onClickBP;
         }
 
         return Object.freeze(
