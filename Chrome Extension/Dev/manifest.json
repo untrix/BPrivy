@@ -1,6 +1,6 @@
 {
   "name": "BPrivy",
-  "version": "0.5.20",
+  "version": "0.5.21",
   "manifest_version": 2,
   "minimum_chrome_version": "7",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
@@ -15,7 +15,7 @@
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     "js": ["bp_cs_boot.cat.js"],
-    "run_at": "document_end",
+    "run_at": "document_idle",
     "all_frames": true
     }
   ],
@@ -27,7 +27,7 @@
            "bp_cs_boot_head.js",
            "bp_cs.cat.js",
            "bp_cs_boot_stub.js"],
-    "run_at": "document_end",
+    "run_at": "document_idle",
     "css": ["bp.css"],
     "all_frames": true
     }

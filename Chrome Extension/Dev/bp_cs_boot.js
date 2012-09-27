@@ -173,4 +173,13 @@
     if (BP_MOD_BOOT.scan(document)) {
         onDllLoad();
     }
+    else {
+        BP_MOD_BOOT.observe(document, function(node,observer)
+        {
+            if (BP_MOD_BOOT.scan(node)) {
+                observer.disconnect();
+                onDllLoad();
+            }
+        });
+    }
 }());

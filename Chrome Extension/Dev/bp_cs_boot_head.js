@@ -10,7 +10,7 @@ var BP_MOD_BOOT = (function()
         // }]);
     // }
     
-    function scan(doc)
+    function scan(ctxEl)
     {
         // var bNumForms = 0;
 //         
@@ -23,11 +23,46 @@ var BP_MOD_BOOT = (function()
         // }]);
 //         
         // return bNumForms;
-        var el = doc.querySelector('input[type=password]');        return Boolean(el);
+        var el = ctxEl.querySelector('input[type=password]');        return Boolean(el);
     }
-    
+        
+    function observe(doc, callback)
+    {
+        function onMutation(mutations, observer)
+        {
+            function handleMutation(mutation)
+            {
+                var i, n, node, nodes=mutation.addedNodes;
+                for (i=0, n=nodes.length; i<n; ++i)
+                {
+                    node = nodes[i];
+                    if ((node.nodeType===node.ELEMENT_NODE)&&(node.tagName!=='IFRAME')) {                        callback(node, observer);
+                    }
+                }
+            }
+            
+            console.log("Mutation observed by loader:\n");
+            var i, n;
+            for (i=0, n=mutations.length; i<n; i++)
+            {
+                handleMutation(mutations[i]);
+            }
+        }
+
+        var observer = new WebKitMutationObserver(onMutation);
+        observer.observe(doc,
+            {
+                childList:true,
+                subtree:true,
+                // attributes:true,
+                // attributeFilter: ['offsetWidth', 'offsetHeight'],
+                // attributeOldValue: true
+            });
+    }
+        
     return Object.freeze(
         {
-            scan: scan
+            scan: scan,
+            observe: observe
         });
 }());
