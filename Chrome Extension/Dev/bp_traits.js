@@ -54,6 +54,8 @@ var BP_MOD_TRAITS = (function ()
         fn_userid2= "u2",// userid field of signup/register forms for auto-capture but not autofill.
         fn_pass = "p",   // Represents field password. Copy value from P_UI_TRAITS.
         fn_pass2= "p2";  // password field of signup/register forms for auto-capture but not autofill
+        
+    var eid_pfx = "com-untrix-";
 
     var FT = Object.freeze({
         text: 1,
@@ -153,48 +155,12 @@ var BP_MOD_TRAITS = (function ()
             return null;
         }
     };
-    
-    // function DTIterator (dnode)
-    // {
-        // var a = [], dts = UI_TRAITS.getAllDT(), i, dt;
-//         
-        // for (i=dts.length-1; i>=0; i--)
-        // {
-            // dt = dts[i];
-            // if (dnode.data[dt]) {
-                // a.push(new RecsIterator(dnode.data[dt]));
-            // }
-        // }
-//         
-        // Object.defineProperties(this,
-        // {
-            // _a: {value: a},
-            // _n: {value: a.length},
-            // _i: {value:0, writable:true}
-        // });
-        // Object.seal(this);
-    // }
-    // DTIterator.prototype.next = function ()
-    // {
-        // if (this._i < this._n) {
-            // return this._a[this._i++];
-        // }
-        // else {
-            // return null;
-        // }
-    // };
-// 
-    // function DNodeIterator (root) // Walks dictionary and returns DNodes that have data.
-    // {
-//         
-    // }
 
     var iface = {};
     Object.defineProperties(iface,
     {
         UI_TRAITS: {value: UI_TRAITS},
         RecsIterator: {value: RecsIterator},
-        //DTIterator: {value: DTIterator},
         dt_eRecord: {value: dt_eRecord},
         dt_pRecord: {value: dt_pRecord},
         dt_etld: {value: dt_etld},
@@ -203,7 +169,8 @@ var BP_MOD_TRAITS = (function ()
         fn_userid: {value: fn_userid},
         fn_userid2:{value: fn_userid2},
         fn_pass: {value: fn_pass},
-        fn_pass2:{value: fn_pass2}
+        fn_pass2:{value: fn_pass2},
+        eid_pfx: {value: eid_pfx}
     }); Object.freeze(iface);
     
     console.log("loaded traits");

@@ -68,7 +68,7 @@ var BP_MOD_CS_PLAT = (function()
                 }
                 else // frame url not provided
                 {
-                    var tag = document.activeElement.tagName.toLowerCase();
+                    var tag = document.activeElement.localName;
                     if (document.hasFocus())
                     {
                         if (tag==='iframe')

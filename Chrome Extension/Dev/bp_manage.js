@@ -441,7 +441,7 @@ var BP_MOD_MANAGE = (function ()
                    dbutton: "Select Wallet Folder",
                    clrHist: true},
                    //capture the id in the closure for using from callback
-                   id = e.currentTarget.id;
+                   id = e.currentTarget.getAttribute('id');
             $('#dbChooseLoad, #dbChooseLoad2').button('loading');
 
             if (BP_PLUGIN.chooseFolder(o)) 
@@ -499,7 +499,7 @@ var BP_MOD_MANAGE = (function ()
         // {
             // var inp = $('[data-path]', this.form)[0];
             // inp.value = inp.value + this.value + DIR_SEP;
-            // fillOptions(this.id, inp.value);
+            // fillOptions(this.getAttribute('id'), inp.value);
             // //$(this).trigger('click');
             // this.focus();
         // });
@@ -518,7 +518,7 @@ var BP_MOD_MANAGE = (function ()
         addEventListeners('#dbClose, #dbClose2', 'click', function (e)
         {
             //capture the id in the closure for using from callback
-            var id = e.currentTarget.id;
+            var id = e.currentTarget.getAttribute('id');
             
             unloadDB(function (resp)
             {

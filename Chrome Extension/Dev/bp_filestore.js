@@ -43,10 +43,12 @@ var BP_MOD_FILESTORE = (function()
     var newPRecord = IMPORT(m.newPRecord);
     /** @import-module-begin MemStore **/
     var MEM_STORE = IMPORT(BP_MOD_MEMSTORE);
+    /** @import-module-begin UI Traits **/
+    var eid_pfx = IMPORT(BP_MOD_TRAITS.eid_pfx);
     /** @import-module-end **/    m = null;
 
     /** @constant ID of BP-Plugin HtmlEmbedElement*/
-    var eid_bp = "com-untrix-bpplugin",
+    var eid_bp = eid_pfx + "bpplugin",
     // Points to the bp-plugin
         BP_PLUGIN,
         /** Record Separator in the files */

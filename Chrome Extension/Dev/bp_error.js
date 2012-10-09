@@ -117,8 +117,8 @@ var BP_MOD_ERROR = (function()
     var dt_Activity= 'Activity';// Represents an Activity object. Needed because message
                                 // objects reassmbled across a the message-pipe loose their
                                 // constructor property and hence there is no way to find out
-                                // type of the object. 
-   /*
+                                // type of the object.
+   /**
     * More codes
     */
     var msg = Object.freeze(
@@ -136,7 +136,8 @@ var BP_MOD_ERROR = (function()
         NotJSObject: "Argument is not a javascript object.",
         NoDBLoaded: "Please load a uWallet first.",
         DBAlreadyLoaded: "This wallet is already loaded. Please select a different one.",
-        NoDBSelected: "Please choose a uWallet first."
+        NoDBSelected: "Please choose a uWallet first.",
+        InternalError: "InternalError"
     });
 
    function Activity(arg)

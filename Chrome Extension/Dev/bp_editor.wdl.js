@@ -736,7 +736,7 @@ var BP_MOD_EDITOR = (function ()
         onTarget:{ dragstart:EditorWdl.prototype.handleDragStart,
         drag:EditorWdl.prototype.handleDrag, 
         dragend:EditorWdl.prototype.handleDragEnd },
-        attr:{ id:'com-bprivy-panel'},
+        attr:{ id:BP_MOD_TRAITS.eid_pfx+'panel'},
         iface:{ i:0 },
         ctx:{ w$:{ editor:'w$el' } },
             iterate:{ it:dnIt, wdi:DNodeWdl.wdi }

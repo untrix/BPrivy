@@ -52,7 +52,8 @@ var BP_MOD_WDL = (function ()
         fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
         fn_pass = IMPORT(m.fn_pass),        // Represents data-type password
         dt_eRecord = IMPORT(m.dt_eRecord),
-        dt_pRecord = IMPORT(m.dt_pRecord);
+        dt_pRecord = IMPORT(m.dt_pRecord),
+        eid_pfx = IMPORT(m.eid_pfx);
         /** @import-module-end **/    m = null;
 
     /** @globals-begin */
@@ -63,20 +64,20 @@ var BP_MOD_WDL = (function ()
     // semantic. They are grouped according to semantics.
     // Element ID values. These could clash with other HTML elements
     // Therefore they need to be crafted to be globally unique within the DOM.
-    var eid_panel = "com-bprivy-panel"; // Used by panel elements
-    var eid_panelTitle ="com-bprivy-panelTitle"; // Used by panel elements
-    var eid_panelTitleText = "com-bprivy-TitleText";
-    var eid_panelList ="com-bprivy-panelList"; // Used by panel elements
-    var eid_ioItem = "com-bprivy-ioItem-";
-    var eid_opElement = 'com-bprivy-op-'; // ID prefix of an output line of panel
-    var eid_userOElement = "com-bprivy-useridO-"; // ID Prefix used by panel elements
-    var eid_passOElement = "com-bprivy-passO-"; // ID Prefix Used by panel elements
-    var eid_userIElement = "com-bprivy-useridI-"; // ID Prefix used by panel elements
-    var eid_passIElement = "com-bprivy-passI-"; // ID Prefix Used by panel elements
-    var eid_inForm = "com-bprivy-iform-";
-    var eid_tButton = "com-bprivy-tB-"; // ID prefix for IO toggle button
-    var eid_xButton = "com-bprivy-xB"; // ID of the panel close button
-    var eid_fButton = "com-bprivy-fB"; // ID of the fill fields button
+    var eid_panel = eid_pfx+"panel"; // Used by panel elements
+    var eid_panelTitle =eid_pfx+"panelTitle"; // Used by panel elements
+    var eid_panelTitleText = eid_pfx+"TitleText";
+    var eid_panelList =eid_pfx+"panelList"; // Used by panel elements
+    var eid_ioItem = eid_pfx+"ioItem-";
+    var eid_opElement = eid_pfx+'op-'; // ID prefix of an output line of panel
+    var eid_userOElement = eid_pfx+"useridO-"; // ID Prefix used by panel elements
+    var eid_passOElement = eid_pfx+"passO-"; // ID Prefix Used by panel elements
+    var eid_userIElement = eid_pfx+"useridI-"; // ID Prefix used by panel elements
+    var eid_passIElement = eid_pfx+"passI-"; // ID Prefix Used by panel elements
+    var eid_inForm = eid_pfx+"iform-";
+    var eid_tButton = eid_pfx+"tB-"; // ID prefix for IO toggle button
+    var eid_xButton = eid_pfx+"xB"; // ID of the panel close button
+    var eid_fButton = eid_pfx+"fB"; // ID of the fill fields button
 
     // CSS Class Names. Visible as value of 'class' attribute in HTML
     // and used as keys in CSS selectors. These need to be globally
@@ -121,7 +122,7 @@ var BP_MOD_WDL = (function ()
        
     function MiniDB()
     {
-        this.init();
+        this.clear();
     }
     MiniDB.prototype = Object.freeze(
     {
@@ -142,12 +143,19 @@ var BP_MOD_WDL = (function ()
             }
             else
             { 
-                this.init();
+                this.clear();
             }
         },
-        init: function ()
+        clear: function ()
         {
             this.empty();
+            this.preventEdits();
+        },
+        rmData: function ()
+        {
+            var k = this.eRecsMapArray;
+            this.empty();
+            this.eRecsMapArray = k;
             this.preventEdits();
         },
         empty: function ()
@@ -461,7 +469,7 @@ var BP_MOD_WDL = (function ()
     OItemP.wdt = function (w$ctx)
     {
         var u, p, 
-            autoFill = w$ctx.autoFill,
+            //autoFill = w$ctx.autoFill,
             ioItem = w$ctx.ioItem,
             pRec = (ioItem && ioItem.rec) ? ioItem.rec:undefined;
         if (pRec) {
@@ -474,7 +482,6 @@ var BP_MOD_WDL = (function ()
             addClass:css_class_ioFields,
             ctx:{ w$:{ oItem:'w$el' } },
                 children:[
-                //autoFill ? FButton.wdt : w$undefined,
                 {tag:'span',
                  attr:{ draggable:true },
                  addClass:css_class_field+css_class_userOut,
