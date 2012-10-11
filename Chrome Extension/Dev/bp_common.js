@@ -260,6 +260,10 @@ var BP_MOD_COMMON = (function()
         } 
     }
     
+    function indexOf (a, item)
+    {
+        return Array.prototype.indexOf.apply(a, [item]);
+    }
     // function concatArray (dst, frag)
     // {
         // iterArray2(frag, null, function (item, dst)
@@ -290,8 +294,9 @@ var BP_MOD_COMMON = (function()
         clear: {value: clear},
         delProps: {value: delProps},
         iterKeys: {value: iterKeys},
-        iterArray2:{value: iterArray2},
-        iterObj:{value:iterObj},
+        iterArray2: {value: iterArray2},
+        indexOf: {value: indexOf},
+        iterObj: {value:iterObj},
         //concatArray: {value: concatArray},
         EMPTY_OBJECT: {value: EMPTY_OBJECT},
         EMPTY_ARRAY: {value: EMPTY_ARRAY}

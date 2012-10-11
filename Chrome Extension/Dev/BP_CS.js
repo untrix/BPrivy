@@ -23,6 +23,7 @@
     m = BP_MOD_COMMON;
     var MOD_COMMON = IMPORT(m),
         iterArray2 = IMPORT(m.iterArray2),
+        indexOf = IMPORT(m.indexOf),
         encrypt = IMPORT(m.encrypt),
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
@@ -41,7 +42,8 @@
         fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
         fn_userid2= IMPORT(m.fn_userid2),
         fn_pass2 = IMPORT(m.fn_pass2),
-        fn_pass = IMPORT(m.fn_pass);        // Represents data-type password
+        fn_pass = IMPORT(m.fn_pass),        // Represents data-type password
+        fn_btn  = IMPORT(m.fn_btn);        // Submit button
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
     var getRecs = IMPORT(m.getRecs),
@@ -147,9 +149,13 @@
                 'buddys': {value: buddys || [], writable:true, enumerable:true},
                 // Array of pontential submit buttons. Ideally there should only be one.
                 'btns':  {writable:true, enumerable:true},
-                'tabIndex':{writable:true, enumerable:true} // similiar to tabIndex IDL attrib of elements.
+                'tabIndex':{writable:true, enumerable:true}, // similiar to tabIndex IDL attrib of elements.
+                'k':      {value: {us:[], ps:[]}}
             });
         }
+        //
+        // GLOBAL FUNCS GLOBAL FUNCS GLOBAL FUNCS GLOBAL FUNCS GLOBAL FUNCS GLOBAL FUNCS
+        // 
         FormInfo.getVal = function(els)
         {
             var val;
@@ -200,23 +206,127 @@
                 }
             }
         };
+        FormInfo.isSubmitEl = function (el)
+        {
+            var cnfdnc = $(el).data(data_btn);
+            if (cnfdnc) {
+                return Number(cnfdnc);
+            }
+            return 0;
+        };
+        //
+        // PROTOTYPE PROTOTYPE PROTOTYPE PROTOTYPE PROTOTYPE PROTOTYPE
+        //
         FormInfo.prototype.onSubmit = function (c)
         {
             BP_MOD_ERROR.alert("FormInfo.prototype.submit invoked with c = " + c);
         };
-        FormInfo.prototype.pushEl = function (el, fn)
+        FormInfo.prototype.pushEl = function (el, fn, merge)
         {
-            if (fn===fn_userid) {this.us.push(el);}
-            else if (fn===fn_pass) {this.ps.push(el);}
+            var ar;
+            if (fn===fn_userid) {ar = this.us;}
+            else if (fn===fn_pass) {ar = this.ps;}
+            else if (fn===fn_btn) {ar = this.btns;}
+            if (ar && (!merge || (ar.indexOf(el)===-1))) {ar.push(el);}
         };
-        FormInfo.prototype.pushEls = function (els, fn)
+        FormInfo.prototype.mergeEl = function (el, fn)
         {
-            iterArray2(els, this, FormInfo.prototype.pushEl, fn);
+            this.pushEl(el, fn, true);
+        };
+        FormInfo.prototype.pushEls = function (els, fn, merge)
+        {
+            iterArray2(els, this, function(el)
+            {
+                this.pushEl(el, fn, merge);
+            });
+        };
+        FormInfo.prototype.mergeEls = function (els, fn) { this.pushEls(els, fn, true); };
+        FormInfo.prototype.merge = function (fInfo, rel)
+        {   
+            rel = rel || FormInfo.SUBSET;
+            if (rel === FormInfo.SUBSET) {
+                // this is SUBSET of fInfo
+                this.form = fInfo.form;
+                this.cntnr= fInfo.cntnr;
+            }
+            if (!this.k.us.length) {
+                // No e-records here.
+                if (fInfo.k.us.length) {
+                    this.us = fInfo.us;
+                }
+                else {
+                    this.mergeEls(fInfo.us, fn_userid);
+                }
+            }
+            if (!this.k.ps.length) {
+                // No e-records here.
+                if (fInfo.k.ps.length) {
+                    this.ps = fInfo.ps;
+                }
+                else {
+                    this.mergeEls(fInfo.ps, fn_pass);
+                }
+            }
+            this.mergeEls(fInfo.btns, fn_btn);
         };
         FormInfo.prototype.isEmpty = function ()
         {
             return (!this.form) && (!this.us.length) && (!this.ps.length) && (!this.btns.length);
-        };        FormInfo.prototype.count = function ()
+        };
+        FormInfo.prototype.hasEl = function (el, fn)
+        {
+            if (fn===fn_userid) {
+                return (this.us.indexOf(el) !== -1);
+            }
+            else if (fn===fn_pass) {
+                return (this.ps.indexOf(el) !== -1);
+            }
+            else if (fn===fn_btn) {
+                return (this.btns.indexOf(el) !== -1);
+            }
+        };
+        FormInfo.prototype.isContainerOf = function (el, fn)
+        {
+            if (!this.form) { return false; }
+            else if (!this.cntnr) {
+                return isAncestor(this.form, el) || (indexOf(this.form.elements, el) !== -1);
+            }
+            else {
+                return isAncestor(this.cntnr, el) || (indexOf(this.form.elements, el) !== -1);
+            }
+        };
+        FormInfo.DISJOINT = -1;
+        FormInfo.UNDEFINED = 0;
+        FormInfo.EQUAL = 1;
+        FormInfo.SUPERSET = 2;
+        FormInfo.SUBSET = 3;
+        FormInfo.prototype.intersect = function(fInfo)
+        {
+            var cmp, rval;
+            if ((!fInfo.form) || (!this.form)) {rval = FormInfo.DISJOINT;}
+            else if (this.form===fInfo.form) {rval = FormInfo.EQUAL;}
+            else if ((!this.cntnr) || (!fInfo.cntnr)) {rval = FormInfo.DISJOINT;}
+            else {
+                cmp = fInfo.cntnr.compareDocumentPosition(this.cntnr);
+            
+                if (cmp & fInfo.cntnr.DOCUMENT_POSITION_CONTAINS) {
+                    rval = FormInfo.SUPERSET;
+                }
+                else if (cmp & fInfo.cntnr.DOCUMENT_POSITION_CONTAINED_BY) {
+                    rval = FormInfo.SUBSET;
+                }
+                else {
+                    rval = FormInfo.DISJOINT;
+                }
+            }
+            return rval;
+        };
+        FormInfo.prototype.getIntersecting = function (fInfo)
+        {
+            var cmp = this.intersect(fInfo);
+            return (cmp !== FormInfo.DISJOINT) ? {fInfo:this, cmp:cmp} : null;
+        };
+        FormInfo.prototype.count = function ()
         {
             return ( (this.form && this.form.elements) ? (this.form.elements.length||0) : 
                      ((this.us?(this.us.length||0):0) + (this.ps?(this.ps.length||0):0)) );
@@ -274,14 +384,6 @@
             else {
                 this.top = this.left = this.h = this.w = 0;
             }
-        };
-        FormInfo.prototype.isSubmit = function (el)
-        {
-            var cnfdnc = $(el).data(data_btn);
-            if (cnfdnc) {
-                return Number(cnfdnc);
-            }
-            return 0;
         };
         FormInfo.prototype.hookForm = function ()
         {
@@ -454,7 +556,8 @@
             
             this._a.some(function(fInfo)
             {
-                if (fInfo.form===form) {
+                if (fInfo.form===form) 
+                {
                     rInfo = fInfo;
                     return true;
                 }
@@ -462,34 +565,97 @@
             
             return rInfo;
         };
-        /**
-         * Inserts fInfo in tree-order unless it is already present in the collection.
-         * Returns true if insertion was successful, false otherwise. 
-         */
-        Forms.prototype.insert = function (fInfo) 
+        Forms.prototype.getFInfoE = function (el, fn)
         {
-            var i, n, done=false, rVal=false;
+            var rInfo = null;
+            this._a.some(function(fInfo)
+            {
+                if (fInfo.hasEl(el, fn)) {
+                    rInfo = fInfo;
+                    return true;
+                }
+            });
+            
+            return rInfo;
+        };
+        
+        /**
+         * Inserts fInfo in tree order into the collection. Does not check for
+         * intersection. Only checks if the form is not already present.
+         */
+        Forms.prototype.insertForm = function (form) 
+        {
+            var i, n, cmp, done=false, rInfo, tInfo;
+            if (!form) {return;}
+
+            for (i=0, n=this._a.length-1; i<n; i++) 
+            {
+                if (this._a[i].form === form) {
+                    done = true;
+                    rInfo = this._a[i];
+                    break;
+                }
+                else if (isBefore(form, this._a[i].form)) {
+                    tInfo = new FormInfo(form);
+                    this._a.splice(i,0, tInfo);
+                    done = true;
+                    rInfo = tInfo;
+                    break;
+                }
+            }
+
+            if (!done) {
+                tInfo = new FormInfo(form);
+                this._a.push(tInfo);
+                rInfo = tInfo;
+            }
+            
+            return rInfo;
+        };
+        /**
+         * Inserts fInfo in tree-order unless it intersects with an
+         * already present form, in which case the two will get merged.
+         * Returns true if insertion was successful, false otherwise.
+         */
+        Forms.prototype.mergeInsert = function (fInfo) 
+        {
+            var i, n, cmp, done=false, rInfo;
             if (!fInfo.form) {
                 throw BP_MOD_ERROR.BPError("fInfo insert attempted without a form", "Diag", "InternalError");
             }
-            for (i=0, n=this._a.length-1; i<n; i++) {
-                if (fInfo.form===this._a[i].form) {
+            for (i=0, n=this._a.length-1; i<n; i++) 
+            {
+                cmp = this._a[i].intersect(fInfo);
+                if ((cmp===FormInfo.EQUAL) || (cmp===FormInfo.SUBSET)) {
+                    this._a[i].merge(fInfo, cmp);
                     done = true;
+                    rInfo = this._a[i];
                     break;
                 }
-                if (isBefore(fInfo.form, this._a[i].form)) {
+                else if (cmp===FormInfo.SUPERSET) {
+                    // fInfo could be a superset of the next item as well. Therefore,
+                    // remove the current element and merge it into fInfo. Then check
+                    // fInfo against the next element.
+                    fInfo.merge(this._a.splice(i,1),cmp);
+                    // We decremented index of the following elements by 1. Hence
+                    // decrement i.
+                    i--;
+                    continue;
+                }
+                else if (isBefore(fInfo.form, this._a[i].form)) {
                     this._a.splice(i,0,fInfo);
                     done = true;
+                    rInfo = fInfo;
                     break;
                 }
             }
-            
+
             if (!done) {
                 this._a.push(fInfo);
-                rVal = true;
+                rInfo = fInfo;
             }
             
-            return rVal;
+            return rInfo;
         };
         Forms.prototype.some = function (func)
         {
@@ -508,18 +674,18 @@
             {
                 fInfos.some(function()
                 {
-                    host.insert(this);
+                    host.mergeInsert(this);
                 });
             }
         };
-        Forms.prototype.mergeForms = function (forms)
+        Forms.prototype.insertForms = function (forms)
         {
             var host = this;
             if (forms)
             {
                 iterArray2(forms, null, function(form)
                 {
-                    host.insert(new FormInfo(form));
+                    host.insertForm(form);
                 });
             }
         };
@@ -591,6 +757,30 @@
             });
             
             return found;
+        };
+        Forms.prototype.getContainerOf = function(el, fn)
+        {
+            var fInfo;
+            this.some(function()
+            {
+                if (this.isContainerOf(el, fn)) {
+                    fInfo = this;
+                    return true;
+                }
+            });
+
+            return fInfo;
+        };
+        Forms.prototype.getIntersecting = function(fInfo)
+        {
+            var rVal;
+            this.some(function(f)
+            {
+                rVal = f.getIntersecting(fInfo);
+                return rVal;
+            });
+
+            return rVal;
         };
         // Forms.prototype.getTabbed = function ()
         // {
@@ -665,9 +855,39 @@
         };
         FillInfo.prototype.getFInfo = function (form)
         {   // returns fInfo or null
-            return ( this.signin.getFInfo(form) ||
-                     this.signup.getFInfo(form) ||
-                     this.scraped.all.getFInfo(form) );
+            if (this.k.fmInfo && (this.k.fmInfo.form === form)) {
+                return this.k.fmInfo;
+            }
+            // else if (this.k.fmInfo2 && (this.k.fmInfo2.form === form)) {
+                // return this.k.fmInfo2;
+            // }
+            else {
+                return this.scraped.all.getFInfo(form);
+            }
+        };
+        FillInfo.prototype.getContainerOf = function (el, fn)
+        {
+            var rval;
+            if (this.k.fmInfo && this.k.fmInfo.isContainerOf(el, fn)) {
+                rval = this.k.fmInfo;
+            }
+            // else if (this.k.fmInfo2 && this.k.fmInfo2.isContainerOf(el, fn)) {
+                // rval = this.k.fmInfo2;
+            // }
+            else {
+                rval = this.scraped.all.getContainerOf(el, fn);
+            }
+            return rval;
+        };
+        FillInfo.prototype.getFInfoE = function (el, fn)
+        {
+            if (this.k.fmInfo && this.k.fmInfo.hasEl(el, fn)) { return this.k.fmInfo; }
+            //if (this.k.fmInfo2 && this.k.fmInfo2.hasEl(el, fn)) { return this.k.fmInfo2; }
+            return this.scraped.all.getFInfoE(el, fn);
+        };
+        FillInfo.prototype.getIntersecting = function (fInfo)
+        {
+            return (this.k.fmInfo? this.k.fmInfo.getIntersecting(fInfo):null) || this.scraped.all.getIntersecting(fInfo);
         };
         FillInfo.prototype.dontHave = function (forms)
         {
@@ -695,7 +915,7 @@
             if (!fInfo) {
                 fInfo = m_info.signup.getClicked(ev);
             }
-            
+
             return fInfo;
         };
 
@@ -736,7 +956,7 @@
             if (!fInfo) {
                 return;
             }
-            cnfdnc=fInfo.isSubmit(el);
+            cnfdnc=FormInfo.isSubmitEl(el);
             if (cnfdnc) {
                 fInfo.onSubmit(cnfdnc);
             }
@@ -808,13 +1028,19 @@
             }
         }
 
-        function getAncestor(el, levels, numInp)
+        function getAncestor(el, levels, numInp, visibleOnly)
         {
-            var p, i, p2;
+            var p, i, p2, num;
 
             for (i=0, p=el.parentElement; (i<levels)&&p; i++, p=p.parentElement)
             {
-                if ($('input,button,a',p).length>=numInp) {
+                if (visibleOnly) {
+                    num = $('input,button,a', p).filter(':visible').length;
+                }
+                else {
+                    num = $('input,button,a', p).length;
+                }
+                if (num>=numInp) {
                     break;
                 }
             }
@@ -828,7 +1054,7 @@
             if (form && (form.localName==='form'))
             {
                 if ((g_uselessForms.indexOf(form.id) !== -1) ||
-                    ($(field).parentsUntil(form) >= 5)) 
+                    (isAncestor(form, field) && ($(field).parentsUntil(form) >= 5)) ) 
                 {
                     isUseless = true;
                 }
@@ -844,53 +1070,54 @@
          *  of el. The returned element itself may not be a form element (such is the case
          *  with about 2-5% websites tested).
          */
-        function formAncestor(el, fn)
+        function formAncestor(el, fn, stage)
         {
-            var i, topEls,
-            p = el.form, 
-            p2 = el,
-            fInfo = new FormInfo();
+            var i, topEls, tF, tE
+                fInfo = new FormInfo();
 
-            if (p)
-            { 
-                if (isUselessForm(p, el)) {
-                    // aspnetForms are meaningless.
-                    p = null;
-                }
-                else {
-                    fInfo.form = p;
+            if (el.form)
+            {   
+                tF = el.form
+                if (!isUselessForm(tF, el)) {
+                    fInfo.form = tF;
+                    if (isAncestor(tF, el)) {
+                        fInfo.cntnr = tF;
+                    }
                 }
             }
             
-            while ((!p) && $(p2).is(':visible')) 
+            tE = el;
+            while ((!fInfo.cntnr) && $(tE).is(':visible')) 
             {
                 // el is visible. Find its positioned ancestor.
-                p = $(p2).offsetParent()[0];
+                tF = $(tE).offsetParent()[0];
                 
-                if (p) 
+                if (tF)
                 {
-                    if ((p===g_doc.body) || (p===g_doc.documentElement) || (p===g_doc)) {
-                        p = null;
+                    if ((tF===g_doc.body) || (tF===g_doc.documentElement) || (tF===g_doc)) {
                         break; // exit the loop.
                     }
-                    else if ($('input', p).length<=1) {
+                    else if ($('input', tF).length<=1) {
                         // We didn't grab any more input elements. So this is be too
                         // narrow a selection.
-                        p2 = p;
-                        p = null; // loop back.
+                        tE = tF;
                     }
                     else {
-                        fInfo.cntnr = fInfo.form = p;
+                        fInfo.cntnr = tF;
+                        if (!fInfo.form) {fInfo.form = tF;}
                         break;
                     }
                 }
+                else {
+                    break;
+                }
             }
             
-            if (!p) 
+            if (!fInfo.cntnr) 
             {
-                // Return ancestor upto 5 levels above, containing at least 3 input elements.
-                p = getAncestor(el, 5, 3);
-                fInfo.cntnr = fInfo.form = p;
+                // Return ancestor upto 5 levels above, containing at least 2 visible input elements.
+                fInfo.cntnr = getAncestor(el, 5, 2, true);
+                if (!fInfo.form) {fInfo.form = fInfo.cntnr;}
             }
 
             fInfo.pushEl(el, fn);
@@ -953,31 +1180,37 @@
         // element is found. This is useful in cases where there was only one text field
         // besides the password field in a form (e.g. type===email) in which case, that
         // is probably the username field.
-        //
+        // @param stage Unused for now.
         // IMPORTANT: Results must be sorted in tree-order.
-        function uCandidates(cntxt, passEl, form)
+        //
+        //function uCandidates(cntxt, passEl, form)
+        function uCandidates(cntxt, stage)
         {
-            var $el, rval, $el1;
-            //$el = 
-            if (cntxt.elements) { // cntxt is a form element
+            var $el, rval, $el1, fInfo;
+            
+            if (cntxt instanceof FormInfo) {
+                fInfo = cntxt;
+                cntxt = fInfo.form || fInfo.cntnr || g_doc;
+            }
+            
+            if (cntxt instanceof HTMLFormElement) { // cntxt is a form element
                 $el1 = $(cntxt.elements).filter(function(){return this.webkitMatchesSelector(g_uSel);}).filter(':visible');
             }
             else {
                 $el1 = $(g_uSel, $(cntxt)).filter(':visible');
             }
             
-            if ((!passEl) && (!form)) {
-                // Since the container doesn't have a password field, apply a strict filter.
+            if (!fInfo || fInfo.isEmpty()) {
+                // Apply a strict filter.
                 // Note: container may be the entire document itself.
-                //$el = uFilter($el1, g_uSel2);
                 $el = $(nameMatch($el1, g_uReg2));
             }
-            else // if (passEl || form)
+            else // !fInfo.isEmpty()
             {   
-                if (passEl) {
+                if (fInfo.ps.length) {
                     // Filter out elements that come after the password element in the
                     // form. Username always preceeds password.
-                    $el1 = getElsBefore(passEl, $el1);
+                    $el1 = getElsBefore(getFirstEl(fInfo.ps), $el1);
                 }
                 
                 // Container form has a password field, therefore we can be more lax
@@ -1003,6 +1236,9 @@
                 }
             }
 
+            if (fInfo) {
+                fInfo.mergeEls($el, fn_userid);
+            }
             return $el;
         }
 
@@ -1011,6 +1247,8 @@
         // @param cntxt can be a cntxt-Element, a form-element or a FormInfo element.
         //        If it is a FormInfo element, then the found pCandidates will be added
         //        to it.
+        // @param stage Unused for now.
+        //
         function pCandidates(cntxt, stage)
         {
             var $candids, $try, fInfo, form, cntnr;
@@ -1019,7 +1257,7 @@
                 fInfo = cntxt;
                 cntxt = fInfo.form || fInfo.cntnr;
             }
-            
+
             if (!cntxt) {
                 cntnr = g_doc;
             }
@@ -1051,13 +1289,18 @@
             else { // This is known to be a signin or signup form. Hence we can be lax here.
                 if ($candids.length)
                 {
+                    if (fInfo.us.length) {
+                        $candids = getElsAfter(getLastEl(fInfo.us), $candids);
+                    }
+
                     $try = $candids.filter(':visible');
-                    if ($try.length || $(fInfo.ps).filter(':visible').length) {
+                    if ($try.length || ($(fInfo.ps).filter(':visible').length)) {
                         // There are other visible password fields. Hence all password
                         // fields should be visible
                         $candids = $try;
                     }
-                    // else: http://www.ibm.com/us/en/ case:
+                    // else $candids = $candids
+                    // case: http://www.ibm.com/us/en/
                     // All our password fields are hidden, but since we do know that this is
                     // a legit form, we'll assume that those password fields will be made visible
                     // later. So we'll keep the hidden password fields.
@@ -1065,7 +1308,7 @@
             }
 
             if (fInfo) {
-                fInfo.pushEls($candids, fn_pass);
+                fInfo.mergeEls($candids, fn_pass);
             }
 
             return $candids;
@@ -1074,25 +1317,35 @@
         /**
          * Find forms inside the context element and return them in tree order. Only
          * finds visible forms in stage-1 (the only stage this func is invoked in as of now).
+         * This function should ensure that it returns a list of unique and non-intersecting
+         * forms that do not intersect with m_info as well . Leave m_info untouched though,
+         * do not push elements or merge forms into it.
+         * 
+         * Note that since some of the fInfos detected below may not have their cntnr fields
+         * populated it is too early to find out whether these forms intersect. Only after
+         * their constituent field are discovered can their cntnr field be found and only after
+         * that we can perform true intersection. That will happen at the end of stage 2.
+         * At this stage we'll be only eliminating duplicate form elements for such fInfos.
          */
         function findForms(ctxEl, stage)
         {
-            var $forms, $candids, forms, fInfos = new Forms();
-            
+            var $forms, $candids, forms, tInfos, fInfos = new Forms();
+
             ctxEl = ctxEl || g_doc;
-            $forms = (ctxEl.forms ? $(ctxEl.forms) : $(ctxEl).find('form'));
+            forms = ctxEl.forms || $(ctxEl).find('form');
 
             if ($forms.length)
             {
-                forms = m_info.dontHave($forms);
-                forms = nameMatch(forms, g_fReg2);
-                $forms = $(forms);
-                fInfos.mergeForms(forms);
+                forms = nameMatch($forms, g_fReg2);
+                forms = m_info.dontHave(forms);
+                fInfos.insertForms(forms);
             }
 
             // Fetch enclosing forms around each candidate field.
-            // NOTE: Only visible fields are being sought below.
-            uCandidates(ctxEl).each(function()
+            // NOTE: Strict filters will be applied by *Candidates.
+            // We're assuming that this is stage-1 and that m_info.scraped
+            // is empty.
+            uCandidates(ctxEl, 1).each(function()
             {
                 processField.apply(this, [this, fn_userid]);
             });
@@ -1106,37 +1359,31 @@
              */
             function processField(el, fn)
             {
-                var f = el.form,
-                    fInfo, $t;
-                if (f && isUselessForm(f, el)) { f = null; }
-                
-                if (f) {
-                    if (forms.indexOf(f)!==-1) {
-                        // this input elements ancestor is already included.
-                        fInfos.getFInfo(f).pushEl(el, fn);
-                        return;
-                    }
-                }
-                else { // !f
-                    if (($t=$forms.has(el)) && $t.length) {
-                        // this input element is a descendant of an included form.
-                        fInfos.getFInfo($t[0]).pushEl(el, fn);
-                        return;
-                    }
-                    else {
-                        fInfo = formAncestor(el, fn);
-                        f = fInfo.form;
-                    }
-                }
+                var f, fInfo, t;
 
-                if (f && (!m_info.getFInfo(f))) {
-                    // union operation, not a blind concat. Tree order is retained.
-                    $forms = $forms.add(f);
-                    fInfos.insert(fInfo);
+                if ((t = fInfos.getContainerOf(el, fn))) {
+                    // this input element is a descendant or element of a known form.
+                    t.pushEl(el, fn);
+                    return;
+                }
+                else if (m_info.getContainerOf(el, fn)) {
+                    // t === m_info.k.fmInfo because at this stage m_info.scraped is empty.
+                    // Ignore this element since it is already included in the signin form.
+                    // Signin form will be scraped separately, so don't bother pushing this
+                    // element into it now.
+                    return;
+                }
+                else 
+                {
+                    fInfo = formAncestor(el, fn, 1);
+                    if (!m_info.getIntersecting(fInfo)) {
+                        fInfos.mergeInsert(fInfo);
+                    }
+
+                    return;
                 }
             }
             
-            //return $forms.toArray();
             return fInfos;
         }
         
@@ -1335,25 +1582,25 @@
         // @param fn Field-Type to find.
         // @param el The element that has been found.
         // finds visible username peers or visible and invisible password peers
-        function findPeers(fn, el, _form)
+        function findPeers(fn, el, fInfo)
         {
             var peers = [],
                 buddy,
                 $peers,
-                form = _form || formAncestor(el, fn),
+                //form = _form || formAncestor(el, fn),
                 //tabIndex = el.tabIndex,
                 $el = $(el),
                 pos, pos2, h, w;
 
-            if (form)
+            if (fInfo)
             {
                 if (fn === fn_userid) {
                     // $peers is sorted in tree order
-                    $peers = $(uCandidates(form, el)); // gets only visible fields.
+                    $peers = $(uCandidates(fInfo, el)); // gets only visible fields.
                 }
                 else if (fn === fn_pass) {
                     // $peers is sorted in tree order
-                    $peers = $(pCandidates(form)); // may return invisible fields in addition to visible
+                    $peers = $(pCandidates(fInfo)); // may return invisible fields in addition to visible
                 }
                 
                 if ($peers && ($peers.length > 0))
@@ -1473,84 +1720,73 @@
                 tabbed=new Forms(),
                 visible =new Forms(),
                 all = new Forms();
-            
-            if (ctxEl) 
-            {
-                if (ctxEl.localName === 'form') {
-                    //forms = [ctxEl];
-                    fInfos = new Forms();
-                    fInfos.insert(new FormInfo(form));
-                }
-                else {
-                    //forms = findForms(ctxEl);
-                    fInfos = findForms(ctxEl);
-                }
+
+            if (ctxEl && (ctxEl.localName === 'form')) {
+                //forms = [ctxEl];
+                fInfos = new Forms();
+                fInfos.insertForms([ctxEl]);                
             }
             else {
                 //forms = findForms(g_doc);
-                fInfos = findForms(g_doc);
+                fInfos = findForms(ctxEl, 1);
             }
 
             iterArray2(fInfos, null, function (fmInfo)
             {
-                var $p, $u, o, form = fmInfo.form;
+                var $p, $u, o;
 
-                // Skip the form if its already been seen before.
-                if (!m_info.getFInfo(form))
+                $p = pCandidates(fmInfo, 2);
+                //fmInfo = new FormInfo(form);
+
+                if ($p.length>0)
                 {
-                    $p = pCandidates(fmInfo, 2); // may return invisible fields in addition to visible
-                    //fmInfo = new FormInfo(form);
-
-                    if ($p.length>0)
+                    // fmInfo.ps = $p.toArray();
+                    // One or more password fields found inside this form.
+                    // Loop through password fields and collect all peer userid fields.
+                    iterArray2($p, null, function(p)
                     {
-                        // fmInfo.ps = $p.toArray();
-                        // One or more password fields found inside this form.
-                        // Loop through password fields and collect all peer userid fields.
-                        iterArray2($p, null, function(p)
+                        o = findPeers(fn_userid, p, form);// only visible userid fields.
+                        if (o.buddy)
                         {
-                            o = findPeers(fn_userid, p, form);// only visible userid fields.
-                            if (o.buddy)
-                            {
-                                fmInfo.buddys.push({u:o.buddy, p:p});
-                                // union of the two sets. tree-order is maintained by jQuery
-                                fmInfo.us = $(fmInfo.us).add(o.peers).toArray();
-                            }
-                        });
+                            fmInfo.buddys.push({u:o.buddy, p:p});
+                            // union of the two sets. tree-order is maintained by jQuery
+                            fmInfo.us = $(fmInfo.us).add(o.peers).toArray();
+                        }
+                    });
 
-                        if (fmInfo.buddys.length) {
-                            if (fmInfo.ps.length===1) {
-                                onePass.push(fmInfo);
-                            }
-                            else {
-                                multiPass.push(fmInfo);
-                            }
+                    if (fmInfo.buddys.length) {
+                        if (fmInfo.ps.length===1) {
+                            onePass.push(fmInfo);
                         }
                         else {
-                            noUser.push(fmInfo);                            
+                            multiPass.push(fmInfo);
                         }
-                        
-                        all.push(fmInfo);
                     }
-                    else 
-                    {   // No password fields found inside this form. Do a strict match for userid fields.
-                        // Strict matching will leave out email fields though. We pick only one of the
-                        // matched fields.
-                        $u = uCandidates(form);
-                        if ($u.length>0)
-                        {
-                            fmInfo.us = $u.toArray();
-                            noPass.push(fmInfo);
-                            all.push(fmInfo);
-                        }
+                    else {
+                        noUser.push(fmInfo);                            
                     }
                     
-                    fmInfo.updtCntnr();
-                    // if (fmInfo.cntnr) {
-                        // addEventListener(fmInfo.cntnr, 'keydown', FormInfo.onEnter);
-                        // addEventListeners(fmInfo.cntnr, 'mousedown', FormInfo.onMousedown);
-                    // }
-                    findSubmitBtns(fmInfo);
+                    all.push(fmInfo);
                 }
+                else 
+                {   // No password fields found inside this form. Do a strict match for userid fields.
+                    // Strict matching will leave out email fields though. We pick only one of the
+                    // matched fields.
+                    $u = uCandidates(form);
+                    if ($u.length>0)
+                    {
+                        fmInfo.us = $u.toArray();
+                        noPass.push(fmInfo);
+                        all.push(fmInfo);
+                    }
+                }
+                
+                fmInfo.updtCntnr();
+                // if (fmInfo.cntnr) {
+                    // addEventListener(fmInfo.cntnr, 'keydown', FormInfo.onEnter);
+                    // addEventListeners(fmInfo.cntnr, 'mousedown', FormInfo.onMousedown);
+                // }
+                findSubmitBtns(fmInfo);
             });
             if (m_info.scraped.onePass) {
                 m_info.scraped.onePass.merge(onePass);

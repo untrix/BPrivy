@@ -53,7 +53,9 @@ var BP_MOD_TRAITS = (function ()
     var fn_userid = "u", // Represents field userid. Copy value from P_UI_TRAITS.
         fn_userid2= "u2",// userid field of signup/register forms for auto-capture but not autofill.
         fn_pass = "p",   // Represents field password. Copy value from P_UI_TRAITS.
-        fn_pass2= "p2";  // password field of signup/register forms for auto-capture but not autofill
+        fn_pass2= "p2",  // password field of signup/register forms for auto-capture but not autofill
+        fn_btn = "b";    // submit button for both signin and signup. Currently not saved in eRecs.
+                         // usage limited to bp_cs, but included here to ensure no name-clash.
         
     var eid_pfx = "com-untrix-";
 
@@ -170,6 +172,7 @@ var BP_MOD_TRAITS = (function ()
         fn_userid2:{value: fn_userid2},
         fn_pass: {value: fn_pass},
         fn_pass2:{value: fn_pass2},
+        fn_btn: {value: fn_btn},
         eid_pfx: {value: eid_pfx}
     }); Object.freeze(iface);
     
