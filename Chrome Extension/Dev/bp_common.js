@@ -199,7 +199,9 @@ var BP_MOD_COMMON = (function()
             // ctx = Array.prototype.slice.apply(arguments, [3]);
         for (i; i>=0; i--)
         {
-            func.apply(thisArg, [keys[i], o[keys[i]], ctx]);
+            if (func.apply(thisArg, [keys[i], o[keys[i]], ctx]) === true) {
+                break;
+            }
         } 
     }
 
@@ -238,7 +240,9 @@ var BP_MOD_COMMON = (function()
             i = keys.length-1;
         for (i; i>=0; i--)
         {
-            func.apply(thisArg, [keys[i], o[keys[i]], ctx]);
+            if (func.apply(thisArg, [keys[i], o[keys[i]], ctx]) === true) {
+                break;
+            }
         } 
     }
 

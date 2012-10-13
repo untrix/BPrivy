@@ -178,6 +178,10 @@ var BP_MOD_WDL = (function ()
         has: function (username)
         {
             return (Object.keys(this.pRecsMap).indexOf(username) !== (-1));
+        },
+        matches: function (uid, pass)
+        {
+            return this.pRecsMap && this.pRecsMap[uid] && (this.pRecsMap[uid].curr.p===pass);
         }
     });
     

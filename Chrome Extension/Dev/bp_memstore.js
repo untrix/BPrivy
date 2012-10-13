@@ -1169,7 +1169,43 @@ var BP_MOD_MEMSTORE = (function ()
         if (!_dnode) {_dnode = DNode[dr.dt];}
         return DNProto.insert.apply(_dnode, [dr]) ? dr.notes : undefined;                
     }
-    
+    function insertTempRec(rec, dt)
+    {
+        if (dt !== dt_pRecord) {return;}
+        
+        var dr, pRecsMap, u1, notes,
+            dnode = DNode['temp_' + dt];
+        
+        if (!rec.u)
+        {
+            pRecsMap = DNProto.findPRecsMap.apply(dnode, [rec.l]);
+            if (pRecsMap) {
+                BP_MOD_COMMON.iterKeys(pRecsMap, function(u, actns)
+                {
+                    if (!actns.curr.p) {
+                        u1 = u;
+                        return true; // break the loop
+                    }
+                });
+            }
+            if (u1) {
+               rec.u = u1;
+            }
+            else {
+                rec.u = "unknown";
+            }
+        }
+
+        dr = new DRecord(rec, dt);
+        notes = DNProto.insert.apply(dnode, [dr]) ? dr.notes : undefined;
+        if (notes) {
+            BP_MOD_ERROR.logdebug("Saved temp pRecord: " + JSON.stringify(rec));
+        }
+        else {
+            BP_MOD_ERROR.logwarn("Could not save temp pRecord: " + JSON.stringify(rec));
+        }
+        return notes;
+    }
     /** @end-class-def DNode **/
 
     function loadETLD ()
@@ -1185,6 +1221,7 @@ var BP_MOD_MEMSTORE = (function ()
     function clear (dtl)
     {
         var i, dt,            dtList = dtl || Object.keys(DT_TRAITS.traits),            n = dtList.length;        for (i=0; i<n; i++)        {            dt = dtList[i];            DNode[dt] = newDNode();        }
+        DNode['temp_'+dt_pRecord] = newDNode();
         MemStats.stats = new MemStats();
     }
     
@@ -1339,6 +1376,7 @@ var BP_MOD_MEMSTORE = (function ()
     {
         insertRec:   insertRec,
         insertDrec:  insertDrec,
+        insertTempRec:insertTempRec,
         getRecs:     getRecs,
         DT_TRAITS:   DT_TRAITS,
         PREC_TRAITS: PREC_TRAITS,

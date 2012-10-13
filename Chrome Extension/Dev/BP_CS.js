@@ -150,7 +150,7 @@
                 'vps':    {value: [], writable:true, enumerable:true},
                 'buddys': {value: [], writable:true, enumerable:true},
                 // Array of *visible* pontential submit buttons. Ideally there should only be one.
-                'btns':   {writable:true, enumerable:true},
+                'btns':   {value: [], writable:true, enumerable:true},
                 'tabIndex':{writable:true, enumerable:true}, // similiar to tabIndex IDL attrib of elements.
                 // Elements derived from knowledge records (eRecs).
                 'k':      {value: {us:[], ps:[], vps:[]}}
@@ -158,20 +158,7 @@
         }
         //
         // GLOBAL FUNCS GLOBAL FUNCS GLOBAL FUNCS GLOBAL FUNCS GLOBAL FUNCS GLOBAL FUNCS
-        // 
-        FormInfo.getVal = function(els)
-        {
-            var val;
-            iterArray2(els, null, function(el)
-            {
-                if (el.value && (el.value !== el.defaultValue)) {
-                    val = el.value;
-                    return true;
-                }
-            });
-
-            return val;
-        };
+        //
         FormInfo.onSubmit = function(ev)
         {
             BP_MOD_ERROR.log("FormInfo.onSubmit: entered");
@@ -222,7 +209,11 @@
         //
         FormInfo.prototype.onSubmit = function (c)
         {
-            BP_MOD_ERROR.alert("FormInfo.prototype.submit invoked with c = " + c);
+            var pair = this.getVals(c);
+            if (pair) {
+                tempRec(newPRecord(g_doc.location, Date.now(), pair.u, encrypt(pair.p)), dt_pRecord);
+            }
+            BP_MOD_ERROR.logdebug("FormInfo.prototype.submit invoked with c = " + c);
         };
         FormInfo.prototype.pushMerge = function (el, fn, merge)
         {
@@ -363,7 +354,7 @@
                 }
                 
                 if (!this.cntnr) {
-                    BP_MOD_ERROR.alert("Could not find a form-container");
+                    BP_MOD_ERROR.logwarn("Could not find a form-container");
                     this.cntnr = g_doc.body || g_doc.documentElement || g_doc; // just to prevent referencing errors.
                 }
             }
@@ -384,12 +375,7 @@
             var doneFields = false;
             iterArray2(this.buddys, this, function(pair)
             {
-                var $el;
-                
-                // We only want input from visible pairs
-                // if ( (!$(pair.u).is(':visible')) && (!$(pair.p).is(':visible')) ) {
-                    // return;
-                // }
+                var $el;
                 $el = $(pair.u);
                 // make sure to use a static function in order to allow repeatedly calling
                 // the below without adding multiple event listeners.
@@ -445,14 +431,6 @@
         {
             $(this).removeData();
         };
-        FormInfo.prototype.getUid = function()
-        {
-            return FormInfo.getVal(this.us);
-        };
-        FormInfo.prototype.getPass = function()
-        {
-            return FormInfo.getVal(this.ps);
-        };
         FormInfo.prototype.isVisible = function()
         {
             //return ($(this.form).is(':visible') || ($(this.us).filter(':visible').length) || ($(this.ps).filter(':visible').length) );
@@ -464,7 +442,7 @@
         };
         FormInfo.prototype.getFirstVisibleEl = function ()
         {
-            return getFirstEl(this.us) || getFirstEl(this.ps) || getFirstEl(this.btns);
+            return getFirstEl(this.us) || getFirstEl(this.vps) || getFirstEl(this.btns);
         };
         FormInfo.prototype.numVisibleEls = function ()
         {
@@ -473,6 +451,40 @@
         FormInfo.prototype.isFocussable = function ()
         {
             return (this.getTabIndex() >= 0);
+        };
+        FormInfo.prototype.getVals = function(c)
+        {
+            var out;
+            if (this.buddys.length) {
+                iterArray2(this.buddys, this, function(pair)
+                {
+                    if (hasVal(pair.u) && hasVal(pair.p) && isVisible(pair.p)) {
+                        out = {u:pair.u.value, p:encrypt(pair.p.value)};
+                        return true; // exit loop
+                    }
+                });
+            }
+            else if (this.us.length) {
+                // noPass case. We only expect one username field. Capture it.
+                iterArray2(this.us, this, function(u)
+                {
+                    if (hasVal(u)) {
+                        out = {u:u.value};
+                    }
+                });
+            }
+            else if (this.ps.length) {
+                // noUser case. We only expect a password field. Match it with a
+                // previously captured username field without password.
+                iterArray2(this.ps, this, function(p)
+                {
+                    if (hasVal(p) && isVisible(p)) {
+                        out = {p:encrypt(p.value)};
+                    }
+                });
+            }
+
+            return out;
         };
 
         /*
@@ -919,8 +931,6 @@
 
         var m_info = new FillInfo();
 
-        function info() {return m_info;}
-        
         function onSubmit(ev)
         {
             if (!g_bScanned) {scan();}
@@ -928,7 +938,7 @@
             var form = ev.target, fInfo;
             if ((fInfo=m_info.getFInfo(form))) {
                 // A relevant form was submited
-                fInfo.onSubmit(10);
+                fInfo.onSubmit(20);
             }
         }
         function onClick(ev)
@@ -937,25 +947,23 @@
                 return;
             }
 
-            var go, href, fInfo, cnfdnc,
+            var href, fInfo, cnfdnc,
                 el = ev.target,
                 $el = $(el).closest(':submit,:button,input[type=image],a')
 
             if ($el.length)
             {
-                el = $el[0]; go = true;
+                el = $el[0]; 
             }
-
-            if (!go) {return;}
+            else { return; }
 
             if (!g_bScanned) {scan();}
 
-            fInfo = m_info.getClicked(ev);
-            if (!fInfo) {
-                return;
-            }
             cnfdnc=FormInfo.isSubmitEl(el);
             if (cnfdnc) {
+                fInfo = $(el).data(data_finfo);
+                //fInfo = m_info.getClicked(ev);
+                if (!fInfo) { return; }
                 fInfo.onSubmit(cnfdnc);
             }
         }
@@ -985,11 +993,11 @@
 
             if (uEl && (uEl.value !== uEl.defaultValue)) {
                 // Fields sometimes have non-empty default values. We don't want those.
-                uid = uEl.value; //TODO: getUid needs improvement
+                uid = uEl.value;
             }
             if (pEl && (pEl.value !== pEl.defaultValue)) {
                 // Fields sometimes have non-empty default values. We don't want those.
-                pass = encrypt(pEl.value); //TODO: getPass needs improvement
+                pass = encrypt(pEl.value);
             }
             
             if (pair) 
@@ -1000,11 +1008,12 @@
                 }
                 else // both uid and pass are available
                 {
-                    if (MOD_DB.has(uid)) {
-                        console.log("Update, autofill or assert of uid " + uid);
+                    if (MOD_DB.has(uid) && MOD_DB.matches(uid, pass)) {
+                        console.log("Exiting password was input " + uid);
                     }
                     else {
-                        console.log("New userid (and password) was input: " + uid + "/" + encrypt(pass));
+                        tempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
+                        console.log("New password was input: " + uid + "/" + pass);
                     }
                 }
             }
@@ -1014,6 +1023,7 @@
                 {
                     if (!MOD_DB.has(uid)) {
                         console.log("New userid was input without password: " + uid);
+                        tempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
                     }
                     else {
                         console.log("Existing userid was input without password: " + uid);
@@ -1022,6 +1032,7 @@
                 else if (pass)
                 {
                     console.log("A password was entered without userid. Saving it: " + encrypt(pass));
+                    tempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
                 }
             }
         }
@@ -1232,7 +1243,11 @@
             
             return $(out);
         }
-
+        
+        function hasVal(el)
+        {
+            return el.value && (el.value !== el.defaultValue);
+        }
         function isVisible(el)
         {
             return el.offsetWidth && el.offsetHeight;
@@ -1593,80 +1608,9 @@
             
             return last;
         }
-
-        // @param fn Field-Type to find.
-        // @param el The element that has been found.
-        // finds visible username peers or visible and invisible password peers
-/*        function findPeers(fn, el, fInfo)
-        {
-            var peers = [],
-                buddy,
-                $peers,
-                //form = _form || formAncestor(el, fn),
-                //tabIndex = el.tabIndex,
-                $el = $(el),
-                pos, pos2, h, w;
-
-            if (fInfo)
-            {
-                if (fn === fn_userid) {
-                    // $peers is sorted in tree order
-                    $peers = $(uCandidates(fInfo, el)); // gets only visible fields.
-                }
-                else if (fn === fn_pass) {
-                    // $peers is sorted in tree order
-                    $peers = $(pCandidates(fInfo)); // may return invisible fields in addition to visible
-                }
-                
-                if ($peers && ($peers.length > 0))
-                {
-                    if ($peers.length>1)
-                    {
-                        $peers.each(function(i)
-                        {
-                            if (fn===fn_userid)
-                            {
-                                //if (isBefore(this, el)) {
-                                peers.push(this);
-                                //}
-                            }
-                            else if (fn===fn_pass)
-                            {
-                                if (isAfter(this, el)) {
-                                    peers.push(this);
-                                }
-                            }
-                        });
-                    }
-                    else // only one verified peer match
-                    {
-                        peers.push($peers[0]);
-                    }
-                }
-            }
-
-            if (peers.length === 1) {
-                buddy = peers[0];
-            }
-            else if (peers.length > 1) {
-                if (fn === fn_userid) {
-                    // select the last element of the tree-order list since that will be
-                    // closest to the password element.
-                    buddy = peers[peers.length-1];
-                }
-                else if (fn===fn_pass) {
-                    // select the first element of the tree-order list since that will be
-                    // closest to the userid element.
-                    buddy = peers[0];
-                }
-            }
-            
-            return {peers:peers, buddy:buddy};
-        }
-*/        
+        
         function findEl(eRec, ctxEl)
         {
-            //var $form = $((eRec.fid?('#'+eRec.fid):'') + (eRec.fnm?('[name='+eRec.fnm+']'):'') );
             var $ctx = ctxEl ? $(ctxEl) : undefined;
             return $(eRec.t + (eRec.id?('#'+eRec.id):'') + (eRec.n?('[name="'+eRec.n+'"]'):'') + (eRec.y? ('[type='+eRec.y+']') : ''), $ctx)[0];
         }
@@ -1676,8 +1620,9 @@
          */
         function findSubmitBtns(fmInfo)
         {
-            var $sub, $a, tEl, lP;
+            var $sub, $btn, $a, $fin, tEl, lP;
             if (!fmInfo.form || !fmInfo.cntnr) {return;}
+            $sub = $btn = $a = $();
             
             // Now parse form/container for a submit button.
             if (fmInfo.form.localName === 'form') 
@@ -1687,51 +1632,56 @@
                 $sub = $sub.add($('input[type=image]:visible', fmInfo.cntnr));
                 if (!$sub.length) {
                     // Didn't find submit buttons. Now look for plain buttons.
-                    $sub = $(fmInfo.form.elements).filter('input[type=button],button:not([type])').filter(':visible');
+                    $btn = $(fmInfo.form.elements).filter('input[type=button],button:not([type])').filter(':visible');
                 }
             }
             else
             {
                 $sub = $(':submit:visible,input[type=image]:visible', fmInfo.cntnr);
                 if (!$sub.length) {
-                    $sub = $('input[type=button],button:not([type]):visible', fmInfo.cntnr);
+                    $btn = $('input[type=button],button:not([type]):visible', fmInfo.cntnr);
                 }
             }
 
             lP = getLastEl(fmInfo.ps);
             if (lP) {
                 $sub = getElsAfter(lP, $sub);
+                $btn = getElsAfter(lP, $btn);
             }
             
-            if ($sub.length>1)
+            if ($sub.length)
             {
-                $sub.data(data_btn,5); // Flagging all buttons as potential submit buttons (confidence=5/10)
-                tEl = getFirstEl($sub);
-                $(tEl).data(data_btn, 10); // Possibly *the* submit button.
-                $sub[0].dataset['untrix_btn'] = 10;
-            }
-            else if ($sub.length===1) {
                 $sub.data(data_btn, 10); // The submit button
-                $sub[0].dataset['untrix_btn'] = 10;
+                $sub[0].dataset.untrix_btn = 10;
             }
-            else { //if ($sub.length===0)
+            else if ($btn.length)
+            {
+                $btn.data(data_btn,5); // Flagging all buttons as potential submit buttons (confidence=5/10)
+                tEl = getFirstEl($btn);
+                $(tEl).data(data_btn, 10); // Possibly *the* submit button.
+                $btn[0].dataset.untrix_btn = 10;
+            }
+            else {
                 // Look for anchor based buttons.
                 $a = $('a', fmInfo.cntnr);
-                $sub = $a.filter(function(el)
+                $a = $a.filter(function(el)
                 {
-                    var rVal =  (!this.href) || (this.href==='#') ||
+                    var rVal = ((!this.href) || (this.href==='#') ||
                                 (this.href===this.baseURI) ||
-                                (this.href===this.baseURI+'#');
+                                (this.href===this.baseURI+'#')) &&
+                                this.offsetWidth && this.offsetHeight; // isVisible
 
                     return (rVal && lP) ? isAfter(this, lP) : rVal;
-                }).filter(':visible');
-                $sub.data(data_btn,5); // confidence = 5/10
+                });
+                if ($a.length) {
+                    $a.data(data_btn,5); // confidence = 5/10
+                    $a[0].dataset.untrix_btn = 5;
+                }
             }
 
-            if ($sub.length) {
-                $sub.data(data_finfo, fmInfo);
-                fmInfo.btns = $sub.toArray();
-            }        
+            $fin = $sub.length ? $sub : ($btn.length ? $btn : $a);
+            $fin.data(data_finfo, fmInfo);
+            fmInfo.btns = $fin.toArray();
         }
         
         function scrapeForms(ctxEl)
@@ -1749,6 +1699,7 @@
 
             iterArray2(fInfos._a, null, function (fmInfo)
             {
+                var isGood;
                 // stage2 of uCandidates should come before pCandidates. This is so
                 // because we allow invisible password fields if visible userid fields
                 // are found. Hence we need to find userid fields first. Secondly,
@@ -1759,9 +1710,6 @@
                 // tab-order. 
                 uCandidates(fmInfo, 2);
                 pCandidates(fmInfo, 2);
-                assignBuddys(fmInfo);
-                //fmInfo = new FormInfo(form);
-                fmInfo.updtCntnr();
 
                 if (fmInfo.ps.length)
                 {
@@ -1778,17 +1726,23 @@
                     }
                     
                     all.push(fmInfo);
+                    isGood = true;
                 }
                 else if (fmInfo.us.length)
                 {
                     noPass.push(fmInfo);
                     all.push(fmInfo);
+                    isGood = true;
                 }
                 
+                if (!isGood) { return; }
                 // if (fmInfo.cntnr) {
                     // addEventListener(fmInfo.cntnr, 'keydown', FormInfo.onEnter);
                     // addEventListeners(fmInfo.cntnr, 'mousedown', FormInfo.onMousedown);
                 // }
+                assignBuddys(fmInfo);
+                //fmInfo = new FormInfo(form);
+                fmInfo.updtCntnr();
                 findSubmitBtns(fmInfo);
             });
             if (m_info.scraped.onePass) {
@@ -2033,7 +1987,6 @@
             }
             
             m_info.hook();
-            g_bScanned = true;
         }
         
         // Assumes input element and fills it
@@ -2067,7 +2020,7 @@
                         // a signup form, then it would get filled as well :(
                         iterArray2(fInfo.buddys, this, function(pair)
                         {
-                            if (!$([pair.u,pair.p]).filter(':visible').length) {
+                            if (!(isVisible(pair.u) || isVisible(pair.p))) {
                                 return;
                             }
                             fill(pair.u, userid);
@@ -2105,11 +2058,12 @@
         return Object.freeze(
         {
             'g_uSel':g_uSel,
-            'info': info,
+            'info':  function () {return m_info;},
             'scan': scan,
             'autoFill': autoFill,
             'init': init,
-            'onChange': onChange
+            'onChange': onChange,
+            'setScanned': function() {g_bScanned=true;}
         });
     }());
 
@@ -2452,6 +2406,7 @@
         function onMutation(mutations, observer)
         {
             MOD_FILL.scan(g_doc);
+            MOD_FILL.setScanned();
             if ((!MOD_PANEL.get()) && (!MOD_PANEL.userClosed()) && MOD_FILL.info().autoFillable()) {
                 MOD_PANEL.create();
             }

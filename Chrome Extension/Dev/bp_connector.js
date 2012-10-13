@@ -48,7 +48,8 @@ var BP_MOD_CONNECT = (function ()
         cm_getDB        = "cm_getDB",
         cm_getDN        = "cm_getDN",
         cm_getDomn      = "cm_getDomn",
-        cm_closed       = "cm_closed";
+        cm_closed       = "cm_closed",
+        cm_tempRec      = "cm_tempRec";
 
     var DICT_TRAITS={};
    
@@ -182,7 +183,19 @@ var BP_MOD_CONNECT = (function ()
                 postMsgToMothership(req);
             }
         };
-        
+        var tempRec = function (rec, dt, callbackFunc)
+        {
+            var req = {};
+            req.cm = cm_tempRec;
+            req.dt = dt;
+            req.rec = rec;
+            if (callbackFunc) {
+                rpcToMothership(req, callbackFunc);
+            }
+            else {
+                postMsgToMothership(req);
+            }
+        };        
         var deleteRecord = function (erec, dt)
         {
             console.log('Deleting Record ' + JSON.stringify(erec));
@@ -235,8 +248,9 @@ var BP_MOD_CONNECT = (function ()
             cm_getDN:   {value: cm_getDN},
             cm_getDomn: {value: cm_getDomn},
             cm_closed:  {value: cm_closed},
+            cm_tempRec: {value: cm_tempRec},
             saveRecord: {value: saveRecord},
-            tempRec: {value: saveRecord},
+            tempRec: {value: tempRec},
             deleteRecord: {value: deleteRecord},
             newERecord: {value: newERecord},
             newPRecord: {value: newPRecord},

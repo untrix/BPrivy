@@ -131,6 +131,11 @@
                     bSaveRec = true;
                     funcSendResponse({result:insertNewRec(rq.rec, dt_pRecord)});
                     break;
+                case MOD_CONNECT.cm_tempRec:
+                    BPError.push("SaveTempRecord");
+                    funcSendResponse({result:true,
+                                      notes:MEM_STORE.insertTempRec(rq.rec, rq.dt)});
+                    break;
                 case cm_getRecs:
                     BPError.push("GetRecs");
                     // recs = MEM_STORE.getRecs(rq.loc);
