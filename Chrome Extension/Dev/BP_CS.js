@@ -134,7 +134,7 @@
                             // "input[id*=login i],input[id*=identity i],input[id*=accountname i],input[id*=signin i]," +
                             // "input[id*=username i],input[id*=user_name i],input[id*=email i],input[id*=userid i],input[id*=logon i]";
 
-        function FormInfo(form, us, ps, buddys)
+        function FormInfo(form)
         {
             Object.defineProperties(this,
             {
@@ -142,15 +142,18 @@
                 'form':   {value:form, writable:true, enumerable:true},
                 // The DOM container of all form-fields. May or may-not be same as the form element above.
                 'cntnr':  {writable:true, enumerable:true},
-                // An array or jQuery object of userid field DOM elements.
-                'us':     {value: us || [], writable:true, enumerable:true},
-                // An array or jQuery object of password field DOM elements
-                'ps':     {value: ps || [], writable:true, enumerable:true},
-                'buddys': {value: buddys || [], writable:true, enumerable:true},
-                // Array of pontential submit buttons. Ideally there should only be one.
-                'btns':  {writable:true, enumerable:true},
+                // An array or jQuery object of *visible* userid field DOM elements.
+                'us':     {value: [], writable:true, enumerable:true},
+                // An array or jQuery object of *visible and invisible* password field DOM elements
+                'ps':     {value:[], writable:true, enumerable:true},
+                // visible password fields only
+                'vps':    {value: [], writable:true, enumerable:true},
+                'buddys': {value: [], writable:true, enumerable:true},
+                // Array of *visible* pontential submit buttons. Ideally there should only be one.
+                'btns':   {writable:true, enumerable:true},
                 'tabIndex':{writable:true, enumerable:true}, // similiar to tabIndex IDL attrib of elements.
-                'k':      {value: {us:[], ps:[]}}
+                // Elements derived from knowledge records (eRecs).
+                'k':      {value: {us:[], ps:[], vps:[]}}
             });
         }
         //
@@ -221,26 +224,43 @@
         {
             BP_MOD_ERROR.alert("FormInfo.prototype.submit invoked with c = " + c);
         };
-        FormInfo.prototype.pushEl = function (el, fn, merge)
+        FormInfo.prototype.pushMerge = function (el, fn, merge)
         {
-            var ar;
+            var ar, arv;
             if (fn===fn_userid) {ar = this.us;}
-            else if (fn===fn_pass) {ar = this.ps;}
+            else if (fn===fn_pass) {ar = this.ps; arv = this.vps;}
             else if (fn===fn_btn) {ar = this.btns;}
-            if (ar && (!merge || (ar.indexOf(el)===-1))) {ar.push(el);}
+            if (ar) {
+                 if ((!merge) || (ar.indexOf(el)===-1)) {
+                     ar.push(el);
+                     if (arv && el.offsetWidth && el.offsetHeight) {
+                         arv.push(el);
+                     }
+                 }
+            }
+        };
+        FormInfo.prototype.pushEl = function (el, fn)
+        {
+            this.pushMerge(el, fn, false);
         };
         FormInfo.prototype.mergeEl = function (el, fn)
         {
-            this.pushEl(el, fn, true);
+            this.pushMerge(el, fn, true);
         };
-        FormInfo.prototype.pushEls = function (els, fn, merge)
+        FormInfo.prototype.pushEls = function (els, fn)
         {
             iterArray2(els, this, function(el)
             {
-                this.pushEl(el, fn, merge);
+                this.pushMerge(el, fn, false);
             });
         };
-        FormInfo.prototype.mergeEls = function (els, fn) { this.pushEls(els, fn, true); };
+        FormInfo.prototype.mergeEls = function (els, fn)
+        {
+            iterArray2(els, this, function(el)
+            {
+                this.pushMerge(el, fn, true);
+            });
+        };
         FormInfo.prototype.merge = function (fInfo, rel)
         {   
             rel = rel || FormInfo.SUBSET;
@@ -249,24 +269,8 @@
                 this.form = fInfo.form;
                 this.cntnr= fInfo.cntnr;
             }
-            if (!this.k.us.length) {
-                // No e-records here.
-                if (fInfo.k.us.length) {
-                    this.us = fInfo.us;
-                }
-                else {
-                    this.mergeEls(fInfo.us, fn_userid);
-                }
-            }
-            if (!this.k.ps.length) {
-                // No e-records here.
-                if (fInfo.k.ps.length) {
-                    this.ps = fInfo.ps;
-                }
-                else {
-                    this.mergeEls(fInfo.ps, fn_pass);
-                }
-            }
+            this.mergeEls(fInfo.us, fn_userid);
+            this.mergeEls(fInfo.ps, fn_pass);
             this.mergeEls(fInfo.btns, fn_btn);
         };
         FormInfo.prototype.isEmpty = function ()
@@ -331,58 +335,37 @@
             return ( (this.form && this.form.elements) ? (this.form.elements.length||0) : 
                      ((this.us?(this.us.length||0):0) + (this.ps?(this.ps.length||0):0)) );
         };
-        FormInfo.prototype.updtCntnr = function ()
+        FormInfo.prototype.updtCntnr = function (stage)
         {
-            var tEl, $p, off;
+            var tEl, off, num, $p;
 
-            if (!this.form) {return;}
-            
-            this.cntnr = null;
-
-            if (this.form.localName === 'form') 
-            {
-                if ((this.ps.length || this.us.length) &&
-                    (isAncestor(this.form, this.ps[0] || this.us[0]))) 
-                {
-                    this.cntnr = this.form;
-                }
-            }
-            else {
-                this.cntnr = this.form; // this.form is a DOM-ancestor of the fields
-                console.log("FromInfo.form is not a form element");
-            }
-            
-            tEl = this.getVisibleEl();
-            if (tEl) {
-                $p = $(tEl).offsetParent();
-            }
             if (!this.cntnr)
             {
-                if ($p.length)
-                {   // this.form is a form element that is not an ancestor of its fields. There
-                    // is an offset parent though that should work most of the time.
-                    // TODO: need to disregard this value if it matches the root element.
-                    this.cntnr = $p[0];
+                if (!this.form) {return false;}
+                if (this.form.localName === 'form')
+                {
+                    tEl = this.getFirstVisibleEl();
+                    if (tEl)
+                    {
+                        if (isAncestor(this.form, tEl)) 
+                        {
+                            this.cntnr = this.form;
+                        }
+                        else {
+                            num = this.numVisibleEls();
+                            this.cntnr = offsetAncestor(tEl, 5, num, true) || getAncestor(tEl, 5, num, true);
+                        }
+                    }
                 }
                 else {
-                    this.cntnr = getAncestor(this.us[0] || this.ps[0], 5, this.us.length+this.ps.length+this.btns.length);
+                    this.cntnr = this.form; // this.form is a DOM-ancestor of the fields
+                    // We should never have reached here...
                 }
-            }
-            
-            if (!this.cntnr) {
-                BP_MOD_ERROR.alert("Could not find a form-container");
-                this.cntnr = g_doc.body || g_doc.documentElement || g_doc; // just to prevent referencing errors.
-            }
-
-            if ($p.length) {
-                off = $p.offset();
-                this.top = off.top;
-                this.left= off.left;
-                this.h = $p.outerHeight();
-                this.w = $p.outerWidth();
-            }
-            else {
-                this.top = this.left = this.h = this.w = 0;
+                
+                if (!this.cntnr) {
+                    BP_MOD_ERROR.alert("Could not find a form-container");
+                    this.cntnr = g_doc.body || g_doc.documentElement || g_doc; // just to prevent referencing errors.
+                }
             }
         };
         FormInfo.prototype.hookForm = function ()
@@ -473,16 +456,25 @@
         FormInfo.prototype.isVisible = function()
         {
             //return ($(this.form).is(':visible') || ($(this.us).filter(':visible').length) || ($(this.ps).filter(':visible').length) );
-            return (($(this.us).filter(':visible').length) || ($(this.ps).filter(':visible').length) );
+            return this.us.length || this.vps.length;
         };
         FormInfo.prototype.getVisibleEl = function ()
         {
-            return $(this.ps).filter(':visible')[0] || $(this.us).filter(':visible')[0];
+            return this.vps[0] || this.us[0];
+        };
+        FormInfo.prototype.getFirstVisibleEl = function ()
+        {
+            return getFirstEl(this.us) || getFirstEl(this.ps) || getFirstEl(this.btns);
+        };
+        FormInfo.prototype.numVisibleEls = function ()
+        {
+            return this.us.length + this.btns.length + this.vps.length;
         };
         FormInfo.prototype.isFocussable = function ()
         {
             return (this.getTabIndex() >= 0);
         };
+
         /*
          * Roughly mimics the tabIndex IDL attribute of input elements, but applied to the
          * entire form. Returns:
@@ -746,8 +738,14 @@
                 
             this.some(function()
             {
-                var x1 = this.left, y1 = this.top, h = this.h, w = this.w;
-                
+                //var x1 = this.left - window.scrollX, y1 = this.top - window.scrollY, h = this.h, w = this.w;
+                var $p = $(this.cntnr),
+                    off = $p.offset(),
+                    y1 = off.top - window.scrollY,
+                    x1 = off.left - window.scrollX,
+                    h = $p.outerHeight(),
+                    w = $p.outerWidth();
+                            
                 if (!h || !w) { return false; }
                 
                 if ((x>=x1) && (x<=(x1+w)) && (y>=y1) && (y<=(y1+w))) {
@@ -941,7 +939,7 @@
 
             var go, href, fInfo, cnfdnc,
                 el = ev.target,
-                $el = $(el).closest(':submit,button:not([type]),input[type=image],a')
+                $el = $(el).closest(':submit,:button,input[type=image],a')
 
             if ($el.length)
             {
@@ -1028,14 +1026,50 @@
             }
         }
 
-        function getAncestor(el, levels, numInp, visibleOnly)
+        function offsetAncestor(el, numInp, visibleOnly, ctxEl)
+        {
+            var p, tE = el, tF, $i;
+            while ((!p) && $(tE).is(':visible')) 
+            {
+                // el is visible. Find its positioned ancestor.
+                tF = $(tE).offsetParent()[0];
+                
+                if (tF)
+                {
+                    if ((ctxEl && (tF===ctxEl)) || (tF===g_doc.body) || (tF===g_doc.documentElement) || (tF===g_doc)) {
+                        break; // exit the loop.
+                    }
+                    else 
+                    {
+                        $i = $('input, button, a', tF);
+                        if (visibleOnly) {$i = $i.filter(':visible');}
+                        if ($i.length < numInp) {
+                            // This doesn't contain enough input elements. So this is too
+                            // narrow a selection.
+                            tE = tF;
+                        }
+                        else {
+                            p = tF;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    break;
+                }
+            }
+
+            return p;
+        }
+        
+        function getAncestor(el, levels, numInp, visibleOnly, ctxEl)
         {
             var p, i, p2, num;
 
-            for (i=0, p=el.parentElement; (i<levels)&&p; i++, p=p.parentElement)
+            for (i=0, p=el.parentElement; (i<levels) && p && (!ctxEl || (p!==ctxEl)); i++, p=p.parentElement)
             {
                 if (visibleOnly) {
-                    num = $('input,button,a', p).filter(':visible').length;
+                    num = $('input,button, a', p).filter(':visible').length;
                 }
                 else {
                     num = $('input,button,a', p).length;
@@ -1048,21 +1082,23 @@
             return p || g_doc.body || g_doc.documentElement || g_doc;
         }
         
-        function isUselessForm(form, field)
+        function isUselessForm(form, field, ctxEl)
         {
-            var isUseless = true;
+            var isUseless = false;
             if (form && (form.localName==='form'))
             {
-                if ((g_uselessForms.indexOf(form.id) !== -1) ||
-                    (isAncestor(form, field) && ($(field).parentsUntil(form) >= 5)) ) 
+                if (    (g_uselessForms.indexOf(form.id) !== -1) ||
+                        ( (isAncestor(form, field)) && ($(field).parentsUntil(form).length >= 5) ) ||
+                        (ctxEl && !isAncestor(ctxEl, form))
+                   )
                 {
                     isUseless = true;
                 }
-                else {
-                    isUseless = false;
-                }
             }
-            
+            else {
+                isUseless = true;
+            }
+
             return isUseless;
         }        
         /**
@@ -1070,53 +1106,26 @@
          *  of el. The returned element itself may not be a form element (such is the case
          *  with about 2-5% websites tested).
          */
-        function formAncestor(el, fn, stage)
+        function formAncestor(el, fn, stage, ctxEl)
         {
-            var i, topEls, tF, tE
+            var i, topEls, tF, tE,
                 fInfo = new FormInfo();
 
             if (el.form)
             {   
-                tF = el.form
-                if (!isUselessForm(tF, el)) {
+                tF = el.form;
+                if (!isUselessForm(tF, el, ctxEl)) {
                     fInfo.form = tF;
                     if (isAncestor(tF, el)) {
                         fInfo.cntnr = tF;
                     }
                 }
             }
-            
-            tE = el;
-            while ((!fInfo.cntnr) && $(tE).is(':visible')) 
-            {
-                // el is visible. Find its positioned ancestor.
-                tF = $(tE).offsetParent()[0];
-                
-                if (tF)
-                {
-                    if ((tF===g_doc.body) || (tF===g_doc.documentElement) || (tF===g_doc)) {
-                        break; // exit the loop.
-                    }
-                    else if ($('input', tF).length<=1) {
-                        // We didn't grab any more input elements. So this is be too
-                        // narrow a selection.
-                        tE = tF;
-                    }
-                    else {
-                        fInfo.cntnr = tF;
-                        if (!fInfo.form) {fInfo.form = tF;}
-                        break;
-                    }
-                }
-                else {
-                    break;
-                }
-            }
-            
+
             if (!fInfo.cntnr) 
             {
                 // Return ancestor upto 5 levels above, containing at least 2 visible input elements.
-                fInfo.cntnr = getAncestor(el, 5, 2, true);
+                fInfo.cntnr = offsetAncestor(el, 2, true, ctxEl) || getAncestor(el, 5, 3, true, ctxEl);
                 if (!fInfo.form) {fInfo.form = fInfo.cntnr;}
             }
 
@@ -1141,37 +1150,94 @@
         {
             return name.toLowerCase().replace(/[\-_]/g,"");
         }
-        /**
-         * Apply case-insensitive filter to $el1 assuming these are all input[type=text]
-         * elements. Selector should be all lower-case. Assumed that only id and text
-         * properties are matched against.
-         * 
-         * DO NOT CHANGE the order of the supplied elements.
-         */
-        /*function uFilter($el1, sel)
-        {
-            var $el, els=[];
 
-            // try case-insensitive filtering
-            $el1.each(function(index)
+        function isAncestor(cntnr, el)
+        {
+            return (el.compareDocumentPosition(cntnr) & el.DOCUMENT_POSITION_CONTAINS);
+        }
+        /**
+         * Returns true if lhs preceds rhs in tree-order.
+         * const unsigned short DOCUMENT_POSITION_DISCONNECTED = 0x01;
+         * const unsigned short DOCUMENT_POSITION_PRECEDING = 0x02;
+         * const unsigned short DOCUMENT_POSITION_FOLLOWING = 0x04;
+         * const unsigned short DOCUMENT_POSITION_CONTAINS = 0x08;
+         * const unsigned short DOCUMENT_POSITION_CONTAINED_BY = 0x10;
+         * const unsigned short DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20; // historical
+         */
+        function isBefore(lhs, rhs)
+        {
+            if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
+                return (lhs.tabIndex < rhs.tabIndex);
+            }
+
+            return (lhs.compareDocumentPosition(rhs) & lhs.DOCUMENT_POSITION_FOLLOWING);
+        }
+        /**
+         * Returns true if lhs follows rhs in tree-order.
+         */
+        function isAfter(lhs, rhs)
+        {
+            if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
+                return (lhs.tabIndex > rhs.tabIndex);
+            }
+            
+            return (lhs.compareDocumentPosition(rhs) & lhs.DOCUMENT_POSITION_PRECEDING);
+        }
+        /**
+         * From the provided collection $el, return elements (as jQuery object) that lie
+         * before el in sequential navigation order. Returned elements are sorted in the
+         * same order in which they were present in $el.
+         */
+        function getElsBefore(el, $el)
+        {
+            var out = [];
+            $el.each(function(i)
             {
-                var id = this.id? normalize(this.id) : "",
-                    nm = this.name? normalize(this.name) : "",
-                    found = false;
-                    //copy = g_doc.createElement('input'),
-                    //$copy = $(copy).attr({type:'text', 'id':id, 'name':nm});
-                
-                $g_uEl.attr({type:'text', 'id':id, 'name':nm});
-                if ($g_uEl.is(sel))
-                {
-                    // Make sure we maintain element order.
-                    els.push(this);
+                if (isBefore(this, el)) {
+                    out.push(this);
                 }
             });
             
-            return $(els);
-        }*/
+            return $(out);
+        }
 
+        /**
+         * Returns first element in tabbing order. 
+         */
+        function getFirstEl(els)
+        {
+            var first = els[0];
+            iterArray2(els, null, function(el)
+            {
+                if (isBefore(el, first)) {
+                    first = el;
+                }
+            });
+            
+            return first;
+        }        /**
+         * From the provided collection $el, return elements (as jQuery object) that lie
+         * after el in sequential navigation (tabbing) order. Returned elements are sorted
+         * in the same order in which they were present in $el.
+         */
+        function getElsAfter(el, $el)
+        {
+            var out = [];
+            $el.each(function(i)
+            {
+                if (isAfter(this, el)) {
+                    out.push(this);
+                }
+            });
+            
+            return $(out);
+        }
+
+        function isVisible(el)
+        {
+            return el.offsetWidth && el.offsetHeight;
+        }
+        
         // Returns a jQuery object containing matching fn_userid elements within cntxt.
         // @param cntxt can be a form element or a container/ancestor element. If it is a
         // non-form element, search will be performed on its descendents. If it is a form
@@ -1188,19 +1254,21 @@
         {
             var $el, rval, $el1, fInfo;
             
+            cntxt = cntxt || g_doc;
+
             if (cntxt instanceof FormInfo) {
                 fInfo = cntxt;
                 cntxt = fInfo.form || fInfo.cntnr || g_doc;
             }
             
-            if (cntxt instanceof HTMLFormElement) { // cntxt is a form element
+            if ((cntxt instanceof HTMLFormElement) && cntxt.elements.length) { // cntxt is a form element
                 $el1 = $(cntxt.elements).filter(function(){return this.webkitMatchesSelector(g_uSel);}).filter(':visible');
             }
             else {
                 $el1 = $(g_uSel, $(cntxt)).filter(':visible');
             }
             
-            if (!fInfo || fInfo.isEmpty()) {
+            if ((!fInfo) || fInfo.isEmpty() || (stage<2)) {
                 // Apply a strict filter.
                 // Note: container may be the entire document itself.
                 $el = $(nameMatch($el1, g_uReg2));
@@ -1217,7 +1285,7 @@
                 // in the comparison. Try varying levels of strictness and pick the strickest
                 // possible one.
                 if ($el1.length>1) // We have more than one candidate username fields
-                {   // Try and see if further filtration helps.
+                {   // Try and see if further filtering helps.
                     //$el = uFilter($el1, g_uSel2); // strickest filter
                     $el = $(nameMatch($el1, g_uReg2)); // strickest filter
                     if ($el.length===0) {
@@ -1236,10 +1304,16 @@
                 }
             }
 
-            if (fInfo) {
+            if (!fInfo) {
+                fInfo = new FormInfo(cntxt);
+                fInfo.pushEls($el, fn_userid);
+            }
+            else {
                 fInfo.mergeEls($el, fn_userid);
             }
-            return $el;
+            
+            //return $el;
+            return fInfo;
         }
 
         // Returns a jQuery object containing matching fn_pass elements within cntxt.
@@ -1253,16 +1327,16 @@
         {
             var $candids, $try, fInfo, form, cntnr;
             
-            if (cntxt instanceof FormInfo) {
+            if (!cntxt) {
+                cntxt = g_doc;
+            }
+            else if (cntxt instanceof FormInfo) {
                 fInfo = cntxt;
-                cntxt = fInfo.form || fInfo.cntnr;
+                cntxt = fInfo.form || fInfo.cntnr || g_doc;
             }
 
-            if (!cntxt) {
-                cntnr = g_doc;
-            }
-            else if (cntxt instanceof HTMLFormElement) {
-                if (cntxt.elements) {
+            if (cntxt instanceof HTMLFormElement) {
+                if (cntxt.elements.length) {
                     form = cntxt;
                 }
                 else {
@@ -1282,8 +1356,9 @@
 
             // In second and subsequent stages we can take advantage of knowledge gathered
             // thus far.
-            if ((!fInfo) || fInfo.isEmpty()) {
-                // We are either not in context of an fInfo or the fInfo is empty :(
+            if ((!fInfo) || (!fInfo.us.length) || (stage<2)) {
+                // We are either not in context of an fInfo or the fInfo has no visible
+                // username fields. In stage 1 we only want visible password fields.
                 $candids = $candids.filter(':visible');
             }
             else { // This is known to be a signin or signup form. Hence we can be lax here.
@@ -1294,24 +1369,44 @@
                     }
 
                     $try = $candids.filter(':visible');
-                    if ($try.length || ($(fInfo.ps).filter(':visible').length)) {
-                        // There are other visible password fields. Hence all password
-                        // fields should be visible
+                    if ($try.length || ($(fInfo.vps).length)) {
+                        // There are other visible password fields. Hence the invisible
+                        // password fields are invalid.
                         $candids = $try;
                     }
-                    // else $candids = $candids
-                    // case: http://www.ibm.com/us/en/
-                    // All our password fields are hidden, but since we do know that this is
-                    // a legit form, we'll assume that those password fields will be made visible
-                    // later. So we'll keep the hidden password fields.
+                    else {
+                        // else $candids = $candids
+                        // case: http://www.ibm.com/us/en/
+                        // All our password fields are hidden, but since we do know that this is
+                        // a legit form, we'll assume that those password fields will be made visible
+                        // later. Since we don't get any event or mutation callback when that happens
+                        // we'll just have to include them now.
+                    }
                 }
             }
 
-            if (fInfo) {
+            if (!fInfo) {
+                fInfo = new FormInfo(form || cntnr);
+                fInfo.pushEls($candids, fn_pass);
+            }
+            else {
                 fInfo.mergeEls($candids, fn_pass);
             }
+            return fInfo;
+        }
 
-            return $candids;
+        function assignBuddys(fInfo)
+        {
+            if (!fInfo) {return;}
+            
+            fInfo.buddys = [];
+            var u = getLastEl(fInfo.us);
+            if (u) {
+                iterArray2(fInfo.ps, fInfo, function(p)
+                {
+                    this.buddys.push({'u':u, 'p':p});
+                });                
+            }
         }
 
         /**
@@ -1329,29 +1424,31 @@
          */
         function findForms(ctxEl, stage)
         {
-            var $forms, $candids, forms, tInfos, fInfos = new Forms();
+            var $candids, forms, tInfo, tInfos, fInfos = new Forms();
 
             ctxEl = ctxEl || g_doc;
             forms = ctxEl.forms || $(ctxEl).find('form');
 
-            if ($forms.length)
+            // NOTE: if ctxEl is a form element, we are not including it on purpose.
+            if (forms.length)
             {
-                forms = nameMatch($forms, g_fReg2);
+                forms = nameMatch(forms, g_fReg2);
                 forms = m_info.dontHave(forms);
                 fInfos.insertForms(forms);
             }
 
-            // Fetch enclosing forms around each candidate field.
+            // Cast a wider net and fetch all candidate fields with strict match and
+            // find forms enclosing them.
             // NOTE: Strict filters will be applied by *Candidates.
-            // We're assuming that this is stage-1 and that m_info.scraped
-            // is empty.
-            uCandidates(ctxEl, 1).each(function()
+            // We're assuming that m_info.scraped
+            // is empty. This is stage-1 scanning.
+            uCandidates(ctxEl, 1).us.forEach(function(uEl)
             {
-                processField.apply(this, [this, fn_userid]);
+                processField.apply(uEl, [uEl, fn_userid]);
             });
-            pCandidates(ctxEl, 1).each(function()
+            pCandidates(ctxEl, 1).ps.forEach(function(pEl)
             {
-                processField.apply(this, [this, fn_pass]);
+                processField.apply(pEl, [pEl, fn_pass]);
             });
 
             /**
@@ -1375,7 +1472,7 @@
                 }
                 else 
                 {
-                    fInfo = formAncestor(el, fn, 1);
+                    fInfo = formAncestor(el, fn, 1, ctxEl);
                     if (!m_info.getIntersecting(fInfo)) {
                         fInfos.mergeInsert(fInfo);
                     }
@@ -1481,88 +1578,6 @@
                 // return ud.el;
             // }
         // }
-        function isAncestor(cntnr, el)
-        {
-            return (el.compareDocumentPosition(cntnr) & el.DOCUMENT_POSITION_CONTAINS);
-        }
-        /**
-         * Returns true if lhs preceds rhs in tree-order.
-         * const unsigned short DOCUMENT_POSITION_DISCONNECTED = 0x01;
-         * const unsigned short DOCUMENT_POSITION_PRECEDING = 0x02;
-         * const unsigned short DOCUMENT_POSITION_FOLLOWING = 0x04;
-         * const unsigned short DOCUMENT_POSITION_CONTAINS = 0x08;
-         * const unsigned short DOCUMENT_POSITION_CONTAINED_BY = 0x10;
-         * const unsigned short DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20; // historical
-         */
-        function isBefore(lhs, rhs)
-        {
-            if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
-                return (lhs.tabIndex < rhs.tabIndex);
-            }
-
-            return (lhs.compareDocumentPosition(rhs) & lhs.DOCUMENT_POSITION_FOLLOWING);
-        }
-        /**
-         * Returns true if lhs follows rhs in tree-order.
-         */
-        function isAfter(lhs, rhs)
-        {
-            if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
-                return (lhs.tabIndex > rhs.tabIndex);
-            }
-            
-            return (lhs.compareDocumentPosition(rhs) & lhs.DOCUMENT_POSITION_PRECEDING);
-        }
-        /**
-         * From the provided collection $el, return elements (as jQuery object) that lie
-         * before el in sequential navigation order. Returned elements are sorted in the
-         * same order in which they were present in $el.
-         */
-        function getElsBefore(el, $el)
-        {
-            var out = [];
-            $el.each(function(i)
-            {
-                if (isBefore(this, el)) {
-                    out.push(this);
-                }
-            });
-            
-            return $(out);
-        }
-
-        /**
-         * Returns first element in tabbing order. 
-         */
-        function getFirstEl(els)
-        {
-            var first = els[0];
-            iterArray2(els, null, function(el)
-            {
-                if (isBefore(el, first)) {
-                    first = el;
-                }
-            });
-            
-            return first;
-        }        /**
-         * From the provided collection $el, return elements (as jQuery object) that lie
-         * after el in sequential navigation (tabbing) order. Returned elements are sorted
-         * in the same order in which they were present in $el.
-         */
-        function getElsAfter(el, $el)
-        {
-            var out = [];
-            $el.each(function(i)
-            {
-                if (isAfter(this, el)) {
-                    out.push(this);
-                }
-            });
-            
-            return $(out);
-        }
-
         /**
          * Returns last element in tabbing order. 
          */
@@ -1582,7 +1597,7 @@
         // @param fn Field-Type to find.
         // @param el The element that has been found.
         // finds visible username peers or visible and invisible password peers
-        function findPeers(fn, el, fInfo)
+/*        function findPeers(fn, el, fInfo)
         {
             var peers = [],
                 buddy,
@@ -1648,7 +1663,7 @@
             
             return {peers:peers, buddy:buddy};
         }
-        
+*/        
         function findEl(eRec, ctxEl)
         {
             //var $form = $((eRec.fid?('#'+eRec.fid):'') + (eRec.fnm?('[name='+eRec.fnm+']'):'') );
@@ -1661,29 +1676,34 @@
          */
         function findSubmitBtns(fmInfo)
         {
-            var $sub, $a, tEl;
+            var $sub, $a, tEl, lP;
             if (!fmInfo.form || !fmInfo.cntnr) {return;}
             
             // Now parse form/container for a submit button.
             if (fmInfo.form.localName === 'form') 
             {   // Look for submit buttons or just buttons
-                //jQuery filter is case-sensitive, hence preferring :submit over [type=submit]
+                //jQuery filter is case-sensitive, hence prefering :submit over [type=submit]
                 $sub = $(fmInfo.form.elements).filter(':submit:visible');
-                $sub = $sub.add($('input:visible[type=image]', fmInfo.cntnr));
+                $sub = $sub.add($('input[type=image]:visible', fmInfo.cntnr));
                 if (!$sub.length) {
-                    $sub = $(fmInfo.form.elements).filter('button:not([type]):visible');
+                    // Didn't find submit buttons. Now look for plain buttons.
+                    $sub = $(fmInfo.form.elements).filter('input[type=button],button:not([type])').filter(':visible');
                 }
             }
             else
             {
-                $sub = $(':visible[type=submit],input[type=image]:visible', fmInfo.cntnr);
+                $sub = $(':submit:visible,input[type=image]:visible', fmInfo.cntnr);
                 if (!$sub.length) {
-                    $sub = $('button:not([type]):visible', fmInfo.cntnr);
+                    $sub = $('input[type=button],button:not([type]):visible', fmInfo.cntnr);
                 }
             }
 
-            $sub = getElsAfter(getLastEl(fmInfo.ps), $sub);
-            if ($sub.length>1) 
+            lP = getLastEl(fmInfo.ps);
+            if (lP) {
+                $sub = getElsAfter(lP, $sub);
+            }
+            
+            if ($sub.length>1)
             {
                 $sub.data(data_btn,5); // Flagging all buttons as potential submit buttons (confidence=5/10)
                 tEl = getFirstEl($sub);
@@ -1698,9 +1718,13 @@
                 // Look for anchor based buttons.
                 $a = $('a', fmInfo.cntnr);
                 $sub = $a.filter(function(el)
-                    {
-                        return (!this.href) || (this.href==='#') || (this.href===this.baseURI) || (this.href===this.baseURI+'#');
-                    }).filter(':visible');
+                {
+                    var rVal =  (!this.href) || (this.href==='#') ||
+                                (this.href===this.baseURI) ||
+                                (this.href===this.baseURI+'#');
+
+                    return (rVal && lP) ? isAfter(this, lP) : rVal;
+                }).filter(':visible');
                 $sub.data(data_btn,5); // confidence = 5/10
             }
 
@@ -1721,39 +1745,26 @@
                 visible =new Forms(),
                 all = new Forms();
 
-            if (ctxEl && (ctxEl.localName === 'form')) {
-                //forms = [ctxEl];
-                fInfos = new Forms();
-                fInfos.insertForms([ctxEl]);                
-            }
-            else {
-                //forms = findForms(g_doc);
-                fInfos = findForms(ctxEl, 1);
-            }
+            fInfos = findForms(ctxEl, 1);
 
-            iterArray2(fInfos, null, function (fmInfo)
+            iterArray2(fInfos._a, null, function (fmInfo)
             {
-                var $p, $u, o;
-
-                $p = pCandidates(fmInfo, 2);
+                // stage2 of uCandidates should come before pCandidates. This is so
+                // because we allow invisible password fields if visible userid fields
+                // are found. Hence we need to find userid fields first. Secondly,
+                // user-fields are constrained to be before all password fields and
+                // vice-versa. Therefore we can't let erroneously included invisible
+                // password fields to trump legit visible username fields because the
+                // (illegit) password field happened to be before the username field in
+                // tab-order. 
+                uCandidates(fmInfo, 2);
+                pCandidates(fmInfo, 2);
+                assignBuddys(fmInfo);
                 //fmInfo = new FormInfo(form);
+                fmInfo.updtCntnr();
 
-                if ($p.length>0)
+                if (fmInfo.ps.length)
                 {
-                    // fmInfo.ps = $p.toArray();
-                    // One or more password fields found inside this form.
-                    // Loop through password fields and collect all peer userid fields.
-                    iterArray2($p, null, function(p)
-                    {
-                        o = findPeers(fn_userid, p, form);// only visible userid fields.
-                        if (o.buddy)
-                        {
-                            fmInfo.buddys.push({u:o.buddy, p:p});
-                            // union of the two sets. tree-order is maintained by jQuery
-                            fmInfo.us = $(fmInfo.us).add(o.peers).toArray();
-                        }
-                    });
-
                     if (fmInfo.buddys.length) {
                         if (fmInfo.ps.length===1) {
                             onePass.push(fmInfo);
@@ -1768,20 +1779,12 @@
                     
                     all.push(fmInfo);
                 }
-                else 
-                {   // No password fields found inside this form. Do a strict match for userid fields.
-                    // Strict matching will leave out email fields though. We pick only one of the
-                    // matched fields.
-                    $u = uCandidates(form);
-                    if ($u.length>0)
-                    {
-                        fmInfo.us = $u.toArray();
-                        noPass.push(fmInfo);
-                        all.push(fmInfo);
-                    }
+                else if (fmInfo.us.length)
+                {
+                    noPass.push(fmInfo);
+                    all.push(fmInfo);
                 }
                 
-                fmInfo.updtCntnr();
                 // if (fmInfo.cntnr) {
                     // addEventListener(fmInfo.cntnr, 'keydown', FormInfo.onEnter);
                     // addEventListeners(fmInfo.cntnr, 'mousedown', FormInfo.onMousedown);
@@ -1906,8 +1909,8 @@
          */
         function scanKnowledge(ctxEl)
         {
-            var i, j, l, uEl, uEl2, pEl, pEl2, eRecsMap, uer, per, uer2, per2,
-                loc = BP_MOD_CONNECT.newL(g_loc, dt_eRecord);
+            var i, j, l, uEl, uEl2, pEl, pEl2, eRecsMap, uer, per, uer2, per2;
+                //loc = BP_MOD_CONNECT.newL(g_loc, dt_eRecord);
             
             if (MOD_DB.eRecsMapArray.length)
             {
@@ -1953,54 +1956,48 @@
                 }
             }
 
-            var o;
+            var o, tInfo;
                         
             if (uEl || pEl)
             {   // Pick elements only if they are visible. Implication is that corresponding forms will be
                 // visible too. Assumption is made that if the fields are not visible then
                 // their forms are hidden as well and therefore we should ignore those forms - they will
                 // get picked when they become visible.
-                if (uEl && pEl) {
-                    if ($(uEl).is(':visible') || $(pEl).is(':visible')) {
-                        m_info.k.fmInfo = new FormInfo(formAncestor(uEl), [uEl], [pEl], [{u:uEl, p:pEl}]);
+                if (uEl && pEl) 
+                {
+                    if (isVisible(uEl)) {
+                        tInfo = formAncestor(uEl, fn_userid, 1);
+                        tInfo.pushEl(pEl, fn_pass);
+                    }
+                    else if (isVisible(pEl)) {
+                        tInfo = formAncestor(pEl, fn_pass, 1);
+                        tInfo.pushEl(uEl, fn_userid);
                     }
                 }
                 else if (uEl && (!pEl)) {
-                    if ($(uEl).is(':visible')) {
-                        // NOTE: findPeers will catch invisible password fields as well. But many times, the
-                        // password field is hidden until the user clicks on it. Hence we need to catch invisible
-                        // password fields too - as long as the form is visible overall. This is most likely a
+                    if (isVisible(uEl)) {
+                        // NOTE: This is most likely a
                         // username only form or one where auto-detection of password works - otherwise the user
                         // would've trained both uEl and pEl.
-                        o = findPeers(fn_pass, uEl);
-                        m_info.k.fmInfo = new FormInfo(formAncestor(uEl), [uEl], o.peers, [{u:uEl, p:o.buddy}]);
+                        tInfo = formAncestor(uEl, fn_userid, 1);
+                        pCandidates(tInfo, 2);
                     }
                 }
                 else if (pEl && (!uEl)) {
-                    if ($(pEl).is(':visible')) {
-                        // NOTE: findPeers will catch only visible username fields. This is what we want because
-                        // normally the username field is visible and the password field is not. Hence it is
-                        // save to assume that if the password field is visible then the username field should be
-                        // too. This is most likely a password only form or where the auto-detection of username
+                    if (isVisible(pEl)) {
+                        // NOTE: This is most likely a password only form or where the auto-detection of username
                         // is adequate - otherwise the user would've trained both uEl and pEl.
-                        o = findPeers(fn_userid, pEl);
-                        m_info.k.fmInfo = new FormInfo(formAncestor(pEl), o.peers, [pEl], [{u:o.buddy, p:pEl}]);
+                        tInfo = formAncestor(pEl, fn_pass, 1);
+                        uCandidates(tInfo, 2);
                     }
                 }
-            }
-            
-            if (uEl2 || pEl2)
-            {
-                if (uEl2 && pEl2) {
-                    m_info.k.fmInfo2 = new FormInfo(formAncestor(uEl2), [uEl2], [pEl2], [{u:uEl2, p:pEl2}]);
-                }
-                else if (uEl2 && (!pEl2)) {
-                    o = findPeers(fn_pass, uEl2);
-                    m_info.k.fmInfo2 = new FormInfo(formAncestor(uEl2), [uEl2], o.peers, [{u:uEl2, p:o.buddy}]);
-                }
-                else if (pEl2 && (!uEl2)) {
-                    o = findPeers(fn_userid, pEl2);
-                    m_info.k.fmInfo2 = new FormInfo(formAncestor(pEl2), o.peers, [pEl2], [{u:o.buddy, p:pEl2}]);
+                
+                if (tInfo)
+                {
+                    tInfo.updtCntnr();
+                    assignBuddys(tInfo);
+                    findSubmitBtns(tInfo);
+                    m_info.k.fmInfo = tInfo;
                 }
             }
             
@@ -2036,6 +2033,7 @@
             }
             
             m_info.hook();
+            g_bScanned = true;
         }
         
         // Assumes input element and fills it
@@ -2066,7 +2064,7 @@
                     {   // userPass and multiPass cases.
                         // We'll try all pairs. Only one pair should be visible
                         // and so only one will get filled eventually. If this was
-                        // a signup form, then it woudl get filled as well :(
+                        // a signup form, then it would get filled as well :(
                         iterArray2(fInfo.buddys, this, function(pair)
                         {
                             if (!$([pair.u,pair.p]).filter(':visible').length) {
