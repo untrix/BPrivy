@@ -213,7 +213,7 @@
             if (pair && !MOD_DB.matches(pair.u, pair.p)) {
                 saveTempRec(newPRecord(g_doc.location, Date.now(), pair.u, pair.p), dt_pRecord, function(resp)
                 {
-                    if (resp.result && MOD_PANEL.get()) {
+                    if (resp.result) {
                         MOD_CS.showPanelAsync();
                     }
                 });
@@ -372,7 +372,11 @@
             
             if (this.form.localName === 'form') {
                 addEventListener(this.form, 'submit', FormInfo.onSubmit);
-            }            
+            }
+                // if (fmInfo.cntnr) {
+                    // addEventListener(fmInfo.cntnr, 'keydown', FormInfo.onEnter);
+                    // addEventListeners(fmInfo.cntnr, 'mousedown', FormInfo.onMousedown);
+                // }
         };
         FormInfo.prototype.hook = function ()
         {
@@ -385,6 +389,7 @@
                 // make sure to use a static function in order to allow repeatedly calling
                 // the below without adding multiple event listeners.
                 //addEventListener(pair.u, 'change', MOD_FILL.onChange);
+                //addEventListener(pair.u, 'keydown', MOD_FILL.onEnter);
                 $el.data(data_finfo, this);
                 $el.data(data_pair, pair);
                 $el.data(data_fn, fn_userid);
@@ -393,6 +398,7 @@
 
                 $el = $(pair.p);
                 //addEventListener(pair.p, 'change', MOD_FILL.onChange);
+                //addEventListener(pair.p, 'keydown', MOD_FILL.onEnter);
                 $el.data(data_finfo, this);
                 $el.data(data_pair, pair);
                 $el.data(data_fn, fn_pass);
@@ -989,7 +995,7 @@
             var $this = $(ev.target),//.closest('input'),
                 fInfo = $this.data(data_finfo),
                 fn, pair, uid = null, pass = null,
-                uEl, pEl;
+                uEl, pEl, bSave;
             
             if (!fInfo) {return;}
 
@@ -1028,7 +1034,7 @@
                         console.log("Exiting password was input " + uid);
                     }
                     else {
-                        saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
+                        bSave = true;
                         console.log("New password was input: " + uid + "/" + pass);
                     }
                 }
@@ -1039,7 +1045,7 @@
                 {
                     if (!MOD_DB.has(uid)) {
                         console.log("New userid was input without password: " + uid);
-                        saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
+                        bSave = true
                     }
                     else {
                         console.log("Existing userid was input without password: " + uid);
@@ -1048,8 +1054,17 @@
                 else if (pass)
                 {
                     console.log("A password was entered without userid. Saving it: " + encrypt(pass));
-                    saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
+                    bSave = true;
                 }
+            }
+            
+            if (bSave) {
+                saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord, function(resp)
+                {
+                    if (resp.result) {
+                        MOD_CS.showPanelAsync();
+                    }
+                });
             }
         }
 
@@ -1754,10 +1769,6 @@
                     noPass.push(fmInfo);
                     all.push(fmInfo);
                 }
-                // if (fmInfo.cntnr) {
-                    // addEventListener(fmInfo.cntnr, 'keydown', FormInfo.onEnter);
-                    // addEventListeners(fmInfo.cntnr, 'mousedown', FormInfo.onMousedown);
-                // }
             });
             if (m_info.scraped.onePass) {
                 m_info.scraped.onePass.merge(onePass);
@@ -2030,8 +2041,10 @@
             if (!g_bInited) {try
             {
                 BP_MOD_BOOT.observe(g_doc, MOD_CS.onMutation, {bRemoved:true});
-                //addEventListener(g_doc, 'change', onChange);
+                addEventListener(g_doc, 'change', onChange);
                 addEventListener(g_doc, 'click', onClick);
+                //addEventListener(g_doc, 'mousedown', onClick);
+                //addEventListener(g_doc, 'keydown', onEnter);
                 g_bInited = true;
             }
             catch (ex)

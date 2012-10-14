@@ -236,7 +236,7 @@ var BP_MOD_EDITOR = (function ()
         {
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
             e.preventDefault(); // Causes event to get cancelled if cancellable
-            this.ioItem.destroy();
+            this.ioItem.deleteRecord();
         }}
     });
 
@@ -414,17 +414,17 @@ var BP_MOD_EDITOR = (function ()
 
             // save to db
             var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
-            saveRecord(pRec, dt_pRecord, callback);
-            //ioItem.rec = pRec;
-            if (oU && (nU !== oU)) {
-                this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
-            }                
-        }},
-        deleteRecord: {value: function(dt, key)
-        {
-            if (dt === dt_pRecord) {
-                deleteRecord({loc:this.ioItem.loc, u:key}, dt);
-            }
+            saveRecord(pRec, dt_pRecord, function(resp)
+            {
+                if (resp.result) 
+                {
+                    if (oU && (nU !== oU)) {
+                        BP_MOD_CONNECT.deleteRecord(ioItem.rec, dt_pRecord);
+                        ioItem.rec = pRec;
+                    }                    
+                }
+                callback(resp);
+            });
         }},
         onSubmit: {value: function(e)
         {
@@ -572,6 +572,20 @@ var BP_MOD_EDITOR = (function ()
             }
             
             return Boolean(this.iItem);
+        }},
+        deleteRecord: {value: function()
+        {
+            var self = this,
+                panel = this.panel;
+            function handleResp(resp)
+            {
+                if (resp.result!==true) {
+                    BP_MOD_ERROR.warn(resp.err);
+                }
+                else {self.destroy();}
+            }
+            
+            BP_MOD_CONNECT.deleteRecord(this.rec, dt_pRecord, handleResp);
         }}
     });
 
@@ -606,21 +620,24 @@ var BP_MOD_EDITOR = (function ()
     function DNodeWdl () {}
     DNodeWdl.wdi = function(w$ctx) 
     {
-        var dNode = w$ctx.w$rec,
-            dt = w$ctx.dt,
-            bOpen = w$ctx.bOpen,
-            recs = DNProto.getData.apply(dNode, [dt]);//dNode.getData(dt)
-
-        // If this node has no data, then have it be skipped.    
-        if (!recs) {return w$undefined;}
-        if (dt!==dt_pRecord) {
+        if (w$ctx.dt!==dt_pRecord) {
             BPError.logwarn("DNodeWdl.wdi&editwdl.js: bad dt-type passed in");
             return w$undefined;
         }
 
-        var loc = MOD_COMMON.parseURL('http://' + dNode[DNODE_TAG.URL]),
-            rIt = new BP_MOD_TRAITS.RecsIterator(recs),
-            H = loc.hostname;
+        var dNode = w$ctx.w$rec,
+            dt = w$ctx.dt,
+            bOpen = w$ctx.bOpen,
+            recs, rIt, loc, H;
+        
+        recs = DNProto.getData.apply(dNode, [dt]);//dNode.getData(dt)
+        // If this node has no data, then have it be skipped.    
+        if (!recs) {return w$undefined;}        
+        rIt = new BP_MOD_TRAITS.RecsIterator(recs);
+        if (!rIt.num()) {return w$undefined;}
+        
+        loc = MOD_COMMON.parseURL('http://' + dNode[DNODE_TAG.URL]);
+        H = loc.hostname;
             
         return {
         cons:DNodeWdl, // w$el constructor
@@ -643,8 +660,8 @@ var BP_MOD_EDITOR = (function ()
                 children:[
                 //EButton.wdt,
                 NButton.wdt,
-                dNodeTitleText_wdt,
-                DButton2.wdt
+                dNodeTitleText_wdt
+                //DButton2.wdt // TODO: DButton2.onClick needs implementation.
                 ]
             },
             bOpen ? PanelList.wdt : w$undefined

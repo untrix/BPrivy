@@ -124,9 +124,11 @@ var BP_MOD_CONNECT = (function ()
         {
             // The action being performed. An undefined value means an insert action. The
             // only other legal value is 'd', meaning delete.
-            a: {enumerable: true},
+            // TODO: Make un-writable - right now needed for setDeleted
+            a: {enumerable: true, writable:true},
             // Date and timestamp of record creation. Should be a Date object.
-            tm: {value: date, enumerable: true},
+            // TODO: Make un-writable - right now needed for setDeleted
+            tm: {value: date, enumerable: true, writable:true},
             // URL that this record pertains to. Determines where the record will sit within the URL-trie.
             // We're stripping extra data and shortening property names so as to conserve space in memory
             // as well as on disk and processing cycles as well. This becomes important when one has to

@@ -585,8 +585,9 @@ var BP_MOD_WDL = (function ()
                 {
                     iI.saveInput(function(resp)
                     {
-                        if (resp.result===true) {
-                            self.deleteRecord();
+                        if ((resp.result===true)) {
+                            if (self.isTRec) {self.deleteRecord();}
+                            self.panel.reload();
                         }
                         else {
                             BP_MOD_ERROR.warn(resp.err);
@@ -617,8 +618,8 @@ var BP_MOD_WDL = (function ()
                 if (resp.result!==true) {
                     BP_MOD_ERROR.warn(resp.err);
                 }
-                // else {self.destroy();}
-                panel.reload();
+                else {self.destroy();}
+                //panel.reload();
             }
 
             if (!this.isTRec) {
