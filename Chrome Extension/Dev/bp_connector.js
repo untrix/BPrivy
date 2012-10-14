@@ -49,7 +49,8 @@ var BP_MOD_CONNECT = (function ()
         cm_getDN        = "cm_getDN",
         cm_getDomn      = "cm_getDomn",
         cm_closed       = "cm_closed",
-        cm_tempRec      = "cm_tempRec";
+        cm_tempRec      = "cm_tempRec",
+        DELETE_ACTION_VAL = "D}";
 
     var DICT_TRAITS={};
    
@@ -121,22 +122,31 @@ var BP_MOD_CONNECT = (function ()
         
         Object.defineProperties(this,
         {
+            // The action being performed. An undefined value means an insert action. The
+            // only other legal value is 'd', meaning delete.
+            a: {enumerable: true},
             // Date and timestamp of record creation. Should be a Date object.
             tm: {value: date, enumerable: true},
             // URL that this record pertains to. Determines where the record will sit within the URL-trie.
             // We're stripping extra data and shortening property names so as to conserve space in memory
             // as well as on disk and processing cycles as well. This becomes important when one has to
             // ingest thousands of records (ETLD has about 7K records)
-            l: {value: newL(loc, dt), enumerable: true},
+            l: {value: newL(loc, dt), enumerable: true}
         });
     }
+    // Sets record as a delete action record.
+    ARec.prototype.setDeleted = function () 
+    {
+        this.a = 'd';
+        this.tm = Date.now();
+    };
     
     function ERecord(loc, date, fieldName, tagName, id, name, type, formId, formNm)
     {
         ARec.apply(this, [dt_eRecord, loc, date]);
         Object.defineProperties(this, 
         {
-            f: {value: fieldName, enumerable: true},
+            f: {value: fieldName, enumerable: true}, // key
             t: {value: tagName, enumerable: true},
             id: {value: id, enumerable: true},
             n: {value: name, enumerable: true},
@@ -147,6 +157,11 @@ var BP_MOD_CONNECT = (function ()
         Object.seal(this);
     }
     ERecord.prototype = Object.create(ARec.prototype,{});
+    ERecord.prototype.setDeleted = function ()
+    {
+        ARec.prototype.setDeleted.apply(this);
+        this.t = this.id = this.n = this.y = this.fid = this.fnm = undefined;
+    };
     ERecord.prototype.toJson = function ()
     {
         return JSON.stringify(this, null, 2);
@@ -160,14 +175,28 @@ var BP_MOD_CONNECT = (function ()
         ARec.apply(this, [dt_pRecord, loc, date]);
         Object.defineProperties(this,
             {
-                u: {value: userid, enumerable: true},
+                u: {value: userid, enumerable: true}, // key
                 p: {value: pass, enumerable: true}
             }
         );
         Object.seal(this);
     }
     PRecord.prototype = Object.create(ARec.prototype,{});
-        
+    PRecord.prototype.setDeleted = function ()
+    {
+        ARec.prototype.setDeleted.apply(this);
+        this.p = undefined;
+    };
+    
+    function getProto(dt)
+    {
+        switch (dt)
+        {
+            case dt_pRecord: return PRecord.prototype;
+            case dt_eRecord: return ERecord.prototype;
+            default: return ARec.prototype;
+        }
+    }    
     /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
@@ -183,7 +212,7 @@ var BP_MOD_CONNECT = (function ()
                 postMsgToMothership(req);
             }
         };
-        var tempRec = function (rec, dt, callbackFunc)
+        var saveTempRec = function (rec, dt, callbackFunc)
         {
             var req = {};
             req.cm = cm_tempRec;
@@ -196,9 +225,17 @@ var BP_MOD_CONNECT = (function ()
                 postMsgToMothership(req);
             }
         };        
-        var deleteRecord = function (erec, dt)
+        var deleteRecord = function (rec, dt, callback)
         {
-            console.log('Deleting Record ' + JSON.stringify(erec));
+            getProto(dt).setDeleted.apply(rec);
+            saveRecord(rec, dt, callback);
+            console.log('Deleting Record ' + JSON.stringify(rec));
+        };
+        var delTempRec = function (rec, dt, callback)
+        {
+            getProto(dt).setDeleted.apply(rec);
+            saveTempRec(rec, dt, callback);
+            console.log('Deleting Temp Record ' + JSON.stringify(rec));
         };
         
         var getRecs = function(loc, callback)
@@ -249,9 +286,11 @@ var BP_MOD_CONNECT = (function ()
             cm_getDomn: {value: cm_getDomn},
             cm_closed:  {value: cm_closed},
             cm_tempRec: {value: cm_tempRec},
+            DELETE_ACTION_VAL: {value: DELETE_ACTION_VAL},
             saveRecord: {value: saveRecord},
-            tempRec: {value: tempRec},
+            saveTempRec: {value: saveTempRec},
             deleteRecord: {value: deleteRecord},
+            delTempRec: {value: delTempRec},
             newERecord: {value: newERecord},
             newPRecord: {value: newPRecord},
             getRecs: {value: getRecs},

@@ -423,7 +423,7 @@ var BP_MOD_EDITOR = (function ()
         deleteRecord: {value: function(dt, key)
         {
             if (dt === dt_pRecord) {
-                deleteRecord({loc:this.ioItem.loc, u:key});
+                deleteRecord({loc:this.ioItem.loc, u:key}, dt);
             }
         }},
         onSubmit: {value: function(e)

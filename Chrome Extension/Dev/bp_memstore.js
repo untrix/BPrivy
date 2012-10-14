@@ -11,7 +11,7 @@
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
-var BP_MOD_MEMSTORE = (function () 
+var BP_MOD_MEMSTORE = (function ()
 {
     "use strict"; //TODO: Remove this from prod. build
     
@@ -35,7 +35,8 @@ var BP_MOD_MEMSTORE = (function ()
         //newPRecord = IMPORT(m.newPRecord),
         //newERecord = IMPORT(m.newERecord),
         newL = IMPORT(m.newL),
-        DICT_TRAITS = IMPORT(m.DICT_TRAITS);
+        DICT_TRAITS = IMPORT(m.DICT_TRAITS),
+        DELETE_ACTION_VAL = IMPORT(m.DELETE_ACTION_VAL);
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
@@ -176,21 +177,16 @@ var BP_MOD_MEMSTORE = (function ()
             // affect that behaviour.
             persist_asserts: false
         },        // Returns record key        getKey: function (rec) {return rec.k;},// not needed by dt_etld
-        // return EQUAL or DIFFRNT. // not needed by dt_etld        compareVals: function(rec1, rec2)
-        {
-            if (rec1 && rec2)
-            {
-                if (rec1.v === rec2.v) { return EQUAL;}
-                else {return DIFFRNT;}
-            }
-            else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
-                return EQUAL;
-            }
-            else { return DIFFRNT; }
-        },
         // return true if the record is valid, false otherwise. Only needed for pRecords        isValidCSV: function(rec) {return Boolean(rec.k);}, // only needed for some types.
         // Returns value converted to a string suitable to be used as a property name
-        valStr: function(rec) {return rec.v;},        csvHeader: function ()
+        valStr: function(rec)
+        {
+            if (rec.a) { // delete action
+                return DELETE_ACTION_VAL;
+            }
+            else {return "V}" + rec.v;}
+        },
+        csvHeader: function ()
         {
             return "key, value";
         },
@@ -222,21 +218,14 @@ var BP_MOD_MEMSTORE = (function ()
                     (typeof rec.u === "string") &&
                     (typeof rec.p === "string"));
             }},
-            compareVals: {value:function(rec1, rec2)
-            {
-                if (rec1 && rec2)
-                {
-                    if (rec1.p === rec2.p) { return EQUAL;}
-                    else {return DIFFRNT;}
-                }
-                else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
-                    return EQUAL;
-                }
-                else { return DIFFRNT; }
-            }},
             valStr: {value: function(rec)
             {
-                return rec.p;
+                if (rec.a) { // Implies a delete action
+                    return DELETE_ACTION_VAL;
+                }
+                else { // insert action
+                    return "P}" + rec.p;
+                }
             }},
             csvHeader: {value: function ()
             {
@@ -250,7 +239,7 @@ var BP_MOD_MEMSTORE = (function ()
             }}
         }));   
     }
-    PStoreTraits.prototype = DEFAULT_TRAITS;
+    PStoreTraits.prototype = DEFAULT_TRAITS; // Inherit the rest from DEFAULT_TRAITS
     var PREC_TRAITS = DT_TRAITS.traits[dt_pRecord] = new PStoreTraits();
 
     function EStoreTraits()
@@ -270,28 +259,12 @@ var BP_MOD_MEMSTORE = (function ()
                     (typeof rec.f === "string") &&
                     (typeof rec.t === "string"));
             }},
-            compareVals: {value:function(rec1, rec2) 
-            {
-                if (rec1 && rec2)
-                {
-                    if (rec1.t === rec2.t &&
-                        rec1.id === rec2.id &&
-                        rec1.n === rec2.n &&
-                        rec1.y === rec2.y &&
-                        rec1.fid === rec2.fid && // since 0.5.19
-                        rec1.fnm === rec2.fnm)   // since 0.5.19
-                        {
-                            return EQUAL;
-                        }
-                    else {return DIFFRNT;}
-                }
-                else if ((rec1===undefined || rec1===null) && (rec2===undefined || rec2===null)) {
-                    return EQUAL;
-                }
-                else { return DIFFRNT;}                
-            }},
             valStr: {value: function(rec)
             {
+                if (rec.a) { // Implies a delete action
+                    return DELETE_ACTION_VAL;
+                }
+
                 var str = "";
                 if (rec.t) {
                     str += "T}" + rec.t;
@@ -330,7 +303,7 @@ var BP_MOD_MEMSTORE = (function ()
             }}
         }));
     }
-    EStoreTraits.prototype = DEFAULT_TRAITS;
+    EStoreTraits.prototype = DEFAULT_TRAITS;// Inherit the rest from DEFAULT_TRAITS
     var EREC_TRAITS = DT_TRAITS.traits[dt_eRecord] = new EStoreTraits();
     
     function SStoreTraits()
@@ -338,10 +311,10 @@ var BP_MOD_MEMSTORE = (function ()
         Object.freeze(Object.defineProperties(this, 
         {
             dict: {value:DICT_TRAITS[BP_MOD_TRAITS.dt_settings]},
-            // everything else is same as DEFAULT_TRAITS            
+            // everything else is inherited from DEFAULT_TRAITS            
         }));        
     }
-    SStoreTraits.prototype = DEFAULT_TRAITS;
+    SStoreTraits.prototype = DEFAULT_TRAITS;// Inherit the rest from DEFAULT_TRAITS
     DT_TRAITS.traits[BP_MOD_TRAITS.dt_settings] = new SStoreTraits();
     
     Object.freeze(DT_TRAITS);
@@ -611,7 +584,9 @@ var BP_MOD_MEMSTORE = (function ()
                 // use-case can easily be made possible by changing the code in this section
                 // to not forget repeated values. Hence for now we'll go with the simpler
                 // leaner arguably smarter but certainly novel approach.
+
                 drec.notes.isNewRepeat = true; // NOTE: May or may not causeCurrChange...
+
                 // In loadCSV case all record-timestamps are Date.now and therefore are
                 // latest. Hence any value in the csv record will appear like a new value
                 // or an upgrade. We don't want that to spoil the chronology of the DB
@@ -1095,6 +1070,7 @@ var BP_MOD_MEMSTORE = (function ()
         r = {};
         r.eRecsMapArray = DNProto.findERecsMapArray.apply(DNode[dt_eRecord], [newL(loc,dt_eRecord)]);
         r.pRecsMap = DNProto.findPRecsMap.apply(DNode[dt_pRecord],[newL(loc,dt_pRecord)]);
+        r.tRecsMap = DNProto.findPRecsMap.apply(DNode['temp_'+dt_pRecord],[newL(loc,dt_pRecord)]);
 
         return r;
     }

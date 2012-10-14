@@ -49,7 +49,7 @@
     var getRecs = IMPORT(m.getRecs),
         deleteRecord = IMPORT(m.deleteRecord),
         saveRecord = IMPORT(m.saveRecord),
-        tempRec = IMPORT(m.tempRec),
+        saveTempRec = IMPORT(m.saveTempRec),
         newERecord = IMPORT(m.newERecord),
         newPRecord = IMPORT(m.newPRecord),
         panelClosed = IMPORT(m.panelClosed);
@@ -210,8 +210,13 @@
         FormInfo.prototype.onSubmit = function (c)
         {
             var pair = this.getVals(c);
-            if (pair) {
-                tempRec(newPRecord(g_doc.location, Date.now(), pair.u, encrypt(pair.p)), dt_pRecord);
+            if (pair && !MOD_DB.matches(pair.u, pair.p)) {
+                saveTempRec(newPRecord(g_doc.location, Date.now(), pair.u, pair.p), dt_pRecord, function(resp)
+                {
+                    if (resp.result && MOD_PANEL.get()) {
+                        MOD_CS.showPanelAsync();
+                    }
+                });
             }
             BP_MOD_ERROR.logdebug("FormInfo.prototype.submit invoked with c = " + c);
         };
@@ -587,7 +592,7 @@
          * Inserts fInfo in tree order into the collection. Does not check for
          * intersection. Only checks if the form is not already present.
          */
-        Forms.prototype.insertForm = function (form) 
+        /*Forms.prototype.insertForm = function (form) 
         {
             var i, n, cmp, done=false, rInfo, tInfo;
             if (!form) {return;}
@@ -615,7 +620,7 @@
             }
             
             return rInfo;
-        };
+        };*/
         /**
          * Inserts fInfo in tree-order unless it intersects with an
          * already present form, in which case the two will get merged.
@@ -689,19 +694,29 @@
             {
                 iterArray2(forms, null, function(form)
                 {
-                    host.insertForm(form);
+                    host.mergeInsert(new FormInfo(form));
+                    //host.insertForm(form);
                 });
             }
         };
-        Forms.prototype.rm = function (fInfo) // removes fInfo from collection
+        Forms.prototype.rm = function (fInfo)
         {
-            return this._a.some(function(item, i, ar)
+            var i = this._a.indexOf(fInfo);
+            if (i>=0) {
+                this._a.splice(i,1);
+            }
+        };
+        Forms.prototype.rms = function (fInfos) // removes fInfos from collection
+        {
+            var nu = [];
+            this._a.forEach(function(item)
             {
-                if (item===fInfo) {
-                    ar.splice(i,1);
-                    return true;
+                if (fInfos._a.indexOf(item)===-1) {
+                    nu.push(item);
                 }
             });
+            
+            this._a = nu;
         };
         Forms.prototype.getVisible = function ()
         {
@@ -740,6 +755,7 @@
                 });
             }
 
+            // TODO: Take z-index into account instead of returning focussable[0]
             return (first || focussable[0]);
         };
         Forms.prototype.getClicked = function (ev)
@@ -1008,11 +1024,11 @@
                 }
                 else // both uid and pass are available
                 {
-                    if (MOD_DB.has(uid) && MOD_DB.matches(uid, pass)) {
+                    if (MOD_DB.matches(uid, pass)) {
                         console.log("Exiting password was input " + uid);
                     }
                     else {
-                        tempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
+                        saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
                         console.log("New password was input: " + uid + "/" + pass);
                     }
                 }
@@ -1023,7 +1039,7 @@
                 {
                     if (!MOD_DB.has(uid)) {
                         console.log("New userid was input without password: " + uid);
-                        tempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
+                        saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
                     }
                     else {
                         console.log("Existing userid was input without password: " + uid);
@@ -1032,7 +1048,7 @@
                 else if (pass)
                 {
                     console.log("A password was entered without userid. Saving it: " + encrypt(pass));
-                    tempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
+                    saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
                 }
             }
         }
@@ -1246,7 +1262,7 @@
         
         function hasVal(el)
         {
-            return el.value && (el.value !== el.defaultValue);
+            return el.value ;//&& (el.value !== el.defaultValue);
         }
         function isVisible(el)
         {
@@ -1711,6 +1727,12 @@
                 uCandidates(fmInfo, 2);
                 pCandidates(fmInfo, 2);
 
+                if (!fmInfo.ps.length && !fmInfo.us.length) { return; }
+                
+                assignBuddys(fmInfo);
+                fmInfo.updtCntnr();
+                findSubmitBtns(fmInfo);
+                
                 if (fmInfo.ps.length)
                 {
                     if (fmInfo.buddys.length) {
@@ -1726,24 +1748,16 @@
                     }
                     
                     all.push(fmInfo);
-                    isGood = true;
                 }
                 else if (fmInfo.us.length)
                 {
                     noPass.push(fmInfo);
                     all.push(fmInfo);
-                    isGood = true;
                 }
-                
-                if (!isGood) { return; }
                 // if (fmInfo.cntnr) {
                     // addEventListener(fmInfo.cntnr, 'keydown', FormInfo.onEnter);
                     // addEventListeners(fmInfo.cntnr, 'mousedown', FormInfo.onMousedown);
                 // }
-                assignBuddys(fmInfo);
-                //fmInfo = new FormInfo(form);
-                fmInfo.updtCntnr();
-                findSubmitBtns(fmInfo);
             });
             if (m_info.scraped.onePass) {
                 m_info.scraped.onePass.merge(onePass);
@@ -1785,68 +1799,37 @@
         function scrape(ctxEl)
         {
             var formScan = scrapeForms(ctxEl),
-                signin,
-                visible;
+                visible, signin;
 
             if (formScan.all.length())
             {
                 if (!m_info.signin.length())
                 {   // Try to isolate a signin form
                     visible = formScan.onePass.getVisible();
-                    if (visible.length()===1)
-                    {
-                        signin = visible.get(0);
-                    }
-                    else if (visible.length()>1)
-                    {
-                        // one could also get the smallest form, but this works better.
-                         signin = visible.getFirstFocussed();
-                    }
-                    else
+                    // signin = visible.getFirstFocussed();
+                    // signin = visible.getSmallest();
+                    if (!visible.length())
                     {
                         // The onePass forms are not visible. Try to see if there is
                         // a visible noPass form. If yes, then that becomes the signin
                         // form, otherwise we won't label any because we don't want to
                         // autoFill invisible forms. That would be confusing to the user.
                         visible = formScan.noPass.getVisible();
-                        if (visible.length()>1) {
-                            signin = visible.getFirstFocussed();
-                        }
-                        else if (visible.length()===1) {
-                            signin = visible.get(0);
-                        }
-                        else
+                        if (!visible.length())
                         {
                             visible = formScan.noUser.getVisible();
-                            if (visible.length()===1)
-                            {
-                                signin = visible.get(0);
-                            }
-                            else if (visible.length()>1)
-                            {
-                                 signin = visible.getFirstFocussed();
-                            }
-                            else 
+                            if (!visible.length())
                             {
                                 // Try multi-pass now. We risk labelling a sign-up form
                                 // as sign-in, however we expect the user to not hit
                                 // the auto-fill button if this was a signup form. 
                                 visible = formScan.multiPass.getVisible();
-                                if (visible.length()===1)
-                                {
-                                    signin = visible.get(0);
-                                }
-                                else if (visible.length()>1)
-                                {
-                                     signin = visible.getFirstFocussed();
-                                }
                             }
                         }
                     }
                     
-                    if (signin) {
-                        m_info.signin.push(signin);
-                    }
+                    signin = visible.getFirstFocussed();
+                    m_info.signin.push(signin);
                 }
 
                 // Save the remaining forms for auto-capture
@@ -2001,16 +1984,18 @@
             inp.value = val;
             trigger(inp, 'input');
             inp.blur();
+            inp.focus();
             // trigger(inp, 'change');
         }
         
         function autoFill(userid, pass)
         {
-            var u, p, pRecsMap, fInfo;
+            var u, p, pRecsMap;
 
-            if (m_info.signin.length())
+            m_info.signin.some(function()
             {
-                fInfo = m_info.signin.get(0);
+                //fInfo = m_info.signin.get(0);
+                var fInfo = this;
                 if (fInfo.isVisible()) 
                 {
                     if (fInfo.buddys.length) 
@@ -2039,13 +2024,13 @@
                         }
                     }
                 }
-            }        }
+            });        }
         function init()
         {
             if (!g_bInited) {try
             {
                 BP_MOD_BOOT.observe(g_doc, MOD_CS.onMutation, {bRemoved:true});
-                addEventListener(g_doc, 'change', onChange);
+                //addEventListener(g_doc, 'change', onChange);
                 addEventListener(g_doc, 'click', onClick);
                 g_bInited = true;
             }
@@ -2305,7 +2290,8 @@
             close();
             m_bUserClosed = false;
             var ctx = {
-                it: new RecsIterator(MOD_DB.pRecsMap), 
+                it: new RecsIterator(MOD_DB.pRecsMap),
+                it2: new RecsIterator(MOD_DB.tRecsMap),
                 reload:MOD_CS.showPanelAsync,
                 onClosed:onClosed,
                 autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined), 
@@ -2380,7 +2366,7 @@
                 BP_MOD_ERROR.logwarn(err);
             }
 
-            if ((!bConditional) || MOD_FILL.info().autoFillable()) {
+            if ((!bConditional) || MOD_FILL.info().autoFillable() || MOD_DB.numUnsaved) {
                 MOD_PANEL.create();
             }
         }

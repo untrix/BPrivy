@@ -148,14 +148,30 @@ var BP_MOD_TRAITS = (function ()
         });
         Object.seal(this);
     }
+    /**
+     * Iterates over non-deleted items. 
+     */
     RecsIterator.prototype.next = function ()
     {
-        if (this._i < this._n) {
-            return this._o[this._k[this._i++]];
+        var actn = null, t;
+        // Find the next item who's current action is not delete.
+        while (this._i < this._n) 
+        {
+            t = this._o[this._k[this._i++]];
+            if (!t.curr.a) { actn=t; break; }
         }
-        else {
-            return null;
+
+        return actn;
+    };
+    RecsIterator.prototype.num = function ()
+    {
+        var i = 0,
+            n = 0;
+        while (i < this._n) 
+        {
+            if (!this._o[this._k[i++]].curr.a) { n++; }
         }
+        return n;
     };
 
     var iface = {};

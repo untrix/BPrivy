@@ -132,9 +132,12 @@ var BP_MOD_WDL = (function ()
             {
                 this.empty();
                 if (db.pRecsMap) {this.pRecsMap = db.pRecsMap;} 
+                if (db.tRecsMap) {this.tRecsMap = db.tRecsMap;}
                 if (db.eRecsMapArray) {this.eRecsMapArray = db.eRecsMapArray;}
                 if (this.pRecsMap) {this.numUserids = Object.keys(this.pRecsMap).length;}
                 else {this.numUserids = 0;}
+                if (this.tRecsMap) {this.numUnsaved = Object.keys(this.tRecsMap).length;}
+                else {this.numUnsaved = 0;}
                 if (dbInfo) {
                     if (dbInfo.dbName) {this.dbName = dbInfo.dbName;}
                     if (dbInfo.dbPath) {this.dbPath = dbInfo.dbPath;}
@@ -163,7 +166,8 @@ var BP_MOD_WDL = (function ()
             BP_MOD_COMMON.clear(this);
             this.eRecsMapArray = BP_MOD_COMMON.EMPTY_ARRAY;
             this.pRecsMap = BP_MOD_COMMON.EMPTY_OBJECT;
-            this.numUserids = 0;
+            this.tRecsMap = BP_MOD_COMMON.EMPTY_OBJECT;
+            this.numUserids = this.numUnsaved = 0;
         },
         preventEdits: function ()
         {
@@ -171,17 +175,23 @@ var BP_MOD_WDL = (function ()
             {
                 eRecsMapArray: {configurable:true, enumerable:true},
                 pRecsMap: {configurable:true, enumerable:true},
+                tRecsMap: {configurable:true, enumerable:true},
                 dbName: {configurable:true, enumerable:true},
-                dbPath: {configurable:true, enumerable:true}
+                dbPath: {configurable:true, enumerable:true},
+                numUserids: {configurable:true, enumerable:true},
+                numUnsaved: {configurable:true, enumerable:true}
             });
         },
         has: function (username)
         {
-            return (Object.keys(this.pRecsMap).indexOf(username) !== (-1));
+            // return (Object.keys(this.pRecsMap).indexOf(username) >=0) ||
+                   // (Object.keys(this.tRecsMap).indexOf(username) >=0);            return (this.pRecsMap && this.pRecsMap[uid]) ||
+                   (this.tRecsMap && this.tRecsMap[uid]) ;
         },
         matches: function (uid, pass)
         {
-            return this.pRecsMap && this.pRecsMap[uid] && (this.pRecsMap[uid].curr.p===pass);
+            return (this.pRecsMap && this.pRecsMap[uid] && (this.pRecsMap[uid].curr.p===pass)) ||
+                   (this.tRecsMap && this.tRecsMap[uid] && (this.tRecsMap[uid].curr.p===pass)) ;
         }
     });
     
@@ -193,7 +203,7 @@ var BP_MOD_WDL = (function ()
             attrs:{ src:getURL(imgPath) }
         };
     }
-    
+
     function cs_panelTitleText_wdt (ctx)
     {
         // uses ctx.dbName and ctx.dbPath
@@ -201,6 +211,16 @@ var BP_MOD_WDL = (function ()
             tag:"div",
             attr:{ id: eid_panelTitleText, title:ctx.dbPath },
             text:ctx.dbName || "No wallet open"
+        };
+    }
+
+    function unsavedTitleText_wdt (ctx)
+    {
+        return {
+            tag:"div",
+            attr:{ id: eid_panelTitleText },
+            css:{ display: 'block'},
+            text: "Unsaved Passwords"
         };
     }
 
@@ -344,7 +364,7 @@ var BP_MOD_WDL = (function ()
     {
         onClick: {value: function(ev)
         {
-            this.ioItem.destroy();
+            this.ioItem.deleteRecord();
         }}
     });
         
@@ -363,7 +383,7 @@ var BP_MOD_WDL = (function ()
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
-            addClass:bInp? "icon-eye-close" :"icon-eye-open",
+            addClass:bInp? "icon-ok" :"icon-eye-open",
             ctx:{ w$:{icon:'w$el'} }
             }],
          _iface:{ w$ctx:{ ioItem:"ioItem", icon:'icon' } }
@@ -376,10 +396,10 @@ var BP_MOD_WDL = (function ()
             var bInp = this.ioItem.toggleIO();
             if (bInp) {
                 this.icon.removeClass('icon-eye-open');
-                this.icon.addClass('icon-eye-close');
+                this.icon.addClass('icon-ok');
             }
             else {
-                this.icon.removeClass('icon-eye-close');
+                this.icon.removeClass('icon-ok');
                 this.icon.addClass('icon-eye-open');                    
             }
         }}
@@ -432,16 +452,26 @@ var BP_MOD_WDL = (function ()
         {
             var ioItem = this.ioItem,
                 nU = this.u.el.value,
-                oU = ioItem.rec? ioItem.rec.u: undefined,
                 nP = encrypt(this.p.el.value),
-                oP = ioItem.rec? ioItem.rec.p: undefined;
-            
+                isTRec = ioItem.isTRec,
+                oU, oP;
+
             if (!isValidInput(nU) || !isValidInput(nP)) {
                 return false; // inputs are invalid
             }
             
-            if ((nU !== oU) || (nP !== oP)) {
-                return true; // inputs are valid and different
+            if (isTRec) {
+                // If this is a temporary-Rec, then the input must be saved if
+                // valid.
+                return true;
+            }
+            else 
+            {
+                oU = ioItem.rec? ioItem.rec.u: undefined;
+                oP = ioItem.rec? ioItem.rec.p: undefined;
+                if ((nU !== oU) || (nP !== oP)) {
+                    return true; // inputs are valid and different
+                }
             }
             // else return undefined; inputs are valid but same.
         }},
@@ -457,15 +487,9 @@ var BP_MOD_WDL = (function ()
             var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
             saveRecord(pRec, dt_pRecord, callback);
             //ioItem.rec = pRec;
-            if (oU && (nU !== oU)) {
-                this.deleteRecord(dt_pRecord, oU); // TODO: Needs URL
-            }                
-        }},
-        deleteRecord: {value: function(dt, key)
-        {
-            if (dt === dt_pRecord) {
-                deleteRecord({loc:this.ioItem.loc, u:key});
-            }
+            // if (oU && (nU !== oU)) {
+                // this.ioItem.deleteRecord(dt_pRecord, oU);
+            // }
         }}
     });
     
@@ -515,13 +539,14 @@ var BP_MOD_WDL = (function ()
             loc = w$ctx.loc,
             panel = w$ctx.panel,
             bInp = w$ctx.io_bInp,
-            autoFill = panel.autoFill;
+            autoFill = panel.autoFill,
+            isTRec = w$ctx.isTRec;
         return {
         cons: IoItem,
         tag:'div', 
         attr:{ class:css_class_li },
         ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.prototype.toggleIO },
-        iface: { acns:acns, rec:rec, loc:loc, panel:panel, bInp:bInp },
+        iface: { acns:acns, rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec },
         on: {mousedown:stopPropagation},
             children:[
             autoFill ? FButton.wdt : w$undefined,
@@ -561,7 +586,7 @@ var BP_MOD_WDL = (function ()
                     iI.saveInput(function(resp)
                     {
                         if (resp.result===true) {
-                            self.panel.reload();
+                            self.deleteRecord();
                         }
                         else {
                             BP_MOD_ERROR.warn(resp.err);
@@ -582,6 +607,27 @@ var BP_MOD_WDL = (function ()
             }
             
             return Boolean(this.iItem);
+        }},
+        deleteRecord: {value: function()
+        {
+            var self = this,
+                panel = this.panel;
+            function handleResp(resp)
+            {
+                if (resp.result!==true) {
+                    BP_MOD_ERROR.warn(resp.err);
+                }
+                // else {self.destroy();}
+                panel.reload();
+            }
+
+            if (!this.isTRec) {
+                //deleteRecord({loc:this.ioItem.loc, u:key}, dt);
+                BP_MOD_CONNECT.deleteRecord(this.rec, dt_pRecord, handleResp);
+            }
+            else {
+                BP_MOD_CONNECT.delTempRec(this.rec, dt_pRecord, handleResp);
+            }
         }}
     });
     
@@ -601,6 +647,18 @@ var BP_MOD_WDL = (function ()
         iface:{ loc:loc, panel:panel },
              iterate:{ it:it, wdi:IoItem.wdi }
         };
+    };
+    // PanelList of temporary records.
+    PanelList.wdt2 = function (ctx)
+    {
+        var it = ctx.it,
+            isTRec = ctx.isTRec;
+            
+        // switch it to it2 ;) Everything else stays same as PanelList !
+        ctx.it = ctx.it2;
+        ctx.isTRec = true;
+        var wdl = PanelList.wdt(ctx);
+        return wdl;
     };
     PanelList.prototype = w$defineProto(PanelList,
     {
@@ -650,7 +708,8 @@ var BP_MOD_WDL = (function ()
         var loc = ctx.loc || g_loc,
             reload = ctx.reload,
             autoFill = ctx.autoFill,
-            onClosed = ctx.onClosed;
+            onClosed = ctx.onClosed,
+            it2 = ctx.it2;
         
         return {
         cons:Panel, // static prototype object.
@@ -672,7 +731,9 @@ var BP_MOD_WDL = (function ()
                 // ctx.dbName? CButton.wdt: w$undefined,                // OButton.wdt
                 ]
             },
-            UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt : w$undefined],
+            UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt : w$undefined,
+            it2.num() ? unsavedTitleText_wdt : w$undefined,
+            UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt2 : w$undefined],
 
         // Post processing steps
         _iface:{ w$:{}, w$ctx:{itemList:'itemList'} },

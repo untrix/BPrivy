@@ -70,7 +70,8 @@
      *     children == children wdls, inserted in order of appearence.
      *              As a special case, a w$undefined value of a child-wdl is an indication to skip that
      *              child element instead of throwing an exception (exception will be thrown if (!child))
-     *     iterate:{ it:iterator, wdi:wdl-template-func-or-plain-object }
+     *     iterate:
+     *     iterate2:{ it:iterator, wdi:wdl-template-func-or-plain-object }
      *              Insert children iteratively. Iterator should have a next() function that returns a 'record'
      *              object to be fed into the wdi function. The wdi property shoudl hold a wdl-template function
      *              that is expected to be executed at runtime and with each iteration w$ctx.w$rec property is
@@ -337,21 +338,23 @@ var BP_MOD_W$ = (function ()
             }
         }
         // now the iterative children
-        if (wdl.iterate && wdl.iterate.it && wdl.iterate.wdi) 
+        function iterate (it, wdi)
         {
-            var rec, it=wdl.iterate.it, wdi = wdl.iterate.wdi, isFunc=false;
+            var rec, isFunc=false, _cwdl;
+            
+            if (!it || !wdi) {return;}
 
             if (typeof wdi === 'function') { isFunc = true; }
 
-            for (i=0, cwdl=wdi; ((rec = it.next())); i++, cwdl=wdi) 
+            for (i=0, _cwdl=wdi; ((rec = it.next())); i++, _cwdl=wdi) 
             {try {
                 if (isFunc) {
                     ctx.w$rec = rec;
                     ctx.w$i = i;
-                    cwdl = cwdl(ctx);
+                    _cwdl = _cwdl(ctx);
                 } // compile wdi to wdl
-                if (cwdl !== w$undefined) {
-                    w$el.append(w$exec(cwdl, ctx, true));
+                if (_cwdl !== w$undefined) {
+                    w$el.append(w$exec(_cwdl, ctx, true));
                 }
             } catch (e) {
                 logwarn(e);
@@ -359,6 +362,12 @@ var BP_MOD_W$ = (function ()
             
             it = null;
         }
+        if (wdl.iterate) {
+            iterate(wdl.iterate.it, wdl.iterate.wdi);
+        } 
+        if (wdl.iterate2) {
+            iterate(wdl.iterate2.it, wdl.iterate2.wdi);
+        } 
         
         // Populate w$el's interface post-children
         if (wdl._iface) { w$evalProps(wdl._iface, w$, ctx, w$el); }
