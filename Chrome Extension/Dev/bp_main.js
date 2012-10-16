@@ -111,10 +111,10 @@
     
     function onRequest(rq, sender, funcSendResponse)
     {
-        var result, recs, dbPath, dbStats, resp, fnames,
+        var result, recs, dbPath, dbStats, fnames, notes, dt,
             cm = rq.cm,
             bSaveRec;
-        delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
+        //delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
         console.info(String(cm));
         
         rq.atvt ? (BPError.atvt = new Activity(rq.atvt)) : (BPError.atvt = new Activity("BPMain::OnRequest"));
@@ -122,27 +122,26 @@
         try  {
             switch (cm) {
                 case dt_eRecord:
-                    BPError.push("SaveERecord");
-                    bSaveRec = true;
-                    funcSendResponse({result:insertNewRec(rq.rec, dt_eRecord)});
-                    break;
                 case dt_pRecord:
-                    BPError.push("SavePRecord");
+                    dt = cm;
+                    BPError.push("SaveRecord:" + dt);
                     bSaveRec = true;
-                    funcSendResponse({result:insertNewRec(rq.rec, dt_pRecord)});
+                    result = insertNewRec(rq.rec, dt);
+                    if (result && (!rq.noRecs)) {
+                        recs = MEM_STORE.getDTRecs(rq.loc, dt);
+                    }
+                    funcSendResponse({result:result, recs:recs});
                     break;
                 case MOD_CONNECT.cm_tempRec:
-                    BPError.push("SaveTempRecord");
-                    funcSendResponse({result:true,
-                                      notes:MEM_STORE.insertTempRec(rq.rec, rq.dt)});
+                    BPError.push("SaveTempRecord:" + rq.dt);
+                    notes = MEM_STORE.insertTempRec(rq.rec, rq.dt);
+                    if (!rq.noRecs) {
+                        recs = MEM_STORE.getTRecs(rq.loc);
+                    }
+                    funcSendResponse({result:true, recs:recs, notes:notes});
                     break;
                 case cm_getRecs:
                     BPError.push("GetRecs");
-                    // recs = MEM_STORE.getRecs(rq.loc);
-                    // recs.dbName = FILE_STORE.getDBName();
-                    // recs.dbPath = FILE_STORE.getDBPath();
-                    // resp = makeDashResp(true);
-                    // resp.db = recs;
                     funcSendResponse(getRecs(rq.loc));
                     MOD_WIN.putTab(rq.loc.href);
                     break;

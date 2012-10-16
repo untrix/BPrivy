@@ -47,9 +47,6 @@
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
     var getRecs = IMPORT(m.getRecs),
-        deleteRecord = IMPORT(m.deleteRecord),
-        saveRecord = IMPORT(m.saveRecord),
-        saveTempRec = IMPORT(m.saveTempRec),
         newERecord = IMPORT(m.newERecord),
         newPRecord = IMPORT(m.newPRecord),
         panelClosed = IMPORT(m.panelClosed);
@@ -103,7 +100,7 @@
         var data_finfo = 'finfo',
             data_pair = 'pair',
             data_btn  = 'btn',
-            g_bInited, g_bScanned,
+            g_bInited, g_mutationScanned,
             g_uSel = 'input[type="text"],input:not([type]),input[type="email"],input[type="tel"],input[type="number"]',
             g_uReg2= /(log|sign)(in|on)|signup|(user|account)(id|name|number|email)|^(id|user|uid|uname)$|identity|authentication/i,
             g_uSel2 =  "[name=id],[name=uid],#id,#uid,[name=user],[name=uname],#user,#uname," +
@@ -161,18 +158,18 @@
         //
         FormInfo.onSubmit = function(ev)
         {
-            BP_MOD_ERROR.log("FormInfo.onSubmit: entered");
+            BP_MOD_ERROR.logdebug("FormInfo.onSubmit invoked");
             if (ev.currentTarget!==ev.target) {
                 BP_MOD_ERROR.log("FormInfo.onSubmit: current target and target are different");
             }
             var fInfo = $(ev.target).data(data_finfo);
             if (fInfo) {
-                fInfo.onSubmit(20);
+                fInfo.submit(20);
             }
         };
         FormInfo.onClick = function(ev)
         {
-            BP_MOD_ERROR.log("Click event received");
+            BP_MOD_ERROR.log("FormInfo.onClick event received");
             if (ev.currentTarget!==ev.target) {
                 BP_MOD_ERROR.log("onClick: current target and target are different");
             }
@@ -182,18 +179,9 @@
             if (ev.button!==0) {
                 return;
             }
-            BP_MOD_ERROR.log("Primary Mouse Button Depressed");
+            BP_MOD_ERROR.log("FormInfo.onMousedown: Primary Mouse Button Depressed");
             if (ev.currentTarget!==ev.target) {
                 BP_MOD_ERROR.log("onMousedown: current target and target are different");
-            }
-        };
-        FormInfo.onEnter = function(ev)
-        {
-            if ((ev.key==='Enter') || (ev.keyCode===13)) {
-                BP_MOD_ERROR.log("Enter button pressed");
-                if (ev.currentTarget!==ev.target) {
-                    BP_MOD_ERROR.log("onEnter: current target and target are different");
-                }
             }
         };
         FormInfo.isSubmitEl = function (el)
@@ -207,18 +195,18 @@
         //
         // PROTOTYPE PROTOTYPE PROTOTYPE PROTOTYPE PROTOTYPE PROTOTYPE
         //
-        FormInfo.prototype.onSubmit = function (c)
+        FormInfo.prototype.submit = function (c)
         {
+            BP_MOD_ERROR.logdebug("FormInfo.prototype.submit invoked with c = " + c);
             var pair = this.getVals(c);
             if (pair && !MOD_DB.matches(pair.u, pair.p)) {
-                saveTempRec(newPRecord(g_doc.location, Date.now(), pair.u, pair.p), dt_pRecord, function(resp)
+                MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(), pair.u, pair.p), dt_pRecord, function(resp)
                 {
                     if (resp.result) {
-                        MOD_CS.showPanelAsync();
+                        MOD_PANEL.create();
                     }
                 });
             }
-            BP_MOD_ERROR.logdebug("FormInfo.prototype.submit invoked with c = " + c);
         };
         FormInfo.prototype.pushMerge = function (el, fn, merge)
         {
@@ -463,7 +451,7 @@
         {
             return (this.getTabIndex() >= 0);
         };
-        FormInfo.prototype.getVals = function(c)
+        FormInfo.prototype.getVals = function(/*confidence*/)
         {
             var out;
             if (this.buddys.length) {
@@ -953,14 +941,15 @@
 
         var m_info = new FillInfo();
 
-        function onSubmit(ev)
+        function onSubmit(ev) // target is a form element.
         {
-            if (!g_bScanned) {scan();}
+            BP_MOD_ERROR.logdebug("onSubmit invoked");
+            if (!g_mutationScanned) {scan();}
 
             var form = ev.target, fInfo;
             if ((fInfo=m_info.getFInfo(form))) {
                 // A relevant form was submited
-                fInfo.onSubmit(20);
+                fInfo.submit(20);
             }
         }
         function onClick(ev)
@@ -979,19 +968,35 @@
             }
             else { return; }
 
-            if (!g_bScanned) {scan();}
+            if (!g_mutationScanned) {scan();}
 
             cnfdnc=FormInfo.isSubmitEl(el);
             if (cnfdnc) {
+                BP_MOD_ERROR.logdebug("onClick invoking fInfo.submit");
                 fInfo = $(el).data(data_finfo);
                 //fInfo = m_info.getClicked(ev);
                 if (!fInfo) { return; }
-                fInfo.onSubmit(cnfdnc);
+                fInfo.submit(cnfdnc);
             }
         }
-        
+
+        function onEnter(ev)
+        {
+            if ((ev.key!=='Enter') && (ev.keyCode!==13)) {
+                return;
+            }
+
+            var fInfo = $(ev.target).data(data_finfo);
+            
+            if (fInfo) {
+                BP_MOD_ERROR.logdebug("onEnter invoking fInfo.submit");
+                fInfo.submit(5);
+            }
+        }
+
         function onChange(ev)
         {
+            BP_MOD_ERROR.logdebug("onChange invoked");
             var $this = $(ev.target),//.closest('input'),
                 fInfo = $this.data(data_finfo),
                 fn, pair, uid = null, pass = null,
@@ -1006,22 +1011,27 @@
             {
                 uEl = $this[0];
                 pEl = pair ? pair.p : null;
+                uid = uEl.value;
+                if (pEl && (pEl.value !== pEl.defaultValue)) {
+                    // Fields sometimes have non-empty default values. We don't want those.
+                    pass = encrypt(pEl.value);
+                }
             }
             else if (fn === fn_pass)
             {
                 uEl = pair ? pair.u : null;
                 pEl = $this[0];
+                pass = encrypt(pEl.value);
+                if (pEl && (pEl.value !== pEl.defaultValue)) {
+                    // Fields sometimes have non-empty default values. We don't want those.
+                    pass = encrypt(pEl.value);
+                }
+                //if (uEl && (uEl.value !== uEl.defaultValue)) {
+                    // Fields sometimes have non-empty default values. We don't want those.
+                    uid = uEl.value;
+                //}
             }
 
-            if (uEl && (uEl.value !== uEl.defaultValue)) {
-                // Fields sometimes have non-empty default values. We don't want those.
-                uid = uEl.value;
-            }
-            if (pEl && (pEl.value !== pEl.defaultValue)) {
-                // Fields sometimes have non-empty default values. We don't want those.
-                pass = encrypt(pEl.value);
-            }
-            
             if (pair) 
             {
                 if (!uid || !pass) {
@@ -1059,10 +1069,10 @@
             }
             
             if (bSave) {
-                saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord, function(resp)
+                MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord, function(resp)
                 {
                     if (resp.result) {
-                        MOD_CS.showPanelAsync();
+                        MOD_PANEL.create();
                     }
                 });
             }
@@ -2042,9 +2052,9 @@
             {
                 BP_MOD_BOOT.observe(g_doc, MOD_CS.onMutation, {bRemoved:true});
                 addEventListener(g_doc, 'change', onChange);
+                addEventListener(g_doc, 'keydown', onEnter);
                 addEventListener(g_doc, 'click', onClick);
                 //addEventListener(g_doc, 'mousedown', onClick);
-                //addEventListener(g_doc, 'keydown', onEnter);
                 g_bInited = true;
             }
             catch (ex)
@@ -2061,7 +2071,7 @@
             'autoFill': autoFill,
             'init': init,
             'onChange': onChange,
-            'setScanned': function() {g_bScanned=true;}
+            'setMutationScanned': function() {g_mutationScanned=true;}
         });
     }());
 
@@ -2185,7 +2195,7 @@
                                           el.type,
                                           ((form&&form.getAttribute('id'))? form.getAttribute('id') : undefined),
                                           ((form&&form.name)? form.name:undefined));
-                    saveRecord(eRec, dt_eRecord);
+                    MOD_CS.saveRec(eRec, dt_eRecord);
     
                     data = e.dataTransfer.getData(CT_TEXT_PLAIN);
                     if (data) 
@@ -2305,8 +2315,11 @@
             var ctx = {
                 it: new RecsIterator(MOD_DB.pRecsMap),
                 it2: new RecsIterator(MOD_DB.tRecsMap),
-                reload:MOD_CS.showPanelAsync,
+                reload:MOD_PANEL.create, // this function
                 onClosed:onClosed,
+                saveRec: MOD_CS.saveRec,
+                delRec: MOD_CS.delRec,
+                delTempRec: MOD_CS.delTempRec,
                 autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined), 
                 dbName:MOD_DB.dbName,
                 dbPath:MOD_DB.dbPath
@@ -2405,7 +2418,7 @@
         function onMutation(mutations, observer)
         {
             MOD_FILL.scan(g_doc);
-            MOD_FILL.setScanned();
+            MOD_FILL.setMutationScanned();
             if ((!MOD_PANEL.get()) && (!MOD_PANEL.userClosed()) && MOD_FILL.info().autoFillable()) {
                 MOD_PANEL.create();
             }
@@ -2463,6 +2476,38 @@
             }
         }
         
+        function saveRec (rec, dt, callbackFunc, isTRec)
+        {
+            var func = isTRec ? BP_MOD_CONNECT.saveTempRec : BP_MOD_CONNECT.saveRecord;
+            if (isTRec) {MOD_DB.saveTRec(rec);}
+            func(rec, dt, function(resp)
+            {
+                if (resp.result && resp.recs) {
+                    if (!isTRec) {MOD_DB.ingestDT(resp.recs, dt);}
+                    else {MOD_DB.ingestT(resp.recs);}
+                }
+                if (callbackFunc) {
+                    callbackFunc(resp);
+                }
+            });
+        }
+
+        function delRec (rec, dt, callbackFunc, isTRec)
+        {
+            var func = isTRec ? BP_MOD_CONNECT.delTempRec : BP_MOD_CONNECT.deleteRecord;
+            if (isTRec) {MOD_DB.delTRec(rec);}
+            func(rec, dt, function(resp)
+            {
+                if (resp.result && resp.recs) {
+                    if (!isTRec) {MOD_DB.ingestDT(resp.recs, dt);}
+                    else {MOD_DB.ingestT(resp.recs);}
+                }
+                if (callbackFunc) {
+                    callbackFunc(resp);
+                }
+            });
+        }
+
         function main()
         {
             registerMsgListener(onClickBP);
@@ -2476,7 +2521,11 @@
         {
             main: main,
             showPanelAsync: showPanelAsync,
-            onMutation: onMutation
+            onMutation: onMutation,
+            saveRec: function(a,b,c) {saveRec(a,b,c);},
+            saveTempRec: function(a,b,c) {saveRec(a,b,c,true);},
+            delRec: function(a,b,c) {delRec(a,b,c);},
+            delTempRec: function(a,b,c) {delRec(a,b,c,true);},
         });
     }());
     

@@ -6,6 +6,7 @@
  */
 
 /* JSLint directives */
+
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
   BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_WDL */
 
@@ -424,7 +425,7 @@ var BP_MOD_EDITOR = (function ()
                     }                    
                 }
                 callback(resp);
-            });
+            }, true);
         }},
         onSubmit: {value: function(e)
         {

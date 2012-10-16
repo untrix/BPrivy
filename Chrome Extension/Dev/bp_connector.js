@@ -51,7 +51,8 @@ var BP_MOD_CONNECT = (function ()
         cm_closed       = "cm_closed",
         cm_tempRec      = "cm_tempRec",
         DELETE_ACTION_VAL = "D}";
-
+    
+    var g_loc = document.location;
     var DICT_TRAITS={};
    
     /** list of traits properties */
@@ -202,11 +203,12 @@ var BP_MOD_CONNECT = (function ()
     /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
-        var saveRecord = function (rec, dt, callbackFunc)
+        var saveRecord = function (rec, dt, callbackFunc, noRecs)
         {
-            var req = {};
-            req.cm = dt;
-            req.rec = rec;
+            var req = {cm:dt, rec:rec, noRecs:noRecs};
+            if (callbackFunc && (!noRecs)) {
+                req.loc = g_loc;
+            }
             if (callbackFunc) {
                 rpcToMothership(req, callbackFunc);
             }
@@ -214,19 +216,19 @@ var BP_MOD_CONNECT = (function ()
                 postMsgToMothership(req);
             }
         };
-        var saveTempRec = function (rec, dt, callbackFunc)
+        var saveTempRec = function (rec, dt, callbackFunc, noRecs)
         {
-            var req = {};
-            req.cm = cm_tempRec;
-            req.dt = dt;
-            req.rec = rec;
+            var req = {cm:cm_tempRec, dt:dt, rec:rec, noRecs:noRecs };
+            if (callbackFunc && (!noRecs)) {
+                req.loc = g_loc;
+            }
             if (callbackFunc) {
                 rpcToMothership(req, callbackFunc);
             }
             else {
                 postMsgToMothership(req);
             }
-        };        
+        };       
         var deleteRecord = function (rec, dt, callback)
         {
             getProto(dt).setDeleted.apply(rec);

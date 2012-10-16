@@ -39,9 +39,7 @@ var BP_MOD_WDL = (function ()
         addHandlers = IMPORT(m.addHandlers); // Compatibility function
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
-    var newPRecord = IMPORT(m.newPRecord),
-        saveRecord = IMPORT(m.saveRecord),
-        deleteRecord = IMPORT(m.deleteRecord);
+    var newPRecord = IMPORT(m.newPRecord);
     /** @import-module-begin Error */
     m = BP_MOD_ERROR;
     var BPError = IMPORT(m.BPError);
@@ -149,6 +147,34 @@ var BP_MOD_WDL = (function ()
                 this.clear();
             }
         },
+        ingestDT: function(recs, dt)
+        {
+            if (dt===dt_pRecord) {
+                this.pRecsMap = recs;
+            }
+            else if (dt===dt_eRecord) {
+                this.eRecsMapArray = recs;
+            }
+        },
+        ingestT: function(recs)
+        {
+            this.tRecsMap = recs;
+        },
+        saveTRec: function(rec)
+        {
+            var d;
+            if (this.tRecsMap) {
+                d = this.tRecsMap[rec.u] || {};
+                d.curr = rec;
+                this.tRecsMap[rec.u] = d;
+            }
+        },
+        delTRec: function(rec)
+        {
+            if (this.tRecsMap && this.tRecsMap[rec.u]) {
+                delete this.tRecsMap[rec.u];
+            }
+        },
         clear: function ()
         {
             this.empty();
@@ -166,12 +192,12 @@ var BP_MOD_WDL = (function ()
             BP_MOD_COMMON.clear(this);
             this.eRecsMapArray = BP_MOD_COMMON.EMPTY_ARRAY;
             this.pRecsMap = BP_MOD_COMMON.EMPTY_OBJECT;
-            this.tRecsMap = BP_MOD_COMMON.EMPTY_OBJECT;
+            this.tRecsMap = {}; //BP_MOD_COMMON.EMPTY_OBJECT;
             this.numUserids = this.numUnsaved = 0;
         },
         preventEdits: function ()
         {
-            Object.defineProperties(this,
+            /*Object.defineProperties(this,
             {
                 eRecsMapArray: {configurable:true, enumerable:true},
                 pRecsMap: {configurable:true, enumerable:true},
@@ -180,7 +206,7 @@ var BP_MOD_WDL = (function ()
                 dbPath: {configurable:true, enumerable:true},
                 numUserids: {configurable:true, enumerable:true},
                 numUnsaved: {configurable:true, enumerable:true}
-            });
+            });*/
         },
         has: function (username)
         {
@@ -485,7 +511,7 @@ var BP_MOD_WDL = (function ()
 
             // save to db
             var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
-            saveRecord(pRec, dt_pRecord, callback);
+            ioItem.panel.saveRec(pRec, dt_pRecord, callback);
             //ioItem.rec = pRec;
             // if (oU && (nU !== oU)) {
                 // this.ioItem.deleteRecord(dt_pRecord, oU);
@@ -619,15 +645,13 @@ var BP_MOD_WDL = (function ()
                     BP_MOD_ERROR.warn(resp.err);
                 }
                 else {self.destroy();}
-                //panel.reload();
             }
 
             if (!this.isTRec) {
-                //deleteRecord({loc:this.ioItem.loc, u:key}, dt);
-                BP_MOD_CONNECT.deleteRecord(this.rec, dt_pRecord, handleResp);
+                self.panel.delRec(this.rec, dt_pRecord, handleResp);
             }
             else {
-                BP_MOD_CONNECT.delTempRec(this.rec, dt_pRecord, handleResp);
+                self.panel.delTempRec(this.rec, dt_pRecord, handleResp);
             }
         }}
     });
@@ -710,7 +734,10 @@ var BP_MOD_WDL = (function ()
             reload = ctx.reload,
             autoFill = ctx.autoFill,
             onClosed = ctx.onClosed,
-            it2 = ctx.it2;
+            it2 = ctx.it2,
+            saveRec = ctx.saveRec,
+            delRec = ctx.delRec,
+            delTempRec = ctx.delTempRec;
         
         return {
         cons:Panel, // static prototype object.
@@ -719,7 +746,8 @@ var BP_MOD_WDL = (function ()
         css:{ position:'fixed', top:'0px', 'right':'0px' },
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:loc },
-        iface:{ _reload:reload, id:eid_panel, autoFill:autoFill, onClosed:onClosed },
+        iface:{ _reload:reload, id:eid_panel, autoFill:autoFill, onClosed:onClosed,
+                saveRec:saveRec, delRec:delRec, delTempRec:delTempRec },
 
             // Create children
             children:[
@@ -770,13 +798,8 @@ var BP_MOD_WDL = (function ()
             var _onClosed = this.onClosed;
             this.destroy();
             _onClosed();
-        }},
-        tempRecord: {value: function(u, p) // TODO
-        {
-            
-        }},
-        editRecord: {value: function(u, p){}} // TODO
-    });
+        }}
+    });
       
     var iface = 
     {

@@ -168,6 +168,7 @@ var BP_MOD_COMMON = (function()
         for (n=keys.length-1; n>=0; n--) {
             dst[keys[n]] = src[keys[n]];
         }
+        return dst;
     }
 
     // function curry (func, ctx)

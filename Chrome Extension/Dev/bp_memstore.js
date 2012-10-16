@@ -1061,6 +1061,26 @@ var BP_MOD_MEMSTORE = (function ()
         }
     };
     
+    function getDTRecs (loc, dt)
+    {
+        var recs;
+        switch (dt)
+        {
+            case dt_pRecord:
+                recs = DNProto.findPRecsMap.apply(DNode[dt_pRecord],[newL(loc,dt_pRecord)]);
+                break;
+            case dt_eRecord:
+                recs = DNProto.findERecsMapArray.apply(DNode[dt_eRecord], [newL(loc,dt_eRecord)]);
+                break;
+        }
+        return recs; 
+    }
+    
+    function getTRecs (loc)
+    {
+        return DNProto.findPRecsMap.apply(DNode['temp_'+dt_pRecord],[newL(loc,dt_pRecord)]);
+    }
+
     /**
      * Returns dt_eRecord and dt_pRecord matching loc as per the respective dt traits
      */
@@ -1068,9 +1088,9 @@ var BP_MOD_MEMSTORE = (function ()
     {
         var kdb, pdb, r;
         r = {};
-        r.eRecsMapArray = DNProto.findERecsMapArray.apply(DNode[dt_eRecord], [newL(loc,dt_eRecord)]);
-        r.pRecsMap = DNProto.findPRecsMap.apply(DNode[dt_pRecord],[newL(loc,dt_pRecord)]);
-        r.tRecsMap = DNProto.findPRecsMap.apply(DNode['temp_'+dt_pRecord],[newL(loc,dt_pRecord)]);
+        r.eRecsMapArray = getDTRecs(loc, dt_eRecord);
+        r.pRecsMap = getDTRecs(loc, dt_pRecord);
+        r.tRecsMap = getTRecs(loc);
 
         return r;
     }
@@ -1354,6 +1374,8 @@ var BP_MOD_MEMSTORE = (function ()
         insertDrec:  insertDrec,
         insertTempRec:insertTempRec,
         getRecs:     getRecs,
+        getDTRecs:   getDTRecs,
+        getTRecs:    getTRecs,
         DT_TRAITS:   DT_TRAITS,
         PREC_TRAITS: PREC_TRAITS,
         EREC_TRAITS: EREC_TRAITS,
