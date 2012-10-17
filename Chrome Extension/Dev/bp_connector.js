@@ -188,7 +188,7 @@ var BP_MOD_CONNECT = (function ()
     PRecord.prototype.setDeleted = function ()
     {
         ARec.prototype.setDeleted.apply(this);
-        this.p = undefined;
+        //delete this.p;
     };
     
     function getProto(dt)

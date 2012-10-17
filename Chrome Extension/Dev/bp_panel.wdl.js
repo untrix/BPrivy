@@ -132,9 +132,9 @@ var BP_MOD_WDL = (function ()
                 if (db.pRecsMap) {this.pRecsMap = db.pRecsMap;} 
                 if (db.tRecsMap) {this.tRecsMap = db.tRecsMap;}
                 if (db.eRecsMapArray) {this.eRecsMapArray = db.eRecsMapArray;}
-                if (this.pRecsMap) {this.numUserids = Object.keys(this.pRecsMap).length;}
+                if (this.pRecsMap) {this.numUserids = this.numRecs(this.pRecsMap);}
                 else {this.numUserids = 0;}
-                if (this.tRecsMap) {this.numUnsaved = Object.keys(this.tRecsMap).length;}
+                if (this.tRecsMap) {this.numUnsaved = this.numRecs(this.tRecsMap);}
                 else {this.numUnsaved = 0;}
                 if (dbInfo) {
                     if (dbInfo.dbName) {this.dbName = dbInfo.dbName;}
@@ -151,6 +151,7 @@ var BP_MOD_WDL = (function ()
         {
             if (dt===dt_pRecord) {
                 this.pRecsMap = recs;
+                this.numUserids = this.numRecs(this.pRecsMap);
             }
             else if (dt===dt_eRecord) {
                 this.eRecsMapArray = recs;
@@ -159,6 +160,7 @@ var BP_MOD_WDL = (function ()
         ingestT: function(recs)
         {
             this.tRecsMap = recs;
+            this.numUnsaved = this.numRecs(this.tRecsMap);
         },
         saveTRec: function(rec)
         {
@@ -168,12 +170,23 @@ var BP_MOD_WDL = (function ()
                 d.curr = rec;
                 this.tRecsMap[rec.u] = d;
             }
+            this.numUnsaved = this.numRecs(this.tRecsMap);
         },
         delTRec: function(rec)
         {
             if (this.tRecsMap && this.tRecsMap[rec.u]) {
                 delete this.tRecsMap[rec.u];
             }
+            --this.numUnsaved;
+        },
+        numRecs: function(recsMap)
+        {
+            var num = 0;
+            BP_MOD_COMMON.iterKeys(recsMap, function(k, val)
+            {
+                if (!val.curr.a) { num++; }
+            });
+            return num;
         },
         clear: function ()
         {
@@ -208,11 +221,20 @@ var BP_MOD_WDL = (function ()
                 numUnsaved: {configurable:true, enumerable:true}
             });*/
         },
-        has: function (username)
+        has: function (uid)
         {
             // return (Object.keys(this.pRecsMap).indexOf(username) >=0) ||
-                   // (Object.keys(this.tRecsMap).indexOf(username) >=0);            return (this.pRecsMap && this.pRecsMap[uid]) ||
-                   (this.tRecsMap && this.tRecsMap[uid]) ;
+                   // (Object.keys(this.tRecsMap).indexOf(username) >=0);            return (this.pRecsMap && this.pRecsMap[uid] && this.pRecsMap[uid].curr && (this.pRecsMap[uid].curr.a!=='d')) ||
+                   (this.tRecsMap && this.tRecsMap[uid] && this.tRecsMap[uid].curr && (this.tRecsMap[uid].curr.a!=='d')) ;
+        },
+        hasPass: function (pass)
+        {
+            var found = false;
+            function checkPass(u, actn) {if (actn.curr.p===pass) {found=true; return true;}}
+            if (!BP_MOD_COMMON.iterKeys(this.pRecsMap, checkPass)) {
+                return BP_MOD_COMMON.iterKeys(this.tRecsMap, checkPass);
+            }
+            else { return true; }
         },
         matches: function (uid, pass)
         {
@@ -295,7 +317,7 @@ var BP_MOD_WDL = (function ()
             }]
         };
     };
-    
+
     /**
      * Panel Dismiss/Close button - 'x' button 
      */
@@ -352,7 +374,8 @@ var BP_MOD_WDL = (function ()
     });
     FButton.wdt = function(w$ctx)
     {
-        var autoFill = w$ctx.autoFill;
+        var ioItem = w$ctx.ioItem,
+            autoFill = ioItem.panel.autoFill;
         return {
         cons: FButton,
         html:'<button type="button"></button>',
@@ -360,7 +383,7 @@ var BP_MOD_WDL = (function ()
         ctx:{ w$:{ fButton:"w$el" } },
         on:{ click:FButton.prototype.onClick },
         css:{ width:'20px' },
-        iface:{ ioItem:w$ctx.ioItem, _autoFill:autoFill },
+        iface:{ ioItem:ioItem, _autoFill:autoFill },
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
@@ -436,7 +459,8 @@ var BP_MOD_WDL = (function ()
     {
         var u, p, 
         ioItem = w$ctx.ioItem,
-        pRec = ioItem.rec;
+        pRec = ioItem.rec,
+        isTRec = ioItem.isTRec;
         
         if (pRec)
         {
@@ -456,7 +480,7 @@ var BP_MOD_WDL = (function ()
             children: [
             {tag:'input',
              attr:{ type:'text', value:u, placeholder:'Username' },
-             prop:{ disabled:u?true:false },
+             prop:{ disabled:(u&&(!isTRec))?true:false },
              addClass:css_class_field+css_class_userIn,
              ctx:{ w$:{ u:'w$el' } },
              _iface:{ value: u } 
@@ -511,11 +535,24 @@ var BP_MOD_WDL = (function ()
 
             // save to db
             var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
+            // Save into the main store, not temp store. Therefore toTempStore should be false.
             ioItem.panel.saveRec(pRec, dt_pRecord, callback);
-            //ioItem.rec = pRec;
-            // if (oU && (nU !== oU)) {
-                // this.ioItem.deleteRecord(dt_pRecord, oU);
-            // }
+            if (oU && (nU !== oU)) {
+                // If user edited the userid, then delete the old userid. This means
+                // that we loose history on that userid as well. However, we only allow
+                // this for temp records, hence its okay. Writing code below for both
+                // temp and main store just in case ...
+                if (!ioItem.isTRec) {
+                    // We shouldn't get here because userid editing is not allowed in
+                    // main recs.
+                    ioItem.panel.delRec(ioItem.rec, dt_pRecord);
+                }
+                else {
+
+                    ioItem.panel.delTempRec(ioItem.rec, dt_pRecord);
+                }
+            }
+            ioItem.rec = pRec;
         }}
     });
     
@@ -676,14 +713,19 @@ var BP_MOD_WDL = (function ()
     // PanelList of temporary records.
     PanelList.wdt2 = function (ctx)
     {
-        var it = ctx.it,
-            isTRec = ctx.isTRec;
-            
-        // switch it to it2 ;) Everything else stays same as PanelList !
-        ctx.it = ctx.it2;
-        ctx.isTRec = true;
-        var wdl = PanelList.wdt(ctx);
-        return wdl;
+        var loc = ctx.loc || g_loc,
+            panel = ctx.panel,
+            it2 = ctx.it2;
+        return {
+        cons: PanelList,
+        tag:'div', attr:{ id:eid_panelList },
+        onTarget:{ dragstart:PanelList.prototype.handleDragStart,
+        drag:PanelList.prototype.handleDrag, 
+        dragend:PanelList.prototype.handleDragEnd },
+        ctx:{ io_bInp:false, w$:{ itemList2:'w$el' }, isTRec:true },
+        iface:{ loc:loc, panel:panel, isTRec:true },
+             iterate:{ it:it2, wdi:IoItem.wdi }
+        };
     };
     PanelList.prototype = w$defineProto(PanelList,
     {
@@ -720,8 +762,10 @@ var BP_MOD_WDL = (function ()
         newItem: {value: function()
         {
             if (!this.newItemCreated) {
-                w$exec(IoItem.wdi, {io_bInp:true, loc:this.loc, panel:this.panel }).appendTo(this);
-                this.newItemCreated = true;    
+                var ctx = BP_MOD_COMMON.copy2(this.panel.origCtx, {});
+                BP_MOD_COMMON.copy2({io_bInp:true, loc:this.loc, panel:this.panel, isTRec:this.isTRec }, ctx);
+                w$exec(IoItem.wdi, ctx).appendTo(this);
+                this.newItemCreated = true;
             }
             
         }}
@@ -737,7 +781,8 @@ var BP_MOD_WDL = (function ()
             it2 = ctx.it2,
             saveRec = ctx.saveRec,
             delRec = ctx.delRec,
-            delTempRec = ctx.delTempRec;
+            delTempRec = ctx.delTempRec,
+            origCtx = BP_MOD_COMMON.copy2(ctx, {});
         
         return {
         cons:Panel, // static prototype object.
@@ -747,7 +792,7 @@ var BP_MOD_WDL = (function ()
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:loc },
         iface:{ _reload:reload, id:eid_panel, autoFill:autoFill, onClosed:onClosed,
-                saveRec:saveRec, delRec:delRec, delTempRec:delTempRec },
+                saveRec:saveRec, delRec:delRec, delTempRec:delTempRec, origCtx:origCtx },
 
             // Create children
             children:[

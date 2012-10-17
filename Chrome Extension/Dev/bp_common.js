@@ -195,15 +195,17 @@ var BP_MOD_COMMON = (function()
     function iterKeys (o, func, ctx, thisArg)
     {
         var keys = Object.keys(o),
+            rVal = false,
             i = keys.length-1;
             // convert arguments into an array. Omit 'o', 'this' and 'func' arguments though.
             // ctx = Array.prototype.slice.apply(arguments, [3]);
         for (i; i>=0; i--)
         {
             if (func.apply(thisArg, [keys[i], o[keys[i]], ctx]) === true) {
-                break;
+                rVal = true; break;
             }
-        } 
+        }
+        return rVal;
     }
 
 

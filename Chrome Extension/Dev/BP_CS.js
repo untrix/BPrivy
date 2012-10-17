@@ -199,13 +199,19 @@
         {
             BP_MOD_ERROR.logdebug("FormInfo.prototype.submit invoked with c = " + c);
             var pair = this.getVals(c);
-            if (pair && !MOD_DB.matches(pair.u, pair.p)) {
-                MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(), pair.u, pair.p), dt_pRecord, function(resp)
+            if (pair) 
+            {
+                if ((!pair.u && !MOD_DB.hasPass(pair.p)) ||
+                    (!pair.p && !MOD_DB.has(pair.u)) ||
+                    (!MOD_DB.matches(pair.u, pair.p)))
                 {
-                    if (resp.result) {
-                        MOD_PANEL.create();
-                    }
-                });
+                    MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(), pair.u, pair.p), dt_pRecord, function(resp)
+                    {
+                        if (resp.result) {
+                            MOD_PANEL.create();
+                        }
+                    });
+                }
             }
         };
         FormInfo.prototype.pushMerge = function (el, fn, merge)
@@ -457,7 +463,7 @@
             if (this.buddys.length) {
                 iterArray2(this.buddys, this, function(pair)
                 {
-                    if (hasVal(pair.u) && hasVal(pair.p) && isVisible(pair.p)) {
+                    if (hasVal(pair.u, fn_userid) && hasVal(pair.p, fn_pass) && isVisible(pair.p)) {
                         out = {u:pair.u.value, p:encrypt(pair.p.value)};
                         return true; // exit loop
                     }
@@ -467,8 +473,9 @@
                 // noPass case. We only expect one username field. Capture it.
                 iterArray2(this.us, this, function(u)
                 {
-                    if (hasVal(u)) {
+                    if (hasVal(u,fn_userid)) {
                         out = {u:u.value};
+                        return true;
                     }
                 });
             }
@@ -477,8 +484,9 @@
                 // previously captured username field without password.
                 iterArray2(this.ps, this, function(p)
                 {
-                    if (hasVal(p) && isVisible(p)) {
+                    if (hasVal(p, fn_pass) && isVisible(p)) {
                         out = {p:encrypt(p.value)};
+                        return true;
                     }
                 });
             }
@@ -553,9 +561,9 @@
          */
         Forms.prototype.push = function (info) {this._a.push(info);};
         Forms.prototype.getFInfo = function (form)
-        {   // returns fInfo or null
-            var rInfo = null;
-            if (!form) {return null;}
+        {   // returns fInfo or undefined
+            var rInfo;
+            if (!form) {return;}
             
             this._a.some(function(fInfo)
             {
@@ -570,7 +578,7 @@
         };
         Forms.prototype.getFInfoE = function (el, fn)
         {
-            var rInfo = null;
+            var rInfo;
             this._a.some(function(fInfo)
             {
                 if (fInfo.hasEl(el, fn)) {
@@ -952,7 +960,9 @@
                 fInfo.submit(20);
             }
         }
-        function onClick(ev)
+        // We catch mousedown instead of click because some webpages change the input value upon click.
+        //function onClick(ev)
+        function onMousedown(ev)
         {
             if (ev.button!==0) { // We only care about primary button clicks
                 return;
@@ -960,7 +970,7 @@
 
             var href, fInfo, cnfdnc,
                 el = ev.target,
-                $el = $(el).closest(':submit,:button,input[type=image],a')
+                $el = $(el).closest(':submit,:button,input[type=image],a');
 
             if ($el.length)
             {
@@ -986,7 +996,7 @@
                 return;
             }
 
-            var fInfo = $(ev.target).data(data_finfo);
+            var fInfo = $(ev.target).data(data_finfo); // should be an input element.
             
             if (fInfo) {
                 BP_MOD_ERROR.logdebug("onEnter invoking fInfo.submit");
@@ -996,10 +1006,11 @@
 
         function onChange(ev)
         {
-            BP_MOD_ERROR.logdebug("onChange invoked");
+            BP_MOD_ERROR.logdebug("onChange entered");
             var $this = $(ev.target),//.closest('input'),
                 fInfo = $this.data(data_finfo),
-                fn, pair, uid = null, pass = null,
+                fn, pair, 
+                uid = undefined, pass = undefined, // Default values *must* be undefined, not null.
                 uEl, pEl, bSave;
             
             if (!fInfo) {return;}
@@ -1010,27 +1021,16 @@
             if (fn === fn_userid)
             {
                 uEl = $this[0];
-                pEl = pair ? pair.p : null;
-                uid = uEl.value;
-                if (pEl && (pEl.value !== pEl.defaultValue)) {
-                    // Fields sometimes have non-empty default values. We don't want those.
-                    pass = encrypt(pEl.value);
-                }
+                pEl = pair ? pair.p : undefined;
             }
             else if (fn === fn_pass)
             {
-                uEl = pair ? pair.u : null;
+                uEl = pair ? pair.u : undefined;
                 pEl = $this[0];
-                pass = encrypt(pEl.value);
-                if (pEl && (pEl.value !== pEl.defaultValue)) {
-                    // Fields sometimes have non-empty default values. We don't want those.
-                    pass = encrypt(pEl.value);
-                }
-                //if (uEl && (uEl.value !== uEl.defaultValue)) {
-                    // Fields sometimes have non-empty default values. We don't want those.
-                    uid = uEl.value;
-                //}
             }
+
+            if (hasVal(uEl)) {uid = uEl.value;}
+            if (hasVal(pEl, fn_pass)) { pass = encrypt(pEl.value); }
 
             if (pair) 
             {
@@ -1049,22 +1049,27 @@
                     }
                 }
             }
-            else 
+            else // Either uEl or pEl available, not both.
             {
-                if (uid)
+                if (uEl)
                 {
                     if (!MOD_DB.has(uid)) {
                         console.log("New userid was input without password: " + uid);
-                        bSave = true
+                        bSave = true;
                     }
                     else {
                         console.log("Existing userid was input without password: " + uid);
                     }
                 }
-                else if (pass)
+                else if (pEl)
                 {
-                    console.log("A password was entered without userid. Saving it: " + encrypt(pass));
-                    bSave = true;
+                    if (!MOD_DB.hasPass(pass)) {
+                        console.log("A new password was entered without userid. Saving it: " + encrypt(pass));
+                        bSave = true;
+                    }
+                    else {
+                        console.log("Existing password was input without password: " + uid);
+                    }
                 }
             }
             
@@ -1285,9 +1290,25 @@
             return $(out);
         }
         
-        function hasVal(el)
+        function hasVal(el, fn)
         {
-            return el.value ;//&& (el.value !== el.defaultValue);
+            if  (!el || !el.value) {
+                return false;
+            }
+            else if (fn_pass) {
+                // Websites sometimes supply defaultValue as placeholders. Those are
+                // invalid for passwords.
+                return (el.value !== el.defaultValue);
+            }
+            else if (fn_userid) {
+                // Websites sometimes fill-in valid default values of usernames. Hence
+                // we can't ignore default values. But many websites have default values
+                // like 'username'. Hence, we'll bet on a middle-way. Ignore default
+                // value unless it exists as a known userid in the password DB. There
+                // is a rare chance that we may not catch a valid username this way
+                // if it was not captured in the DB already.
+                return (el.value !== el.defaultValue) || MOD_DB.has(el.value);
+            }
         }
         function isVisible(el)
         {
@@ -2053,8 +2074,8 @@
                 BP_MOD_BOOT.observe(g_doc, MOD_CS.onMutation, {bRemoved:true});
                 addEventListener(g_doc, 'change', onChange);
                 addEventListener(g_doc, 'keydown', onEnter);
-                addEventListener(g_doc, 'click', onClick);
-                //addEventListener(g_doc, 'mousedown', onClick);
+                //addEventListener(g_doc, 'click', onClick);
+                addEventListener(g_doc, 'mousedown', onMousedown);
                 g_bInited = true;
             }
             catch (ex)
@@ -2276,8 +2297,8 @@
             if (m_id_panel && m_panel /*(panel = w$get('#'+m_id_panel))*/ ) 
             {
                 m_panel.destroy();
-                m_id_panel = null;
-                m_panel = null;
+                m_id_panel = undefined;
+                m_panel = undefined;
                 return true;
             }
             
@@ -2302,8 +2323,8 @@
          */
         function onClosed()
         {
-            m_panel = null;
-            m_id_panel = null;
+            m_panel = undefined;
+            m_id_panel = undefined;
             m_bUserClosed = true;
             panelClosed(g_loc);
         }
@@ -2392,7 +2413,8 @@
                 BP_MOD_ERROR.logwarn(err);
             }
 
-            if ((!bConditional) || MOD_FILL.info().autoFillable() || MOD_DB.numUnsaved) {
+            //if ((!bConditional) || MOD_FILL.info().autoFillable() || MOD_DB.numUnsaved) {
+            if ((!bConditional) || MOD_DB.numUnsaved) {
                 MOD_PANEL.create();
             }
         }
@@ -2419,7 +2441,7 @@
         {
             MOD_FILL.scan(g_doc);
             MOD_FILL.setMutationScanned();
-            if ((!MOD_PANEL.get()) && (!MOD_PANEL.userClosed()) && MOD_FILL.info().autoFillable()) {
+            if ((!MOD_PANEL.get()) && (!MOD_PANEL.userClosed()) && MOD_DB.numUnsaved) {
                 MOD_PANEL.create();
             }
         }
@@ -2440,7 +2462,7 @@
         function onClickBP (request, _ /*sender*/, sendResponse)
         {
             onClickComm();
-            sendResponse({ack:true});
+            if (sendResponse) {sendResponse({ack:true});}
         }
     
         /**
@@ -2475,15 +2497,16 @@
                 console.log("bp_cs: Instrumented Command");
             }
         }
-        
-        function saveRec (rec, dt, callbackFunc, isTRec)
+
+        function saveRec (rec, dt, callbackFunc, toTempStore)
         {
-            var func = isTRec ? BP_MOD_CONNECT.saveTempRec : BP_MOD_CONNECT.saveRecord;
-            if (isTRec) {MOD_DB.saveTRec(rec);}
+            var func = toTempStore ? BP_MOD_CONNECT.saveTempRec : BP_MOD_CONNECT.saveRecord;
+            // We could cache non-TRecs records as well but not needed by use-cases right now
+            if (toTempStore) {MOD_DB.saveTRec(rec);} // We could do this for non-TRecs as well...
             func(rec, dt, function(resp)
             {
                 if (resp.result && resp.recs) {
-                    if (!isTRec) {MOD_DB.ingestDT(resp.recs, dt);}
+                    if (!toTempStore) {MOD_DB.ingestDT(resp.recs, dt);}
                     else {MOD_DB.ingestT(resp.recs);}
                 }
                 if (callbackFunc) {
@@ -2492,14 +2515,15 @@
             });
         }
 
-        function delRec (rec, dt, callbackFunc, isTRec)
+        function delRec (rec, dt, callbackFunc, toTempStore)
         {
-            var func = isTRec ? BP_MOD_CONNECT.delTempRec : BP_MOD_CONNECT.deleteRecord;
-            if (isTRec) {MOD_DB.delTRec(rec);}
+            var func = toTempStore ? BP_MOD_CONNECT.delTempRec : BP_MOD_CONNECT.deleteRecord;
+            // We could cache non-TRecs records as well but not needed by use-cases right now
+            if (toTempStore) {MOD_DB.delTRec(rec);}
             func(rec, dt, function(resp)
             {
                 if (resp.result && resp.recs) {
-                    if (!isTRec) {MOD_DB.ingestDT(resp.recs, dt);}
+                    if (!toTempStore) {MOD_DB.ingestDT(resp.recs, dt);}
                     else {MOD_DB.ingestT(resp.recs);}
                 }
                 if (callbackFunc) {
