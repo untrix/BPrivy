@@ -807,8 +807,8 @@ bool BPrivyAPI::_chooseFolderXP(bp::JSObject* p)
 	{
 		name[MAX_PATH-1] = 0;
 		p->SetProperty(PROP_FILENAME, name);
-		wchar_t path[2048]; path[0] = 0; // returned name is in unicode.
-		if (SHGetPathFromIDListEx(pidl, path, 2048, GPFIDL_DEFAULT )) {
+		wchar_t path[ MAX_PATH + 1 ]; path[0] = 0; // returned name is in unicode.
+		if (SHGetPathFromIDList(pidl, path )) {
 			SetChosenPath(p, path, ENT_DIR);
 			//p->SetProperty(PROP_PATH, path);
 		}
