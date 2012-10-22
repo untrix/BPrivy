@@ -96,6 +96,7 @@ var  BP_MOD_PLAT = (function()
         //console.info("Menu Item ID " + menu_id + " Created");
     
         chrome.browserAction.onClicked.addListener(bpClick);
+        chrome.pageAction.onClicked.addListener(bpClick);
        
         g.contextMenuID = menu_id;
         MOD_WIN = mod_win;

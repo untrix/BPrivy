@@ -10,7 +10,6 @@
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
-
 /**
  * @ModuleBegin Connector
  */
@@ -107,13 +106,20 @@ var BP_MOD_CONNECT = (function ()
     {
         return ((this.H===l2.H) && (this.P===l2.P));
     };
+    /**
+     * Returns a partial Location object suitable for passing as an argument to ARec constructor.
+     */
+    L.prototype.toLoc = function ()
+    {
+        return {hostname:this.H, pathname:(this.P||"/")};
+    };
 
     function newL (loc, dt) { 
         return (new L(loc,dt)); 
     }
 
     /** Pseudo Inheritance */
-    function ARec(dt, loc, date)
+    function ARec(dt, loc, date, actn)
     {
         // date is number of milliseconds since midnight Jan 1, 1970.
         if (date !== undefined && date !== null)
@@ -123,30 +129,23 @@ var BP_MOD_CONNECT = (function ()
         
         Object.defineProperties(this,
         {
-            // The action being performed. An undefined value means an insert action. The
-            // only other legal value is 'd', meaning delete.
-            // TODO: Make un-writable - right now needed for setDeleted
-            a: {enumerable: true, writable:true},
             // Date and timestamp of record creation. Should be a Date object.
-            // TODO: Make un-writable - right now needed for setDeleted
-            tm: {value: date, enumerable: true, writable:true},
+            tm: {value: date, enumerable: true},
             // URL that this record pertains to. Determines where the record will sit within the URL-trie.
             // We're stripping extra data and shortening property names so as to conserve space in memory
             // as well as on disk and processing cycles as well. This becomes important when one has to
             // ingest thousands of records (ETLD has about 7K records)
-            l: {value: newL(loc, dt), enumerable: true}
+            l: {value: newL(loc, dt), enumerable: true},
+            // The action being performed. An undefined value means an insert action. The
+            // only other legal value is 'd', meaning delete.
+            a: {value:actn, enumerable: true}
         });
     }
-    // Sets record as a delete action record.
-    ARec.prototype.setDeleted = function () 
-    {
-        this.a = 'd';
-        this.tm = Date.now();
-    };
+    //ARec.prototype.setDeleted = function () { this.a = 'd'; };
     
-    function ERecord(loc, date, fieldName, tagName, id, name, type, formId, formNm)
+    function ERecord(loc, date, actn, fieldName, tagName, id, name, type, formId, formNm)
     {
-        ARec.apply(this, [dt_eRecord, loc, date]);
+        ARec.apply(this, [dt_eRecord, loc, date, actn]);
         Object.defineProperties(this, 
         {
             f: {value: fieldName, enumerable: true}, // key
@@ -160,22 +159,22 @@ var BP_MOD_CONNECT = (function ()
         Object.seal(this);
     }
     ERecord.prototype = Object.create(ARec.prototype,{});
-    ERecord.prototype.setDeleted = function ()
-    {
-        ARec.prototype.setDeleted.apply(this);
-        this.t = this.id = this.n = this.y = this.fid = this.fnm = undefined;
-    };
+
     ERecord.prototype.toJson = function ()
     {
         return JSON.stringify(this, null, 2);
     };
+    ERecord.prototype.newDelActn = function ()
+    {
+        return new ERecord(L.prototype.toLoc.apply(this.l), Date.now(), 'd', this.f);
+    };
     function newERecord(loc, date, fieldName, tagName, id, name, type, formId, formNm) {
-        return new ERecord(loc, date, fieldName, tagName, id, name, type, formId, formNm);    
+        return new ERecord(loc, date, undefined, fieldName, tagName, id, name, type, formId, formNm);    
     }
 
-    function PRecord(loc, date, userid, pass)
+    function PRecord(loc, date, actn, userid, pass)
     {
-        ARec.apply(this, [dt_pRecord, loc, date]);
+        ARec.apply(this, [dt_pRecord, loc, date, actn]);
         Object.defineProperties(this,
             {
                 u: {value: userid, enumerable: true}, // key
@@ -185,11 +184,10 @@ var BP_MOD_CONNECT = (function ()
         Object.seal(this);
     }
     PRecord.prototype = Object.create(ARec.prototype,{});
-    PRecord.prototype.setDeleted = function ()
+    PRecord.prototype.newDelActn = function ()
     {
-        ARec.prototype.setDeleted.apply(this);
-        //delete this.p;
-    };
+        return new PRecord(L.prototype.toLoc.apply(this.l), Date.now(), 'd', this.u);
+    };    
     
     function getProto(dt)
     {
@@ -197,50 +195,50 @@ var BP_MOD_CONNECT = (function ()
         {
             case dt_pRecord: return PRecord.prototype;
             case dt_eRecord: return ERecord.prototype;
-            default: return ARec.prototype;
         }
     }    
     /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
-        var saveRecord = function (rec, dt, callbackFunc, noRecs)
+        function saveRecord(rec, dt, callbackFunc, dontGet)
         {
-            var req = {cm:dt, rec:rec, noRecs:noRecs};
-            if (callbackFunc && (!noRecs)) {
-                req.loc = g_loc;
+            var req = {cm:dt, rec:rec, dontGet:dontGet};
+            if (callbackFunc && (!dontGet)) {
+                req.loc = g_loc; // argument to getRecs
             }
+            BP_MOD_ERROR.logdebug('Producing Insert Action' + JSON.stringify(rec));
             if (callbackFunc) {
                 rpcToMothership(req, callbackFunc);
             }
             else {
                 postMsgToMothership(req);
             }
-        };
-        var saveTempRec = function (rec, dt, callbackFunc, noRecs)
+        }
+        function saveTempRec(rec, dt, callbackFunc, dontGet)
         {
-            var req = {cm:cm_tempRec, dt:dt, rec:rec, noRecs:noRecs };
-            if (callbackFunc && (!noRecs)) {
-                req.loc = g_loc;
+            var req = {cm:cm_tempRec, dt:dt, rec:rec, dontGet:dontGet };
+            if (callbackFunc && (!dontGet)) {
+                req.loc = g_loc; // argument to getRecs
             }
+            BP_MOD_ERROR.logdebug('Producing Insert Action to temp: ' + JSON.stringify(rec));
             if (callbackFunc) {
                 rpcToMothership(req, callbackFunc);
             }
             else {
                 postMsgToMothership(req);
             }
-        };       
-        var deleteRecord = function (rec, dt, callback)
+        }
+        function sendDelActn(_rec, dt, callback, dontGet, toTemp)
         {
-            getProto(dt).setDeleted.apply(rec);
-            saveRecord(rec, dt, callback);
-            console.log('Deleting Record ' + JSON.stringify(rec));
-        };
-        var delTempRec = function (rec, dt, callback)
-        {
-            getProto(dt).setDeleted.apply(rec);
-            saveTempRec(rec, dt, callback);
-            console.log('Deleting Temp Record ' + JSON.stringify(rec));
-        };
+            var del = getProto(dt).newDelActn.apply(_rec);
+            //BP_MOD_ERROR.logdebug('Producing Delete Action' + (toTemp?' to temp: ':': ') + JSON.stringify(del));
+            if (toTemp) {
+                saveTempRec(del, dt, callback, dontGet);
+            }
+            else {
+                saveRecord(del, dt, callback, dontGet);                
+            }
+        }
         
         var getRecs = function(loc, callback)
         {
@@ -254,7 +252,7 @@ var BP_MOD_CONNECT = (function ()
 
         function newPRecord(loc, date, userid, pass)
         {
-            return new PRecord(loc, date, userid, pass);
+            return new PRecord(loc, date, undefined, userid, pass);
         }
         
         function panelClosed(loc)
@@ -293,8 +291,7 @@ var BP_MOD_CONNECT = (function ()
             DELETE_ACTION_VAL: {value: DELETE_ACTION_VAL},
             saveRecord: {value: saveRecord},
             saveTempRec: {value: saveTempRec},
-            deleteRecord: {value: deleteRecord},
-            delTempRec: {value: delTempRec},
+            sendDelActn: {value: sendDelActn},
             newERecord: {value: newERecord},
             newPRecord: {value: newPRecord},
             getRecs: {value: getRecs},

@@ -8,6 +8,11 @@
  */
 /* This is the css-shield. Blocks cascading of CSS rules from the environment */
 #com-untrix-panel, #com-untrix-panel * {
+  // box-sizing is needed to normalize height/width treatment for all elements
+              -moz-box-sizing: border-box;
+              -webkit-box-sizing: border-box; 
+              box-sizing: border-box;
+              // min-width/height needed to reset directives on certain web-pages.
               min-width: 0px;
               min-height: 0px;
               margin: 0px;
@@ -61,20 +66,20 @@
 			}
 
 #com-untrix-panel {
-#com-untrix-panelList {
+  #com-untrix-panelList {
                 display: block;
                 color: black;
                 border-style: none;
             }
 
-#com-untrix-panelTitle {
+  #com-untrix-panelTitle {
 				display: block;
 				text-align: center;
 				vertical-align: middle;
 				cursor: move;
 			}
 
-#com-untrix-TitleText {
+  #com-untrix-TitleText {
                 display: inline-block;
                 text-align: center;
                 vertical-align: middle;
@@ -90,9 +95,9 @@
                 -webkit-user-select: none;
                 user-select: none;
                 font-weight: bold;
-}
+  }
 
-.com-bprivy-xB {
+  .com-bprivy-xB {
                 display: inline-block;
                 float: right;
                 vertical-align: middle;
@@ -100,27 +105,16 @@
                 //background: none;
                 cursor: pointer;
             }
-            
-.com-bprivy-hidden {
+
+  .com-bprivy-hidden {
                 display:none;
             }
 
-// Keep this under #com-untrix-panel in order to force two IDs in the selector.
-// Otherwise this rule gets overridden by others.
-#com-untrix-panelList .com-bprivy-field {
-                display: inline-block;
-                height: 16px;
-                overflow: hidden;
-                margin: 1px;
-                padding: 1px;
-                text-align: justify;
-                vertical-align: middle;
-            }
-
-
+  // Keep this under #com-untrix-panel in order to force two IDs in the selector.
+  // Otherwise these rules may get overridden by others on the page.
   #com-untrix-panelList {
 
-    button, input[type="button"] {
+    button, input[type="button"], [type="submit"], input[type="image"] {
       box-shadow:none;
       -moz-box-shadow: none;
       -webkit-box-shadow: none;
@@ -132,7 +126,7 @@
                 display: block;
                 border-collapse:collapse;
                 vertical-align: middle;
-            }
+    }
 
 
     .com-bprivy-tB {
@@ -141,41 +135,50 @@
                 text-align: center;
                 //background: none;
                 cursor: pointer;
-            }
+    }
 
     .com-bprivy-io-fieldset {
                 display: inline-block;
-                //display: inline;
                 border: none;
-}
+    }
+
+    .com-bprivy-field {
+                display: inline-block;
+                overflow: hidden;
+                margin: 1px;
+                padding: 1px;
+                text-align: justify;
+                vertical-align: middle;
+                width: 125px;
+                height: 16px;
+    }
+
+    input[disabled].com-bprivy-field {
+                border-style: outset;
+                cursor: not-allowed;
+    }
 
     input.com-bprivy-user-in {
-                border: 1px;
-                width: 127px;
-                background-color: white;
-                opacity: 1;
-}
+                border: 1px inset;
+                border-color: silver;
+    }
 
     input.com-bprivy-pass-in {
-                border: 1px;
-                width: 127px;
-                background-color: white;
-                opacity: 1;
-}
+                border: 1px inset;
+                border-color: silver;
+    }
 
     .com-bprivy-user-out{
-                border: 1px solid #0060bf;
-                width: 125px;
+                border: 1px ridge #0060bf;
                 //background-color: light-gray;
                 cursor: move;
- 		 	}
+    }
 
     .com-bprivy-pass-out {
-                border: 1px solid #0060bf;
-                width: 125px;
+                border: 1px ridge #0060bf;
                 //background-color: light-gray;
                 cursor: move;
-			}
-}
+	  }
+  }
 }
 

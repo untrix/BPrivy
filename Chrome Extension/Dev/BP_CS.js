@@ -6,7 +6,7 @@
  */
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT,
-  BP_MOD_ERROR, BP_MOD_WDL, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_BOOT */
+  BP_MOD_ERROR, BP_MOD_WDL, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_BOOT, BP_DLL */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 /* members el.type,
@@ -43,7 +43,12 @@
         fn_userid2= IMPORT(m.fn_userid2),
         fn_pass2 = IMPORT(m.fn_pass2),
         fn_pass = IMPORT(m.fn_pass),        // Represents data-type password
-        fn_btn  = IMPORT(m.fn_btn);        // Submit button
+        fn_btn  = IMPORT(m.fn_btn),
+        CT_BP_FN = IMPORT(m.CT_BP_FN),
+        CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN),
+        CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX),
+        CT_BP_USERID = IMPORT(m.CT_BP_USERID),
+        CT_BP_PASS = IMPORT(m.CT_BP_PASS);        // Submit button
     /** @import-module-begin Connector */
     m = BP_MOD_CONNECT;
     var getRecs = IMPORT(m.getRecs),
@@ -52,12 +57,7 @@
         panelClosed = IMPORT(m.panelClosed);
     /** @import-module-begin */
     m = BP_MOD_WDL;
-    var CT_BP_FN = IMPORT(m.CT_BP_FN),
-        CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN),
-        CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX),
-        CT_BP_USERID = IMPORT(m.CT_BP_USERID),
-        CT_BP_PASS = IMPORT(m.CT_BP_PASS),
-        cs_panel_wdt = IMPORT(m.cs_panel_wdt),
+    var cs_panel_wdt = IMPORT(m.cs_panel_wdt),
         MiniDB = IMPORT(m.MiniDB);
     /** @import-module-begin W$ */
         m = IMPORT(BP_MOD_W$);
@@ -201,9 +201,9 @@
             var pair = this.getVals(c);
             if (pair) 
             {
-                if ((!pair.u && !MOD_DB.hasPass(pair.p)) ||
-                    (!pair.p && !MOD_DB.has(pair.u)) ||
-                    (!MOD_DB.matches(pair.u, pair.p)))
+                if ((!pair.u && pair.p && (!MOD_DB.hasPass(pair.p))) ||
+                    (!pair.p && pair.u && (!MOD_DB.has(pair.u))) ||
+                    (pair.u && pair.p && (!MOD_DB.matches(pair.u, pair.p))))
                 {
                     MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(), pair.u, pair.p), dt_pRecord, function(resp)
                     {
@@ -283,10 +283,10 @@
         {
             if (!this.form) { return false; }
             else if (!this.cntnr) {
-                return isAncestor(this.form, el) || (indexOf(this.form.elements, el) !== -1);
+                return isAncestor(this.form, el) || (this.form.elements && (indexOf(this.form.elements, el) !== -1) );
             }
             else {
-                return isAncestor(this.cntnr, el) || (indexOf(this.form.elements, el) !== -1);
+                return isAncestor(this.cntnr, el) || (this.form.elements && (indexOf(this.form.elements, el) !== -1));
             }
         };
         FormInfo.DISJOINT = -1;
@@ -1029,7 +1029,7 @@
                 pEl = $this[0];
             }
 
-            if (hasVal(uEl)) {uid = uEl.value;}
+            if (hasVal(uEl, fn_userid)) {uid = uEl.value;}
             if (hasVal(pEl, fn_pass)) { pass = encrypt(pEl.value); }
 
             if (pair) 
@@ -1295,19 +1295,19 @@
             if  (!el || !el.value) {
                 return false;
             }
-            else if (fn_pass) {
-                // Websites sometimes supply defaultValue as placeholders. Those are
-                // invalid for passwords.
-                return (el.value !== el.defaultValue);
-            }
-            else if (fn_userid) {
+            else if (fn===fn_userid) {
                 // Websites sometimes fill-in valid default values of usernames. Hence
                 // we can't ignore default values. But many websites have default values
                 // like 'username'. Hence, we'll bet on a middle-way. Ignore default
                 // value unless it exists as a known userid in the password DB. There
                 // is a rare chance that we may not catch a valid username this way
                 // if it was not captured in the DB already.
-                return (el.value !== el.defaultValue) || MOD_DB.has(el.value);
+                return (el.value !== el.defaultValue) || MOD_DB.had(el.value);
+            }
+            else { //if (fn===fn_pass)
+                // Websites sometimes supply defaultValue as placeholders. Those are
+                // invalid for passwords.
+                return (el.value !== el.defaultValue);
             }
         }
         function isVisible(el)
@@ -2498,15 +2498,15 @@
             }
         }
 
-        function saveRec (rec, dt, callbackFunc, toTempStore)
+        function saveRec (rec, dt, callbackFunc, toTemp)
         {
-            var func = toTempStore ? BP_MOD_CONNECT.saveTempRec : BP_MOD_CONNECT.saveRecord;
+            var func = toTemp ? BP_MOD_CONNECT.saveTempRec : BP_MOD_CONNECT.saveRecord;
             // We could cache non-TRecs records as well but not needed by use-cases right now
-            if (toTempStore) {MOD_DB.saveTRec(rec);} // We could do this for non-TRecs as well...
+            if (toTemp) {MOD_DB.saveTRec(rec);} // We could do this for non-TRecs as well...
             func(rec, dt, function(resp)
             {
                 if (resp.result && resp.recs) {
-                    if (!toTempStore) {MOD_DB.ingestDT(resp.recs, dt);}
+                    if (!toTemp) {MOD_DB.ingestDT(resp.recs, dt);}
                     else {MOD_DB.ingestT(resp.recs);}
                 }
                 if (callbackFunc) {
@@ -2515,21 +2515,21 @@
             });
         }
 
-        function delRec (rec, dt, callbackFunc, toTempStore)
+        function delRec (rec, dt, callbackFunc, toTemp)
         {
-            var func = toTempStore ? BP_MOD_CONNECT.delTempRec : BP_MOD_CONNECT.deleteRecord;
-            // We could cache non-TRecs records as well but not needed by use-cases right now
-            if (toTempStore) {MOD_DB.delTRec(rec);}
-            func(rec, dt, function(resp)
+            // We could cache non-TRecs records as well but that's not needed by use-cases
+            // right now
+            if (toTemp) {MOD_DB.delTRec(rec);}
+            BP_MOD_CONNECT.sendDelActn(rec, dt, function(resp)
             {
                 if (resp.result && resp.recs) {
-                    if (!toTempStore) {MOD_DB.ingestDT(resp.recs, dt);}
+                    if (!toTemp) {MOD_DB.ingestDT(resp.recs, dt);}
                     else {MOD_DB.ingestT(resp.recs);}
                 }
                 if (callbackFunc) {
                     callbackFunc(resp);
                 }
-            });
+            }, false, toTemp);
         }
 
         function main()

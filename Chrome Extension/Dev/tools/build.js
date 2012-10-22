@@ -104,10 +104,9 @@ var src = abs(argv[0]),
        "bp_cs.js"
     ],
     release_main_js=['bp_error.js','bp_common.js','bp_traits.js',"bp_main_chrome.js","bp_cs_platform_chrome.js",
-                     "bp_connector.js","bp_memstore.js","bp_filestore.js","bp_main.js" ],
+                     "bp_connector.js","bp_memstore.js", "bp_db_fs.js", "bp_filestore.js","bp_main.js" ],
     release_manage_js=["bp_error.js","bp_common.js","bp_traits.js","bp_cs_platform_chrome.js","bp_w$.js",
-                       "bp_connector.js","bp_memstore.js","bp_filestore.js","bp_panel.wdl.js",
-                       "bp_editor.wdl.js","bp_manage.js"],
+                       "bp_connector.js", "bp_db_fs.js", "bp_editor.wdl.js", "bp_manage.js"],
     release_others = [
     'bp_manage.html',
     'BP_Main.html'].

@@ -103,13 +103,6 @@ function buildPackage(src, bld, async)
     copy(src, bld, ['updates.xml'], async);
 }
 
-function cleanJson(err, data, ctx)
-{   'use strict';
-    if (err) {throw err;}
-    var o = JSON.parse(data);
-    fs.writeFile(ctx.df, JSON.stringify(o), ctx.async.runHere(throwErr));
-}
-
 function processFiles(src, dst, files, callback, async)
 {   'use strict';
     files.forEach(function (fname, i, files)
@@ -170,6 +163,16 @@ function catIfNeeded(srcFiles, dest)
         }
         fs.appendFileSync(dest, data);
     });
+}
+
+function cleanJson(err, data, ctx)
+{   'use strict';
+    if (err) {throw err;}
+    var o = JSON.parse(data);
+    if (doBuild([ctx.sf], ctx.df)) {
+        console.log("Creating JSON file " + ctx.df);
+        fs.writeFile(ctx.df, JSON.stringify(o), ctx.async.runHere(throwErr));
+    }
 }
 
 module.exports = {

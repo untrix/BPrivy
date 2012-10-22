@@ -148,6 +148,11 @@ var BP_MOD_W$ = (function ()
     };
     WidgetElement.prototype.show = function() {this.el.style.removeProperty('display');};
     WidgetElement.prototype.hide = function() {this.el.style.display = 'none';};
+    WidgetElement.prototype.toggle = function()
+    {
+        if (this.el.style.display) {this.show(); return true;} 
+        else {this.hide(); return false;}
+    };
     WidgetElement.prototype.destroy = function()
     {
         // This is a destructor, but unfortunately a new jQuery object is being created here.
@@ -161,6 +166,8 @@ var BP_MOD_W$ = (function ()
         MOD_COMMON.delProps(this.w$);
         MOD_COMMON.delProps(this);
     };
+    WidgetElement.prototype.cssClass = function (_class)
+    { this.el.className = _class; };
     WidgetElement.prototype.addClass = function (className)
     {
         $(this.el).addClass(className);

@@ -8,7 +8,7 @@
 /* JSLint directives */
 
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_WDL */
+  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_WDL, chrome */
 
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -43,7 +43,6 @@ var BP_MOD_EDITOR = (function ()
     m = BP_MOD_CONNECT;
     var newPRecord = IMPORT(m.newPRecord),
         saveRecord = IMPORT(m.saveRecord),
-        deleteRecord = IMPORT(m.deleteRecord),
         cm_getDN = IMPORT(m.cm_getDN),
         cm_getDomn = IMPORT(m.cm_getDomn),
         newL = IMPORT(m.newL);
@@ -57,17 +56,15 @@ var BP_MOD_EDITOR = (function ()
         fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
         fn_pass = IMPORT(m.fn_pass),        // Represents data-type password
         dt_eRecord = IMPORT(m.dt_eRecord),
-        dt_pRecord = IMPORT(m.dt_pRecord);
-    /** @import-module-begin */
-    m = IMPORT(BP_MOD_WDL);
-    var CT_BP_FN = IMPORT(m.CT_BP_FN),
+        dt_pRecord = IMPORT(m.dt_pRecord),
+        CT_BP_FN = IMPORT(m.CT_BP_FN),
         CT_BP_PASS = IMPORT(m.CT_BP_PASS),
         CT_BP_USERID = IMPORT(m.CT_BP_USERID),
         CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN),
-        CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX),
-        image_wdt = IMPORT(m.image_wdt);
+        CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX);
 
     /** @import-module-begin */
+    var BP_MOD_MEMSTORE = chrome.extension.getBackgroundPage().BP_MOD_MEMSTORE;
     m = IMPORT(BP_MOD_MEMSTORE);
     var MEMSTORE = IMPORT(m),
         DNODE_TAG = IMPORT(m.DNODE_TAG),
@@ -91,6 +88,15 @@ var BP_MOD_EDITOR = (function ()
         rpcToMothership({cm:cm_getDomn, loc:loc}, cback);
     }
     
+    function image_wdt(ctx)
+    {
+        var imgPath = ctx.imgPath;
+        return {
+            tag:"img", 
+            attrs:{ src:getURL(imgPath) }
+        };
+    }
+
     function dNodeTitleText_wdt(ctx)
     {
         var loc = ctx.loc,
@@ -351,10 +357,10 @@ var BP_MOD_EDITOR = (function ()
             u = pRec.u;
             p = pRec.p;
         }
-        else { // create a new pRec and save it back to ioItem.
+        /*else { // create a new pRec and save it back to ioItem.
             pRec = newPRecord(ioItem.loc);
             ioItem.rec = pRec; // Save this back to ioItem.
-        }
+        }*/
         return {
         cons: IItemP,
         tag:'form', attr:{ action:"#" },
@@ -392,7 +398,7 @@ var BP_MOD_EDITOR = (function ()
         {
             var ioItem = this.ioItem,
                 nU = this.u.el.value,
-                oU = ioItem.rec? ioItem.rec.u: undefined,
+                oU = ioItem.rec ? ioItem.rec.u : undefined,
                 nP = encrypt(this.p.el.value),
                 oP = ioItem.rec? ioItem.rec.p: undefined;
             
@@ -417,14 +423,20 @@ var BP_MOD_EDITOR = (function ()
             var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
             saveRecord(pRec, dt_pRecord, function(resp)
             {
-                if (resp.result) 
-                {
+                var oRec;
+                if (resp.result) {
+                    oRec = ioItem.rec;
+                    ioItem.rec = pRec;
                     if (oU && (nU !== oU)) {
-                        BP_MOD_CONNECT.deleteRecord(ioItem.rec, dt_pRecord);
-                        ioItem.rec = pRec;
-                    }                    
+                        BP_MOD_CONNECT.sendDelActn(oRec, dt_pRecord, function(r){callback(resp);}, true);
+                    }
+                    else {
+                        callback(resp);
+                    }                   
                 }
-                callback(resp);
+                else { 
+                    callback(resp);
+                }
             }, true);
         }},
         onSubmit: {value: function(e)
@@ -586,7 +598,12 @@ var BP_MOD_EDITOR = (function ()
                 else {self.destroy();}
             }
             
-            BP_MOD_CONNECT.deleteRecord(this.rec, dt_pRecord, handleResp);
+            if (this.rec) {
+                BP_MOD_CONNECT.sendDelActn(this.rec, dt_pRecord, handleResp, true);
+            }
+            else {
+                self.destroy();
+            }
         }}
     });
 

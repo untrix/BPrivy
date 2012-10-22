@@ -94,13 +94,14 @@ var BP_MOD_CS_PLAT = (function()
         {
             var url = chrome.extension.getURL(path);
             return url;
+            //return "chrome-extension://" + BP_MOD_DEV.chrome_extension_id + "/" + path;
         },
         
-        getAbsPath: function(path)
+        /*getAbsPath: function(path)
         {
             // get url and then remove the leading file:///
             return chrome.extension.getURL(path).slice(8);
-        },
+        },*/
         
         addEventListener: function(el, ev, fn)
         {

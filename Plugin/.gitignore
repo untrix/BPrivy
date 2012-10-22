@@ -1,5 +1,6 @@
 /plugin-win-build*
 *.dll
+*.exe
 /firebreath1.7/
 /plugin-*/*
 /boost*/*

@@ -8,11 +8,14 @@
 
 /* JSLint directives */
 /*global $, document, BP_MOD_PLAT, BP_MOD_CONNECT, BP_MOD_COMMON, IMPORT, localStorage,
-  BP_MOD_MEMSTORE, BP_MOD_FILESTORE, BP_MOD_ERROR, BP_MOD_TRAITS */
+  BP_MOD_MEMSTORE, BP_MOD_DBFS, BP_MOD_FILESTORE, BP_MOD_ERROR, BP_MOD_TRAITS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
-(function Main(doc)
+/** @globals-begin */
+var BP_PLUGIN;
+/** @globals-end */
+var BP_MOD_MAIN = (function Main(doc)
 {
     "use strict"; // TODO: @remove Only used in debug builds
     
@@ -41,6 +44,8 @@
     m = BP_MOD_ERROR;
     var BPError = BP_MOD_ERROR.BPError;
     var Activity = BP_MOD_ERROR.Activity;
+    /** @import-module-begin */
+    var DBFS = IMPORT(BP_MOD_DBFS);
     /** @import-module-end **/    m = null;
 
     var MOD_WIN; // defined later.
@@ -79,9 +84,9 @@
     {
         return {
             result: result,
-            dbName:FILE_STORE.getDBName(),
-            dbPath:FILE_STORE.getDBPath(),
-            dbStats:FILE_STORE.getDBStats(),
+            dbName:DBFS.getDBName(),
+            dbPath:DBFS.getDBPath(),
+            dbStats:DBFS.getDBStats(),
             memStats:MEM_STORE.getStats()
         };
     }
@@ -91,8 +96,8 @@
         var recs, resp={};
         recs = MEM_STORE.getRecs(loc);
         resp.dbInfo = {
-            dbName : FILE_STORE.getDBName(),
-            dbPath : FILE_STORE.getDBPath()
+            dbName : DBFS.getDBName(),
+            dbPath : DBFS.getDBPath()
         };
         resp.db = recs;
         resp.result = true;
@@ -116,7 +121,7 @@
             cm = rq.cm,
             bSaveRec;
         //delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
-        console.info(String(cm));
+        BP_MOD_ERROR.logdebug("onRequest: " + cm);
         
         rq.atvt ? (BPError.atvt = new Activity(rq.atvt)) : (BPError.atvt = new Activity("BPMain::OnRequest"));
         
@@ -128,7 +133,7 @@
                     BPError.push("SaveRecord:" + dt);
                     bSaveRec = true;
                     result = insertNewRec(rq.rec, dt);
-                    if (result && (!rq.noRecs)) {
+                    if (result && (!rq.dontGet)) {
                         recs = MEM_STORE.getDTRecs(rq.loc, dt);
                     }
                     funcSendResponse({result:result, recs:recs});
@@ -136,15 +141,21 @@
                 case MOD_CONNECT.cm_tempRec:
                     BPError.push("SaveTempRecord:" + rq.dt);
                     notes = MEM_STORE.insertTempRec(rq.rec, rq.dt);
-                    if (!rq.noRecs) {
+                    if (!rq.dontGet) {
                         recs = MEM_STORE.getTRecs(rq.loc);
                     }
                     funcSendResponse({result:true, recs:recs, notes:notes});
                     break;
+                case 'cm_bootLoaded':
+                    BPError.push("CSLoaded");
+                    chrome.pageAction.show(sender.tab.id);
+                    funcSendResponse({result:true});
+                    break;
                 case cm_getRecs:
                     BPError.push("GetRecs");
+                    MOD_WIN.putTab(sender.tab.id);
+                    chrome.pageAction.show(sender.tab.id);
                     funcSendResponse(getRecs(rq.loc));
-                    MOD_WIN.putTab(rq.loc.href);
                     break;
                 case cm_loadDB:
                     BPError.push("LoadDB");
@@ -188,7 +199,7 @@
                     break;
                 case cm_getDBPath:
                     BPError.push("GetDBPath");
-                    dbPath = BP_MOD_FILESTORE.getDBPath();
+                    dbPath = DBFS.getDBPath();
                     funcSendResponse(makeDashResp(true));
                     break;
                 case MOD_CONNECT.cm_importCSV:
@@ -215,7 +226,7 @@
                     break;
                 case MOD_CONNECT.cm_closed:
                     BPError.push("PanelClosed");
-                    MOD_WIN.rmTab(rq.loc.href);
+                    MOD_WIN.rmTab(sender.tab.id);
                     funcSendResponse({result:true});
                     break;
                 case "form":
@@ -270,16 +281,16 @@
             }
         }
         
-        function putTab (url)
+        function putTab (id)
         {
-            g_tabs[url] = true;
+            g_tabs[id] = true;
         }
         
-        function rmTab (url)
+        function rmTab (id)
         {
-            delete g_tabs[url];
+            delete g_tabs[id];
         }
-        
+
         return Object.freeze (
         {
             clickReq: clickReq,
@@ -289,36 +300,65 @@
         });
     }());
 
-    try
+    function init() 
     {
-        var dbPath = localStorage["db.path"];
-        initScaffolding(doc, MOD_WIN);
-        registerMsgListener(onRequest);
-        FILE_STORE.init();
-        MEM_STORE.loadETLD();
-        MEM_STORE.clear();
-        if (dbPath)
-        {
-            BPError.atvt = new Activity('LoadDBAtInit');
-            dbPath = FILE_STORE.loadDB(dbPath);
+        var dbPath;
 
-            if (!dbPath) { // db-load failed
-                throw new BPError("DB Load Failed");
-            }
+        function bpPluginLoaded ()
+        { "use strict";
+          BP_PLUGIN = document.getElementById('com-untrix-bpplugin');
+          if (!BP_PLUGIN.getpid) {
+              BP_MOD_ERROR.warn(
+                  "UWallet: Sorry, you either haven't installed the BPrivy plugin or your"+
+                  " operating system is not supported. Please install the plugin from "+
+                  "http://www.untrix.com/downloads, then restart your browser'");
+              throw new BPError("Plugin Not Loaded");
+          }
+          BP_MOD_ERROR.logdebug("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
         }
         
-        chrome.webRequest.onBeforeRequest.addListener(onBefReq, {urls:["http://*/*", "https://*/*"]});
+        try
+        {
+            bpPluginLoaded();
+            dbPath = localStorage["db.path"];
+            initScaffolding(doc, MOD_WIN);
+            registerMsgListener(onRequest);
+            DBFS.init();
+            MEM_STORE.loadETLD();
+            MEM_STORE.clear();
+            if (dbPath)
+            {
+                BPError.atvt = new Activity('LoadDBAtInit');
+                dbPath = FILE_STORE.loadDB(dbPath);
     
-        // chrome.tabs.onSelectionChanged.addListener(function(tabId) 
-        // {
-            // chrome.pageAction.show(tabId);
-        // });    } catch (e)
-    {
+                if (!dbPath) { // db-load failed
+                    throw new BPError("DB Load Failed");
+                }
+            }
+            
+            //chrome.webRequest.onBeforeRequest.addListener(onBefReq, {urls:["http://*/*", "https://*/*"]});
         
-        delete localStorage['db.path'];
-        MEM_STORE.clear();
-        BP_MOD_ERROR.logwarn(e);
+            // chrome.tabs.onSelectionChanged.addListener(function(tabId) 
+            // {
+                // chrome.pageAction.show(tabId);
+            // });
+            BP_MOD_ERROR.logdebug("loaded main");        } 
+        catch (e)
+        {
+            delete localStorage['db.path'];
+            MEM_STORE.clear();
+            BP_MOD_ERROR.logwarn(e);
+        }
     }
-        
-    console.log("loaded main");
+
+    return Object.freeze(
+        {
+            init: init
+        });
 }(document));
+      
+BP_MOD_CS_PLAT.addEventListener(window, 'load', function(e)
+{ "use strict";
+  BP_MOD_MAIN.init(); 
+  BP_MOD_ERROR.logdebug("inited main"); 
+});

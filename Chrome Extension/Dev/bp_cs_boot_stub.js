@@ -16,6 +16,7 @@
  * This file does not get loaded in production.
  */
 
+chrome.extension.sendRequest({cm:'cm_bootLoaded'});
 if (BP_MOD_BOOT.scan(document)) 
 {
     BP_DLL.onDllLoad();

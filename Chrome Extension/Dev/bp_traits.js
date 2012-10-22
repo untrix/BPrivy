@@ -59,6 +59,12 @@ var BP_MOD_TRAITS = (function ()
         
     var eid_pfx = "com-untrix-";
 
+    var CT_TEXT_PLAIN = 'text/plain',
+        CT_BP_PREFIX = 'application/x-untrix-',
+        CT_BP_FN = CT_BP_PREFIX + 'fn',
+        CT_BP_PASS = CT_BP_PREFIX + fn_pass,
+        CT_BP_USERID = CT_BP_PREFIX + fn_userid;
+
     var FT = Object.freeze({
         text: 1,
         pass: 2
@@ -189,7 +195,12 @@ var BP_MOD_TRAITS = (function ()
         fn_pass: {value: fn_pass},
         fn_pass2:{value: fn_pass2},
         fn_btn: {value: fn_btn},
-        eid_pfx: {value: eid_pfx}
+        eid_pfx: {value: eid_pfx},
+        CT_BP_FN: {value: CT_BP_FN},
+        CT_TEXT_PLAIN: {value: CT_TEXT_PLAIN},
+        CT_BP_PREFIX: {value: CT_BP_PREFIX},
+        CT_BP_USERID: {value: CT_BP_USERID},
+        CT_BP_PASS: {value: CT_BP_PASS}
     }); Object.freeze(iface);
     
     console.log("loaded traits");

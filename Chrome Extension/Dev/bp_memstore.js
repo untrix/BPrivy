@@ -393,11 +393,13 @@ var BP_MOD_MEMSTORE = (function ()
             arecs = this.arecs,
             len = arecs.length,
             res,
-            memStats = MemStats.stats;
+            memStats = MemStats.stats,
+            isDelete = Boolean(arec.a==='d');
         
         if (len===0)        {            // This will happen the first time a key is created            arecs[0] = arec;            arecs[valStr] = arec;
             memStats.loaded++;        }        else if (arec.tm<=arecs[len-1].tm)        {            // In the case of loadDB, we load records in reverse chronological order. That            // allows us to simply push subsequent records to the end of the array.            arecs.push(arec);            arecs[valStr] = arec;
-            memStats.loaded++;            // We don't need to check for item-overflow because that has already            // been checked before we were invoked.        }        // // Below clause may be useful in optimizing mergeDB use-case.        // // else if (arec.tm>=arecs[0])        // // {            // // arecs.unshift(arec);            // // arecs[valStr] = arec;            // // if (len>max)            // // delete the last item
+            memStats.loaded++;            // We don't need to check for item-overflow because that has already            // been checked before we were invoked.        }        // // Below clause is useful in optimizing mergeDB use-case, and new records
+        // // inserted by autocapture or manual entry.        // // else if (arec.tm>=arecs[0])        // // {            // // arecs.unshift(arec);            // // arecs[valStr] = arec;            // // if (len>max)            // // delete the last item
             // // drec.notes.causedOverflow = true;
             // // memStats.fluff++;        // // }        else
         {
@@ -460,37 +462,47 @@ var BP_MOD_MEMSTORE = (function ()
      * list-visit order. Therefore we'll just visit from position 0 onwards because that
      * is convenient for coding.
      */
-    Actions.prototype.updateTm = function (arec, tm, notes)
+    Actions.prototype.updateTm = function (oarec, drec, valStr)
     {
         var arecs = this.arecs, 
+            narec = drec.rec,
+            notes = drec.notes,
+            tm = narec.tm,
             i, bDone;
 
-        i = arecs.indexOf(arec);
+        i = arecs.indexOf(oarec);
         if (i !== -1)
         {
-            arec.tm = tm;
+            //arec.tm = tm;
+            // Remove item
+            arecs.splice(i, 1);
+            delete arecs[valStr];
             if (i>0)
             {
-                // Remove item
-                arecs.splice(i, 1);
-
-                // Reposition item.
+                // Insert new item.
                 for (bDone=false,--i; i>=0; --i)
                 {
-                    if (arec.tm<=arecs[i].tm) {
+                    if (narec.tm<=arecs[i].tm) {
                         // insert one item
-                        arecs.splice(i+1, 0, arec);
+                        arecs.splice(i+1, 0, narec);
+                        arecs[valStr] = narec;
                         bDone = true;
                         break;
                     }
                 }
                 if (!bDone) {
-                    arecs.splice(0, 0, arec);
+                    // insert item at the beginning.
+                    arecs.splice(0, 0, narec);
+                    arecs[valStr] = narec;
                     this.curr = arecs[0];
                     notes.causedCurrChange = true;
                 }
             }
-            // else the item is already at the top. Can't be upgraded anymore than this
+            else {
+                // else the item was already at the top. Replace it with the new item.
+                arecs.splice(0, 0, narec);
+                arecs[valStr] = narec;
+            }
         }
         else {
             throw new BPError("Internal Error", "SkipRecord", "UpgradeItemNotFound");
@@ -535,12 +547,15 @@ var BP_MOD_MEMSTORE = (function ()
      */
     Actions.prototype.insert = function(drec)
     {
-        var arec = drec.rec, dtt = drec.dtt,
+        var arec = drec.rec,
+            dtt = drec.dtt,
             valStr = dtt.valStr(arec),
             max = dtt.actions.history + 1,
             oarec,
             memStats = MemStats.stats;
             
+        Object.freeze(arec);
+        
         if (this.arecs.length === max && arec.tm <= this.arecs[max-1].tm) 
         {
             // This record should not be inserted. Its date&time are older than the
@@ -562,6 +577,7 @@ var BP_MOD_MEMSTORE = (function ()
                 // Okay, same value, same timestamp. This is a repeated record.
                 // Do nothing, just ignore it.
                 drec.notes.isOldRepeat = true;
+                // return;
             }
             else if (arec.tm > oarec.tm)
             {
@@ -600,7 +616,7 @@ var BP_MOD_MEMSTORE = (function ()
                     // We'll save only the latest record. So, we need to remove the old record
                     // and insert the new one at the right location in the sorted list. This
                     // constitutes an upgrade of the old record with a newer timestamp.
-                    this.updateTm(oarec, arec.tm, drec.notes);
+                    this.updateTm(oarec, drec, valStr);
                 }
             }
         }
@@ -1323,7 +1339,7 @@ var BP_MOD_MEMSTORE = (function ()
         var dn, recs, rIt, acoll, aIt, arec;
         while ((dn=this.next()))
         {
-            // Can't write dn.getData(dt) because dn maybe a JSON parsed object.
+            // Can't code dn.getData(dt) because dn maybe a JSON parsed object.
             if ((recs=DNProto.getData.apply(dn, [this.dt])))
             {
                 rIt = new BP_MOD_TRAITS.RecsIterator(recs);

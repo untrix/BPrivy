@@ -94,17 +94,17 @@ fs.mkdirp(abs(DST, 'release'));
 fs.mkdirp(abs(DST, 'dist'));
 
 //var srcFiles=[SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dev.less'];
-var srcFiles=[SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dev.less'];
+var srcFiles=[SRC+'bp.less', /*SRC+'bp_bootstrap-responsive.less',*/ TMPDIR+'bp.dev.less'];
 if (doBuild(srcFiles, devTarget)) {
     recess(srcFiles, {compile:true, compress:false}, async.runHere(makeRecessCback(devTarget)));
 }
 
-srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.release.less']; // reverse order of concatenation
+srcFiles = [SRC+'bp.less', /*SRC+'bp_bootstrap-responsive.less',*/ TMPDIR+'bp.release.less']; // reverse order of concatenation
 if (doBuild(srcFiles, releaseTarget)) { 
     recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(releaseTarget)));
 }
 
-srcFiles = [SRC+'bp.less', SRC+'bp_bootstrap-responsive.less', TMPDIR+'bp.dist.less']; // reverse order of concatenation
+srcFiles = [SRC+'bp.less', /*SRC+'bp_bootstrap-responsive.less',*/ TMPDIR+'bp.dist.less']; // reverse order of concatenation
 if (doBuild(srcFiles, distTarget)) {
     recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(distTarget)));
 }

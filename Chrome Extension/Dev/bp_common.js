@@ -269,6 +269,7 @@ var BP_MOD_COMMON = (function()
     
     function indexOf (a, item)
     {
+        if (!a) {return -1;}
         return Array.prototype.indexOf.apply(a, [item]);
     }
     // function concatArray (dst, frag)

@@ -7,11 +7,11 @@
 
 /* JSLint directives */
 /*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR,
-  ls, BP_PLUGIN, BP_MOD_FILESTORE, BP_MOD_EDITOR, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_MEMSTORE */
+  ls, BP_PLUGIN, BP_MOD_FILESTORE, BP_MOD_EDITOR, BP_MOD_W$, BP_MOD_TRAITS, chrome, BP_MOD_DBFS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
  
-var BP_MOD_MANAGE = (function () 
+var BP_MOD_MANAGE = (function ()
 {
     "use strict"; //TODO: Remove this from prod. build
     /** @import-module-begin */
@@ -21,14 +21,14 @@ var BP_MOD_MANAGE = (function ()
     var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
     var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     var DIR_SEP = IMPORT(m.DIR_SEP);
-    /** @import-module-begin Common */
-    m = IMPORT(BP_MOD_FILESTORE);
-    var FILESTORE = IMPORT(m);
-    var cullDBName = IMPORT(m.cullDBName);
+    /** @import-module-begin */
+    var DBFS = IMPORT(BP_MOD_DBFS);
+    var cullDBName = IMPORT(DBFS.cullDBName);
     /** @import-module-begin*/
     m = IMPORT(BP_MOD_TRAITS);
     var dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin */
+    var BP_MOD_MEMSTORE = chrome.extension.getBackgroundPage().BP_MOD_MEMSTORE;
     var MEMSTORE = IMPORT(BP_MOD_MEMSTORE);
     var CS_PLAT = IMPORT(BP_MOD_CS_PLAT),
         rpcToMothership = IMPORT(CS_PLAT.rpcToMothership);
@@ -95,7 +95,7 @@ var BP_MOD_MANAGE = (function ()
     
     function getDB(dt, cback)
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_getDB, dt:dt}, cback);
+        //rpcToMothership({cm: MOD_CONNECT.cm_getDB, dt:dt}, cback);
     }
     
     // function fillOptions(eid, dir)
@@ -165,7 +165,7 @@ var BP_MOD_MANAGE = (function ()
             
             if (resp.dbStats)
             {
-                resp.dbStats = FILESTORE.newDBMap(null, resp.dbStats);
+                resp.dbStats = DBFS.newDBMap(null, resp.dbStats);
                 gbg = resp.dbStats.calcDupes();
                 
                 if (gbg) {
@@ -199,24 +199,25 @@ var BP_MOD_MANAGE = (function ()
 
     function clearEditor()
     {
-        MEMSTORE.clear([dt_pRecord]);
+        //MEMSTORE.clear([dt_pRecord]);
         if (g_editor) {
             g_editor.destroy();
             g_editor = null;
         }
     }
+
     function reloadEditor()
     {
         $('#refreshEditor').button('loading');
-        getDB(dt_pRecord, function (resp)
-        {
-            if (!resp) {
-                callbackHandleError(resp);
+        //getDB(dt_pRecord, function (resp)
+        //{
+            //if (!resp) {
+                //callbackHandleError(resp);
                 // fall-through
-            }
+            //}
 
-            var dB = resp.dB;
-            MEMSTORE.putDB(dB, dt_pRecord);
+            //var dB = resp.dB;
+            //MEMSTORE.putDB(dB, dt_pRecord);
             
             var ctx = {dnIt:MEMSTORE.newDNodeIterator(dt_pRecord), dt:dt_pRecord},
                 editor = BP_MOD_W$.w$exec(BP_MOD_EDITOR.EditorWdl_wdt, ctx),
@@ -237,7 +238,7 @@ var BP_MOD_MANAGE = (function ()
             
             $('#refreshEditor').button('reset');
             //$('#editorPane *').tooltip(); // leaks DOM nodes :(. I wonder what else in bootstrap leaks.
-        });
+        //});
     }
     
     function onload()
@@ -272,10 +273,10 @@ var BP_MOD_MANAGE = (function ()
         });
         
         //$('#csvPathReset').click(function()
-        addEventListeners('[data-path-reset]', 'click', function(e)
-        {
-            fillOptions("csvPathSelect", "");
-        });
+        //addEventListeners('[data-path-reset]', 'click', function(e)
+        //{
+        //    fillOptions("csvPathSelect", "");
+        //});
         
         addEventListeners('#csvImport', 'click', function (e)
         {
@@ -610,6 +611,6 @@ function bpPluginLoaded ()
 // $(document).ready(function (e)BP_MOD_CS_PLAT.addEventListener(window, 'load', function(e)
 { "use strict";
   bpPluginLoaded();
-  BP_MOD_FILESTORE.init();
+  BP_MOD_DBFS.init();
   BP_MOD_MANAGE.onload();
 });

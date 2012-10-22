@@ -51,7 +51,12 @@ var BP_MOD_WDL = (function ()
         fn_pass = IMPORT(m.fn_pass),        // Represents data-type password
         dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord),
-        eid_pfx = IMPORT(m.eid_pfx);
+        eid_pfx = IMPORT(m.eid_pfx),
+        CT_BP_FN = IMPORT(m.CT_BP_FN),
+        CT_BP_PASS = IMPORT(m.CT_BP_PASS),
+        CT_BP_USERID = IMPORT(m.CT_BP_USERID),
+        CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN),
+        CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX);
         /** @import-module-end **/    m = null;
 
     /** @globals-begin */
@@ -91,18 +96,6 @@ var BP_MOD_WDL = (function ()
     var css_class_tButton = "com-bprivy-tB ";
     var css_class_nButton = "com-bprivy-nB ";
     var css_class_xButton = "com-bprivy-xB ";
-
-    // These are 'data' attribute names.
-    //var prop_value = "bpValue";
-    //var prop_fieldName = "bprivy_FN";
-    //var prop_peerID = 'bpPID';
-    //var prop_panelID = 'bpPanelID';
-    //var prop_ctx = 'bpPanelCtx';
-    var CT_TEXT_PLAIN = 'text/plain';
-    var CT_BP_PREFIX = 'application/x-untrix-';
-    var CT_BP_FN = CT_BP_PREFIX + 'fn';
-    var CT_BP_PASS = CT_BP_PREFIX + fn_pass;
-    var CT_BP_USERID = CT_BP_PREFIX + fn_userid;
 
     // Other Globals
     var g_win = window;
@@ -221,12 +214,13 @@ var BP_MOD_WDL = (function ()
                 numUnsaved: {configurable:true, enumerable:true}
             });*/
         },
-        has: function (uid)
+        has: function (uid, considerAll)
         {
             // return (Object.keys(this.pRecsMap).indexOf(username) >=0) ||
-                   // (Object.keys(this.tRecsMap).indexOf(username) >=0);            return (this.pRecsMap && this.pRecsMap[uid] && this.pRecsMap[uid].curr && (this.pRecsMap[uid].curr.a!=='d')) ||
-                   (this.tRecsMap && this.tRecsMap[uid] && this.tRecsMap[uid].curr && (this.tRecsMap[uid].curr.a!=='d')) ;
+                   // (Object.keys(this.tRecsMap).indexOf(username) >=0);            return (this.pRecsMap && this.pRecsMap[uid] && this.pRecsMap[uid].curr && (considerAll || (this.pRecsMap[uid].curr.a!=='d'))) ||
+                   (this.tRecsMap && this.tRecsMap[uid] && this.tRecsMap[uid].curr && (considerAll || (this.tRecsMap[uid].curr.a!=='d'))) ;
         },
+        had: function (uid) {return this.has(uid, true);},
         hasPass: function (pass)
         {
             var found = false;
@@ -254,7 +248,7 @@ var BP_MOD_WDL = (function ()
 
     function cs_panelTitleText_wdt (ctx)
     {
-        // uses ctx.dbName and ctx.dbPath
+        // uses ctx.dbName and ctx.dbPath and ctx.panel
         return {
             tag:"div",
             attr:{ id: eid_panelTitleText, title:ctx.dbPath },
@@ -271,6 +265,46 @@ var BP_MOD_WDL = (function ()
             text: "Unsaved Passwords"
         };
     }
+
+    function ShowButton () {}
+    ShowButton.wdt = function (ctx)
+    {
+        return {
+        cons: ShowButton,
+        html:'<button type="button"></button>',
+        attr:{ class:css_class_nButton + ' icon-chevron-down'},
+        iface:{ panel:ctx.panel },
+        on:{ 'click': ShowButton.prototype.onClick },
+        css:{ width:'20px', float:'left' },
+            /*children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle' },
+            addClass: 'icon-chevron-down'
+            }],*/
+        };
+    };
+    ShowButton.prototype = w$defineProto(ShowButton,
+    {
+        onClick: {value: function(ev)
+        {
+            var isVisible;
+            
+            ev.stopPropagation(); ev.preventDefault();
+            
+            if (this.panel.itemList) {
+                isVisible = this.panel.itemList.toggle();
+                
+                if (isVisible) {
+                    this.removeClass('icon-chevron-down');
+                    this.addClass('icon-chevron-up');
+                }
+                else {
+                    this.removeClass('icon-chevron-up');
+                    this.addClass('icon-chevron-down');
+                }
+            }
+        }}
+    });
 
     /**
      * New Item button 
@@ -467,10 +501,10 @@ var BP_MOD_WDL = (function ()
             u = pRec.u;
             p = pRec.p;
         }
-        else { // create a new pRec and save it back to ioItem.
+        /*else { // create a new pRec and save it back to ioItem.
             pRec = newPRecord(ioItem.loc);
             ioItem.rec = pRec; // Save this back to ioItem.
-        }
+        }*/
         return {
         cons: IItemP,
         tag:'div', addClass:css_class_ioFields,
@@ -536,23 +570,27 @@ var BP_MOD_WDL = (function ()
             // save to db
             var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
             // Save into the main store, not temp store. Therefore toTempStore should be false.
-            ioItem.panel.saveRec(pRec, dt_pRecord, callback);
-            if (oU && (nU !== oU)) {
-                // If user edited the userid, then delete the old userid. This means
-                // that we loose history on that userid as well. However, we only allow
-                // this for temp records, hence its okay. Writing code below for both
-                // temp and main store just in case ...
-                if (!ioItem.isTRec) {
-                    // We shouldn't get here because userid editing is not allowed in
-                    // main recs.
-                    ioItem.panel.delRec(ioItem.rec, dt_pRecord);
+            ioItem.panel.saveRec(pRec, dt_pRecord, function(resp)
+            {
+                var oRec;
+                if (resp.result && (!ioItem.isTRec)) {
+                    oRec = ioItem.rec;
+                    //ioItem.rec = pRec;
+                    if (oU && (nU !== oU)) {
+                        // This behaviour is blocked at a higher-level so we should never come here.
+                        
+                        // If user edited the userid, then delete the old userid. This means
+                        // that we loose history on that userid as well.
+                        ioItem.panel.delRec(oRec, dt_pRecord, function(){callback(resp);}, false);
+                    }
+                    else {
+                        callback(resp);
+                    }
                 }
                 else {
-
-                    ioItem.panel.delTempRec(ioItem.rec, dt_pRecord);
+                    callback(resp);
                 }
-            }
-            ioItem.rec = pRec;
+            });
         }}
     });
     
@@ -684,11 +722,14 @@ var BP_MOD_WDL = (function ()
                 else {self.destroy();}
             }
 
-            if (!this.isTRec) {
-                self.panel.delRec(this.rec, dt_pRecord, handleResp);
-            }
+            if (!this.rec) {self.destroy();}
             else {
-                self.panel.delTempRec(this.rec, dt_pRecord, handleResp);
+                if (!this.isTRec) {
+                    self.panel.delRec(this.rec, dt_pRecord, handleResp);
+                }
+                else {
+                    self.panel.delTempRec(this.rec, dt_pRecord, handleResp);
+                }
             }
         }}
     });
@@ -707,7 +748,8 @@ var BP_MOD_WDL = (function ()
         dragend:PanelList.prototype.handleDragEnd },
         ctx:{ io_bInp:false, w$:{ itemList:'w$el' } },
         iface:{ loc:loc, panel:panel },
-             iterate:{ it:it, wdi:IoItem.wdi }
+             iterate:{ it:it, wdi:IoItem.wdi },
+        //_final:{ show:false }
         };
     };
     // PanelList of temporary records.
@@ -724,7 +766,8 @@ var BP_MOD_WDL = (function ()
         dragend:PanelList.prototype.handleDragEnd },
         ctx:{ io_bInp:false, w$:{ itemList2:'w$el' }, isTRec:true },
         iface:{ loc:loc, panel:panel, isTRec:true },
-             iterate:{ it:it2, wdi:IoItem.wdi }
+             iterate:{ it:it2, wdi:IoItem.wdi },
+        //_final:{ show:false }
         };
     };
     PanelList.prototype = w$defineProto(PanelList,
@@ -782,7 +825,9 @@ var BP_MOD_WDL = (function ()
             saveRec = ctx.saveRec,
             delRec = ctx.delRec,
             delTempRec = ctx.delTempRec,
-            origCtx = BP_MOD_COMMON.copy2(ctx, {});
+            origCtx = BP_MOD_COMMON.copy2(ctx, {}),
+            dbName = ctx.dbName,
+            showRecs = (UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)&&dbName);
         
         return {
         cons:Panel, // static prototype object.
@@ -798,19 +843,20 @@ var BP_MOD_WDL = (function ()
             children:[
             {tag:"div", attr:{ id:eid_panelTitle },
                 children:[
-                (UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)&&ctx.dbName)?NButton.wdt: w$undefined,
+                showRecs ? ShowButton.wdt : w$undefined,
+                showRecs ? NButton.wdt : w$undefined,
                 cs_panelTitleText_wdt,
                 XButton.wdt,
                 SButton.wdt
                 // ctx.dbName? CButton.wdt: w$undefined,                // OButton.wdt
                 ]
             },
-            UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt : w$undefined,
+            showRecs ? PanelList.wdt : w$undefined,
             it2.num() ? unsavedTitleText_wdt : w$undefined,
-            UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)? PanelList.wdt2 : w$undefined],
+            showRecs ? PanelList.wdt2 : w$undefined],
 
         // Post processing steps
-        _iface:{ w$:{}, w$ctx:{itemList:'itemList'} },
+        _iface:{ w$:{}, w$ctx:{ itemList:'itemList', itemlist2:'itemlist2' } },
         _final:{ 
             appendTo:document.body, 
             show:true
@@ -849,13 +895,7 @@ var BP_MOD_WDL = (function ()
     var iface = 
     {
        MiniDB: MiniDB,
-       cs_panel_wdt: Panel.wdt,
-       CT_BP_FN: CT_BP_FN,
-       CT_TEXT_PLAIN: CT_TEXT_PLAIN,
-       CT_BP_PREFIX: CT_BP_PREFIX,
-       CT_BP_USERID: CT_BP_USERID,
-       CT_BP_PASS: CT_BP_PASS,
-       image_wdt: image_wdt
+       cs_panel_wdt: Panel.wdt
     };
     
     console.log("loaded wdl");

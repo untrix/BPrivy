@@ -168,6 +168,7 @@
 
     chrome.extension.onMessage.addListener(onMessage);
     setupCommand(document, onClickComm);
+    chrome.extension.sendRequest({cm:'cm_bootLoaded'});
     if (BP_MOD_BOOT.scan(document)) {
         onDllLoad();
     }
