@@ -7,7 +7,7 @@
 
 /* JSLint directives */
 
-/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
+/*global $, console, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
   BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_WDL, chrome */
 
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
@@ -16,9 +16,12 @@
 /**
  * @ModuleBegin EDITOR
  */
-var BP_MOD_EDITOR = (function ()
+function BP_GET_EDITOR(g_win)
 {
     "use strict";
+    var window = null, document = null,
+        g_doc = g_win.document;
+
     var m;
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
@@ -70,8 +73,6 @@ var BP_MOD_EDITOR = (function ()
         DNODE_TAG = IMPORT(m.DNODE_TAG),
         DNProto = IMPORT(m.DNProto);
         /** @import-module-end **/    m = null;
-
-    var g_doc = document;
 
     function callbackHandleError (resp)
     {
@@ -856,9 +857,9 @@ var BP_MOD_EDITOR = (function ()
         }}
     });
     
+    console.log("constructed mod_editor");
     return Object.freeze(
     {
         EditorWdl_wdt: EditorWdl.wdt
     });
-    
-}());
+}

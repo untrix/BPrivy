@@ -5,19 +5,23 @@
  * @mail sumeet@untrix.com
  */
 /* JSLint directives */
-/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT,
-  BP_MOD_ERROR, BP_MOD_WDL, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_BOOT, BP_DLL */
+/*global $, console, BP_GET_CONNECT, BP_GET_CS_PLAT, BP_GET_COMMON, IMPORT,
+  BP_GET_ERROR, BP_GET_WDL, BP_GET_W$, BP_GET_TRAITS, BP_MOD_BOOT, BP_DLL */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
-/* members el.type,
- * el.type, win.top, win.self,
- * frame.hidden, frame.style, style.visibility, style.display, ev.preventDefault,
- * ev.stopPropagation, document.getElementById
- */
+
+var BP_MOD_ERROR = BP_GET_ERROR(window),
+    BP_MOD_COMMON = BP_GET_COMMON(window),
+    BP_MOD_TRAITS = BP_GET_TRAITS(window),
+    BP_MOD_CS_PLAT = BP_GET_CS_PLAT(window),
+    BP_MOD_CONNECT = BP_GET_CONNECT(window),
+    BP_MOD_W$ = BP_GET_W$(window),
+    BP_MOD_WDL = BP_GET_WDL(window);
 
 (function(g_win)
 {
     'use strict';
+    var window = null, document = null;
     var m;
     /** @import-module-begin Common */
     m = BP_MOD_COMMON;
@@ -768,11 +772,11 @@
                 
             this.some(function()
             {
-                //var x1 = this.left - window.scrollX, y1 = this.top - window.scrollY, h = this.h, w = this.w;
+                //var x1 = this.left - g_win.scrollX, y1 = this.top - g_win.scrollY, h = this.h, w = this.w;
                 var $p = $(this.cntnr),
                     off = $p.offset(),
-                    y1 = off.top - window.scrollY,
-                    x1 = off.left - window.scrollX,
+                    y1 = off.top - g_win.scrollY,
+                    x1 = off.left - g_win.scrollX,
                     h = $p.outerHeight(),
                     w = $p.outerWidth();
                             
@@ -2486,7 +2490,7 @@
             if (!com) 
             {
                 var head = doc.head || doc.getElementsByTagName( "head" )[0] || doc.documentElement;
-                com = document.createElement('command');
+                com = g_doc.createElement('command');
                 com.type="command";
                 com.accessKey = 'q';
                 com.tabindex = -1;// ensures that the command won't get sequentially focussed.
@@ -2532,6 +2536,15 @@
             }, false, toTemp);
         }
 
+        /**
+         * var BP_MOD_ERROR,
+    BP_MOD_COMMON,
+    BP_MOD_TRAITS,
+    BP_MOD_CS_PLAT,
+    BP_MOD_CONNECT,
+    BP_MOD_W$,
+    BP_MOD_WDL; 
+         */
         function main()
         {
             registerMsgListener(onClickBP);

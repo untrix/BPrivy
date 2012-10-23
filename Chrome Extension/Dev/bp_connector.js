@@ -14,9 +14,11 @@
  * @ModuleBegin Connector
  */
 
-var BP_MOD_CONNECT = (function ()
+function BP_GET_CONNECT(g_win)
 {
-    "use strict"; // TODO: @remove Only used in debug builds
+    "use strict";
+    var window = null, document = null,
+        g_doc = g_win.document;
     
     /** @import-module-begin CSPlatform **/
     var m = BP_MOD_CS_PLAT;
@@ -51,7 +53,7 @@ var BP_MOD_CONNECT = (function ()
         cm_tempRec      = "cm_tempRec",
         DELETE_ACTION_VAL = "D}";
     
-    var g_loc = document.location;
+    var g_loc = g_doc.location;
     var DICT_TRAITS={};
    
     /** list of traits properties */
@@ -303,8 +305,8 @@ var BP_MOD_CONNECT = (function ()
         return iface;
     }
     
-    console.log("loaded connector");
+    console.log("constructed mod_connector");
     return getModuleInterface();
 
-}());
+}
 /** @ModuleEnd */

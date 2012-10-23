@@ -5,19 +5,35 @@
  * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 
-/* JSLint directives */
-/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR,
-  ls, BP_PLUGIN, BP_MOD_FILESTORE, BP_MOD_EDITOR, BP_MOD_W$, BP_MOD_TRAITS, chrome, BP_MOD_DBFS */
+/* JSLint directives */ 
+/*global $, console, window, BP_GET_CONNECT, BP_GET_CS_PLAT, IMPORT, BP_GET_COMMON, BP_GET_ERROR,
+  ls, BP_PLUGIN, BP_GET_EDITOR, BP_GET_W$, BP_GET_TRAITS, chrome, BP_GET_DBFS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
+
+/** @globals-begin */
+var BP_PLUGIN,
+    BP_MOD_MEMSTORE = chrome.extension.getBackgroundPage().BP_MOD_MEMSTORE,
+    IMPORT = chrome.extension.getBackgroundPage().IMPORT,
+    BP_MOD_ERROR = chrome.extension.getBackgroundPage().BP_GET_ERROR(window),
+    BP_MOD_COMMON = chrome.extension.getBackgroundPage().BP_GET_COMMON(window),
+    BP_MOD_TRAITS = chrome.extension.getBackgroundPage().BP_GET_TRAITS(window),
+    BP_MOD_CS_PLAT = BP_GET_CS_PLAT(window),
+    BP_MOD_CONNECT = BP_GET_CONNECT(window),
+    BP_MOD_W$ = BP_GET_W$(window),
+    BP_MOD_DBFS = chrome.extension.getBackgroundPage().BP_GET_DBFS(window),
+    BP_MOD_EDITOR = BP_GET_EDITOR(window);
+/** @globals-end */
  
 var BP_MOD_MANAGE = (function ()
 {
-    "use strict"; //TODO: Remove this from prod. build
+    "use strict";
     /** @import-module-begin */
     var MOD_COMMON = IMPORT(BP_MOD_COMMON);
     /** @import-module-begin CSPlatform */
     var m = IMPORT(BP_MOD_CS_PLAT);
+    var CS_PLAT = IMPORT(BP_MOD_CS_PLAT),
+        rpcToMothership = IMPORT(CS_PLAT.rpcToMothership);
     var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
     var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     var DIR_SEP = IMPORT(m.DIR_SEP);
@@ -28,10 +44,7 @@ var BP_MOD_MANAGE = (function ()
     m = IMPORT(BP_MOD_TRAITS);
     var dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin */
-    var BP_MOD_MEMSTORE = chrome.extension.getBackgroundPage().BP_MOD_MEMSTORE;
     var MEMSTORE = IMPORT(BP_MOD_MEMSTORE);
-    var CS_PLAT = IMPORT(BP_MOD_CS_PLAT),
-        rpcToMothership = IMPORT(CS_PLAT.rpcToMothership);
     /** @import-module-begin */
     var MOD_CONNECT = IMPORT(BP_MOD_CONNECT);
     /** @import-module-begin */
@@ -594,13 +607,9 @@ var BP_MOD_MANAGE = (function ()
     });
     Object.freeze(iface);
 
-    console.log("loaded manage");
+    console.log("constructed mod_manage");
     return iface;
 }());
-
-/** @globals-begin */
-var BP_PLUGIN;
-/** @globals-end */
 
 function bpPluginLoaded ()
 { "use strict";
@@ -613,4 +622,5 @@ function bpPluginLoaded ()
   bpPluginLoaded();
   BP_MOD_DBFS.init();
   BP_MOD_MANAGE.onload();
+  console.log("inited mod_manage");
 });

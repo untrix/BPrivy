@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
+/*global $, console, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
   BP_MOD_ERROR, BP_MOD_MEMSTORE */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -14,9 +14,10 @@
 /**
  * @ModuleBegin Traits
  */
-var BP_MOD_TRAITS = (function ()
+function BP_GET_TRAITS()
 {
     "use strict";
+    var window = null, document = null;
     //////////// HAVE DEPENDENCIES ON MOD_COMMON ONLY, NOTHING ELSE ///////////////////
     var m;
     /** @import-module-begin Common */
@@ -203,6 +204,6 @@ var BP_MOD_TRAITS = (function ()
         CT_BP_PASS: {value: CT_BP_PASS}
     }); Object.freeze(iface);
     
-    console.log("loaded traits");
+    console.log("constructed mod_traits");
     return iface;
-}());
+}

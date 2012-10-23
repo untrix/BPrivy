@@ -5,7 +5,7 @@
  * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 
-/*global $, console, window, IMPORT, BP_MOD_ERROR, BP_MOD_COMMON, BP_MOD_TRAITS, BP_PLUGIN, chrome */
+/*global $, console, IMPORT, BP_MOD_ERROR, BP_MOD_COMMON, BP_MOD_TRAITS, BP_PLUGIN, chrome */
  
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -13,9 +13,10 @@
 /**
  * @ModuleBegin FileStore
  */
-var BP_MOD_DBFS = (function() 
+function BP_GET_DBFS(g_win)
 {
     "use strict";
+    var window = null, document = null;
     /** @import-module-begin Error */
     var m = IMPORT(BP_MOD_ERROR),
         BPError = IMPORT(m.BPError),
@@ -826,6 +827,7 @@ var BP_MOD_DBFS = (function()
         DB_FS.putPathSep(BP_PLUGIN.pathSeparator());
     }
 
+    console.log("constructed mod_dbfs");
     return Object.freeze(
     {
         init: init,
@@ -836,4 +838,4 @@ var BP_MOD_DBFS = (function()
         getDBName: DB_FS.getDBName,
         newDBMap: newDBMap
     });
-}());
+}

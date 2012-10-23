@@ -6,14 +6,16 @@
  */
 
 /* JSLint directives */
-/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
+/*global $, console, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
   BP_MOD_ERROR, chrome, BP_MOD_TRAITS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
-var BP_MOD_MEMSTORE = (function ()
+function BP_GET_MEMSTORE(g_win)
 {
-    "use strict"; //TODO: Remove this from prod. build
+    "use strict";
+    var window = null, document = null,
+        g_doc = g_win.document;
     
     var m;
     /** @import-module-begin Error */
@@ -1411,6 +1413,6 @@ var BP_MOD_MEMSTORE = (function ()
         MOD_ETLD:    MOD_ETLD
     });
 
-    console.log("loaded memstore");
+    console.log("constructed mod_memstore");
     return iface;
-}());
+}

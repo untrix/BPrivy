@@ -5,17 +5,19 @@
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 /* Global declaration for JSLint */
-/*global document, IMPORT */
+/*global IMPORT */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
  
 //////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE ///////////////////
-var BP_MOD_COMMON = (function() 
+function BP_GET_COMMON(g_win) 
 {
     "use strict"; // TODO: @remove Only used in debug builds
     
     /** @globals-begin */      
-    var CSS_HIDDEN = "com-bprivy-hidden";
+    var window = null, document = null,
+        g_doc = g_win.document,
+        CSS_HIDDEN = "com-bprivy-hidden";
     /** 
      * Tagname for dt_eRecords in the in-memory and file stores.
      * @constant
@@ -87,7 +89,7 @@ var BP_MOD_COMMON = (function()
         // Create an HTMLElement and make the browser parse the URL for us! Unfortunately
         // it creates its own scheme and hostname if one is missing. Not good ! Hence use
         // the regexp based implementation above until I can sort this out.
-        var el = document.createElement('a');
+        var el = g_doc.createElement('a');
         el.href = url;
         var loc = {};
         loc.protocol = el.protocol;
@@ -311,10 +313,10 @@ var BP_MOD_COMMON = (function()
     });
     Object.freeze(iface);
 
-    console.log("loaded common");
+    console.log("constructed mod_common");
     return iface;
         
-}());
+}
 
     // Function.prototype.defineMethod = function (name, value)
     // {
@@ -339,9 +341,9 @@ var BP_MOD_COMMON = (function()
     
     //Object.defineProperty(Object.prototype, "bp_common_clone", {value: bp_common_clone, writable: false, enumerable: false, configurable: false});
 
-    // function isDocVisible(document) {
+    // function isDocVisible(g_doc) {
         // /*properties is */
-        // return ((document.webkitVisibilityState && (document.webkitVisibilityState === 'visible')) || ($(document.body).is(":visible")));
+        // return ((g_doc.webkitVisibilityState && (g_doc.webkitVisibilityState === 'visible')) || ($(g_doc.body).is(":visible")));
     // }
 // 
     // function isFrameVisible(frame)

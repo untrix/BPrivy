@@ -13,16 +13,17 @@
 /**
  * @ModuleBegin GoogleChrome Platform
  */
-var BP_MOD_CS_PLAT = (function() 
+function BP_GET_CS_PLAT(g_win)
 {
     "use strict";
-    
+    var window = null, document = null,
+        g_doc = g_win.document;
     // function isTopLevel(win)
     // {
         // return (win.top === win.self);
     // }
-    var g_bTopLevel = (window.top === window.self), 
-        g_frameUrl = g_bTopLevel ? null : window.location.href;
+    var g_bTopLevel = (g_win.top === g_win.self), 
+        g_frameUrl = g_bTopLevel ? null : g_win.location.href;
         
     var module =
     {
@@ -68,8 +69,8 @@ var BP_MOD_CS_PLAT = (function()
                 }
                 else // frame url not provided
                 {
-                    var tag = document.activeElement.localName;
-                    if (document.hasFocus())
+                    var tag = g_doc.activeElement.localName;
+                    if (g_doc.hasFocus())
                     {
                         if (tag==='iframe')
                         {
@@ -85,7 +86,7 @@ var BP_MOD_CS_PLAT = (function()
                     }
                 }
                 
-                console.log("MsgListener@bp_cs_platform_chrome: Handling received message in document " + document.location.href);
+                console.log("MsgListener@bp_cs_platform_chrome: Handling received message in document " + g_doc.location.href);
                 foo(req, sender, callback);
             });
         },
@@ -130,12 +131,12 @@ var BP_MOD_CS_PLAT = (function()
         
         trigger: function (el, eventType, eventInterface)
         {
-            var ev = document.createEvent(eventInterface || 'HTMLEvents');
+            var ev = g_doc.createEvent(eventInterface || 'HTMLEvents');
             ev.initEvent(eventType, true, true);
             el.dispatchEvent(ev);
         }
     };
     
-    console.log("loaded cs_plat");    
+    console.log("constructed mod_cs_plat");    
     return module;
-}());
+}

@@ -7,8 +7,8 @@
 
 
 /* JSLint directives */
-/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON, BP_MOD_ERROR,
-  BP_MOD_MEMSTORE, BP_MOD_TRAITS */
+/*global $, console, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
+  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_TRAITS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -89,9 +89,11 @@
      * }
      */
 
-var BP_MOD_W$ = (function ()
+function BP_GET_W$(g_win)
 {
     "use strict";
+    var window = null, document = null,
+        g_doc = g_win.document;
     var m;
     /** @import-module-begin CSPlatform */
     m = BP_MOD_CS_PLAT;
@@ -294,7 +296,7 @@ var BP_MOD_W$ = (function ()
 
         // Create the DOM element
         if (wdl.tag) {
-            el = document.createElement(wdl.tag);
+            el = g_doc.createElement(wdl.tag);
             $el = $(el);
         }
         else { // html
@@ -379,7 +381,7 @@ var BP_MOD_W$ = (function ()
         // Populate w$el's interface post-children
         if (wdl._iface) { w$evalProps(wdl._iface, w$, ctx, w$el); }
         // Insert text nodes after children
-        if (wdl._text) { $el.append(document.createTextNode(wdl._text)); }
+        if (wdl._text) { $el.append(g_doc.createTextNode(wdl._text)); }
         // Finally, post Creation steps
         if ((_final=wdl._final)) {            
             if (_final.show === true) {
@@ -414,6 +416,6 @@ var BP_MOD_W$ = (function ()
        w$defineProto: w$defineProto,
        Widget: WidgetElement
    });
-   console.log("loaded w$");
+   console.log("constructed mod_w$");
    return iface;
-}());
+}

@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
  */
 /* Global declaration for JSLint */
-/*global document, com_untrix_bp_loaded */
+/*global com_untrix_bp_loaded */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -21,9 +21,10 @@ function IMPORT(sym)
     }
 }
 
-var BP_MOD_ERROR = (function()
+function BP_GET_ERROR(g_win)
 {
     'use strict';
+    var window = null, document = null;
 
    /** @begin-class-def BPError
     o: {//Object returned by the plugin
@@ -262,12 +263,12 @@ var BP_MOD_ERROR = (function()
     {
         var be = new BPError(arg);
         console.log(be.toString());
-        window.alert(be.message || "Something went wrong :(");
+        g_win.alert(be.message || "Something went wrong :(");
     }
     
     function confirm (str)
     {
-        return window.confirm(str);
+        return g_win.confirm(str);
     }
     
     function log (arg)
@@ -301,7 +302,7 @@ var BP_MOD_ERROR = (function()
         msg: msg
     };
     Object.freeze(iface);
-    console.log("loaded error");
+    console.log("constructed mod_error");
     return iface;
     /** @end-class-def BPError **/
-}());
+}

@@ -13,9 +13,10 @@
 /**
  * @ModuleBegin GoogleChrome
  */
-var  BP_MOD_PLAT = (function() 
+function BP_GET_PLAT() 
 {
-    "use strict"; //TODO: Remove this from prod. build
+    "use strict";
+    var window = null, document = null;
     
     var g = {contextMenuID: null, mW: null},
         MOD_WIN, 
@@ -118,6 +119,6 @@ var  BP_MOD_PLAT = (function()
     };
     
     Object.seal(module);
-    console.log("loaded main_plat");
+    console.log("constructed mod_main_plat");
     return module;
-}());
+}

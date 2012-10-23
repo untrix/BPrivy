@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global $, console, window, BP_PLUGIN, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
+/*global $, console, BP_PLUGIN, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
   BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_PLAT, chrome, BP_MOD_TRAITS, BP_MOD_DBFS */
  
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
@@ -15,9 +15,10 @@
 /**
  * @ModuleBegin FileStore
  */
-var BP_MOD_FILESTORE = (function() 
+function BP_GET_FILESTORE(g_win) 
 {
-    "use strict"; //TODO: Remove this from prod. build
+    "use strict";
+    var window = null, document = null;
     
     /** @import-module-begin Error */
     var m = IMPORT(BP_MOD_ERROR),
@@ -925,6 +926,6 @@ var BP_MOD_FILESTORE = (function()
     });
     Object.freeze(iface);
 
-    console.log("loaded filestore");
+    console.log("constructed mod_filestore");
     return iface;
-}());
+}

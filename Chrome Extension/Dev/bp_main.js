@@ -7,17 +7,30 @@
  */
 
 /* JSLint directives */
-/*global $, document, BP_MOD_PLAT, BP_MOD_CONNECT, BP_MOD_COMMON, IMPORT, localStorage,
-  BP_MOD_MEMSTORE, BP_MOD_DBFS, BP_MOD_FILESTORE, BP_MOD_ERROR, BP_MOD_TRAITS */
+/*global $, BP_MOD_PLAT, BP_GET_CONNECT, BP_GET_COMMON, IMPORT, localStorage,
+  BP_GET_MEMSTORE, BP_GET_DBFS, BP_GET_FILESTORE, BP_GET_ERROR, BP_GET_TRAITS,
+  BP_GET_CS_PLAT, BP_GET_PLAT */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
 /** @globals-begin */
 var BP_PLUGIN;
+var BP_MOD_ERROR = BP_GET_ERROR(window),
+    BP_MOD_COMMON = BP_GET_COMMON(window),
+    BP_MOD_TRAITS = BP_GET_TRAITS(window),
+    BP_MOD_PLAT = BP_GET_PLAT(window),
+    BP_MOD_CS_PLAT = BP_GET_CS_PLAT(window),
+    BP_MOD_CONNECT = BP_GET_CONNECT(window),
+    BP_MOD_MEMSTORE = BP_GET_MEMSTORE(window),
+    BP_MOD_DBFS = BP_GET_DBFS(window),
+    BP_MOD_FILESTORE = BP_GET_FILESTORE(window);
 /** @globals-end */
-var BP_MOD_MAIN = (function Main(doc)
+
+var BP_MOD_MAIN = (function Main(g_win)
 {
-    "use strict"; // TODO: @remove Only used in debug builds
+    "use strict";
+    var window = null, document = null,
+        g_doc = g_win.document;
     
     /** @import-module-begin MainPlatform */
     var m = BP_MOD_PLAT;
@@ -107,7 +120,7 @@ var BP_MOD_MAIN = (function Main(doc)
     function onBefReq(details)
     {
         if (g_forms[details.url]) {
-            window.alert("onBefReq: " + details.url);
+            g_win.alert("onBefReq: " + details.url);
             //delete g_forms[details.url];
         }
         // else {
@@ -306,7 +319,7 @@ var BP_MOD_MAIN = (function Main(doc)
 
         function bpPluginLoaded ()
         { "use strict";
-          BP_PLUGIN = document.getElementById('com-untrix-bpplugin');
+          BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');
           if (!BP_PLUGIN.getpid) {
               BP_MOD_ERROR.warn(
                   "UWallet: Sorry, you either haven't installed the BPrivy plugin or your"+
@@ -321,7 +334,7 @@ var BP_MOD_MAIN = (function Main(doc)
         {
             bpPluginLoaded();
             dbPath = localStorage["db.path"];
-            initScaffolding(doc, MOD_WIN);
+            initScaffolding(g_doc, MOD_WIN);
             registerMsgListener(onRequest);
             DBFS.init();
             MEM_STORE.loadETLD();
@@ -341,8 +354,7 @@ var BP_MOD_MAIN = (function Main(doc)
             // chrome.tabs.onSelectionChanged.addListener(function(tabId) 
             // {
                 // chrome.pageAction.show(tabId);
-            // });
-            BP_MOD_ERROR.logdebug("loaded main");        } 
+            // });        } 
         catch (e)
         {
             delete localStorage['db.path'];
@@ -351,12 +363,13 @@ var BP_MOD_MAIN = (function Main(doc)
         }
     }
 
+    BP_MOD_ERROR.logdebug("constructed mod_main");
     return Object.freeze(
         {
             init: init
         });
-}(document));
-      
+}(window));
+
 BP_MOD_CS_PLAT.addEventListener(window, 'load', function(e)
 { "use strict";
   BP_MOD_MAIN.init(); 

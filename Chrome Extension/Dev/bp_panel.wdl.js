@@ -15,7 +15,7 @@
 /**
  * @ModuleBegin Panel
  */
-var BP_MOD_WDL = (function ()
+function BP_GET_WDL ()
 {
     "use strict";
     var m;
@@ -898,6 +898,6 @@ var BP_MOD_WDL = (function ()
        cs_panel_wdt: Panel.wdt
     };
     
-    console.log("loaded wdl");
+    console.log("constructed mod_wdl");
     return Object.freeze(iface);
-}());
+}
