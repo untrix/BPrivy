@@ -2,33 +2,29 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * @copyright Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
 /* JSLint directives */
-/*global chrome, BP_MOD_ERROR, BP_MOD_COMMON, $ */
+/*global chrome, $ */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
+//////////////// MAKE SURE THERE IS NO DEPENDENCY ON ANY OTHER MODULE ////////////////////
 /**
  * @ModuleBegin GoogleChrome Platform
  */
-function BP_GET_CS_PLAT(g_win)
+function BP_GET_CS_PLAT(g)
 {
     "use strict";
-    var window = null, document = null,
-        g_doc = g_win.document;
-    // function isTopLevel(win)
-    // {
-        // return (win.top === win.self);
-    // }
+    var window = g.g_win, document = g.g_win.document, console = g.g_console,
+        g_win = g.g_win,
+        g_doc = g_win.document;
     var g_bTopLevel = (g_win.top === g_win.self), 
         g_frameUrl = g_bTopLevel ? null : g_win.location.href;
         
     var module =
     {
-        DIR_SEP: "\\", // TODO: This needs to be dynamically determined based on OS
-                       // Right now this will only work for Windows, but so is the plugin.
         postMsgToMothership: function (o)
         {
             function rcvAck (rsp) 
@@ -38,7 +34,7 @@ function BP_GET_CS_PLAT(g_win)
                     }
                 }
                 else if (rsp.result===false) {
-                    BP_MOD_ERROR.warn(rsp.err);
+                    console.log(rsp.err);
                 }
             }
             chrome.extension.sendRequest(o, rcvAck);
@@ -48,10 +44,6 @@ function BP_GET_CS_PLAT(g_win)
         {
             chrome.extension.sendRequest(req, function (resp)
             {
-                if (resp && resp.result===false && resp.err) {
-                    var exp = resp.err;
-                    resp.err = new BP_MOD_ERROR.BPError(exp);
-                }
                 respCallback(resp); // respCallback exists in function closure
             });
         },
@@ -86,7 +78,7 @@ function BP_GET_CS_PLAT(g_win)
                     }
                 }
                 
-                console.log("MsgListener@bp_cs_platform_chrome: Handling received message in document " + g_doc.location.href);
+                //console.log("MsgListener@bp_cs_chrome: Handling received message in document " + g_doc.location.href);
                 foo(req, sender, callback);
             });
         },
@@ -104,6 +96,11 @@ function BP_GET_CS_PLAT(g_win)
             return chrome.extension.getURL(path).slice(8);
         },*/
         
+        getBackgroundPage: function ()
+        {
+            return chrome.extension.getBackgroundPage();
+        },
+
         addEventListener: function(el, ev, fn)
         {
             el.addEventListener(ev, fn);

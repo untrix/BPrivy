@@ -2,12 +2,11 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
 /* JSLint directives */
-/*global $, console, window, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_W$, BP_MOD_TRAITS */
+/*global $, IMPORT */
  
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -15,36 +14,41 @@
 /**
  * @ModuleBegin Panel
  */
-function BP_GET_WDL ()
+function BP_GET_WDL (g)
 {
     "use strict";
+    var window = null, document = null, console = null,
+        g_win = g.g_win,
+        g_doc = g_win.document;
+
     var m;
     /** @import-module-begin Common */
-    m = BP_MOD_COMMON;
-    var MOD_COMMON = IMPORT(m),
+    m = g.BP_COMMON;
+    var BP_COMMON = IMPORT(m),
         encrypt = IMPORT(m.encrypt),
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
         preventDefault = IMPORT(m.preventDefault),
         newInherited = IMPORT(m.newInherited);
     /** @import-module-begin W$ */
-    m = IMPORT(BP_MOD_W$);
+    m = IMPORT(g.BP_W$);
     var w$exec = IMPORT(m.w$exec),
         w$defineProto = IMPORT(m.w$defineProto),
         Widget = IMPORT(m.Widget),
         w$undefined = IMPORT(m.w$undefined);
     /** @import-module-begin CSPlatform */
-    m = BP_MOD_CS_PLAT;
+    m = g.BP_CS_PLAT;
     var getURL = IMPORT(m.getURL),
         addHandlers = IMPORT(m.addHandlers); // Compatibility function
     /** @import-module-begin Connector */
-    m = BP_MOD_CONNECT;
+    m = g.BP_CONNECT;
     var newPRecord = IMPORT(m.newPRecord);
     /** @import-module-begin Error */
-    m = BP_MOD_ERROR;
-    var BPError = IMPORT(m.BPError);
+    m = g.BP_ERROR;
+    var BP_ERROR = IMPORT(m),
+        BPError = IMPORT(m.BPError);
     /** @import-module-begin */
-    m = BP_MOD_TRAITS;
+    m = g.BP_TRAITS;
     var MOD_TRAITS = IMPORT(m),
         UI_TRAITS = IMPORT(m.UI_TRAITS),
         fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
@@ -98,8 +102,6 @@ function BP_GET_WDL ()
     var css_class_xButton = "com-bprivy-xB ";
 
     // Other Globals
-    var g_win = window;
-    var g_doc = g_win.document;
     var g_loc = g_doc.location;
     var g_ioItemID = 0;
     var u_cir_s = '\u24E2';
@@ -175,7 +177,7 @@ function BP_GET_WDL ()
         numRecs: function(recsMap)
         {
             var num = 0;
-            BP_MOD_COMMON.iterKeys(recsMap, function(k, val)
+            BP_COMMON.iterKeys(recsMap, function(k, val)
             {
                 if (!val.curr.a) { num++; }
             });
@@ -195,10 +197,10 @@ function BP_GET_WDL ()
         },
         empty: function ()
         {
-            BP_MOD_COMMON.clear(this);
-            this.eRecsMapArray = BP_MOD_COMMON.EMPTY_ARRAY;
-            this.pRecsMap = BP_MOD_COMMON.EMPTY_OBJECT;
-            this.tRecsMap = {}; //BP_MOD_COMMON.EMPTY_OBJECT;
+            BP_COMMON.clear(this);
+            this.eRecsMapArray = BP_COMMON.EMPTY_ARRAY;
+            this.pRecsMap = BP_COMMON.EMPTY_OBJECT;
+            this.tRecsMap = {}; //BP_COMMON.EMPTY_OBJECT;
             this.numUserids = this.numUnsaved = 0;
         },
         preventEdits: function ()
@@ -225,8 +227,8 @@ function BP_GET_WDL ()
         {
             var found = false;
             function checkPass(u, actn) {if (actn.curr.p===pass) {found=true; return true;}}
-            if (!BP_MOD_COMMON.iterKeys(this.pRecsMap, checkPass)) {
-                return BP_MOD_COMMON.iterKeys(this.tRecsMap, checkPass);
+            if (!BP_COMMON.iterKeys(this.pRecsMap, checkPass)) {
+                return BP_COMMON.iterKeys(this.tRecsMap, checkPass);
             }
             else { return true; }
         },
@@ -342,7 +344,7 @@ function BP_GET_WDL ()
     {
         return {
         tag: 'a',
-        attr:{ class:css_class_xButton, href:BP_MOD_CS_PLAT.getURL("/bp_manage.html"), target:"_blank" },
+        attr:{ class:css_class_xButton, href:g.BP_CS_PLAT.getURL("/bp_manage.html"), target:"_blank" },
         css:{ width:'20px' },
             children:[
             {tag:"i",
@@ -674,7 +676,7 @@ function BP_GET_WDL ()
                 if (res===undefined) 
                 {
                     this.oItem = w$exec(OItemP.wdt, ctx);
-                    MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
+                    BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                     if (this.oItem) {
                         delete this.iItem; 
                         iI.destroy();
@@ -691,7 +693,7 @@ function BP_GET_WDL ()
                             self.panel.reload();
                         }
                         else {
-                            BP_MOD_ERROR.warn(resp.err);
+                            BP_ERROR.warn(resp.err);
                             self.panel.reload();
                         }
                     });
@@ -700,7 +702,7 @@ function BP_GET_WDL ()
             else if (oI)
             { // Create input element, destroy output element
                 this.iItem = w$exec(IItemP.wdt, ctx);
-                MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
+                BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                 if (this.iItem) {
                     delete this.oItem; oI.destroy();
                     this.append(this.iItem);
@@ -717,7 +719,7 @@ function BP_GET_WDL ()
             function handleResp(resp)
             {
                 if (resp.result!==true) {
-                    BP_MOD_ERROR.warn(resp.err);
+                    BP_ERROR.warn(resp.err);
                 }
                 else {self.destroy();}
             }
@@ -775,7 +777,7 @@ function BP_GET_WDL ()
         handleDragStart: {value: function handleDragStart (e)
         {   // CAUTION: 'this' is bound to e.target
             
-            //console.info("DragStartHandler entered");
+            //BP_ERROR.loginfo("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
             var data = this.value;
             if (this.fn === fn_pass) {
@@ -787,26 +789,26 @@ function BP_GET_WDL ()
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
             e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon16.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
-            //console.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+            //BP_ERROR.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
             //return true;
         }},
         handleDrag: {value: function handleDrag(e)
         {   // CAUTION: 'this' is bound to e.target
-            //console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //BP_ERROR.loginfo("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
             e.stopImmediatePropagation();
         }},
         handleDragEnd: {value: function handleDragEnd(e)
         {   // CAUTION: 'this' is bound to e.target
-            //console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //BP_ERROR.loginfo("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //return true;
         }},
         newItem: {value: function()
         {
             if (!this.newItemCreated) {
-                var ctx = BP_MOD_COMMON.copy2(this.panel.origCtx, {});
-                BP_MOD_COMMON.copy2({io_bInp:true, loc:this.loc, panel:this.panel, isTRec:this.isTRec }, ctx);
+                var ctx = BP_COMMON.copy2(this.panel.origCtx, {});
+                BP_COMMON.copy2({io_bInp:true, loc:this.loc, panel:this.panel, isTRec:this.isTRec }, ctx);
                 w$exec(IoItem.wdi, ctx).appendTo(this);
                 this.newItemCreated = true;
             }
@@ -825,7 +827,7 @@ function BP_GET_WDL ()
             saveRec = ctx.saveRec,
             delRec = ctx.delRec,
             delTempRec = ctx.delTempRec,
-            origCtx = BP_MOD_COMMON.copy2(ctx, {}),
+            origCtx = BP_COMMON.copy2(ctx, {}),
             dbName = ctx.dbName,
             showRecs = (UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)&&dbName);
         
@@ -858,7 +860,7 @@ function BP_GET_WDL ()
         // Post processing steps
         _iface:{ w$:{}, w$ctx:{ itemList:'itemList', itemlist2:'itemlist2' } },
         _final:{ 
-            appendTo:document.body, 
+            appendTo:g_doc.body, 
             show:true
             ,exec:Panel.prototype.makeDraggable 
             }
@@ -898,6 +900,6 @@ function BP_GET_WDL ()
        cs_panel_wdt: Panel.wdt
     };
     
-    console.log("constructed mod_wdl");
+    BP_ERROR.log("constructed mod_wdl");
     return Object.freeze(iface);
 }

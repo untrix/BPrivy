@@ -818,6 +818,7 @@ bool BPrivyAPI::_chooseFolderXP(bp::JSObject* p)
 	else { return false; }
 }
 
+// Ole32.lib
 bool BPrivyAPI::_choose(bp::JSObject* p, bool chooseFile)
 {
 	bool rval = false;

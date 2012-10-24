@@ -2,7 +2,7 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
 /* JSLint directives */ 
@@ -11,45 +11,59 @@
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
-/** @globals-begin */
-var BP_PLUGIN,
-    BP_MOD_MEMSTORE = chrome.extension.getBackgroundPage().BP_MOD_MEMSTORE,
-    IMPORT = chrome.extension.getBackgroundPage().IMPORT,
-    BP_MOD_ERROR = chrome.extension.getBackgroundPage().BP_GET_ERROR(window),
-    BP_MOD_COMMON = chrome.extension.getBackgroundPage().BP_GET_COMMON(window),
-    BP_MOD_TRAITS = chrome.extension.getBackgroundPage().BP_GET_TRAITS(window),
-    BP_MOD_CS_PLAT = BP_GET_CS_PLAT(window),
-    BP_MOD_CONNECT = BP_GET_CONNECT(window),
-    BP_MOD_W$ = BP_GET_W$(window),
-    BP_MOD_DBFS = chrome.extension.getBackgroundPage().BP_GET_DBFS(window),
-    BP_MOD_EDITOR = BP_GET_EDITOR(window);
-/** @globals-end */
- 
-var BP_MOD_MANAGE = (function ()
+//////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE OR GLOBAL ///////////////////
+function IMPORT(sym)
+{
+    'use strict';
+    var window = null, document = null, console = null;
+    if(sym===undefined || sym===null) {
+        throw new ReferenceError("Linker:Symbol Not Found");
+    }
+    else {
+        return sym;
+    }
+}
+
+var  BP_PLUGIN;
+var BP_MANAGE = (function ()
 {
     "use strict";
+    /** @globals-begin */
+    var g = {g_win:window, g_console:console};
+    g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
+    var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
+    g.BP_MEMSTORE = BP_CS_PLAT.getBackgroundPage().BP_MAIN.g.BP_MEMSTORE;
+    g.BP_ERROR = BP_CS_PLAT.getBackgroundPage().BP_GET_ERROR(g);
+    g.BP_COMMON = BP_CS_PLAT.getBackgroundPage().BP_GET_COMMON(g);
+    g.BP_TRAITS = BP_CS_PLAT.getBackgroundPage().BP_GET_TRAITS(g);
+    g.BP_CONNECT = BP_CS_PLAT.getBackgroundPage().BP_GET_CONNECT(g);
+    g.BP_W$ = BP_GET_W$(g);
+    g.BP_DBFS = BP_CS_PLAT.getBackgroundPage().BP_GET_DBFS(g);
+    g.BP_EDITOR = BP_GET_EDITOR(g);
+    /** @globals-end */
+
     /** @import-module-begin */
-    var MOD_COMMON = IMPORT(BP_MOD_COMMON);
+    var BP_COMMON = IMPORT(g.BP_COMMON);
     /** @import-module-begin CSPlatform */
-    var m = IMPORT(BP_MOD_CS_PLAT);
-    var CS_PLAT = IMPORT(BP_MOD_CS_PLAT),
+    var m = IMPORT(g.BP_CS_PLAT);
+    var CS_PLAT = IMPORT(g.BP_CS_PLAT),
         rpcToMothership = IMPORT(CS_PLAT.rpcToMothership);
     var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
     var addEventListener = IMPORT(m.addEventListener); // Compatibility function
-    var DIR_SEP = IMPORT(m.DIR_SEP);
     /** @import-module-begin */
-    var DBFS = IMPORT(BP_MOD_DBFS);
+    var DBFS = IMPORT(g.BP_DBFS);
     var cullDBName = IMPORT(DBFS.cullDBName);
     /** @import-module-begin*/
-    m = IMPORT(BP_MOD_TRAITS);
+    m = IMPORT(g.BP_TRAITS);
     var dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin */
-    var MEMSTORE = IMPORT(BP_MOD_MEMSTORE);
+    var MEMSTORE = IMPORT(g.BP_MEMSTORE);
     /** @import-module-begin */
-    var MOD_CONNECT = IMPORT(BP_MOD_CONNECT);
+    var BP_CONNECT = IMPORT(g.BP_CONNECT);
     /** @import-module-begin */
-    m = IMPORT(BP_MOD_ERROR);
-    var BPError = IMPORT(m.BPError);
+    m = IMPORT(g.BP_ERROR);
+    var BP_ERROR = IMPORT(m),
+        BPError = IMPORT(m.BPError);
     /** @import-module-end **/ m = null;
     
     /** @globals-begin */
@@ -58,57 +72,57 @@ var BP_MOD_MANAGE = (function ()
     
     function createDB (dbName, dbDir, callbackFunc)
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
+        rpcToMothership({cm: BP_CONNECT.cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
     }
 
     function loadDB (dbPath, callbackFunc)
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_loadDB, dbPath:dbPath}, callbackFunc);
+        rpcToMothership({cm: BP_CONNECT.cm_loadDB, dbPath:dbPath}, callbackFunc);
     }
 
     function mergeInDB (dbPath, callbackFunc)
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_mergeInDB, dbPath:dbPath}, callbackFunc);
+        rpcToMothership({cm: BP_CONNECT.cm_mergeInDB, dbPath:dbPath}, callbackFunc);
     }
 
     function mergeDB (dbPath, callbackFunc)
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_mergeDB, dbPath:dbPath}, callbackFunc);
+        rpcToMothership({cm: BP_CONNECT.cm_mergeDB, dbPath:dbPath}, callbackFunc);
     }
 
     function mergeOutDB (dbPath, callbackFunc)
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_mergeOutDB, dbPath:dbPath}, callbackFunc);
+        rpcToMothership({cm: BP_CONNECT.cm_mergeOutDB, dbPath:dbPath}, callbackFunc);
     }
 
     function compactDB (callbackFunc)
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_compactDB}, callbackFunc);
+        rpcToMothership({cm: BP_CONNECT.cm_compactDB}, callbackFunc);
     }
 
     function cleanDB (callbackFunc)
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_cleanDB}, callbackFunc);
+        rpcToMothership({cm: BP_CONNECT.cm_cleanDB}, callbackFunc);
     }
 
     function importCSV (dbPath, obfuscated, callbackFunc)
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
+        rpcToMothership({cm: BP_CONNECT.cm_importCSV, dbPath:dbPath, obfuscated: obfuscated}, callbackFunc);
     }
 
     function exportCSV (dirPath, obfuscated, callbackFunc)
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_exportCSV, dirPath:dirPath, obfuscated: obfuscated}, callbackFunc);
+        rpcToMothership({cm: BP_CONNECT.cm_exportCSV, dirPath:dirPath, obfuscated: obfuscated}, callbackFunc);
     }
     
     function unloadDB(cback) 
     {
-        rpcToMothership({cm: MOD_CONNECT.cm_unloadDB}, cback);
+        rpcToMothership({cm: BP_CONNECT.cm_unloadDB}, cback);
     }
     
     function getDB(dt, cback)
     {
-        //rpcToMothership({cm: MOD_CONNECT.cm_getDB, dt:dt}, cback);
+        //rpcToMothership({cm: BP_CONNECT.cm_getDB, dt:dt}, cback);
     }
     
     // function fillOptions(eid, dir)
@@ -129,7 +143,7 @@ var BP_MOD_MANAGE = (function ()
     function callbackHandleError (resp)
     {
         if (resp.result===false) {
-            BP_MOD_ERROR.alert(resp.err);
+            BP_ERROR.alert(resp.err);
         }
     }
     
@@ -233,10 +247,10 @@ var BP_MOD_MANAGE = (function ()
             //MEMSTORE.putDB(dB, dt_pRecord);
             
             var ctx = {dnIt:MEMSTORE.newDNodeIterator(dt_pRecord), dt:dt_pRecord},
-                editor = BP_MOD_W$.w$exec(BP_MOD_EDITOR.EditorWdl_wdt, ctx),
+                editor = g.BP_W$.w$exec(g.BP_EDITOR.EditorWdl_wdt, ctx),
                 temp;
             
-            MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
+            BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
             if (g_editor) {
                 g_editor.replaceWith(editor);
                 temp = g_editor;    
@@ -256,7 +270,7 @@ var BP_MOD_MANAGE = (function ()
     
     function onload()
     {              
-        MOD_CONNECT.getDBPath(function(resp)
+        BP_CONNECT.getDBPath(function(resp)
         {
             updateDash(resp);
         });
@@ -305,7 +319,7 @@ var BP_MOD_MANAGE = (function ()
                 {
                     if (resp.result === true) 
                     {
-                        BP_MOD_ERROR.success('Imported passwords from ' + o.path);
+                        BP_ERROR.success('Imported passwords from ' + o.path);
                     }
                     else {
                         callbackHandleError(resp);
@@ -332,7 +346,7 @@ var BP_MOD_MANAGE = (function ()
                     var msg;
                     if (resp.result === true) 
                     {
-                        BP_MOD_ERROR.success('Exported to files ' + resp.fnames.join(","));
+                        BP_ERROR.success('Exported to files ' + resp.fnames.join(","));
                     }
                     else {
                         callbackHandleError(resp);
@@ -354,7 +368,7 @@ var BP_MOD_MANAGE = (function ()
                 if (resp.result === true) 
                 {
                     updateDash(resp);
-                    BP_MOD_ERROR.success('UWallet has been compacted: ' + resp.dbPath);
+                    BP_ERROR.success('UWallet has been compacted: ' + resp.dbPath);
                 }
                 else {
                     callbackHandleError(resp);
@@ -371,7 +385,7 @@ var BP_MOD_MANAGE = (function ()
                 if (resp.result === true) 
                 {
                     updateDash(resp);
-                    BP_MOD_ERROR.success('UWallet has been cleaned: ' + resp.dbPath);
+                    BP_ERROR.success('UWallet has been cleaned: ' + resp.dbPath);
                 }
                 else {
                     callbackHandleError(resp);
@@ -391,7 +405,7 @@ var BP_MOD_MANAGE = (function ()
                 mergeInDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
-                        BP_MOD_ERROR.success('Merged In password wallet at ' + o.path);
+                        BP_ERROR.success('Merged In password wallet at ' + o.path);
                     }
                     else {
                         callbackHandleError(resp);
@@ -414,7 +428,7 @@ var BP_MOD_MANAGE = (function ()
                 mergeDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
-                        BP_MOD_ERROR.success('Merged with password wallet at ' + o.path);
+                        BP_ERROR.success('Merged with password wallet at ' + o.path);
                     }
                     else {
                         callbackHandleError(resp);
@@ -437,7 +451,7 @@ var BP_MOD_MANAGE = (function ()
                 mergeOutDB(o.path, function (resp)
                 {
                     if (resp.result === true) {
-                        BP_MOD_ERROR.success('Merged out to password wallet at ' + o.path);
+                        BP_ERROR.success('Merged out to password wallet at ' + o.path);
                     }
                     else {
                         callbackHandleError(resp);
@@ -467,7 +481,7 @@ var BP_MOD_MANAGE = (function ()
                         if (id === 'dbChooseLoad2') {
                             reloadEditor();
                         }
-                        BP_MOD_ERROR.success('Opened password wallet at ' + resp.dbPath);
+                        BP_ERROR.success('Opened password wallet at ' + resp.dbPath);
                     }
                     else {
                         callbackHandleError(resp);
@@ -485,7 +499,7 @@ var BP_MOD_MANAGE = (function ()
         {
             var dbName = $('#dbName').val();
             if (!dbName) {
-                BP_MOD_ERROR.alert("Please first enter a name for the new Wallet");
+                BP_ERROR.alert("Please first enter a name for the new Wallet");
                 return;
             }
             var o={dtitle:"BPrivy: Select a Folder to contain the Wallet",
@@ -497,7 +511,7 @@ var BP_MOD_MANAGE = (function ()
                 {
                     if (resp.result === true) {
                         updateDash(resp);
-                        BP_MOD_ERROR.success('Password store created at ' + resp.dbPath);
+                        BP_ERROR.success('Password store created at ' + resp.dbPath);
                     }
                     else {
                         callbackHandleError(resp);
@@ -542,7 +556,7 @@ var BP_MOD_MANAGE = (function ()
                     if (id === 'dbClose2') {
                         clearEditor();
                     }
-                    BP_MOD_ERROR.success('UWallet has been closed');
+                    BP_ERROR.success('UWallet has been closed');
                 }
                 else 
                 {
@@ -567,14 +581,14 @@ var BP_MOD_MANAGE = (function ()
             e.stopPropagation();
             if (g_dbName) {
                 site = $('#dnSearch').val();
-                if (!site){
-                    BP_MOD_ERROR.alert("Please enter a web-site first");
+                if (!site) {
+                    BP_ERROR.alert("Please enter a web-site first");
                 }
                 else 
                 {
                     show=g_editor.filter(site);
                      if (!show.length) {
-                        g_editor.newRecord(site);
+                        g_editor.newDNode(site);
                     }
                     else {
                         show.focus();
@@ -582,7 +596,7 @@ var BP_MOD_MANAGE = (function ()
                 }
             }
             else {
-                BP_MOD_ERROR.alert("Please open a wallet first");
+                BP_ERROR.alert("Please open a wallet first");
             }
         });
         
@@ -602,8 +616,8 @@ var BP_MOD_MANAGE = (function ()
     var iface = {};
     Object.defineProperties(iface, 
     {
-//        fillOptions: {value: fillOptions},
-        onload: {value: onload}
+        onload: {value: onload},
+        g: {value: g}
     });
     Object.freeze(iface);
 
@@ -617,10 +631,11 @@ function bpPluginLoaded ()
   console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
 }        
 
-// $(document).ready(function (e)BP_MOD_CS_PLAT.addEventListener(window, 'load', function(e)
+// $(document).ready(function (e)
+BP_MANAGE.g.BP_CS_PLAT.addEventListener(window, 'load', function(e)
 { "use strict";
   bpPluginLoaded();
-  BP_MOD_DBFS.init();
-  BP_MOD_MANAGE.onload();
+  BP_MANAGE.g.BP_DBFS.init();
+  BP_MANAGE.onload();
   console.log("inited mod_manage");
 });

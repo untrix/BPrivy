@@ -1,6 +1,6 @@
 /**
  * @preserve 
- * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
  */
@@ -10,22 +10,38 @@
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
-var BP_MOD_ERROR = BP_GET_ERROR(window),
-    BP_MOD_COMMON = BP_GET_COMMON(window),
-    BP_MOD_TRAITS = BP_GET_TRAITS(window),
-    BP_MOD_CS_PLAT = BP_GET_CS_PLAT(window),
-    BP_MOD_CONNECT = BP_GET_CONNECT(window),
-    BP_MOD_W$ = BP_GET_W$(window),
-    BP_MOD_WDL = BP_GET_WDL(window);
+//////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE OR GLOBAL ///////////////////
+function IMPORT(sym)
+{
+    'use strict';
+    var window = null, document = null, console = null;
+    if(sym===undefined || sym===null) {
+        throw new ReferenceError("Linker:Symbol Not Found");
+    }
+    else {
+        return sym;
+    }
+}
+
 
 (function(g_win)
 {
     'use strict';
-    var window = null, document = null;
+    var g = {g_win:g_win, g_console:console},
+        window = null, document = null;
+    
+    g.BP_ERROR = BP_GET_ERROR(g);
+    g.BP_COMMON = BP_GET_COMMON(g);
+    g.BP_TRAITS = BP_GET_TRAITS(g);
+    g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
+    g.BP_CONNECT = BP_GET_CONNECT(g);
+    g.BP_W$ = BP_GET_W$(g);
+    g.BP_WDL = BP_GET_WDL(g);
+    
     var m;
     /** @import-module-begin Common */
-    m = BP_MOD_COMMON;
-    var MOD_COMMON = IMPORT(m),
+    m = g.BP_COMMON;
+    var BP_COMMON = IMPORT(m),
         iterArray2 = IMPORT(m.iterArray2),
         indexOf = IMPORT(m.indexOf),
         encrypt = IMPORT(m.encrypt),
@@ -33,13 +49,13 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
         stopPropagation = IMPORT(m.stopPropagation),
         preventDefault = IMPORT(m.preventDefault);
     /** @import-module-begin CSPlatform */
-    m = BP_MOD_CS_PLAT;
+    m = g.BP_CS_PLAT;
     var registerMsgListener = IMPORT(m.registerMsgListener);
     var addEventListener = IMPORT(m.addEventListener), // Compatibility function
         addEventListeners = IMPORT(m.addEventListeners),
         trigger = IMPORT(m.trigger);
     /** @import-module-begin Traits */
-    m = IMPORT(BP_MOD_TRAITS);
+    m = IMPORT(g.BP_TRAITS);
     var RecsIterator = IMPORT(m.RecsIterator),
         dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord),
@@ -54,23 +70,24 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
         CT_BP_USERID = IMPORT(m.CT_BP_USERID),
         CT_BP_PASS = IMPORT(m.CT_BP_PASS);        // Submit button
     /** @import-module-begin Connector */
-    m = BP_MOD_CONNECT;
+    m = g.BP_CONNECT;
     var getRecs = IMPORT(m.getRecs),
         newERecord = IMPORT(m.newERecord),
         newPRecord = IMPORT(m.newPRecord),
         panelClosed = IMPORT(m.panelClosed);
     /** @import-module-begin */
-    m = BP_MOD_WDL;
+    m = g.BP_WDL;
     var cs_panel_wdt = IMPORT(m.cs_panel_wdt),
         MiniDB = IMPORT(m.MiniDB);
     /** @import-module-begin W$ */
-        m = IMPORT(BP_MOD_W$);
+        m = IMPORT(g.BP_W$);
     var w$exec = IMPORT(m.w$exec),
         w$get = IMPORT(m.w$get),
         w$set = IMPORT(m.w$set);
     /** @import-module-begin Error */
-    m = BP_MOD_ERROR;
-    var BPError = IMPORT(m.BPError);
+    m = g.BP_ERROR;
+    var BP_ERROR = IMPORT(m),
+        BPError = IMPORT(m.BPError);
     /** @import-module-end **/ m = null;
     
     /** @globals-begin */
@@ -162,9 +179,9 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
         //
         FormInfo.onSubmit = function(ev)
         {
-            BP_MOD_ERROR.logdebug("FormInfo.onSubmit invoked");
+            BP_ERROR.logdebug("FormInfo.onSubmit invoked");
             if (ev.currentTarget!==ev.target) {
-                BP_MOD_ERROR.log("FormInfo.onSubmit: current target and target are different");
+                BP_ERROR.log("FormInfo.onSubmit: current target and target are different");
             }
             var fInfo = $(ev.target).data(data_finfo);
             if (fInfo) {
@@ -173,9 +190,9 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
         };
         FormInfo.onClick = function(ev)
         {
-            BP_MOD_ERROR.log("FormInfo.onClick event received");
+            BP_ERROR.log("FormInfo.onClick event received");
             if (ev.currentTarget!==ev.target) {
-                BP_MOD_ERROR.log("onClick: current target and target are different");
+                BP_ERROR.log("onClick: current target and target are different");
             }
         };
         FormInfo.onMousedown = function(ev)
@@ -183,9 +200,9 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
             if (ev.button!==0) {
                 return;
             }
-            BP_MOD_ERROR.log("FormInfo.onMousedown: Primary Mouse Button Depressed");
+            BP_ERROR.log("FormInfo.onMousedown: Primary Mouse Button Depressed");
             if (ev.currentTarget!==ev.target) {
-                BP_MOD_ERROR.log("onMousedown: current target and target are different");
+                BP_ERROR.log("onMousedown: current target and target are different");
             }
         };
         FormInfo.isSubmitEl = function (el)
@@ -201,7 +218,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
         //
         FormInfo.prototype.submit = function (c)
         {
-            BP_MOD_ERROR.logdebug("FormInfo.prototype.submit invoked with c = " + c);
+            BP_ERROR.logdebug("FormInfo.prototype.submit invoked with c = " + c);
             var pair = this.getVals(c);
             if (pair) 
             {
@@ -357,7 +374,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
                 }
                 
                 if (!this.cntnr) {
-                    BP_MOD_ERROR.logwarn("Could not find a form-container");
+                    BP_ERROR.logwarn("Could not find a form-container");
                     this.cntnr = g_doc.body || g_doc.documentElement || g_doc; // just to prevent referencing errors.
                 }
             }
@@ -636,7 +653,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
         {
             var i, n, cmp, done=false, rInfo;
             if (!fInfo.form) {
-                throw BP_MOD_ERROR.BPError("fInfo insert attempted without a form", "Diag", "InternalError");
+                throw BP_ERROR.BPError("fInfo insert attempted without a form", "Diag", "InternalError");
             }
             for (i=0, n=this._a.length-1; i<n; i++) 
             {
@@ -871,9 +888,9 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
         {
             this.signin.clear();
             this.signup.clear();
-            BP_MOD_COMMON.delProps(this.scraped);
+            BP_COMMON.delProps(this.scraped);
             this.scraped.all = new Forms();
-            BP_MOD_COMMON.delProps(this.k);
+            BP_COMMON.delProps(this.k);
             this.k.bScanned = false;
         };
         FillInfo.prototype.clearAssignment = function ()
@@ -955,7 +972,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
 
         function onSubmit(ev) // target is a form element.
         {
-            BP_MOD_ERROR.logdebug("onSubmit invoked");
+            BP_ERROR.logdebug("onSubmit invoked");
             if (!g_mutationScanned) {scan();}
 
             var form = ev.target, fInfo;
@@ -986,7 +1003,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
 
             cnfdnc=FormInfo.isSubmitEl(el);
             if (cnfdnc) {
-                BP_MOD_ERROR.logdebug("onClick invoking fInfo.submit");
+                BP_ERROR.logdebug("onClick invoking fInfo.submit");
                 fInfo = $(el).data(data_finfo);
                 //fInfo = m_info.getClicked(ev);
                 if (!fInfo) { return; }
@@ -1003,14 +1020,14 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
             var fInfo = $(ev.target).data(data_finfo); // should be an input element.
             
             if (fInfo) {
-                BP_MOD_ERROR.logdebug("onEnter invoking fInfo.submit");
+                BP_ERROR.logdebug("onEnter invoking fInfo.submit");
                 fInfo.submit(5);
             }
         }
 
         function onChange(ev)
         {
-            BP_MOD_ERROR.logdebug("onChange entered");
+            BP_ERROR.logdebug("onChange entered");
             var $this = $(ev.target),//.closest('input'),
                 fInfo = $this.data(data_finfo),
                 fn, pair, 
@@ -1893,7 +1910,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
         function scanKnowledge(ctxEl)
         {
             var i, j, l, uEl, uEl2, pEl, pEl2, eRecsMap, uer, per, uer2, per2;
-                //loc = BP_MOD_CONNECT.newL(g_loc, dt_eRecord);
+                //loc = BP_CONNECT.newL(g_loc, dt_eRecord);
             
             if (MOD_DB.eRecsMapArray.length)
             {
@@ -2075,7 +2092,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
         {
             if (!g_bInited) {try
             {
-                BP_MOD_BOOT.observe(g_doc, MOD_CS.onMutation, {bRemoved:true});
+                BP_BOOT.observe(g_doc, MOD_CS.onMutation, {bRemoved:true});
                 addEventListener(g_doc, 'change', onChange);
                 addEventListener(g_doc, 'keydown', onEnter);
                 //addEventListener(g_doc, 'click', onClick);
@@ -2084,7 +2101,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
             }
             catch (ex)
             {
-                BP_MOD_ERROR.logwarn(ex);
+                BP_ERROR.logwarn(ex);
             }}
         }
         
@@ -2276,12 +2293,12 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
             if (!g_bInited) {try
             {
                 setupDNDWatchers();
-                BP_MOD_BOOT.observe(g_doc, onMutation, {tagName:'input', filterMutes:true});
+                BP_BOOT.observe(g_doc, onMutation, {tagName:'input', filterMutes:true});
                 g_bInited=true;
             }
             catch (ex)
             {
-                BP_MOD_ERROR.logwarn(ex);
+                BP_ERROR.logwarn(ex);
             }}
         }
         
@@ -2351,7 +2368,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
             };
             m_panel = w$exec(cs_panel_wdt, ctx);
             m_id_panel = m_panel.id;
-            MOD_COMMON.delProps(ctx); // Clear DOM refs in the ctx to aid GC
+            BP_COMMON.delProps(ctx); // Clear DOM refs in the ctx to aid GC
         }
         
         function get() {return m_panel;}
@@ -2396,25 +2413,25 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
                         MOD_DB.ingest(resp.db, resp.dbInfo);
                     } 
                     catch (err) {
-                        BP_MOD_ERROR.logwarn(err);
+                        BP_ERROR.logwarn(err);
                     }
                 }
                 else 
                 {
                     MOD_DB.clear(); // Just to be on the safe side
-                    BP_MOD_ERROR.logdebug(resp.err);
+                    BP_ERROR.logdebug(resp.err);
                 }
     
                 try { // failure here shouldn't block rest of the call-flow 
                     MOD_FILL.scan();
                 }
                 catch (err) {
-                    BP_MOD_ERROR.logwarn(err);
+                    BP_ERROR.logwarn(err);
                 }
             }
             catch (err) 
             {
-                BP_MOD_ERROR.logwarn(err);
+                BP_ERROR.logwarn(err);
             }
 
             //if ((!bConditional) || MOD_FILL.info().autoFillable() || MOD_DB.numUnsaved) {
@@ -2461,15 +2478,6 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
         }
 
         /**
-         * Invoked upon receipt of a click message from bp_main.
-         */
-        function onClickBP (request, _ /*sender*/, sendResponse)
-        {
-            onClickComm();
-            if (sendResponse) {sendResponse({ack:true});}
-        }
-    
-        /**
          * Invoked when bp-command is activated.
          */
         function onClickComm (/*ev*/)
@@ -2484,6 +2492,15 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
             }
         }
         
+        /**
+         * Invoked upon receipt of a click message from bp_main.
+         */
+        function onClickBP (request, _ /*sender*/, sendResponse)
+        {
+            onClickComm();
+            if (sendResponse) {sendResponse({ack:true});}
+        }
+    
         function setupCommand(doc, func)
         {
             var com = doc.getElementById("com-untrix-uwallet-click");
@@ -2504,7 +2521,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
 
         function saveRec (rec, dt, callbackFunc, toTemp)
         {
-            var func = toTemp ? BP_MOD_CONNECT.saveTempRec : BP_MOD_CONNECT.saveRecord;
+            var func = toTemp ? g.BP_CONNECT.saveTempRec : g.BP_CONNECT.saveRecord;
             // We could cache non-TRecs records as well but not needed by use-cases right now
             if (toTemp) {MOD_DB.saveTRec(rec);} // We could do this for non-TRecs as well...
             func(rec, dt, function(resp)
@@ -2524,7 +2541,7 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
             // We could cache non-TRecs records as well but that's not needed by use-cases
             // right now
             if (toTemp) {MOD_DB.delTRec(rec);}
-            BP_MOD_CONNECT.sendDelActn(rec, dt, function(resp)
+            g.BP_CONNECT.sendDelActn(rec, dt, function(resp)
             {
                 if (resp.result && resp.recs) {
                     if (!toTemp) {MOD_DB.ingestDT(resp.recs, dt);}
@@ -2536,15 +2553,6 @@ var BP_MOD_ERROR = BP_GET_ERROR(window),
             }, false, toTemp);
         }
 
-        /**
-         * var BP_MOD_ERROR,
-    BP_MOD_COMMON,
-    BP_MOD_TRAITS,
-    BP_MOD_CS_PLAT,
-    BP_MOD_CONNECT,
-    BP_MOD_W$,
-    BP_MOD_WDL; 
-         */
         function main()
         {
             registerMsgListener(onClickBP);

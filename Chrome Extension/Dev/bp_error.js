@@ -2,29 +2,19 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * @copyright Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 /* Global declaration for JSLint */
-/*global com_untrix_bp_loaded */
+/*global */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
-//////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE ///////////////////
-function IMPORT(sym)
+function BP_GET_ERROR(g)
 {
     'use strict';
-    if(sym===undefined || sym===null) {
-        throw new ReferenceError("Linker:Symbol Not Found");
-    }
-    else {
-        return sym;
-    }
-}
-
-function BP_GET_ERROR(g_win)
-{
-    'use strict';
-    var window = null, document = null;
+    var window = null, document = null, console = null,
+        g_win = g.g_win,
+        g_console = g.g_console;
 
    /** @begin-class-def BPError
     o: {//Object returned by the plugin
@@ -257,12 +247,11 @@ function BP_GET_ERROR(g_win)
         }
         BPError.atvt.push(actn);
     };
-
     
     function alert (arg)
     {
         var be = new BPError(arg);
-        console.log(be.toString());
+        g_console.log(be.toString());
         g_win.alert(be.message || "Something went wrong :(");
     }
     
@@ -274,17 +263,17 @@ function BP_GET_ERROR(g_win)
     function log (arg)
     {
         var be = new BPError(arg);
-        console.log(be.toString());
+        g_console.log(be.toString());
     }
     
     function logwarn (arg)
     {
         var be = new BPError(arg);
         if (be.err.acode === 'Unsupported') {
-            console.log(be.toString());
+            g_console.log(be.toString());
         }
         else {
-            console.log(be.toString());
+            g_console.log(be.toString());
         }
     }
     
@@ -302,7 +291,7 @@ function BP_GET_ERROR(g_win)
         msg: msg
     };
     Object.freeze(iface);
-    console.log("constructed mod_error");
+    g_console.log("constructed mod_error");
     return iface;
     /** @end-class-def BPError **/
 }

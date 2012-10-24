@@ -2,21 +2,26 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * @copyright Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
 /* JSLint directives */
-/*global chrome, BP_MOD_ERROR, BP_MOD_COMMON  */
+/*global chrome, IMPORT */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
 /**
  * @ModuleBegin GoogleChrome
  */
-function BP_GET_PLAT() 
+function BP_GET_PLAT(gg) 
 {
     "use strict";
-    var window = null, document = null;
+    var window = null, document = null, console = null;
+        
+    /** @import-module-begin */
+    var BP_ERROR = IMPORT(gg.BP_ERROR),
+        BP_COMMON = IMPORT(gg.BP_COMMON);
+    /** @import-module-end **/
     
     var g = {contextMenuID: null, mW: null},
         MOD_WIN, 
@@ -34,12 +39,12 @@ function BP_GET_PLAT()
         {
             if (!resp) 
             { // Set badge text
-                switch (BP_MOD_COMMON.getScheme(tab.url))
+                switch (BP_COMMON.getScheme(tab.url))
                 {
                     case "file:":
                         chrome.browserAction.setBadgeText({text:"oops", tabId:tab.id});
                         chrome.browserAction.setTitle({title:"User Blocked", tabId:tab.id});
-                        BP_MOD_ERROR.alert("You have blocked BPrivy from accessing files. "+
+                        BP_ERROR.alert("You have blocked BPrivy from accessing files. "+
                         "Please 1) change the setting on 'Manage Extensions' page, then 2) reload the page");
                         break;
                     default:
@@ -78,7 +83,7 @@ function BP_GET_PLAT()
         if (info.menuItemId === g.contextMenuID)
         {
             bpClick(tab, info.frameUrl);
-            //console.info("BPMenuItem was clicked on page " + info.pageUrl);
+            //BP_ERROR.loginfo("BPMenuItem was clicked on page " + info.pageUrl);
             // chrome.tabs.insertCSS(tab.id, CSS_INJECT_DETAILS, function()
             // {
                 // chrome.tabs.executeScript(tab.id, JS_INJECT_DETAILS, function()
@@ -94,14 +99,14 @@ function BP_GET_PLAT()
         var menuProperties = {"type": "normal", "title": "BPrivy", "contexts": ["all"], 
                               "onclick": bpMenuClick/*, "documentUrlPatterns": document.url*/};
         var menu_id = chrome.contextMenus.create(menuProperties);
-        //console.info("Menu Item ID " + menu_id + " Created");
+        //BP_ERROR.loginfo("Menu Item ID " + menu_id + " Created");
     
         chrome.browserAction.onClicked.addListener(bpClick);
         chrome.pageAction.onClicked.addListener(bpClick);
        
         g.contextMenuID = menu_id;
         MOD_WIN = mod_win;
-        //console.info("Menu Item ID = " + g.contextMenuID);
+        //BP_ERROR.loginfo("Menu Item ID = " + g.contextMenuID);
     }
 
     var module =
@@ -119,6 +124,6 @@ function BP_GET_PLAT()
     };
     
     Object.seal(module);
-    console.log("constructed mod_main_plat");
+    BP_ERROR.log("constructed mod_main_plat");
     return module;
 }

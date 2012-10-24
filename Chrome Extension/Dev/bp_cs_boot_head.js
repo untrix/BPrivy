@@ -11,7 +11,7 @@
   regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true */
 
 var BP_DLL = {};
-var BP_MOD_BOOT = (function()
+var BP_BOOT = (function()
 {   "use strict";
     var g_uSel = 'input[type="text"],input:not([type]),input[type="email"],input[type="tel"],input[type="number"]',
         g_uReg2= /(log|sign)(in|on)|signup|(user|account)(id|name|number|email)|^(id|user|uid|uname)$|identity|authentication/i,

@@ -2,21 +2,23 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * @copyright Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 /* Global declaration for JSLint */
-/*global IMPORT */
+/*global */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
  
 //////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE ///////////////////
-function BP_GET_COMMON(g_win) 
+function BP_GET_COMMON(g) 
 {
-    "use strict"; // TODO: @remove Only used in debug builds
+    "use strict";
     
     /** @globals-begin */      
-    var window = null, document = null,
+    var window = null, document = null, console = null,
+        g_win = g.g_win,
         g_doc = g_win.document,
+        BP_ERROR = g.BP_ERROR,
         CSS_HIDDEN = "com-bprivy-hidden";
     /** 
      * Tagname for dt_eRecords in the in-memory and file stores.
@@ -120,14 +122,14 @@ function BP_GET_COMMON(g_win)
 
     function preventDefault (ev)
     {
-        console.log("pd invoked");
+        BP_ERROR.log("pd invoked");
         ev.preventDefault();
         return false;
     }
     
     function stopPropagation(ev)
     {
-        //console.info("stopPropagation invoked");
+        //BP_ERROR.loginfo("stopPropagation invoked");
         ev.stopPropagation();
     }
     
@@ -313,7 +315,7 @@ function BP_GET_COMMON(g_win)
     });
     Object.freeze(iface);
 
-    console.log("constructed mod_common");
+    BP_ERROR.log("constructed mod_common");
     return iface;
         
 }
@@ -349,7 +351,7 @@ function BP_GET_COMMON(g_win)
     // function isFrameVisible(frame)
     // {
         // var retval = true;
-        // console.info("Entered IsFrameVisible");
+        // BP_ERROR.loginfo("Entered IsFrameVisible");
         // if (frame.hidden) {
             // retval = false;
         // }
@@ -366,7 +368,7 @@ function BP_GET_COMMON(g_win)
             // }
         // }
 // 
-        // console.info("Exiting IsFrameVisible");
+        // BP_ERROR.loginfo("Exiting IsFrameVisible");
         // return retval;
     // }
 

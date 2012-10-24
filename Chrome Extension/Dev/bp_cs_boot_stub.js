@@ -17,15 +17,15 @@
  */
 
 chrome.extension.sendRequest({cm:'cm_bootLoaded'});
-if (BP_MOD_BOOT.scan(document)) 
+if (BP_BOOT.scan(document)) 
 {
     BP_DLL.onDllLoad();
 }
 else 
 {
-    BP_MOD_BOOT.observe(document, function(mutations,observer)
+    BP_BOOT.observe(document, function(mutations,observer)
     {
-        if ((!BP_DLL.bLoaded) && BP_MOD_BOOT.scan(document)) {
+        if ((!BP_DLL.bLoaded) && BP_BOOT.scan(document)) {
             observer.disconnect();
             BP_DLL.onDllLoad();
             BP_DLL.bLoaded = true;

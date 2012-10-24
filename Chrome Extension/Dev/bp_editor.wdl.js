@@ -2,13 +2,12 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
 /* JSLint directives */
 
-/*global $, console, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_W$, BP_MOD_TRAITS, BP_MOD_WDL, chrome */
+/*global $, IMPORT */
 
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -16,15 +15,15 @@
 /**
  * @ModuleBegin EDITOR
  */
-function BP_GET_EDITOR(g_win)
+function BP_GET_EDITOR(g)
 {
     "use strict";
-    var window = null, document = null,
-        g_doc = g_win.document;
+    var window = null, document = null, console = null,
+        g_doc = g.g_win.document;
 
     var m;
     /** @import-module-begin Common */
-    m = BP_MOD_COMMON;
+    m = g.BP_COMMON;
     var MOD_COMMON = IMPORT(m),
         encrypt = IMPORT(m.encrypt),
         decrypt = IMPORT(m.decrypt),
@@ -32,28 +31,30 @@ function BP_GET_EDITOR(g_win)
         preventDefault = IMPORT(m.preventDefault),
         newInherited = IMPORT(m.newInherited);
     /** @import-module-begin W$ */
-    m = IMPORT(BP_MOD_W$);
+    m = IMPORT(g.BP_W$);
     var w$exec = IMPORT(m.w$exec),
         w$defineProto = IMPORT(m.w$defineProto),
         Widget = IMPORT(m.Widget),
         w$undefined = IMPORT(m.w$undefined);
     /** @import-module-begin CSPlatform */
-    m = BP_MOD_CS_PLAT;
+    m = g.BP_CS_PLAT;
     var getURL = IMPORT(m.getURL),
         addHandlers = IMPORT(m.addHandlers), // Compatibility function
         rpcToMothership = IMPORT(m.rpcToMothership);
     /** @import-module-begin Connector */
-    m = BP_MOD_CONNECT;
-    var newPRecord = IMPORT(m.newPRecord),
+    m = g.BP_CONNECT;
+    var MOD_CONNECT = IMPORT(m),
+        newPRecord = IMPORT(m.newPRecord),
         saveRecord = IMPORT(m.saveRecord),
         cm_getDN = IMPORT(m.cm_getDN),
         cm_getDomn = IMPORT(m.cm_getDomn),
         newL = IMPORT(m.newL);
     /** @import-module-begin Error */
-    m = BP_MOD_ERROR;
-    var BPError = IMPORT(m.BPError);
+    m = g.BP_ERROR;
+    var BP_ERROR = IMPORT(m),
+        BPError = IMPORT(m.BPError);
     /** @import-module-begin */
-    m = BP_MOD_TRAITS;
+    m = g.BP_TRAITS;
     var MOD_TRAITS = IMPORT(m),
         UI_TRAITS = IMPORT(m.UI_TRAITS),
         fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
@@ -67,8 +68,7 @@ function BP_GET_EDITOR(g_win)
         CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX);
 
     /** @import-module-begin */
-    var BP_MOD_MEMSTORE = chrome.extension.getBackgroundPage().BP_MOD_MEMSTORE;
-    m = IMPORT(BP_MOD_MEMSTORE);
+    m = IMPORT(g.BP_MEMSTORE);
     var MEMSTORE = IMPORT(m),
         DNODE_TAG = IMPORT(m.DNODE_TAG),
         DNProto = IMPORT(m.DNProto);
@@ -77,16 +77,18 @@ function BP_GET_EDITOR(g_win)
     function callbackHandleError (resp)
     {
         if (resp.result===false) {
-            BP_MOD_ERROR.alert(resp.err);
+            BP_ERROR.alert(resp.err);
         }
     }
     function getDNode(l, dt, cback)
     {
-        rpcToMothership({cm:cm_getDN, l:l, dt:dt}, cback);
+        //rpcToMothership({cm:cm_getDN, l:l, dt:dt}, cback);
+        cback({result:true, dN:MEMSTORE.getDNode(l, dt)});
     }
     function getDomain(loc, cback)
     {
-        rpcToMothership({cm:cm_getDomn, loc:loc}, cback);
+        //rpcToMothership({cm:cm_getDomn, loc:loc}, cback);
+        cback ({result:true, domn:MEMSTORE.MOD_ETLD.getDomain(loc)});
     }
     
     function image_wdt(ctx)
@@ -102,7 +104,7 @@ function BP_GET_EDITOR(g_win)
     {
         var loc = ctx.loc,
             host = loc.hostname,
-            i = ctx.editor ? ++(ctx.editor.i): undefined;
+            i = ctx.panel ? ctx.panel.dNIdx : undefined; //ctx.editor ? ++(ctx.editor.i): undefined
         return {
             tag:'a',
             attr:{ href:"http://"+host, target:"_blank" },
@@ -320,9 +322,9 @@ function BP_GET_EDITOR(g_win)
     {
         onsubmit: {value: function(e)
         {
-            console.log("NewRecord.onsubmit invoked");
+            BP_ERROR.log("NewRecord.onsubmit invoked");
             var loc = MOD_COMMON.parseURL($(this.urlF.el).val());
-            console.log("NewRecord.onsubmit: url=" + JSON.stringify(loc));
+            BP_ERROR.log("NewRecord.onsubmit: url=" + JSON.stringify(loc));
             e.stopPropagation();
             e.preventDefault();// Prevents default action and causes event to get cancelled if cancellable
             this.destroy();
@@ -429,7 +431,7 @@ function BP_GET_EDITOR(g_win)
                     oRec = ioItem.rec;
                     ioItem.rec = pRec;
                     if (oU && (nU !== oU)) {
-                        BP_MOD_CONNECT.sendDelActn(oRec, dt_pRecord, function(r){callback(resp);}, true);
+                        MOD_CONNECT.sendDelActn(oRec, dt_pRecord, function(r){callback(resp);}, true);
                     }
                     else {
                         callback(resp);
@@ -442,7 +444,7 @@ function BP_GET_EDITOR(g_win)
         }},
         onSubmit: {value: function(e)
         {
-            console.log("IITemP.onSubmit invoked");
+            BP_ERROR.log("IITemP.onSubmit invoked");
             this.tButton.toggle.apply(this.tButton,[e]);
             e.stopPropagation();
             e.preventDefault();
@@ -502,7 +504,7 @@ function BP_GET_EDITOR(g_win)
     {
         onDblClick: {value: function(e)
         {
-            console.log("OITemP.onDblClick invoked");
+            BP_ERROR.log("OITemP.onDblClick invoked");
             this.tButton.toggle.apply(this.tButton,[e]);
             e.stopPropagation();
             e.preventDefault();
@@ -566,7 +568,7 @@ function BP_GET_EDITOR(g_win)
                             self.panel.reload(true);
                         }
                         else {
-                            BP_MOD_ERROR.warn(resp.err);
+                            BP_ERROR.warn(resp.err);
                             self.panel.reload(true);
                         }
                     });
@@ -594,13 +596,13 @@ function BP_GET_EDITOR(g_win)
             function handleResp(resp)
             {
                 if (resp.result!==true) {
-                    BP_MOD_ERROR.warn(resp.err);
+                    BP_ERROR.warn(resp.err);
                 }
                 else {self.destroy();}
             }
             
             if (this.rec) {
-                BP_MOD_CONNECT.sendDelActn(this.rec, dt_pRecord, handleResp, true);
+                MOD_CONNECT.sendDelActn(this.rec, dt_pRecord, handleResp, true);
             }
             else {
                 self.destroy();
@@ -646,14 +648,16 @@ function BP_GET_EDITOR(g_win)
 
         var dNode = w$ctx.w$rec,
             dt = w$ctx.dt,
+            dNIdx = w$ctx.w$i,
             bOpen = w$ctx.bOpen,
+            emptyOk = w$ctx.emptyOk,
             recs, rIt, loc, H;
         
         recs = DNProto.getData.apply(dNode, [dt]);//dNode.getData(dt)
         // If this node has no data, then have it be skipped.    
         if (!recs) {return w$undefined;}        
-        rIt = new BP_MOD_TRAITS.RecsIterator(recs);
-        if (!rIt.num()) {return w$undefined;}
+        rIt = new MOD_TRAITS.RecsIterator(recs);
+        if ((!emptyOk) && (!rIt.num())) {return w$undefined;}
         
         loc = MOD_COMMON.parseURL('http://' + dNode[DNODE_TAG.URL]);
         H = loc.hostname;
@@ -668,7 +672,7 @@ function BP_GET_EDITOR(g_win)
         ctx:{ w$:{ panel:"w$el" }, loc:loc, it:rIt },// TODO: populate loc and rIt directly.
         // Copy props to the Wel object for future use.
         // NOTE: rIt references MEMSTORE indirectly.
-        iface:{ 'dt':dt, 'rIt':rIt, 'loc':loc,  w$:{ panel:"w$el" } },
+        iface:{ 'dt':dt, 'rIt':rIt, 'loc':loc,  w$:{ panel:"w$el" }, dNIdx:dNIdx },
 
             // Create children
             children:[
@@ -702,6 +706,7 @@ function BP_GET_EDITOR(g_win)
                 
                 var ctx = {
                         w$rec: resp.dN,
+                        w$i: self.dNIdx,
                         dt: self.dt,
                         bOpen: bOpen
                     },
@@ -712,7 +717,7 @@ function BP_GET_EDITOR(g_win)
                     }
                     self.destroy();
             });
-            console.log("DNode->reload invoked");
+            BP_ERROR.log("DNode->reload invoked");
         }},
         createList: {value: function()
         {
@@ -772,8 +777,7 @@ function BP_GET_EDITOR(g_win)
         onTarget:{ dragstart:EditorWdl.prototype.handleDragStart,
         drag:EditorWdl.prototype.handleDrag, 
         dragend:EditorWdl.prototype.handleDragEnd },
-        attr:{ id:BP_MOD_TRAITS.eid_pfx+'panel'},
-        iface:{ i:0 },
+        attr:{ id:MOD_TRAITS.eid_pfx+'panel'},
         ctx:{ w$:{ editor:'w$el' } },
             iterate:{ it:dnIt, wdi:DNodeWdl.wdi }
         };
@@ -786,7 +790,7 @@ function BP_GET_EDITOR(g_win)
             if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
                 return;
             }
-            //console.info("DragStartHandler entered");
+            //BP_ERROR.loginfo("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
             var data = this.value;
             if (this.fn === fn_pass) {
@@ -798,7 +802,7 @@ function BP_GET_EDITOR(g_win)
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
             e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon16.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
-            //console.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+            //BP_ERROR.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
             //return true;
         }},
         handleDrag: {value: function handleDrag(e)
@@ -806,7 +810,7 @@ function BP_GET_EDITOR(g_win)
             if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
                 return;
             }
-            //console.info("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //BP_ERROR.loginfo("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
             e.stopImmediatePropagation();
         }},
@@ -815,18 +819,18 @@ function BP_GET_EDITOR(g_win)
             if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
                 return;
             }
-            //console.info("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //BP_ERROR.loginfo("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //return true;
         }},
-        newRecord: {value: function(site)
+        newDNode: {value: function(site)
         {
             var loc = MOD_COMMON.parseURL('http://' + site),
                 self = this;
             getDomain(loc, function(resp)
             {
                 if (!resp.domn) {
-                    resp = BP_MOD_ERROR.confirm('Unrecognized website ['+site+']. Are you sure you want to proceed?');
+                    resp = BP_ERROR.confirm('Unrecognized website ['+site+']. Are you sure you want to proceed?');
                 }
                 
                 if (!resp) {return;}
@@ -837,7 +841,7 @@ function BP_GET_EDITOR(g_win)
                     
                 dNode.makeRecsMap(dt_pRecord);
                 
-                var wel = w$exec(DNodeWdl.wdi, {w$rec:dNode, dt:dt, bOpen:bOpen});
+                var wel = w$exec(DNodeWdl.wdi, {w$rec:dNode, dt:dt, bOpen:bOpen, emptyOk:true});
                 if (wel) {
                     self.prepend(wel);
                 }                
@@ -845,7 +849,7 @@ function BP_GET_EDITOR(g_win)
         }},
         filter: {value: function(site)
         {
-            //console.log("g_editor: filter invoked on " + site);
+            //BP_ERROR.log("g_editor: filter invoked on " + site);
             var $coll = $('.com-untrix-dnode', this.el),
                 $show = site ? $coll.filter('[id*="'+site+'"]') : $coll,
                 $hide = site ? $coll.not($show) : $();
@@ -857,7 +861,7 @@ function BP_GET_EDITOR(g_win)
         }}
     });
     
-    console.log("constructed mod_editor");
+    BP_ERROR.log("constructed mod_editor");
     return Object.freeze(
     {
         EditorWdl_wdt: EditorWdl.wdt

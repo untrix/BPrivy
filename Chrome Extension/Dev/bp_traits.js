@@ -2,29 +2,31 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
 /* JSLint directives */
-/*global $, console, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, BP_MOD_MEMSTORE */
+/*global IMPORT */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
 /**
  * @ModuleBegin Traits
  */
-function BP_GET_TRAITS()
+function BP_GET_TRAITS(g)
 {
     "use strict";
-    var window = null, document = null;
+    var window = null, document = null, console = null;
     //////////// HAVE DEPENDENCIES ON MOD_COMMON ONLY, NOTHING ELSE ///////////////////
     var m;
     /** @import-module-begin Common */
-    m = IMPORT(BP_MOD_COMMON);
-    var PROTO_HTTP = IMPORT(m.PROTO_HTTP),
+    m = IMPORT(g.BP_COMMON);
+    var MOD_COMMON = m,
+        PROTO_HTTP = IMPORT(m.PROTO_HTTP),
         PROTO_HTTPS = IMPORT(m.PROTO_HTTPS),
         newInherited=IMPORT(m.newInherited);
+    /** @import-module-begin Common */
+    var BP_ERROR = IMPORT(g.BP_ERROR);
     /** @import-module-end **/    m = null;
     
     /** @globals-begin */
@@ -145,7 +147,7 @@ function BP_GET_TRAITS()
     
     function RecsIterator (recsMap)
     {
-        var k = recsMap ? Object.keys(recsMap).sort() : BP_MOD_COMMON.EMPTY_ARRAY;
+        var k = recsMap ? Object.keys(recsMap).sort() : MOD_COMMON.EMPTY_ARRAY;
         Object.defineProperties(this,
         {
             _o: {value: recsMap},
@@ -204,6 +206,6 @@ function BP_GET_TRAITS()
         CT_BP_PASS: {value: CT_BP_PASS}
     }); Object.freeze(iface);
     
-    console.log("constructed mod_traits");
+    BP_ERROR.log("constructed mod_traits");
     return iface;
 }

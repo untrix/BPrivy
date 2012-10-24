@@ -2,37 +2,39 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
 /* JSLint directives */
-/*global $, console, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, chrome, BP_MOD_TRAITS */
+/*global $, IMPORT*/
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
-function BP_GET_MEMSTORE(g_win)
+function BP_GET_MEMSTORE(g)
 {
     "use strict";
-    var window = null, document = null,
+    var window = null, document = null, console = null,
+        g_win = g.g_win,
         g_doc = g_win.document;
     
-    var m;
     /** @import-module-begin Error */
-    var DIAGS = IMPORT(BP_MOD_ERROR);
-    var BPError = IMPORT(DIAGS.BPError);
+    var m = g.BP_ERROR,
+        BP_ERROR = IMPORT(m),
+        BPError = IMPORT(m.BPError);
     /** @import-module-begin Common */
-    m = BP_MOD_COMMON;
-    var PROTO_HTTP = IMPORT(m.PROTO_HTTP),
+    m = g.BP_COMMON;
+    var BP_COMMON = IMPORT(m),
+        PROTO_HTTP = IMPORT(m.PROTO_HTTP),
         PROTO_HTTPS = IMPORT(m.PROTO_HTTPS);
     /** @import-module-begin **/
-    m = BP_MOD_TRAITS;
-    var dt_eRecord = IMPORT(m.dt_eRecord),
+    m = g.BP_TRAITS;
+    var BP_TRAITS = IMPORT(m),
+        dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord),
         dt_default = IMPORT(m.dt_default),
         dt_etld    = IMPORT(m.dt_etld);
     /** @import-module-begin Connector */
-    m = IMPORT(BP_MOD_CONNECT);
+    m = IMPORT(g.BP_CONNECT);
     var //cm_getRecs = IMPORT(m.cm_getRecs),
         //newPRecord = IMPORT(m.newPRecord),
         //newERecord = IMPORT(m.newERecord),
@@ -312,12 +314,12 @@ function BP_GET_MEMSTORE(g_win)
     {
         Object.freeze(Object.defineProperties(this, 
         {
-            dict: {value:DICT_TRAITS[BP_MOD_TRAITS.dt_settings]},
+            dict: {value:DICT_TRAITS[BP_TRAITS.dt_settings]},
             // everything else is inherited from DEFAULT_TRAITS            
         }));        
     }
     SStoreTraits.prototype = DEFAULT_TRAITS;// Inherit the rest from DEFAULT_TRAITS
-    DT_TRAITS.traits[BP_MOD_TRAITS.dt_settings] = new SStoreTraits();
+    DT_TRAITS.traits[BP_TRAITS.dt_settings] = new SStoreTraits();
     
     Object.freeze(DT_TRAITS);
     /** @end-static-class-defn DT_TRAITS **/    
@@ -446,7 +448,7 @@ function BP_GET_MEMSTORE(g_win)
                 }
             }, this);
             if (!res) {
-                DIAGS.logwarn(new BPError("Didn't insert arec", "NewRecordSkipped", "Arecs.Some===false"));
+                BP_ERROR.logwarn(new BPError("Didn't insert arec", "NewRecordSkipped", "Arecs.Some===false"));
                 memStats.fluff++;
             }
         }
@@ -1194,7 +1196,7 @@ function BP_GET_MEMSTORE(g_win)
         {
             pRecsMap = DNProto.findPRecsMap.apply(dnode, [rec.l]);
             if (pRecsMap) {
-                BP_MOD_COMMON.iterKeys(pRecsMap, function(u, actns)
+                BP_COMMON.iterKeys(pRecsMap, function(u, actns)
                 {
                     if (!actns.curr.p) {
                         u1 = u;
@@ -1213,10 +1215,10 @@ function BP_GET_MEMSTORE(g_win)
         dr = new DRecord(rec, dt);
         notes = DNProto.insert.apply(dnode, [dr]) ? dr.notes : undefined;
         if (notes) {
-            BP_MOD_ERROR.logdebug("Saved temp pRecord: " + JSON.stringify(rec));
+            BP_ERROR.logdebug("Saved temp pRecord: " + JSON.stringify(rec));
         }
         else {
-            BP_MOD_ERROR.logwarn("Could not save temp pRecord: " + JSON.stringify(rec));
+            BP_ERROR.logwarn("Could not save temp pRecord: " + JSON.stringify(rec));
         }
         return notes;
     }
@@ -1227,7 +1229,7 @@ function BP_GET_MEMSTORE(g_win)
         var xhr = new XMLHttpRequest();
         
         // xhr.onloadend = function (e)        // {             // ETLD = JSON.parse(e.target.response);        // };
-        xhr.open("GET", BP_MOD_CS_PLAT.getURL('/data/etld.json'), false);
+        xhr.open("GET", g.BP_CS_PLAT.getURL('/data/etld.json'), false);
         xhr.send();
         var resp = xhr.response;        ETLD = JSON.parse(resp);
     }
@@ -1344,7 +1346,7 @@ function BP_GET_MEMSTORE(g_win)
             // Can't code dn.getData(dt) because dn maybe a JSON parsed object.
             if ((recs=DNProto.getData.apply(dn, [this.dt])))
             {
-                rIt = new BP_MOD_TRAITS.RecsIterator(recs);
+                rIt = new BP_TRAITS.RecsIterator(recs);
                 while ((acoll=rIt.next()))
                 {
                     aIt = new TimeIterator(acoll);
@@ -1372,7 +1374,7 @@ function BP_GET_MEMSTORE(g_win)
             // Can't write dn.getData(dt) because dn maybe a JSON parsed object.
             if ((recs=DNProto.getData.apply(dn, [this.dt])))
             {
-                rIt = new BP_MOD_TRAITS.RecsIterator(recs);
+                rIt = new BP_TRAITS.RecsIterator(recs);
                 while ((acoll=rIt.next()))
                 {
                     callback(acoll.curr, ctx);
@@ -1413,6 +1415,6 @@ function BP_GET_MEMSTORE(g_win)
         MOD_ETLD:    MOD_ETLD
     });
 
-    console.log("constructed mod_memstore");
+    BP_ERROR.log("constructed mod_memstore");
     return iface;
 }

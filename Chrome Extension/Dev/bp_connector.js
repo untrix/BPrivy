@@ -2,11 +2,11 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * @copyright Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
 /* Global declaration for JSLint */
-/*global BP_MOD_CS_PLAT, BP_MOD_COMMON, IMPORT, BP_MOD_ERROR, BP_MOD_TRAITS */
+/*global IMPORT */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -14,23 +14,26 @@
  * @ModuleBegin Connector
  */
 
-function BP_GET_CONNECT(g_win)
+function BP_GET_CONNECT(g)
 {
     "use strict";
-    var window = null, document = null,
+    var window = null, document = null, console = null,
+        g_win = g.g_win,
         g_doc = g_win.document;
-    
     /** @import-module-begin CSPlatform **/
-    var m = BP_MOD_CS_PLAT;
-    var postMsgToMothership = IMPORT(m.postMsgToMothership);
-    var rpcToMothership = IMPORT(m.rpcToMothership);
+    var m = IMPORT(g.BP_CS_PLAT),
+        postMsgToMothership = IMPORT(m.postMsgToMothership),
+        rpcToMothership = IMPORT(m.rpcToMothership);
+    /** @import-module-begin **/
+    var BP_ERROR = IMPORT(g.BP_ERROR);
     /** @import-module-begin Traits **/
-        m = BP_MOD_TRAITS;    
-    var dt_eRecord = IMPORT(m.dt_eRecord);  // Represents a E-Record (html-element record). Value is persisted.
-    var dt_pRecord = IMPORT(m.dt_pRecord);  // Represents a P-Record (password record). Value is persisted.
-    var dt_etld    = IMPORT(m.dt_etld);   // Represents a ETLD (Public Suffix) record. Value is persisted.
-    var fn_userid = IMPORT(m.fn_userid);   // Represents field userid. Copy value from P_UI_TRAITS.
-    var fn_pass = IMPORT(m.fn_pass);       // Represents field password. Copy value from P_UI_TRAITS.
+    m = g.BP_TRAITS;
+    var MOD_TRAITS = IMPORT(m),
+        dt_eRecord = IMPORT(m.dt_eRecord),  // Represents a E-Record (html-element record). Value is persisted.
+        dt_pRecord = IMPORT(m.dt_pRecord),  // Represents a P-Record (password record). Value is persisted.
+        dt_etld    = IMPORT(m.dt_etld),   // Represents a ETLD (Public Suffix) record. Value is persisted.
+        fn_userid = IMPORT(m.fn_userid),   // Represents field userid. Copy value from P_UI_TRAITS.
+        fn_pass = IMPORT(m.fn_pass);       // Represents field password. Copy value from P_UI_TRAITS.
     /** @import-module-end **/    m = null;
 
     /** @constant */
@@ -52,8 +55,7 @@ function BP_GET_CONNECT(g_win)
         cm_closed       = "cm_closed",
         cm_tempRec      = "cm_tempRec",
         DELETE_ACTION_VAL = "D}";
-    
-    var g_loc = g_doc.location;
+
     var DICT_TRAITS={};
    
     /** list of traits properties */
@@ -86,7 +88,7 @@ function BP_GET_CONNECT(g_win)
         url_host:{value:true}
     }));
     
-    DICT_TRAITS[BP_MOD_TRAITS.dt_settings] = Object.freeze(Object.create(TRAITS_PROPS,
+    DICT_TRAITS[MOD_TRAITS.dt_settings] = Object.freeze(Object.create(TRAITS_PROPS,
     {
         url_host:{value:false},
         url_path:{value:false}
@@ -206,9 +208,9 @@ function BP_GET_CONNECT(g_win)
         {
             var req = {cm:dt, rec:rec, dontGet:dontGet};
             if (callbackFunc && (!dontGet)) {
-                req.loc = g_loc; // argument to getRecs
+                req.loc = L.toLoc.apply(rec.l); // argument to getRecs
             }
-            BP_MOD_ERROR.logdebug('Producing Insert Action' + JSON.stringify(rec));
+            BP_ERROR.logdebug('Producing Insert Action' + JSON.stringify(rec));
             if (callbackFunc) {
                 rpcToMothership(req, callbackFunc);
             }
@@ -220,9 +222,9 @@ function BP_GET_CONNECT(g_win)
         {
             var req = {cm:cm_tempRec, dt:dt, rec:rec, dontGet:dontGet };
             if (callbackFunc && (!dontGet)) {
-                req.loc = g_loc; // argument to getRecs
+                req.loc = L.toLoc.apply(rec.l); // argument to getRecs
             }
-            BP_MOD_ERROR.logdebug('Producing Insert Action to temp: ' + JSON.stringify(rec));
+            BP_ERROR.logdebug('Producing Insert Action to temp: ' + JSON.stringify(rec));
             if (callbackFunc) {
                 rpcToMothership(req, callbackFunc);
             }
@@ -233,7 +235,7 @@ function BP_GET_CONNECT(g_win)
         function sendDelActn(_rec, dt, callback, dontGet, toTemp)
         {
             var del = getProto(dt).newDelActn.apply(_rec);
-            //BP_MOD_ERROR.logdebug('Producing Delete Action' + (toTemp?' to temp: ':': ') + JSON.stringify(del));
+            //BP_ERROR.logdebug('Producing Delete Action' + (toTemp?' to temp: ':': ') + JSON.stringify(del));
             if (toTemp) {
                 saveTempRec(del, dt, callback, dontGet);
             }
@@ -305,7 +307,7 @@ function BP_GET_CONNECT(g_win)
         return iface;
     }
     
-    console.log("constructed mod_connector");
+    BP_ERROR.log("constructed mod_connector");
     return getModuleInterface();
 
 }

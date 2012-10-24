@@ -2,10 +2,10 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
-/*global $, console, IMPORT, BP_MOD_ERROR, BP_MOD_COMMON, BP_MOD_TRAITS, BP_PLUGIN, chrome */
+/*global $, IMPORT */
  
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -13,22 +13,22 @@
 /**
  * @ModuleBegin FileStore
  */
-function BP_GET_DBFS(g_win)
+function BP_GET_DBFS(g)
 {
     "use strict";
-    var window = null, document = null;
+    var window = null, document = null, console = null;
     /** @import-module-begin Error */
-    var m = IMPORT(BP_MOD_ERROR),
-        BPError = IMPORT(m.BPError),
-        MOD_ERROR = m;
+    var m = IMPORT(g.BP_ERROR),
+        BP_ERROR = m,
+        BPError = IMPORT(m.BPError);
     /** @import-module-begin common **/
-    m = BP_MOD_COMMON;
-    var MOD_COMMON = IMPORT(BP_MOD_COMMON),
-        iterObj = IMPORT(m.iterObj),
+    m = IMPORT(g.BP_COMMON);
+    var iterObj = IMPORT(m.iterObj),
         iterArray2 = IMPORT(m.iterArray2);
     /** @import-module-begin **/
-    m = BP_MOD_TRAITS;
-    var dt_eRecord = IMPORT(m.dt_eRecord),
+    m = g.BP_TRAITS;
+    var BP_TRAITS = IMPORT(m),
+        dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-end **/ m = null;
     
@@ -90,7 +90,7 @@ function BP_GET_DBFS(g_win)
             csv_dt={}, // Name of csv file to export dt records to. populated below
             valid_dt={},// populated below
             path_sep = null, // populated below
-            dt_settings = IMPORT(BP_MOD_TRAITS.dt_settings),
+            dt_settings = IMPORT(BP_TRAITS.dt_settings),
             /* 
              * NOTE. The list dtl is in processing order. That is, we want to deliberately 
              * process load and store DTs in the order least important to most important.
@@ -297,7 +297,7 @@ function BP_GET_DBFS(g_win)
             {
                 var fname = file_dt[dt];
                 if (!dbPath || !fname) {
-                    MOD_ERROR.logwarn("@makeDTFilePath: Bad argument supplied. path="+dbPath+" dt="+dt); 
+                    BP_ERROR.logwarn("@makeDTFilePath: Bad argument supplied. path="+dbPath+" dt="+dt); 
                     throw new BPError("", "InternalError");
                 }
                 
@@ -323,7 +323,7 @@ function BP_GET_DBFS(g_win)
                         fname += mod.ext_Temp;
                         break;
                     default:
-                        MOD_ERROR.logwarn("filestore.js@makeFileName: Bad 'cat' argument");
+                        BP_ERROR.logwarn("filestore.js@makeFileName: Bad 'cat' argument");
                         throw new BPError("", "InternalError", "BadArgument");
                 }
                 
@@ -336,7 +336,7 @@ function BP_GET_DBFS(g_win)
             renameBad: function (name)
             {
                 if (!name) {
-                    MOD_ERROR.logwarn("filestore.js@renameBad: Bad argument supplied."); 
+                    BP_ERROR.logwarn("filestore.js@renameBad: Bad argument supplied."); 
                     throw new BPError("", "InternalError");
                 }
                 return name + mod.ext_Bad;
@@ -344,7 +344,7 @@ function BP_GET_DBFS(g_win)
             makeCsvFilePath: function (dt, dirPath)
             {
                 if (!dirPath || !valid_dt[dt]) {
-                    MOD_ERROR.logwarn("@makeCsvFilePath: Bad argument supplied."); 
+                    BP_ERROR.logwarn("@makeCsvFilePath: Bad argument supplied."); 
                     throw new BPError("", "InternalError");
                 }
                 
@@ -353,7 +353,7 @@ function BP_GET_DBFS(g_win)
             makeDTDirPath: function (dt, dbPath)
             {
                 if (!dbPath || !valid_dt[dt]) {
-                    MOD_ERROR.logwarn("@makeDTDirPath: Bad argument supplied. path="+dbPath+" dt="+dt); 
+                    BP_ERROR.logwarn("@makeDTDirPath: Bad argument supplied. path="+dbPath+" dt="+dt); 
                     throw new BPError("", "InternalError");
                 }
                 return dbPath + path_sep + dir_dt[dt] + path_sep;                
@@ -479,7 +479,7 @@ function BP_GET_DBFS(g_win)
                 }
                 
                 if (!done) {
-                    MOD_ERROR.logwarn("renameDTFile@filestore.js: Could not rename file");
+                    BP_ERROR.logwarn("renameDTFile@filestore.js: Could not rename file");
                     throw new BPError("", "InternalError");
                 }
                 else {
@@ -827,7 +827,7 @@ function BP_GET_DBFS(g_win)
         DB_FS.putPathSep(BP_PLUGIN.pathSeparator());
     }
 
-    console.log("constructed mod_dbfs");
+    BP_ERROR.log("constructed mod_dbfs");
     return Object.freeze(
     {
         init: init,

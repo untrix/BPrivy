@@ -2,13 +2,12 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
 
 /* JSLint directives */
-/*global $, console, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_TRAITS */
+/*global $, IMPORT */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -75,7 +74,7 @@
      *              Insert children iteratively. Iterator should have a next() function that returns a 'record'
      *              object to be fed into the wdi function. The wdi property shoudl hold a wdl-template function
      *              that is expected to be executed at runtime and with each iteration w$ctx.w$rec property is
-     *              populated with the record obtained by iterator.next(). The iteration number (starting with 0)
+     *              populated with the record obtained by iterator.next(). The iteration number (starting with 1)
      *              is populated into w$ctx.w$i.
      *     _iface: Same as iface, except that this directive is processed after children are created. Meant
      *              to catch values thrown by children.
@@ -89,22 +88,24 @@
      * }
      */
 
-function BP_GET_W$(g_win)
+function BP_GET_W$(g)
 {
     "use strict";
-    var window = null, document = null,
+    var window = null, document = null, console = null,
+        g_win = g.g_win,
         g_doc = g_win.document;
     var m;
     /** @import-module-begin CSPlatform */
-    m = BP_MOD_CS_PLAT;
+    m = g.BP_CS_PLAT;
     var getURL = IMPORT(m.getURL);
     var addHandlers = IMPORT(m.addHandlers); // Compatibility function
     /** @import-module-begin Error */
-    m = BP_MOD_ERROR;
-    var BPError = IMPORT(m.BPError);
-    var logwarn = IMPORT(m.logwarn);
+    m = g.BP_ERROR;
+    var BP_ERROR = IMPORT(m),
+        BPError = IMPORT(m.BPError),
+        logwarn = IMPORT(m.logwarn);
     /** @import-module-begin */
-    m = BP_MOD_COMMON;
+    m = g.BP_COMMON;
     var MOD_COMMON = IMPORT(m);
     var newInherited = IMPORT(m.newInherited);
     /** @import-module-end **/    m = null;
@@ -197,7 +198,7 @@ function BP_GET_W$(g_win)
         // sk = source object of keys for the destination as well as provides keys for the 'sv' object
         // dst = destination object, obtains key p from sk and value = sv[sk[p]]
         // sv = object that provides values to the destination. For prop p, value = sv[sk[p]]
-        if (!(sk && sv && dst)) {BP_MOD_ERROR.logdebug('invalid args to copyIndirect'); return;}
+        if (!(sk && sv && dst)) {BP_ERROR.logdebug('invalid args to copyIndirect'); return;}
         
         var ks = Object.keys(sk), i, n;
         for (i=0,n=ks.length; i<n; i++)
@@ -349,21 +350,22 @@ function BP_GET_W$(g_win)
         // now the iterative children
         function iterate (it, wdi)
         {
-            var rec, isFunc=false, _cwdl;
+            var rec, isFunc=false, _cwdl, j;
             
             if (!it || !wdi) {return;}
 
             if (typeof wdi === 'function') { isFunc = true; }
 
-            for (i=0, _cwdl=wdi; ((rec = it.next())); i++, _cwdl=wdi) 
+            for (i=0,j=1,_cwdl=wdi; ((rec = it.next())); i++, _cwdl=wdi) 
             {try {
                 if (isFunc) {
                     ctx.w$rec = rec;
-                    ctx.w$i = i;
+                    ctx.w$i = j;
                     _cwdl = _cwdl(ctx);
                 } // compile wdi to wdl
                 if (_cwdl !== w$undefined) {
                     w$el.append(w$exec(_cwdl, ctx, true));
+                    j++;
                 }
             } catch (e) {
                 logwarn(e);
@@ -416,6 +418,6 @@ function BP_GET_W$(g_win)
        w$defineProto: w$defineProto,
        Widget: WidgetElement
    });
-   console.log("constructed mod_w$");
+   BP_ERROR.log("constructed mod_w$");
    return iface;
 }

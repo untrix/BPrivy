@@ -48,7 +48,7 @@
     <script src="tp/bootstrap/js/bootstrap.min.js"></script>
     <script src="bp_error.js"></script>
     <script src="bp_common.js"></script>
-    <script src="bp_cs_platform_chrome.js"></script>
+    <script src="bp_cs_chrome.js"></script>
     <script src="bp_traits.js"></script>
     <script src="bp_connector.js"></script>
     <script src="bp_memstore.js"></script>
@@ -57,9 +57,9 @@
     var BP_PLUGIN;
     function bpPluginLoaded ()
     {
-      var FILESTORE = IMPORT(BP_MOD_FILESTORE),
-          MEM_STORE  = IMPORT(BP_MOD_MEMSTORE),
-          dt_etld = IMPORT(BP_MOD_CONNECT.dt_etld),
+      var FILESTORE = IMPORT(BP_FILESTORE),
+          MEM_STORE  = IMPORT(BP_MEMSTORE),
+          dt_etld = IMPORT(BP_CONNECT.dt_etld),
           ETLDDict;
 
       BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
@@ -162,12 +162,12 @@
           }
       }
       
-      BP_MOD_CS_PLAT.addEventListeners('#buildETLD', 'click', buildETLD);
+      BP_CS_PLAT.addEventListeners('#buildETLD', 'click', buildETLD);
     }
     $(document).ready(function (e)
       {
         bpPluginLoaded();
-        BP_MOD_FILESTORE.init();
+        BP_FILESTORE.init();
       });
     </script>
 

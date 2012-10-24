@@ -169,13 +169,13 @@
     chrome.extension.onMessage.addListener(onMessage);
     setupCommand(document, onClickComm);
     chrome.extension.sendRequest({cm:'cm_bootLoaded'});
-    if (BP_MOD_BOOT.scan(document)) {
+    if (BP_BOOT.scan(document)) {
         onDllLoad();
     }
     else {
-        BP_MOD_BOOT.observe(document, function(mutations,observer)
+        BP_BOOT.observe(document, function(mutations,observer)
         {
-            if ((!BP_DLL.bLoaded) && BP_MOD_BOOT.scan(document)) {
+            if ((!BP_DLL.bLoaded) && BP_BOOT.scan(document)) {
                 observer.disconnect();
                 onDllLoad();
                 BP_DLL.bLoaded = true;

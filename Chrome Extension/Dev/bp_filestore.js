@@ -2,12 +2,11 @@
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Right Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
 /* JSLint directives */
-/*global $, console, BP_PLUGIN, BP_MOD_CONNECT, BP_MOD_CS_PLAT, IMPORT, BP_MOD_COMMON,
-  BP_MOD_ERROR, BP_MOD_MEMSTORE, BP_MOD_PLAT, chrome, BP_MOD_TRAITS, BP_MOD_DBFS */
+/*global $, BP_PLUGIN, IMPORT */
  
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -15,18 +14,19 @@
 /**
  * @ModuleBegin FileStore
  */
-function BP_GET_FILESTORE(g_win) 
+function BP_GET_FILESTORE(g)
 {
     "use strict";
-    var window = null, document = null;
+    var window = null, document = null, console = null,
+        g_win = g.g_win;
     
     /** @import-module-begin Error */
-    var m = IMPORT(BP_MOD_ERROR),
+    var m = IMPORT(g.BP_ERROR),
         BPError = IMPORT(m.BPError),
-        MOD_ERROR = m;
+        BP_ERROR = m;
     /** @import-module-begin common **/
-    m = BP_MOD_COMMON;
-    var MOD_COMMON = IMPORT(BP_MOD_COMMON),
+    m = g.BP_COMMON;
+    var BP_COMMON = IMPORT(g.BP_COMMON),
         toJson = IMPORT(m.toJson),
         uid_aliases = IMPORT(m.uid_aliases),
         pass_aliases= IMPORT(m.pass_aliases),
@@ -36,18 +36,18 @@ function BP_GET_FILESTORE(g_win)
         iterObj     = IMPORT(m.iterObj),
         iterArray2  = IMPORT(m.iterArray2);
     /** @import-module-begin **/
-    m = BP_MOD_TRAITS;
+    m = g.BP_TRAITS;
     var dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin connector **/
-    m = BP_MOD_CONNECT; 
+    m = g.BP_CONNECT; 
     var newPRecord = IMPORT(m.newPRecord);
     /** @import-module-begin MemStore **/
-    var MEM_STORE = IMPORT(BP_MOD_MEMSTORE);
+    var MEM_STORE = IMPORT(g.BP_MEMSTORE);
     /** @import-module-begin UI Traits **/
-    var eid_pfx = IMPORT(BP_MOD_TRAITS.eid_pfx);
+    var eid_pfx = IMPORT(g.BP_TRAITS.eid_pfx);
     /** @import-module-begin **/
-    m = BP_MOD_DBFS;
+    m = g.BP_DBFS;
     var newDBMap = IMPORT(m.newDBMap),
         DB_FS = IMPORT(m.DB_FS);
     /** @import-module-end **/    m = null;
@@ -133,7 +133,7 @@ function BP_GET_FILESTORE(g_win)
         }
         catch (e)
         { 
-            BP_MOD_ERROR.logwarn("loadFile@filestore: Corrupted file: " + filePath);
+            BP_ERROR.logwarn("loadFile@filestore: Corrupted file: " + filePath);
             DB_FS.quarantineFile(fname, filePath);
             dbStats.putBad(dt, fname, dirEnt);
             return false;
@@ -165,18 +165,18 @@ function BP_GET_FILESTORE(g_win)
                 catch (e) 
                 {
                     var bpe = new BPError(e);
-                    BP_MOD_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
+                    BP_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
                     MEM_STORE.getStats().bad++;
                 }
             },0);
             
-            MOD_ERROR.log("Loaded file " + filePath);
+            BP_ERROR.log("Loaded file " + filePath);
             dbStats.put(dt, cat, fname, dirEnt);
             return true;
         }
         else 
         {
-            MOD_ERROR.log("loadFile@filestore: Empty file?: " + filePath);
+            BP_ERROR.log("loadFile@filestore: Empty file?: " + filePath);
         }
     }
     
@@ -255,14 +255,14 @@ function BP_GET_FILESTORE(g_win)
         // First determine if this DB exists and is good.
         dbPath = DB_FS.verifyDBForLoad(dbPath);
 
-        console.log("loadingDB " + dbPath);
+        BP_ERROR.log("loadingDB " + dbPath);
         MEM_STORE.clear(); // unload the previous DB.
         
         loadDBFiles(dbPath, dbStats, exclude);
         memStats = MEM_STORE.getStats();
         DB_FS.setDBPath(dbPath, dbStats);
                 
-        MOD_ERROR.log("Loaded DB " + dbPath + ". files loaded: "+dbStats.numLoaded()+
+        BP_ERROR.log("Loaded DB " + dbPath + ". files loaded: "+dbStats.numLoaded()+
                       ", files bad: "+dbStats.numBad()+
                       ", recs loaded: "+memStats.loaded + ", recs bad: " +memStats.bad +
                       ", recs fluff: " +memStats.fluff);
@@ -451,7 +451,7 @@ function BP_GET_FILESTORE(g_win)
             }
         });
         
-        BP_MOD_COMMON.iterKeys(bufs, function finalBufFlush(dt, buf)
+        BP_COMMON.iterKeys(bufs, function finalBufFlush(dt, buf)
         {
             if (buf.length)
             {
@@ -647,7 +647,7 @@ function BP_GET_FILESTORE(g_win)
             o = {};
             
         if (DB_FS.insideDB(dir)) {
-            throw new BPError(BP_MOD_ERROR.msg.ExistingStore, 'BadPathArgument', 'ExistingStore');
+            throw new BPError(BP_ERROR.msg.ExistingStore, 'BadPathArgument', 'ExistingStore');
         }
         
         dbPath = DB_FS.makeDBPath(name, dir);
@@ -730,7 +730,7 @@ function BP_GET_FILESTORE(g_win)
         }
         var rval = this.regex.exec(this.buf);
         if (rval!==null) {
-            //console.log("getDataLine-->" + rval[1]);
+            //BP_ERROR.log("getDataLine-->" + rval[1]);
             return rval[1];
         }
     };
@@ -866,7 +866,7 @@ function BP_GET_FILESTORE(g_win)
                     while ((csv = csvf.getcsv2()) !== undefined)
                     {
                         if (!csv) {continue;} // unparsable line
-                        else {BP_MOD_ERROR.loginfo("Importing " + JSON.stringify(csv));}
+                        else {BP_ERROR.loginfo("Importing " + JSON.stringify(csv));}
                         pidx = csvf.pidx;
                         url = parseURL(csv[pidx.url]);
                         prec = newPRecord(url || {}, 
@@ -875,7 +875,7 @@ function BP_GET_FILESTORE(g_win)
                                           csv[pidx.pass]);
                         if (!MEM_STORE.PREC_TRAITS.isValidCSV(prec))
                         {
-                            console.log("Discarding invalid csv record - " + JSON.stringify(csv));
+                            BP_ERROR.log("Discarding invalid csv record - " + JSON.stringify(csv));
                             prec = null; continue;
                         }
                         else
@@ -891,7 +891,7 @@ function BP_GET_FILESTORE(g_win)
                                 }
                             } catch (e) {
                                 var bpe = new BPError(e);
-                                BP_MOD_ERROR.log("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());
+                                BP_ERROR.log("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());
                             }
                         }
                     }
@@ -926,6 +926,6 @@ function BP_GET_FILESTORE(g_win)
     });
     Object.freeze(iface);
 
-    console.log("constructed mod_filestore");
+    BP_ERROR.log("constructed mod_filestore");
     return iface;
 }
