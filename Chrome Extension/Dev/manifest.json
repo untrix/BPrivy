@@ -11,7 +11,7 @@
 	   },
   "permissions": ["contextMenus", "tabs", "webRequest", "<all_urls>"],
   "background": {"page": "bp_Main.html"},
-  "content_scripts1": [
+  "content_scripts": [
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     "js": ["bp_cs_boot.cat.js"],
@@ -19,7 +19,7 @@
     "all_frames": true
     }
   ],
-  "content_scripts": [
+  "content_scripts2": [
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     "js": ["tp/jquery.js",
