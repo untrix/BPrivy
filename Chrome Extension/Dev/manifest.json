@@ -1,6 +1,6 @@
 {
   "name": "BPrivy",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "manifest_version": 2,
   "minimum_chrome_version": "7",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
@@ -9,9 +9,9 @@
 	     "128": "icons/icon128.png",
   	     "16": "icons/icon16.png"
 	   },
-  "permissions": ["contextMenus", "tabs", "webRequest", "<all_urls>"],
+  "permissions": ["contextMenus", "tabs", "webRequest", "<all_urls>", "notifications"],
   "background": {"page": "bp_Main.html"},
-  "content_scripts": [
+  "content_scripts1": [
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     "js": ["bp_cs_boot.cat.js"],
@@ -19,7 +19,7 @@
     "all_frames": true
     }
   ],
-  "content_scripts2": [
+  "content_scripts": [
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     "js": ["tp/jquery.js",
@@ -32,8 +32,9 @@
     "all_frames": true
     }
   ],
-  "page_action": {
-    "default_icon": "icons/icon16.png"
+  "browser_action": {
+    "default_icon": "icons/icon16.png",
+    "default_popup": "bp_panel.html"
   },
   "options_page": "bp_manage.html",
   "offline_enabled": true,

@@ -35,12 +35,10 @@ function BP_GET_MEMSTORE(g)
         dt_etld    = IMPORT(m.dt_etld);
     /** @import-module-begin Connector */
     m = IMPORT(g.BP_CONNECT);
-    var //cm_getRecs = IMPORT(m.cm_getRecs),
-        //newPRecord = IMPORT(m.newPRecord),
-        //newERecord = IMPORT(m.newERecord),
+    var BP_CONNECT = IMPORT(m),
         newL = IMPORT(m.newL),
-        DICT_TRAITS = IMPORT(m.DICT_TRAITS),
-        DELETE_ACTION_VAL = IMPORT(m.DELETE_ACTION_VAL);
+        DICT_TRAITS = IMPORT(m.DICT_TRAITS);
+    var BP_LISTENER = IMPORT(g.BP_LISTENER);
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
@@ -58,7 +56,7 @@ function BP_GET_MEMSTORE(g)
      */
         g_pd, g_kd,
         COMMA = ",",
-        DNODE_NEXT = 'N', 
+        DNODE_NEXT = 'N',
         DNODE_TAG =  Object.freeze(
         {
             // These are DNode property prefixes. Each property shall have one and only one
@@ -66,14 +64,14 @@ function BP_GET_MEMSTORE(g)
             // Individual DURL segments are prefixed based on their segment type in order
             // to ensure a one-to-one mapping between URL and its concatenated DURL
             // segments.
-            NEXT:  DNODE_NEXT, // Prefix to all next-node-pointer properties - i.e. URL segments
-            HOST:  DNODE_NEXT+'H', // Prefix for URL-hostname
-            PATH:  DNODE_NEXT+'P', // Prefix for URL-path
-            ETLD: 'E', // ETLD rule marker. 0=> regular ETLD rule, 1 implies an override 
+            HOST:  'NH', // Prefix for URL-hostname
+            PATH:  'NP', // Prefix for URL-path
+            ETLD:  'E', // ETLD rule marker. 0=> regular ETLD rule, 1 implies an override 
                        // (e.g. !educ.ar). See publicsuffix.org for details.
-            DATA: 'D', // Prefix for data - e.g. De for E-Rec, Dp for P-Rec etc.
-            ITER: "I", // Property used by DNodeIterator to save notes
-            URL:  "U",
+            DATA:  'D', // Prefix for data - e.g. De for E-Rec, Dp for P-Rec etc.
+            ITER:  "I", // Property used by DNodeIterator to save notes
+            URL:   "U",
+            LISTENERS: 'L', // Event Listeners for a given dnode or entire tree (in case of root node only)
             //PORT: 'NO',
             //HTTP: 'NS',
             //HTTPS: 'NS'
@@ -104,7 +102,8 @@ function BP_GET_MEMSTORE(g)
                         break;
                     }
                 }
-                // We've matched as far as we could go - per algorithm prescribed by publicsuffix.org
+                // We've matched as far as we could go - per algorithm prescribed by
+                // publicsuffix.org
                 if (curr[ETLD_TAG]) {
                     if (curr[ETLD_TAG] === 1) { // value ===1 means an ETLD. Refer to build_tools.html
                         // We're at an etld. One more segment is allowable.
@@ -185,8 +184,8 @@ function BP_GET_MEMSTORE(g)
         // Returns value converted to a string suitable to be used as a property name
         valStr: function(rec)
         {
-            if (rec.a) { // delete action
-                return DELETE_ACTION_VAL;
+            if (rec.a==='d') { // delete action
+                return this.DELETE_ACTION_VAL;
             }
             else {return "V}" + rec.v;}
         },
@@ -201,8 +200,9 @@ function BP_GET_MEMSTORE(g)
         },
         toPersist: function (notes)
         {
-            return (notes.isRecentUnique || (notes.isNewRepeat && ((notes.causedCurrChange) || this.persist_asserts)));
-        }
+            return (notes.isRecentUnique || (notes.isRecentRepeat && ((notes.causedCurrChange) || this.persist_asserts)));
+        },
+        DELETE_ACTION_VAL: "D}" // to be used as part of prototype
     });
 
     function PStoreTraits() 
@@ -224,8 +224,8 @@ function BP_GET_MEMSTORE(g)
             }},
             valStr: {value: function(rec)
             {
-                if (rec.a) { // Implies a delete action
-                    return DELETE_ACTION_VAL;
+                if (rec.a==='d') { // Implies a delete action
+                    return this.DELETE_ACTION_VAL;
                 }
                 else { // insert action
                     return "P}" + rec.p;
@@ -265,8 +265,8 @@ function BP_GET_MEMSTORE(g)
             }},
             valStr: {value: function(rec)
             {
-                if (rec.a) { // Implies a delete action
-                    return DELETE_ACTION_VAL;
+                if (rec.a==='d') { // Implies a delete action
+                    return this.DELETE_ACTION_VAL;
                 }
 
                 var str = "";
@@ -454,6 +454,9 @@ function BP_GET_MEMSTORE(g)
         }
         
         this.curr = arecs[0];
+        if (this.curr === arec) {
+            drec.notes.causedCurrChange = true;
+        }
     };
     
     /**
@@ -605,7 +608,7 @@ function BP_GET_MEMSTORE(g)
                 // to not forget repeated values. Hence for now we'll go with the simpler
                 // leaner arguably smarter but certainly novel approach.
 
-                drec.notes.isNewRepeat = true; // NOTE: May or may not causeCurrChange...
+                drec.notes.isRecentRepeat = true; // NOTE: May or may not causeCurrChange...
 
                 // In loadCSV case all record-timestamps are Date.now and therefore are
                 // latest. Hence any value in the csv record will appear like a new value
@@ -897,6 +900,7 @@ function BP_GET_MEMSTORE(g)
 
         if (!this[d]) { // ensure that a data node has been allocated
             this[d] = {};
+            drec.notes.firstKey = true;
         }
         // var recsMap = this.d[dt];        // if (!recsMap) {            // this.d[dt] = (recsMap = {});        // }
         
@@ -909,6 +913,7 @@ function BP_GET_MEMSTORE(g)
         }
         else {
             (recsMap[ki] = newActions(dt)).insert(drec);
+            //drec.notes.newKey = true;
         }
     };
     DNProto.makeRecsMap = function (dt)
@@ -941,6 +946,7 @@ function BP_GET_MEMSTORE(g)
             else {
                 DNProto.putData.apply(this, [drec]);
             }
+            drec.dnode = this;
         }
         else 
         {   // continue walking down the trie
@@ -1080,47 +1086,15 @@ function BP_GET_MEMSTORE(g)
             return n2;
         }
     };
-    
-    function getDTRecs (loc, dt)
+    DNProto.dispatch = function(eventType, drec)
     {
-        var recs;
-        switch (dt)
-        {
-            case dt_pRecord:
-                recs = DNProto.findPRecsMap.apply(DNode[dt_pRecord],[newL(loc,dt_pRecord)]);
-                break;
-            case dt_eRecord:
-                recs = DNProto.findERecsMapArray.apply(DNode[dt_eRecord], [newL(loc,dt_eRecord)]);
-                break;
+        var listeners = this[DNODE_TAG.LISTENERS];
+        if (listeners) {
+            listeners.dispatch(eventType, {drec:drec});
         }
-        return recs; 
-    }
-    
-    function getTRecs (loc)
-    {
-        return DNProto.findPRecsMap.apply(DNode['temp_'+dt_pRecord],[newL(loc,dt_pRecord)]);
-    }
+    };
+    /** @end-class-def DNode **/
 
-    /**
-     * Returns dt_eRecord and dt_pRecord matching loc as per the respective dt traits
-     */
-    function  getRecs (loc)
-    {
-        var kdb, pdb, r;
-        r = {};
-        r.eRecsMapArray = getDTRecs(loc, dt_eRecord);
-        r.pRecsMap = getDTRecs(loc, dt_pRecord);
-        r.tRecsMap = getTRecs(loc);
-
-        return r;
-    }
-
-    function getDNode (l, dt)
-    {
-        if (DNode[dt]) {
-            return DNProto.getDNode.apply(DNode[dt], [l, dt]);
-        }
-    }
     /**
      * @constructor
      * Sets up the supplied record for insertion into the db
@@ -1129,17 +1103,19 @@ function BP_GET_MEMSTORE(g)
     function DRecord(rec, dt, uct)
     {
         // Construct url segment iterator.
-        Object.freeze(Object.defineProperties(this,
+        Object.defineProperties(this,
         {
-            urli: {value:new DURL(rec.l, dt)},
+            urli: {value:new DURL(rec.l, dt), enumerable:false},
             rec:  {value:rec},
             dt:   {value:dt},
-            dtt:  {value:DT_TRAITS.getTraits(dt)},
-            uct:  {value:uct},
-            notes:{value: {}}
-        }));
+            dtt:  {value:DT_TRAITS.getTraits(dt), enumerable:false},
+            uct:  {value:uct, enumerable:false},
+            notes:{value: {}},
+            dnode:{writable:true, enumerable:false}
+        });
     }
-    
+    /** @end-class-def DRecord **/
+
     function MemStats ()
     {
         Object.defineProperties(this,
@@ -1163,14 +1139,59 @@ function BP_GET_MEMSTORE(g)
                 this.loaded++;
             }
         }
-        else if (notes) { // if (rec.notes.isOldRepeat || rec.notes.isNewRepeat || rec.notes.isOverflow)
+        else if (notes) { // if (rec.notes.isOldRepeat || rec.notes.isRecentRepeat || rec.notes.isOverflow)
             this.fluff++;
         }
         else {
             this.bad++;
         }
     };
-    /** @end-class-def DRecord **/
+
+    function getDTRecs (loc, dt)
+    {
+        var recs;
+        switch (dt)
+        {
+            case dt_pRecord:
+                recs = DNProto.findPRecsMap.apply(DNode[dt_pRecord],[newL(loc,dt_pRecord)]);
+                break;
+            case dt_eRecord:
+                recs = DNProto.findERecsMapArray.apply(DNode[dt_eRecord], [newL(loc,dt_eRecord)]);
+                break;
+        }
+        return recs; 
+    }
+    
+    function getTRecs (loc)
+    {
+        return DNProto.findPRecsMap.apply(DNode['temp_'+dt_pRecord],[newL(loc,dt_pRecord)]);
+    }
+
+    function numTRecs (loc)
+    {
+        return (new BP_TRAITS.RecsIterator(getTRecs(loc))).num();
+    }
+    /**
+     * Returns dt_eRecord and dt_pRecord matching loc as per the respective dt traits
+     */
+    function  getRecs (loc)
+    {
+        var kdb, pdb, r;
+        r = {};
+        r.eRecsMapArray = getDTRecs(loc, dt_eRecord);
+        r.pRecsMap = getDTRecs(loc, dt_pRecord);
+        r.tRecsMap = getTRecs(loc);
+
+        return r;
+    }
+
+    function getDNode (l, dt, dict)
+    {
+        dict = dict || dt;
+        if (DNode[dict]) {
+            return DNProto.getDNode.apply(DNode[dict], [l, dt]);
+        }
+    }
 
     // _dnode is optional and is only expected to be used at build-time by buildETLD.
     // At runtime, don't pass _dnode
@@ -1178,19 +1199,20 @@ function BP_GET_MEMSTORE(g)
     {
         if (!_dnode) {_dnode = DNode[dt];}
         var dr = new DRecord(rec, dt);
-        return DNProto.insert.apply(_dnode, [dr]) ? dr.notes : undefined;
+        return DNProto.insert.apply(_dnode, [dr]) ? dr : undefined;
     }
     function insertDrec (dr, _dnode)
     {
         if (!_dnode) {_dnode = DNode[dr.dt];}
-        return DNProto.insert.apply(_dnode, [dr]) ? dr.notes : undefined;                
+        return DNProto.insert.apply(_dnode, [dr]) ? dr : undefined;
     }
     function insertTempRec(rec, dt)
     {
         if (dt !== dt_pRecord) {return;}
         
         var dr, pRecsMap, u1, notes,
-            dnode = DNode['temp_' + dt];
+            dict = 'temp_' + dt,
+            dnode = DNode[dict];
         
         if (!rec.u)
         {
@@ -1214,15 +1236,21 @@ function BP_GET_MEMSTORE(g)
 
         dr = new DRecord(rec, dt);
         notes = DNProto.insert.apply(dnode, [dr]) ? dr.notes : undefined;
-        if (notes) {
+        if (notes)
+        {
             BP_ERROR.logdebug("Saved temp pRecord: " + JSON.stringify(rec));
+            if (notes.causedCurrChange) 
+            {
+                DNProto.dispatch.apply(dr.dnode, ['bp_change', rec]);
+                DNProto.dispatch.apply(dnode, ['bp_change', rec]);
+            }
         }
         else {
             BP_ERROR.logwarn("Could not save temp pRecord: " + JSON.stringify(rec));
         }
-        return notes;
+
+        return dr;
     }
-    /** @end-class-def DNode **/
 
     function loadETLD ()
     {
@@ -1241,6 +1269,21 @@ function BP_GET_MEMSTORE(g)
         MemStats.stats = new MemStats();
     }
     
+    function listen (eventType, scope, cbackInfo)
+    {
+        var dnode;
+        if (!eventType || !scope || !cbackInfo) {return;}
+        
+        dnode = getDNode(scope.l, scope.dt, scope.dict);
+        if (dnode)
+        {
+            if (!dnode[DNODE_TAG.LISTENERS])  {
+                dnode[DNODE_TAG.LISTENERS] = BP_LISTENER.newListeners(scope);
+            }
+            dnode[DNODE_TAG.LISTENERS].add(eventType, cbackInfo);
+        }
+    }
+
     function DNodeIterHelper(node, up, myURL)
     {
         return Object.defineProperties(this,
@@ -1258,7 +1301,7 @@ function BP_GET_MEMSTORE(g)
             key;
             key = this.keys[this.i++])
         {
-            if (key.charAt(0) === DNODE_TAG.NEXT) // Only return next-node-pointer keys
+            if (key.charAt(0) === DNODE_NEXT) // Only return next-node-pointer keys
             {
                 found = true;
                 break;
@@ -1396,6 +1439,7 @@ function BP_GET_MEMSTORE(g)
         getRecs:     getRecs,
         getDTRecs:   getDTRecs,
         getTRecs:    getTRecs,
+        numTRecs:    numTRecs,
         DT_TRAITS:   DT_TRAITS,
         PREC_TRAITS: PREC_TRAITS,
         EREC_TRAITS: EREC_TRAITS,
@@ -1412,7 +1456,8 @@ function BP_GET_MEMSTORE(g)
         putDB:       function(dNode, dt){DNode[dt] = dNode;},
         getDB:       function(dt){return DNode[dt];},
         getDNode:    getDNode,
-        MOD_ETLD:    MOD_ETLD
+        MOD_ETLD:    MOD_ETLD,
+        listen:      listen
     });
 
     BP_ERROR.log("constructed mod_memstore");

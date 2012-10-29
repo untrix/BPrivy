@@ -54,7 +54,7 @@ function BP_GET_CONNECT(g)
         cm_getDomn      = "cm_getDomn",
         cm_closed       = "cm_closed",
         cm_tempRec      = "cm_tempRec",
-        DELETE_ACTION_VAL = "D}";
+        cm_saveRec      = "cm_saveRec";
 
     var DICT_TRAITS={};
    
@@ -193,7 +193,7 @@ function BP_GET_CONNECT(g)
         return new PRecord(L.prototype.toLoc.apply(this.l), Date.now(), 'd', this.u);
     };    
     
-    function getProto(dt)
+    function getDTProto(dt)
     {
         switch (dt)
         {
@@ -206,9 +206,9 @@ function BP_GET_CONNECT(g)
     {
         function saveRecord(rec, dt, callbackFunc, dontGet)
         {
-            var req = {cm:dt, rec:rec, dontGet:dontGet};
+            var req = {cm:cm_saveRec, dt:dt, rec:rec, dontGet:dontGet};
             if (callbackFunc && (!dontGet)) {
-                req.loc = L.toLoc.apply(rec.l); // argument to getRecs
+                req.loc = L.prototype.toLoc.apply(rec.l); // argument to getRecs
             }
             BP_ERROR.logdebug('Producing Insert Action' + JSON.stringify(rec));
             if (callbackFunc) {
@@ -222,7 +222,7 @@ function BP_GET_CONNECT(g)
         {
             var req = {cm:cm_tempRec, dt:dt, rec:rec, dontGet:dontGet };
             if (callbackFunc && (!dontGet)) {
-                req.loc = L.toLoc.apply(rec.l); // argument to getRecs
+                req.loc = L.prototype.toLoc.apply(rec.l); // argument to getRecs
             }
             BP_ERROR.logdebug('Producing Insert Action to temp: ' + JSON.stringify(rec));
             if (callbackFunc) {
@@ -232,9 +232,10 @@ function BP_GET_CONNECT(g)
                 postMsgToMothership(req);
             }
         }
+
         function sendDelActn(_rec, dt, callback, dontGet, toTemp)
         {
-            var del = getProto(dt).newDelActn.apply(_rec);
+            var del = getDTProto(dt).newDelActn.apply(_rec);
             //BP_ERROR.logdebug('Producing Delete Action' + (toTemp?' to temp: ':': ') + JSON.stringify(del));
             if (toTemp) {
                 saveTempRec(del, dt, callback, dontGet);
@@ -268,13 +269,19 @@ function BP_GET_CONNECT(g)
         var iface = {};
         Object.defineProperties(iface, 
         {
+            // MOD_DD
             dt_eRecord: {value: dt_eRecord},
             dt_pRecord: {value: dt_pRecord},
             dt_etld:    {value: dt_etld},
             DICT_TRAITS: {value: DICT_TRAITS},
             newL: {value: newL},
+            lToLoc: {value: function(l){return L.prototype.toLoc.apply(l);}},
+            getDTProto: {value:getDTProto},
+            newERecord: {value: newERecord},
+            newPRecord: {value: newPRecord},
             fn_userid: {value: fn_userid},
             fn_pass: {value: fn_pass},
+            // MOD_PROTO
             cm_getRecs: {value: cm_getRecs},
             cm_loadDB: {value: cm_loadDB},
             cm_unloadDB: {value: cm_unloadDB},
@@ -292,12 +299,11 @@ function BP_GET_CONNECT(g)
             cm_getDomn: {value: cm_getDomn},
             cm_closed:  {value: cm_closed},
             cm_tempRec: {value: cm_tempRec},
-            DELETE_ACTION_VAL: {value: DELETE_ACTION_VAL},
+            cm_saveRec: {value: cm_saveRec},
+            // MOD_CONNECT
             saveRecord: {value: saveRecord},
             saveTempRec: {value: saveTempRec},
             sendDelActn: {value: sendDelActn},
-            newERecord: {value: newERecord},
-            newPRecord: {value: newPRecord},
             getRecs: {value: getRecs},
             getDBPath: {value: getDBPath},
             panelClosed: {value: panelClosed}

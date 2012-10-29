@@ -102,6 +102,10 @@ function BP_GET_PLAT(gg)
         //BP_ERROR.loginfo("Menu Item ID " + menu_id + " Created");
     
         chrome.browserAction.onClicked.addListener(bpClick);
+        // chrome.browserAction.onClicked.addListener(function(tab)
+        // {
+            // chrome.windows.create({url:'/bp_panel.html', type:'panel', focused:true, width:322, height:100});
+        // });
         chrome.pageAction.onClicked.addListener(bpClick);
        
         g.contextMenuID = menu_id;
@@ -111,16 +115,11 @@ function BP_GET_PLAT(gg)
 
     var module =
     {
-        registerMsgListener: function(foo)
-        {
-            chrome.extension.onRequest.addListener(foo);
-        },
-        
-        sendRequestToTab: function(tabID, obj) {
-            chrome.tabs.sendRequest(tabID, obj);
-        },
-        
-        initScaffolding: initScaffolding
+        registerMsgListener: function(foo) {chrome.extension.onRequest.addListener(foo);},
+        sendRequestToTab: function(tabID, obj) {chrome.tabs.sendRequest(tabID, obj);},
+        initScaffolding: initScaffolding,
+        bpClick: bpClick,
+        showPageAction: function(tabId) {chrome.pageAction.show(tabId);}
     };
     
     Object.seal(module);

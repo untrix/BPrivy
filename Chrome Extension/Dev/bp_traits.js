@@ -96,7 +96,7 @@ function BP_GET_TRAITS(g)
             key: {value: {uiName:"Username", apiName:"u", ft:FT.text}},
             fields: {value: [{uiName:"Password", apiName:"p", ft:FT.pass}]},
             protocols: {value: ['http:', 'https:']},
-            showRecs: {value: function(loc) {if (loc) {
+            showRecs:  {value: function(loc) {if (loc && loc.protocol) {
                 return this.protocols.indexOf(loc.protocol.toLowerCase())!==-1;}}}
         }));
     }
@@ -145,9 +145,9 @@ function BP_GET_TRAITS(g)
         }
     });
     
-    function RecsIterator (recsMap)
+    function RecsIterator (recsMap, sort)
     {
-        var k = recsMap ? Object.keys(recsMap).sort() : MOD_COMMON.EMPTY_ARRAY;
+        var k = recsMap ? (sort ? Object.keys(recsMap).sort() : Object.keys(recsMap)) : MOD_COMMON.EMPTY_ARRAY;
         Object.defineProperties(this,
         {
             _o: {value: recsMap},

@@ -1,5 +1,4 @@
 /**
- *
  * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
@@ -9,9 +8,9 @@
 /* JSLint directives */
 /*global $, BP_MOD_PLAT, BP_GET_CONNECT, BP_GET_COMMON, IMPORT, localStorage,
   BP_GET_MEMSTORE, BP_GET_DBFS, BP_GET_FILESTORE, BP_GET_ERROR, BP_GET_TRAITS,
-  BP_GET_CS_PLAT, BP_GET_PLAT */
-/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
-  undef:false, vars:true, white:true, continue: true, nomen:true */
+  BP_GET_CS_PLAT, BP_GET_PLAT, BP_GET_LISTENER */
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true,
+  regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true */
 
 /** @globals-begin */
 //////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE OR GLOBAL ///////////////////
@@ -26,6 +25,7 @@ function IMPORT(sym)
         return sym;
     }
 }
+
 var BP_PLUGIN;
 /** @globals-end */
 
@@ -39,6 +39,7 @@ var BP_MAIN = (function()
     g.BP_COMMON = BP_GET_COMMON(g);
     g.BP_TRAITS = BP_GET_TRAITS(g);
     g.BP_PLAT = BP_GET_PLAT(g);
+    g.BP_LISTENER = BP_GET_LISTENER(g);
     g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
     g.BP_CONNECT = BP_GET_CONNECT(g);
     g.BP_MEMSTORE = BP_GET_MEMSTORE(g);
@@ -46,7 +47,8 @@ var BP_MAIN = (function()
     g.BP_FILESTORE = BP_GET_FILESTORE(g);
 
     /** @import-module-begin MainPlatform */
-    var m = g.BP_PLAT;
+    var m = g.BP_PLAT,
+        BP_PLAT = IMPORT(m);
     var registerMsgListener = IMPORT(m.registerMsgListener);
     var initScaffolding = IMPORT(m.initScaffolding);
     /** @import-module-begin **/
@@ -73,6 +75,7 @@ var BP_MAIN = (function()
         Activity = g.BP_ERROR.Activity;
     /** @import-module-begin */
     var DBFS = IMPORT(g.BP_DBFS);
+    var BP_LISTENER = IMPORT(g.BP_LISTENER);
     /** @import-module-end **/    m = null;
 
     var MOD_WIN; // defined later.
@@ -85,7 +88,7 @@ var BP_MAIN = (function()
      */
     function insertNewRec(rec, dt)
     {
-        var res, notes;
+        var res, dr;
 
         if (!DBFS.getDBPath()) {throw new BPError("", 'UserError', 'NoDBLoaded');}
 
@@ -93,12 +96,12 @@ var BP_MAIN = (function()
         {
             case dt_eRecord:
             case dt_pRecord:
-                notes = MEM_STORE.insertRec(rec, dt);
-                if (notes) 
+                dr = MEM_STORE.insertRec(rec, dt);
+                if (dr) 
                 {
                     res = true;
-                    if (MEM_STORE.DT_TRAITS.getTraits(dt).toPersist(notes) &&
-                        FILE_STORE.UC_TRAITS.insertNewRec.toPersist(notes))
+                    if (MEM_STORE.DT_TRAITS.getTraits(dt).toPersist(dr.notes) &&
+                        FILE_STORE.UC_TRAITS.insertNewRec.toPersist(dr.notes))
                     {
                         res = FILE_STORE.insertRec(rec, dt);
                     }
@@ -121,9 +124,9 @@ var BP_MAIN = (function()
         };
     }
     
-    function getRecs (loc)
+    function getRecs (loc, callback)
     {
-        var recs, resp={};
+        var recs, resp={loc:loc};
         recs = MEM_STORE.getRecs(loc);
         resp.dbInfo = {
             dbName : DBFS.getDBName(),
@@ -131,13 +134,68 @@ var BP_MAIN = (function()
         };
         resp.db = recs;
         resp.result = true;
+        if (callback) {
+            callback(resp);
+        }
         return resp;
     }
     
+    function saveRecord(rec, dt, callback, dontGet)
+    {
+        var result, resp, recs;
+        result = insertNewRec(rec, dt);
+        if (result && (!dontGet)) {
+            recs = MEM_STORE.getDTRecs(BP_CONNECT.lToLoc(rec.l), dt);
+        }
+        resp = {result:result, recs:recs};
+        if (callback) {callback(resp);}
+        
+        return resp;
+    }
+    
+    function saveTempRec(rec, dt, callback, dontGet)
+    {
+        var notes, result, resp, recs, loc;
+        if (DBFS.getDBPath()) 
+        {
+            MEM_STORE.insertTempRec(rec, dt);
+            loc = BP_CONNECT.lToLoc(rec.l);
+            if (!dontGet) {
+                recs = MEM_STORE.getTRecs(loc);
+            }
+            result = true;
+        }
+        else {result = false;}
+        resp = {result:result, recs:recs};
+        if (callback) {callback(resp);}
+        return resp;
+    }
+    
+    function sendDelActn(_rec, dt, callback, dontGet, toTemp)
+    {
+        var del = BP_CONNECT.getDTProto(dt).newDelActn.apply(_rec);
+        //BP_ERROR.logdebug('Producing Delete Action' + (toTemp?' to temp: ':': ') + JSON.stringify(del));
+        if (toTemp) {
+            saveTempRec(del, dt, callback, dontGet);
+        }
+        else {
+            saveRecord(del, dt, callback, dontGet);                
+        }
+    }
+    
+    function getDBPath(callback)
+    {
+        var resp = makeDashResp(true),
+            dbPath = DBFS.getDBPath();
+            
+        if (callback) {callback(resp);}
+        return resp;
+    }
+     
     function onBefReq(details)
     {
         if (g_forms[details.url]) {
-            g_win.alert("onBefReq: " + details.url);
+            window.alert("onBefReq: " + details.url);
             //delete g_forms[details.url];
         }
         // else {
@@ -147,41 +205,28 @@ var BP_MAIN = (function()
     
     function onRequest(rq, sender, funcSendResponse)
     {
-        var result, recs, dbPath, dbStats, fnames, notes, dt,
+        var result, recs, dbPath, dbStats, fnames, notes,
             cm = rq.cm,
             bSaveRec;
-        //delete rq.cm; // we don't want this to get saved to store in case of eRec and pRec.
-        BP_ERROR.logdebug("onRequest: " + cm);
+        BP_ERROR.logdebug("onRequest: " + cm + (rq.dt ? (" dt="+rq.dt) : ""));
         
         rq.atvt ? (BPError.atvt = new Activity(rq.atvt)) : (BPError.atvt = new Activity("BPMain::OnRequest"));
         
         try  {
             switch (cm) {
-                case dt_eRecord:
-                case dt_pRecord:
-                    dt = cm;
-                    BPError.push("SaveRecord:" + dt);
+                case BP_CONNECT.cm_saveRec:
+                    BPError.push("SaveRecord" + rq.dt);
                     bSaveRec = true;
-                    result = insertNewRec(rq.rec, dt);
-                    if (result && (!rq.dontGet)) {
-                        recs = MEM_STORE.getDTRecs(rq.loc, dt);
-                    }
-                    funcSendResponse({result:result, recs:recs});
+                    funcSendResponse(saveRecord(rq.rec, rq.dt, null, rq.dontGet));
                     break;
                 case BP_CONNECT.cm_tempRec:
-                    BPError.push("SaveTempRecord:" + rq.dt);
-                    if (DBFS.getDBPath()) {
-                        notes = MEM_STORE.insertTempRec(rq.rec, rq.dt);
-                        if (!rq.dontGet) {
-                            recs = MEM_STORE.getTRecs(rq.loc);
-                        } 
-                    }
-                    else {result = false;}
-                    funcSendResponse({result:result, recs:recs, notes:notes});
+                    BPError.push("SaveTempRecord" + rq.dt);
+                    funcSendResponse(saveTempRec(rq.rec, rq.dt, null, rq.dontGet));
                     break;
                 case 'cm_bootLoaded':
-                    BPError.push("CSLoaded");
-                    chrome.pageAction.show(sender.tab.id);
+                    BPError.push("CSBootLoaded");
+                    //BP_PLAT.showPageAction(sender.tab.id);
+                    //funcSendResponse({result:true, cm:((MEM_STORE.numTRecs(rq.loc)) ? 'cm_loadDll' : undefined) });
                     funcSendResponse({result:true});
                     break;
                 case cm_getRecs:
@@ -193,7 +238,7 @@ var BP_MAIN = (function()
                 case cm_loadDB:
                     BPError.push("LoadDB");
                     dbPath = FILE_STORE.loadDB(rq.dbPath);
-                    funcSendResponse(makeDashResp(Boolean(dbPath))); 
+                    funcSendResponse(makeDashResp(Boolean(dbPath)));
                     break;
                 case BP_CONNECT.cm_unloadDB:
                     BPError.push("UnloadDB");
@@ -232,8 +277,7 @@ var BP_MAIN = (function()
                     break;
                 case cm_getDBPath:
                     BPError.push("GetDBPath");
-                    dbPath = DBFS.getDBPath();
-                    funcSendResponse(makeDashResp(true));
+                    funcSendResponse(getDBPath());
                     break;
                 case BP_CONNECT.cm_importCSV:
                     BPError.push("ImportCSV");
@@ -324,6 +368,9 @@ var BP_MAIN = (function()
             delete g_tabs[id];
         }
 
+        function notifySaved(l) {}
+        function notifyUnsaved(l) {}
+
         return Object.freeze (
         {
             clickReq: clickReq,
@@ -369,6 +416,13 @@ var BP_MAIN = (function()
                 }
             }
             
+            BPError.atvt = new Activity('InstallListener');
+            var scope = new BP_LISTENER.Scope('temp_' + dt_pRecord, BP_CONNECT.newL({}, dt_pRecord), dt_pRecord);
+            var cback = new BP_LISTENER.CallbackInfo(function(type, details)
+                    {
+                        BP_ERROR.loginfo('Received event ' + type);
+                    });
+            MEM_STORE.listen('bp_change', scope, cback);
             //chrome.webRequest.onBeforeRequest.addListener(onBefReq, {urls:["http://*/*", "https://*/*"]});
         
             // chrome.tabs.onSelectionChanged.addListener(function(tabId) 
@@ -387,7 +441,14 @@ var BP_MAIN = (function()
     return Object.freeze(
         {
             init: init,
-            g: g
+            g: g,
+            // MOD_CONNECT
+            saveRecord: saveRecord,
+            saveTempRec: saveTempRec,
+            sendDelActn: sendDelActn,
+            getRecs: getRecs,
+            getDBPath: getDBPath,
+            BP_PLAT: g.BP_PLAT
         });
 }());
 

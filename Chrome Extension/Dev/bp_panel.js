@@ -7,28 +7,45 @@
 
 /* JSLint directives */
 /*global $, BP_DLL, BP_GET_CONNECT, BP_GET_CS_PLAT, IMPORT, BP_GET_COMMON,
-  BP_GET_ERROR, BP_GET_MEMSTORE, BP_GET_W$, BP_GET_TRAITS, BP_GET_WDL */
+  BP_GET_ERROR, BP_GET_MEMSTORE, BP_GET_W$, BP_GET_TRAITS, BP_GET_WDL, BP_GET_PLAT */
  
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
+//////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE OR GLOBAL ///////////////////
+function IMPORT(sym)
+{
+    'use strict';
+    var window = null, document = null, console = null;
+    if(sym===undefined || sym===null) {
+        throw new ReferenceError("Linker:Symbol Not Found");
+    }
+    else {
+        return sym;
+    }
+}
+
 /**
- * @ModuleBegin PANEL_MAIN
+ * @ModuleBegin MOD_PANEL
  */
-function BP_GET_PANEL()
+(function()
 {
     "use strict";
-    var window = null, document = null;
+    // g => Global Env.
     var g = {g_win:window, g_console:console};
     g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
-    g.BP_ERROR = BP_GET_ERROR(g);
-    g.BP_COMMON = BP_GET_COMMON(g);
-    g.BP_TRAITS = BP_GET_TRAITS(g);
-    g.BP_WDL = BP_GET_WDL(g);
+    var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
+    g.BP_ERROR = BP_CS_PLAT.getBackgroundPage().BP_GET_ERROR(g);
+    g.BP_COMMON = BP_CS_PLAT.getBackgroundPage().BP_GET_COMMON(g);
+    g.BP_TRAITS = BP_CS_PLAT.getBackgroundPage().BP_GET_TRAITS(g);
+    g.BP_CONNECT = BP_CS_PLAT.getBackgroundPage().BP_GET_CONNECT(g);
     g.BP_W$ = BP_GET_W$(g);
+    g.BP_WDL = BP_GET_WDL(g);
+    // Module object used within bp_main.html
+    g.BP_MAIN = BP_CS_PLAT.getBackgroundPage().BP_MAIN;
+    g.BP_PLAT = g.BP_MAIN.BP_PLAT;
     
     var m;
-    var BP_MAIN = g.BP_CS_PLAT.getBackgroundPage().BP_MAIN;
     /** @import-module-begin */
     var BP_COMMON = IMPORT(g.BP_COMMON);
     /** @import-module-begin Traits */
@@ -46,13 +63,18 @@ function BP_GET_PANEL()
         CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX),
         CT_BP_USERID = IMPORT(m.CT_BP_USERID),
         CT_BP_PASS = IMPORT(m.CT_BP_PASS);        // Submit button
-    /** @import-module-begin Connector */
+    /** @import-module-begin */
+    m = g.BP_MAIN;
+    var BP_MAIN = IMPORT(m),
+        getRecs = IMPORT(m.getRecs),
+        saveRecord = IMPORT(m.saveRecord),
+        //saveTempRec = IMPORT(m.saveTempRec),
+        sendDelActn = IMPORT(m.sendDelActn);
+    /** @import-module-begin */
     m = g.BP_CONNECT;
     var BP_CONNECT = IMPORT(m),
-        getRecs = IMPORT(m.getRecs),
         newERecord = IMPORT(m.newERecord),
-        newPRecord = IMPORT(m.newPRecord),
-        panelClosed = IMPORT(m.panelClosed);
+        newPRecord = IMPORT(m.newPRecord);
     /** @import-module-begin */
     m = g.BP_WDL;
     var cs_panel_wdt = IMPORT(m.cs_panel_wdt),
@@ -66,6 +88,8 @@ function BP_GET_PANEL()
     m = g.BP_ERROR;
     var BP_ERROR = IMPORT(m),
         BPError = IMPORT(m.BPError);
+    /** @import-module-begin */
+    var BP_PLAT = IMPORT(g.BP_PLAT);
     /** @import-module-end **/ m = null;
 
     /** @globals-begin */
@@ -79,7 +103,7 @@ function BP_GET_PANEL()
         sel_fn_p = "[data-"+data_fn+"="+fn_pass+']',
         sel_ct_u = "[data-"+data_ct+"="+CT_BP_USERID+']',
         sel_ct_p = "[data-"+data_ct+"="+CT_BP_PASS+']',
-        MOD_DB = new MiniDB(),
+        MOD_DB = new MiniDB(true), // create a read-only db.
         MOD_PANEL,
         MOD_CS;
     /** @globals-end **/
@@ -122,10 +146,11 @@ function BP_GET_PANEL()
             m_panel = undefined;
             m_id_panel = undefined;
             m_bUserClosed = true;
-            panelClosed(g_loc);
+            //panelClosed(g_loc);
+            window.close();
         }
 
-        function create()
+        function create(loc)
         {
             close();
             m_bUserClosed = false;
@@ -137,33 +162,23 @@ function BP_GET_PANEL()
                 saveRec: MOD_CS.saveRec,
                 delRec: MOD_CS.delRec,
                 delTempRec: MOD_CS.delTempRec,
-                autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined), 
+                //autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined), 
                 dbName:MOD_DB.dbName,
-                dbPath:MOD_DB.dbPath
+                dbPath:MOD_DB.dbPath,
+                popup:true,
+                loc:MOD_DB.loc
             };
             m_panel = w$exec(cs_panel_wdt, ctx);
+            
             m_id_panel = m_panel.id;
             BP_COMMON.delProps(ctx); // Clear DOM refs in the ctx to aid GC
         }
-        
-        function get() {return m_panel;}
-        
-        function getc()
-        {
-            if (!m_panel) {
-                create();
-            }
-            
-            return m_panel;
-        }
-        
+
         function userClosed()
         {return m_bUserClosed;}
         
         return Object.freeze(
         {
-            get: get,
-            getc: getc,
             create: create,
             destroy: destroy,
             onClosed: onClosed,
@@ -176,16 +191,16 @@ function BP_GET_PANEL()
         /*
          * Show panel using the dbInfo returned in the response.
          */
-        function cbackShowPanel (resp, bConditional)
+        function cbackShowPanel (resp)
         {
             try
             {// failure here shouldn't prevent from displaying the panel.
-                if (resp.result===true)
+                if (resp && (resp.result===true))
                 {
                     var db = resp.db;
-                    console.info("cbackShowPanel@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
+                    BP_ERROR.loginfo("cbackShowPanel@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
                     try { // failure here shouldn't block rest of the call-flow
-                        MOD_DB.ingest(resp.db, resp.dbInfo);
+                        MOD_DB.ingest(resp.db, resp.dbInfo, resp.loc);
                     } 
                     catch (err) {
                         BP_ERROR.logwarn(err);
@@ -203,29 +218,29 @@ function BP_GET_PANEL()
             }
 
             //if ((!bConditional) || MOD_FILL.info().autoFillable() || MOD_DB.numUnsaved) {
-            if ((!bConditional) || MOD_DB.numUnsaved) {
+            //if ((!bConditional) || MOD_DB.numUnsaved) {
                 MOD_PANEL.create();
-            }
+            //}
         }
         
-        function showPanelAsync(bConditional)
+        function showPanelAsync()
         {
-            chrome.tabs.query({currentWindow:true, hilighted:true}, function(tabs)
+            chrome.tabs.query({currentWindow:true, highlighted:true}, function(tabs)
             {
                 var loc;
-                if (tabs.length) {
-                    loc = BP_COMMON.parseURL(tabs[0].url);
+                if (tabs.length) 
+                {
+                    loc = BP_COMMON.parseURL(tabs[0].url) || {};
+                    //BP_PLAT.bpClick(tabs[0]);
+                    BP_ERROR.logdebug("popup.loc = " + JSON.stringify(loc));
+                    //if (loc) {
+                        getRecs(loc, cbackShowPanel);
+                    // }
+                    // else {
+                        // cbackShowPanel();
+                    // }
                 }
             });
-            if (bConditional) {
-                getRecs(g_loc, function (resp)
-                {
-                    cbackShowPanel(resp, true);
-                });
-            }
-            else {
-                getRecs(g_loc, cbackShowPanel);
-            }
         }
         
         /**
@@ -233,12 +248,13 @@ function BP_GET_PANEL()
          */
         function onDllLoad ()
         {
-            showPanelAsync(true);
+            document.body.style.margin = '2px';
+            showPanelAsync();
         }
 
         function saveRec (rec, dt, callbackFunc)
         {
-            BP_CONNECT.saveRecord(rec, dt, function(resp)
+            saveRecord(rec, dt, function(resp)
             {
                 if (resp.result && resp.recs) {
                     MOD_DB.ingestDT(resp.recs, dt);
@@ -251,7 +267,7 @@ function BP_GET_PANEL()
 
         function delRec (rec, dt, callbackFunc, toTemp)
         {
-            BP_CONNECT.sendDelActn(rec, dt, function(resp)
+            sendDelActn(rec, dt, function(resp)
             {
                 if (resp.result && resp.recs) {
                     if (!toTemp) {MOD_DB.ingestDT(resp.recs, dt);}
@@ -265,7 +281,8 @@ function BP_GET_PANEL()
 
         function main()
         {
-            BP_DLL.onDllLoad = onDllLoad;
+            //BP_DLL.onDllLoad = onDllLoad;
+            onDllLoad();
         }
 
         return Object.freeze(
@@ -279,5 +296,5 @@ function BP_GET_PANEL()
     }());
     
     MOD_CS.main();
-    console.log("loaded CS");    
-}
+    BP_ERROR.log("loaded CS");    
+}());

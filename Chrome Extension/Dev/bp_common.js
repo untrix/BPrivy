@@ -190,8 +190,6 @@ function BP_GET_COMMON(g)
      * DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED
      *                      Use IterObj instead
      * Iterates over keys of an object (as in Object.keys)
-     * Calls func with the array-item as first argument
-     * followed by all arguments passed to iterKeys.
      * 'this' is mapped to thisArg
      *
      * DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED
@@ -211,34 +209,11 @@ function BP_GET_COMMON(g)
         }
         return rVal;
     }
-
-
-    // DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED
-    //                      Use IterArray2 instead
-    // Similar to forEach, but not the same. This is here because forEach is supposed
-    // to be slower than a for-loop ! Calls func with the array-item as first argument
-    // followed by all arguments passed to iterArray.
-    // 'this' is mapped to thisArg.
-    //
-    // DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED
-    // function iterArray (a, func, ctx, thisArg)
-    // {
-        // var n = a.length,
-            // i;
-            // // convert arguments into an array. Omit 'o', 'this' and 'func' arguments.
-            // //ctx = Array.prototype.slice.apply(arguments, [3]);
-        // for (i=0; i<n; i++)
-        // {
-            // func.apply(thisArg, [a[i], ctx]);
-        // } 
-    // }    
-    
+   
     /**
      *                  Replaces IterKeys
      * 
      * Iterates over keys of an object (as in Object.keys)
-     * Calls func with the array-item as first argument
-     * followed by all arguments passed to iterKeys.
      * 'this' is mapped to thisArg
      */
     function iterObj (o, thisArg, func, ctx)
@@ -251,6 +226,15 @@ function BP_GET_COMMON(g)
                 break;
             }
         } 
+    }
+
+    function bindProto (obj, proto)
+    {
+        iterObj(proto, null, function(fName, fBody)
+        {
+            //enumerable,configurable,writable=false
+            Object.defineProperty(obj, fName, {value:fBody});
+        });
     }
 
     //                      Replaces IterArray
@@ -309,6 +293,7 @@ function BP_GET_COMMON(g)
         iterArray2: {value: iterArray2},
         indexOf: {value: indexOf},
         iterObj: {value:iterObj},
+        bindProto:{value:bindProto},
         //concatArray: {value: concatArray},
         EMPTY_OBJECT: {value: EMPTY_OBJECT},
         EMPTY_ARRAY: {value: EMPTY_ARRAY}

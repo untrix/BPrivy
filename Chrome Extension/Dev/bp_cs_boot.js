@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
-/*global chrome, BP_DLL, BP_MOD_BOOT */
+/*global chrome, BP_DLL, BP_BOOT */
 
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -88,22 +88,7 @@
             head.insertBefore(com, head.firstChild);
             console.log("Instrumented command");
         }
-    }
-      
-    // function Control(el, fieldName)
-    // {
-        // // Field names copied from Arec and ERecord for consistency
-        // Object.defineProperties(this, 
-        // {
-            // f: {value: fieldName, enumerable: true},
-            // t: {value: el.tagName, enumerable: true},
-            // id: {value: el.id, enumerable: true},
-            // n: {value: el.name, enumerable: true},
-            // y: {value: el.type, enumerable: true},
-            // v: {value: el.value || el.text}
-        // });
-    // }
-//
+    }
     function onClickComm()
     {
         loadBP_CS(function()
@@ -115,7 +100,7 @@
         });
     }
 
-    function onDllLoad()
+    function loadDll()
     {
         loadBP_CS(function()
         {
@@ -168,16 +153,21 @@
 
     chrome.extension.onMessage.addListener(onMessage);
     setupCommand(document, onClickComm);
-    chrome.extension.sendRequest({cm:'cm_bootLoaded'});
+    chrome.extension.sendRequest({cm:'cm_bootLoaded', loc:document.location}, function(resp)
+    {
+        // if (resp.result && resp.cm && (resp.cm === 'cm_loadDll')) {
+            // loadDll();
+        // }
+    });
     if (BP_BOOT.scan(document)) {
-        onDllLoad();
+        loadDll();
     }
     else {
         BP_BOOT.observe(document, function(mutations,observer)
         {
             if ((!BP_DLL.bLoaded) && BP_BOOT.scan(document)) {
                 observer.disconnect();
-                onDllLoad();
+                loadDll();
                 BP_DLL.bLoaded = true;
             }
         });

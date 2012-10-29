@@ -95,7 +95,8 @@ var src = abs(argv[0]),
     'bp_cs.cat.js',
     'bp_main.cat.js',
     'bp_manage.cat.js',
-    'bp_cs_boot.cat.js'
+    'bp_cs_boot.cat.js',
+    'bp_panel.cat.js'
     ],
     release_cs_boot_js = ["bp_cs_boot_head.js", "bp_cs_boot.js"],
     release_cs_js = [
@@ -104,13 +105,15 @@ var src = abs(argv[0]),
        "bp_cs.js"
     ],
     release_main_js=['bp_error.js','bp_common.js','bp_traits.js',"bp_main_chrome.js","bp_cs_chrome.js",
-                     "bp_connector.js","bp_memstore.js", "bp_db_fs.js", "bp_filestore.js","bp_main.js" ],
+                     "bp_listener.js", "bp_connector.js","bp_memstore.js", "bp_db_fs.js", "bp_filestore.js","bp_main.js" ],
     // release_manage_js=["bp_error.js","bp_common.js","bp_traits.js","bp_cs_chrome.js","bp_w$.js",
                        // "bp_connector.js", "bp_db_fs.js", "bp_editor.wdl.js", "bp_manage.js"],
-    release_manage_js=["bp_w$.js", "bp_cs_chrome.js", "bp_editor.wdl.js", "bp_manage.js"],
+    release_manage_js=["bp_cs_chrome.js", "bp_w$.js", "bp_editor.wdl.js", "bp_listener.js", "bp_manage.js"],
+    release_panel_js=["bp_main_chrome.js", "bp_cs_chrome.js", "bp_w$.js", "bp_panel.wdl.js", "bp_listener.js", "bp_panel.js"],
     release_others = [
     'bp_manage.html',
-    'BP_Main.html'].
+    'BP_Main.html',
+    'bp_panel.html'].
     concat(qualify('data', 'etld.json')).
     concat(lsDir(abs(src,'icons'), src)).    concat(lsDir(abs(src,'tp'), src)),
     release_json = ['manifest.json'];
@@ -157,6 +160,7 @@ catIfNeeded(qualifyA(src,release_cs_boot_js), src + path.sep + 'bp_cs_boot.cat.j
 catIfNeeded(qualifyA(src,release_cs_js), src + path.sep + 'bp_cs.cat.js');
 catIfNeeded(qualifyA(src,release_main_js), src + path.sep + 'bp_main.cat.js');
 catIfNeeded(qualifyA(src,release_manage_js), src + path.sep + 'bp_manage.cat.js');
+catIfNeeded(qualifyA(src,release_panel_js), src + path.sep + 'bp_panel.cat.js');
 
 var ch2 = child.fork('buildminify.js', [src, minjs]);
 ch2.on('exit', async.runHere(function childExit(code, signal)

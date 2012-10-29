@@ -80,13 +80,13 @@ function BP_GET_FILESTORE(g)
             // return true if the record should be persisted to filestore.
             toPersist: function (notes)
                 {
-                    return (notes.isRecentUnique || notes.isNewRepeat);
+                    return (notes.isRecentUnique || notes.isRecentRepeat);
                 }
         },
         insertNewRec: { 
             toPersist: function (notes) // Should be same as importFile
             {
-                return (notes.isRecentUnique || notes.isNewRepeat);
+                return (notes.isRecentUnique || notes.isRecentRepeat);
             }
         }
     });
@@ -109,7 +109,7 @@ function BP_GET_FILESTORE(g)
      */
     function loadFile(dbPath, cat, dt, dtDirPath, fname, dirEnt, dbStats, buf)
     {
-        var i, notes,
+        var i, dr,
             //loaded=0,
             ftraits = MEM_STORE.DT_TRAITS.getTraits(dt).file,
             // Have BPPlugin format the return data like a JSON array. It is more efficient
@@ -152,12 +152,13 @@ function BP_GET_FILESTORE(g)
             {
                 try
                 {
-                    notes = MEM_STORE.insertRec(rec, dt);
+                    dr = MEM_STORE.insertRec(rec, dt);
                     // In case of file-import, the imported records need to be persisted
                     // to the local DB. Such records are merely saved to buf here - not
                     // actually written to file (that's done later). But we need to check with
                     // both DT and UC traits whether the record should be persisted.
-                    if (buf && MEM_STORE.DT_TRAITS.getTraits(dt).toPersist(notes) && UC_TRAITS.importFile.toPersist(notes))
+                    if (buf && MEM_STORE.DT_TRAITS.getTraits(dt).toPersist(dr.notes) && 
+                        UC_TRAITS.importFile.toPersist(dr.notes))
                     {
                         buf.pushRec(rec);
                     }
@@ -172,6 +173,7 @@ function BP_GET_FILESTORE(g)
             
             BP_ERROR.log("Loaded file " + filePath);
             dbStats.put(dt, cat, fname, dirEnt);
+
             return true;
         }
         else 
@@ -853,7 +855,7 @@ function BP_GET_FILESTORE(g)
    
     function importCSV(path, obfuscated)
     {
-        var o={}, rval, i, prec, drec, pidx, csv, line, url, notes;
+        var o={}, rval, i, prec, drec, pidx, csv, line, url, dr;
         if (BP_PLUGIN.ls(path, o))
         {
             switch (path.slice(-4).toLowerCase())
@@ -883,10 +885,10 @@ function BP_GET_FILESTORE(g)
                             drec = new MEM_STORE.DRecord(prec, dt_pRecord, uct);
                         }
                         
-                        if ((notes=MEM_STORE.insertDrec(drec)))
+                        if ((dr=MEM_STORE.insertDrec(drec)))
                         {
                             try {
-                                if (MEM_STORE.DT_TRAITS.getTraits(dt_pRecord).toPersist(notes) && uct.toPersist(notes)) {
+                                if (MEM_STORE.DT_TRAITS.getTraits(dt_pRecord).toPersist(dr.notes) && uct.toPersist(dr.notes)) {
                                     insertRec(prec, dt_pRecord);
                                 }
                             } catch (e) {

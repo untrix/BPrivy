@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
-/*global chrome, BP_DLL, BP_MOD_BOOT, WebKitMutationObserver, console */
+/*global chrome, BP_DLL, BP_BOOT, WebKitMutationObserver, console */
 
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -16,7 +16,12 @@
  * This file does not get loaded in production.
  */
 
-chrome.extension.sendRequest({cm:'cm_bootLoaded'});
+chrome.extension.sendRequest({cm:'cm_bootLoaded', loc:document.location}, function(resp)
+{ 'use strict';
+    // if (resp.result && resp.cm && (resp.cm === 'cm_loadDll')) {
+        // BP_DLL.onDllLoad();
+    // }
+});
 if (BP_BOOT.scan(document)) 
 {
     BP_DLL.onDllLoad();

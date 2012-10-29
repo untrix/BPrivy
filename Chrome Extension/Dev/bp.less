@@ -30,6 +30,8 @@
               background-color: transparent;
               direction: ltr;
               list-style: none;
+              line-height: 1.0;
+              font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
               
             .com-bprivy-nB {
                 display: inline-block;
@@ -49,20 +51,17 @@
 
 #com-untrix-panel	{
         display: block;
-        width: 322px;
+        width: 276px;
         //background-color: rgb(200, 200, 200);
         font-size: 13px;
-        border: thin solid #0060bf;
-        opacity: 0.8;
+        border: thin solid silver; //#0060bf;
+        //opacity: 0.5;
         //background-color: #e3f1ff;
         //background-color: grey;
         background-color: white;
         z-index: 9007199254740992;
-        border-radius: 2px;
-				padding: 2px;
 				color: black;
 				cursor: default;
-				font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
 			}
 
 #com-untrix-panel {
@@ -77,6 +76,7 @@
 				text-align: center;
 				vertical-align: middle;
 				cursor: move;
+        margin-bottom: 2px;
 			}
 
   #com-untrix-TitleText {
@@ -150,36 +150,43 @@
                 text-align: justify;
                 vertical-align: middle;
                 height: 16px;
+                padding: 0px;
+                font-size: 12px;
+                line-height: 1.2;
+                //border-width: 1px;
     }
 
     input[disabled].com-bprivy-field {
                 border-style: outset;
+                border-color: silver;
                 cursor: not-allowed;
     }
 
     input.com-bprivy-user-in {
-                width: 175px;
-                border: 1px inset;
-                border-color: silver;
+                width: 125px;
+                border-style: inset;
+                border-color: gold;
     }
 
     input.com-bprivy-pass-in {
                 width: 75px;
-                border: 1px inset;
-                border-color: silver;
+                border-style: inset;
+                border-color: gold;
     }
 
     .com-bprivy-user-out{
-                width: 175px;
-                border: 1px ridge #0060bf;
-                //background-color: light-gray;
+                width: 125px;
+                //border: 1px outset #0060bf;
+                border-style: outset;
+                border-color: silver;
                 cursor: move;
     }
 
     .com-bprivy-pass-out {
                 width: 75px;
-                border: 1px ridge #0060bf;
-                //background-color: light-gray;
+                //border: 1px ridge #0060bf;
+                border-style: outset;
+                border-color: silver;
                 cursor: move;
 	  }
   }

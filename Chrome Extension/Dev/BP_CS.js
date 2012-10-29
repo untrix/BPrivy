@@ -50,8 +50,8 @@ function IMPORT(sym)
         preventDefault = IMPORT(m.preventDefault);
     /** @import-module-begin CSPlatform */
     m = g.BP_CS_PLAT;
-    var registerMsgListener = IMPORT(m.registerMsgListener);
-    var addEventListener = IMPORT(m.addEventListener), // Compatibility function
+    var registerMsgListener = IMPORT(m.registerMsgListener),
+        addEventListener = IMPORT(m.addEventListener), // Compatibility function
         addEventListeners = IMPORT(m.addEventListeners),
         trigger = IMPORT(m.trigger);
     /** @import-module-begin Traits */
@@ -71,10 +71,12 @@ function IMPORT(sym)
         CT_BP_PASS = IMPORT(m.CT_BP_PASS);        // Submit button
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;
-    var getRecs = IMPORT(m.getRecs),
+    var BP_CONNECT = IMPORT(m),
+        getRecs = IMPORT(m.getRecs),
         newERecord = IMPORT(m.newERecord),
         newPRecord = IMPORT(m.newPRecord),
-        panelClosed = IMPORT(m.panelClosed);
+        panelClosed = IMPORT(m.panelClosed),
+        sendDelActn = IMPORT(m.sendDelActn);
     /** @import-module-begin */
     m = g.BP_WDL;
     var cs_panel_wdt = IMPORT(m.cs_panel_wdt),
@@ -226,7 +228,8 @@ function IMPORT(sym)
                     (!pair.p && pair.u && (!MOD_DB.has(pair.u))) ||
                     (pair.u && pair.p && (!MOD_DB.matches(pair.u, pair.p))))
                 {
-                    MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(), pair.u, pair.p), dt_pRecord, function(resp)
+                    MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(),
+                                       pair.u, pair.p), dt_pRecord, function(resp)
                     {
                         if (resp.result) {
                             MOD_PANEL.create();
@@ -1165,7 +1168,7 @@ function IMPORT(sym)
             var isUseless = false;
             if (form && (form.localName==='form'))
             {
-                if (    (g_uselessForms.indexOf(form.id) !== -1) ||
+                if (    (g_uselessForms.indexOf(form.getAttribute('id')) !== -1) ||
                         ( (isAncestor(form, field)) && ($(field).parentsUntil(form).length >= 5) ) ||
                         (ctxEl && !isAncestor(ctxEl, form))
                    )
@@ -1313,9 +1316,14 @@ function IMPORT(sym)
         
         function hasVal(el, fn)
         {
-            if  (!el || !el.value) {
-                return false;
-            }
+            if  (!el || !el.value || 
+            // In some cases drag-n-drop doesn't work on some fields because those fields
+            // are hidden until the user types something into them. In order to workaround
+            // that problem, we ask the user to type one character (e.g. 'x') into the
+            // offending field in order to activate it; then drag-n-drop should work. But
+            // we don't want to auto-capture that input. Hence we will discard single-character
+            // inputs
+                (el.value.length === 1)) { return false; }
             else if (fn===fn_userid) {
                 // Websites sometimes fill-in valid default values of usernames. Hence
                 // we can't ignore default values. But many websites have default values
@@ -2236,7 +2244,7 @@ function IMPORT(sym)
                                           el.name,
                                           el.type,
                                           ((form&&form.getAttribute('id'))? form.getAttribute('id') : undefined),
-                                          ((form&&form.name)? form.name:undefined));
+                                          ((form&&form.getAttribute('name'))? form.getAttribute('name'):undefined));
                     MOD_CS.saveRec(eRec, dt_eRecord);
     
                     data = e.dataTransfer.getData(CT_TEXT_PLAIN);
@@ -2399,16 +2407,16 @@ function IMPORT(sym)
     MOD_CS = (function()
     {
         /*
-         * Show panel using the dbInfo returned in the response.
+         * Process mini-db returned in the response to get-recs.
          */
-        function cbackShowPanel (resp, bConditional)
+        function onGotRecs (resp)
         {
             try
             {// failure here shouldn't prevent from showing the panel.
                 if (resp.result===true)
                 {
                     var db = resp.db;
-                    console.info("cbackShowPanel@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
+                    BP_ERROR.loginfo("onGotRecs@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
                     try { // failure here shouldn't block rest of the call-flow
                         MOD_DB.ingest(resp.db, resp.dbInfo);
                     } 
@@ -2421,40 +2429,25 @@ function IMPORT(sym)
                     MOD_DB.clear(); // Just to be on the safe side
                     BP_ERROR.logdebug(resp.err);
                 }
-    
-                try { // failure here shouldn't block rest of the call-flow 
+
+                try { // We need to rescan because new e-recs may change the scan results.
                     MOD_FILL.scan();
                 }
                 catch (err) {
                     BP_ERROR.logwarn(err);
                 }
             }
-            catch (err) 
+            catch (err)
             {
                 BP_ERROR.logwarn(err);
             }
 
             //if ((!bConditional) || MOD_FILL.info().autoFillable() || MOD_DB.numUnsaved) {
-            if ((!bConditional) || MOD_DB.numUnsaved) {
-                MOD_PANEL.create();
-            }
+            // if ((!bConditional) || MOD_DB.numUnsaved) {
+                // MOD_PANEL.create();
+            // }
         }
 
-        function cbackShowPanelConditional (resp)
-        {
-            cbackShowPanel(resp, true);
-        }
-        
-        function showPanelAsync(bConditional)
-        {
-            if (bConditional) {
-                getRecs(g_loc, cbackShowPanelConditional);
-            }
-            else {
-                getRecs(g_loc, cbackShowPanel);
-            }
-        }
-        
         /**
          *  Invoked when a mutation event is received. 
          */
@@ -2462,19 +2455,25 @@ function IMPORT(sym)
         {
             MOD_FILL.scan(g_doc);
             MOD_FILL.setMutationScanned();
-            if ((!MOD_PANEL.get()) && (!MOD_PANEL.userClosed()) && MOD_DB.numUnsaved) {
-                MOD_PANEL.create();
-            }
+            // if ((!MOD_PANEL.get()) && (!MOD_PANEL.userClosed()) && MOD_DB.numUnsaved) {
+                // MOD_PANEL.create();
+            // }
         }
-        
+
         /**
-         * Invoked by bp_cs_boot when it detects a possible signin/up form on the page.
+         * Invoked the first time this code is loaded.
          */
         function onDllLoad ()
         {
             MOD_FILL.init(); // init only if not already done
             MOD_DND.init(); // init only if not already done
-            showPanelAsync(true);
+            getRecs(g_loc, function (resp)
+            {
+                onGotRecs(resp);
+                // if (MOD_DB.numUnsaved) {
+                    // MOD_PANEL.create();
+                // }
+            });
         }
 
         /**
@@ -2487,13 +2486,17 @@ function IMPORT(sym)
             
             if (!MOD_PANEL.destroy()) // destroy returns true if a panel existed and was destroyed
             {
-                //MOD_FILL.info().clearAll();
-                showPanelAsync();
+                getRecs(g_loc, function(resp)
+                {
+                    onGotRecs(resp);
+                    MOD_PANEL.create();
+                });
             }
         }
         
         /**
-         * Invoked upon receipt of a click message from bp_main.
+         * Invoked upon receipt of a click message from bp_main - only if popup was not
+         * set in the manifest file.
          */
         function onClickBP (request, _ /*sender*/, sendResponse)
         {
@@ -2521,7 +2524,7 @@ function IMPORT(sym)
 
         function saveRec (rec, dt, callbackFunc, toTemp)
         {
-            var func = toTemp ? g.BP_CONNECT.saveTempRec : g.BP_CONNECT.saveRecord;
+            var func = toTemp ? BP_CONNECT.saveTempRec : BP_CONNECT.saveRecord;
             // We could cache non-TRecs records as well but not needed by use-cases right now
             if (toTemp) {MOD_DB.saveTRec(rec);} // We could do this for non-TRecs as well...
             func(rec, dt, function(resp)
@@ -2541,7 +2544,7 @@ function IMPORT(sym)
             // We could cache non-TRecs records as well but that's not needed by use-cases
             // right now
             if (toTemp) {MOD_DB.delTRec(rec);}
-            g.BP_CONNECT.sendDelActn(rec, dt, function(resp)
+            sendDelActn(rec, dt, function(resp)
             {
                 if (resp.result && resp.recs) {
                     if (!toTemp) {MOD_DB.ingestDT(resp.recs, dt);}
@@ -2565,7 +2568,6 @@ function IMPORT(sym)
         return Object.freeze(
         {
             main: main,
-            showPanelAsync: showPanelAsync,
             onMutation: onMutation,
             saveRec: function(a,b,c) {saveRec(a,b,c);},
             saveTempRec: function(a,b,c) {saveRec(a,b,c,true);},

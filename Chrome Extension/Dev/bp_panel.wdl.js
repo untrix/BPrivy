@@ -7,9 +7,9 @@
 
 /* JSLint directives */
 /*global $, IMPORT */
- 
-/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
-  undef:false, vars:true, white:true, continue: true, nomen:true */
+
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, 
+  regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true */
 
 /**
  * @ModuleBegin Panel
@@ -38,7 +38,8 @@ function BP_GET_WDL (g)
         w$undefined = IMPORT(m.w$undefined);
     /** @import-module-begin CSPlatform */
     m = g.BP_CS_PLAT;
-    var getURL = IMPORT(m.getURL),
+    var BP_CS_PLAT = IMPORT(m),
+        getURL = IMPORT(m.getURL),
         addHandlers = IMPORT(m.addHandlers); // Compatibility function
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;
@@ -113,13 +114,18 @@ function BP_GET_WDL (g)
     var u_cir_X = '\u24CD';
     /** @globals-end **/
        
-    function MiniDB()
+    function MiniDB(readOnly)
     {
         this.clear();
+        // property 'readOnly' is enumerable:false, writable:false, configurable:false
+        Object.defineProperty(this, readOnly, {value:readOnly});
+        if (!readOnly) {
+            BP_COMMON.bindProto(this, MiniDB.wProto);
+        }
     }
     MiniDB.prototype = Object.freeze(
     {
-        ingest: function(db, dbInfo)
+        ingest: function(db, dbInfo, loc)
         {
             if (db) 
             {
@@ -135,12 +141,13 @@ function BP_GET_WDL (g)
                     if (dbInfo.dbName) {this.dbName = dbInfo.dbName;}
                     if (dbInfo.dbPath) {this.dbPath = dbInfo.dbPath;}
                 }
-                this.preventEdits();
             }
             else
             { 
                 this.clear();
             }
+            this.loc = loc;
+            //this.preventEdits();
         },
         ingestDT: function(recs, dt)
         {
@@ -156,23 +163,6 @@ function BP_GET_WDL (g)
         {
             this.tRecsMap = recs;
             this.numUnsaved = this.numRecs(this.tRecsMap);
-        },
-        saveTRec: function(rec)
-        {
-            var d;
-            if (this.tRecsMap) {
-                d = this.tRecsMap[rec.u] || {};
-                d.curr = rec;
-                this.tRecsMap[rec.u] = d;
-            }
-            this.numUnsaved = this.numRecs(this.tRecsMap);
-        },
-        delTRec: function(rec)
-        {
-            if (this.tRecsMap && this.tRecsMap[rec.u]) {
-                delete this.tRecsMap[rec.u];
-            }
-            --this.numUnsaved;
         },
         numRecs: function(recsMap)
         {
@@ -197,7 +187,7 @@ function BP_GET_WDL (g)
         },
         empty: function ()
         {
-            BP_COMMON.clear(this);
+            BP_COMMON.clear(this); // clears enumerable own properties
             this.eRecsMapArray = BP_COMMON.EMPTY_ARRAY;
             this.pRecsMap = BP_COMMON.EMPTY_OBJECT;
             this.tRecsMap = {}; //BP_COMMON.EMPTY_OBJECT;
@@ -236,6 +226,29 @@ function BP_GET_WDL (g)
         {
             return (this.pRecsMap && this.pRecsMap[uid] && (this.pRecsMap[uid].curr.p===pass)) ||
                    (this.tRecsMap && this.tRecsMap[uid] && (this.tRecsMap[uid].curr.p===pass)) ;
+        }
+    });
+    // All functions that modify the recMaps should be kept outside the prototype
+    // This is a fake prototype whose functions will be bound individually to every
+    // writable object.
+    MiniDB.wProto = Object.freeze(
+    {
+        saveTRec: function(rec)
+        {   // Should be invoked with 
+            var d;
+            if (this.tRecsMap) {
+                d = this.tRecsMap[rec.u] || {};
+                d.curr = rec;
+                this.tRecsMap[rec.u] = d;
+            }
+            this.numUnsaved = this.numRecs(this.tRecsMap);
+        },
+        delTRec: function(rec)
+        {
+            if (this.tRecsMap && this.tRecsMap[rec.u]) {
+                delete this.tRecsMap[rec.u];
+            }
+            --this.numUnsaved;
         }
     });
     
@@ -344,7 +357,7 @@ function BP_GET_WDL (g)
     {
         return {
         tag: 'a',
-        attr:{ class:css_class_xButton, href:g.BP_CS_PLAT.getURL("/bp_manage.html"), target:"_blank" },
+        attr:{ class:css_class_xButton, href:BP_CS_PLAT.getURL("/bp_manage.html"), target:"_blank" },
         css:{ width:'20px' },
             children:[
             {tag:"i",
@@ -411,22 +424,23 @@ function BP_GET_WDL (g)
     FButton.wdt = function(w$ctx)
     {
         var ioItem = w$ctx.ioItem,
-            autoFill = ioItem.panel.autoFill;
+            autoFill = ioItem.panel.autoFill,
+            disabled = Boolean(!autoFill);
         return {
         cons: FButton,
         html:'<button type="button"></button>',
-        attr:{class:css_class_tButton, title:'auto fill' },
+        attr:{class:css_class_tButton, title:'auto fill', disabled:disabled },
         ctx:{ w$:{ fButton:"w$el" } },
         on:{ click:FButton.prototype.onClick },
-        css:{ width:'20px' },
+        css:{ width:'20px', cursor: (disabled?'not-allowed':undefined) },
         iface:{ ioItem:ioItem, _autoFill:autoFill },
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
-            addClass:"icon-arrow-left"
+            addClass:"icon-arrow-left" + (disabled ? " icon-white" : "")
             }]
         };
-    };   
+    };
     
     function DButton () {}
     DButton.wdt = function(w$ctx)
@@ -609,18 +623,18 @@ function BP_GET_WDL (g)
 
             return {
             cons: OItemP,
-            tag:'div', 
+            tag:'div',
             addClass:css_class_ioFields,
             ctx:{ w$:{ oItem:'w$el' } },
                 children:[
-                {tag:'span',
+                {tag:'data',
                  attr:{ draggable:true },
                  addClass:css_class_field+css_class_userOut,
                  text:u,
                  ctx:{ w$:{ u:'w$el' } },
                  _iface:{ fn:fn_userid, value:u }
                 },
-                {tag:'span',
+                {tag:'data',
                  attr:{ draggable:true },
                  addClass:css_class_field+css_class_passOut,
                  text:'*****',
@@ -652,7 +666,7 @@ function BP_GET_WDL (g)
         iface: { acns:acns, rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec },
         on: {mousedown:stopPropagation},
             children:[
-            autoFill ? FButton.wdt : w$undefined,
+            FButton.wdt,
             TButton.wdt,
             bInp ? IItemP.wdt : OItemP.wdt,
             DButton.wdt
@@ -829,13 +843,14 @@ function BP_GET_WDL (g)
             delTempRec = ctx.delTempRec,
             origCtx = BP_COMMON.copy2(ctx, {}),
             dbName = ctx.dbName,
-            showRecs = (UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)&&dbName);
+            showRecs = (UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)&&dbName),
+            popup = ctx.popup;
         
         return {
         cons:Panel, // static prototype object.
-        tag:"div",
+        tag:"article",
         attr:{ id:eid_panel },
-        css:{ position:'fixed', top:'0px', 'right':'0px' },
+        css: popup ? {border:"none"} : { position:'fixed', top:'0px', right:'0px', padding:'4px', 'border-radius':'4px'},
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:loc },
         iface:{ _reload:reload, id:eid_panel, autoFill:autoFill, onClosed:onClosed,
@@ -861,8 +876,8 @@ function BP_GET_WDL (g)
         _iface:{ w$:{}, w$ctx:{ itemList:'itemList', itemlist2:'itemlist2' } },
         _final:{ 
             appendTo:g_doc.body, 
-            show:true
-            ,exec:Panel.prototype.makeDraggable 
+            show:true,
+            exec: popup ? undefined : Panel.prototype.makeDraggable
             }
         };
     };
