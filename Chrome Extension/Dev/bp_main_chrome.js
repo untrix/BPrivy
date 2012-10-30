@@ -13,10 +13,10 @@
 /**
  * @ModuleBegin GoogleChrome
  */
-function BP_GET_PLAT(gg) 
+function BP_GET_PLAT(gg)
 {
     "use strict";
-    var window = null, document = null, console = null;
+    var window = null, document = null, console = null, chrome = gg.g_chrome;
         
     /** @import-module-begin */
     var BP_ERROR = IMPORT(gg.BP_ERROR),

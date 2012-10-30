@@ -5,7 +5,7 @@
  * @mail sumeet@untrix.com
  */
 /* JSLint directives */
-/*global $, console, BP_GET_CONNECT, BP_GET_CS_PLAT, BP_GET_COMMON, IMPORT,
+/*global $, console, chrome, BP_GET_CONNECT, BP_GET_CS_PLAT, BP_GET_COMMON, IMPORT,
   BP_GET_ERROR, BP_GET_WDL, BP_GET_W$, BP_GET_TRAITS, BP_MOD_BOOT, BP_DLL */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -27,8 +27,7 @@ function IMPORT(sym)
 (function(g_win)
 {
     'use strict';
-    var g = {g_win:g_win, g_console:console},
-        window = null, document = null;
+    var g = {g_win:g_win, g_console:console, g_chrome: chrome};
     
     g.BP_ERROR = BP_GET_ERROR(g);
     g.BP_COMMON = BP_GET_COMMON(g);

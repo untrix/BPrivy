@@ -15,14 +15,15 @@
  * @ModuleBegin GoogleChrome Platform
  */
 function BP_GET_CS_PLAT(g)
-{
+{   // NOTE: Requires g.g_win to be the target DOM window. Instantiate a fresh module
+    // for the DOM window where you want to use this. 
     "use strict";
-    var window = g.g_win, document = g.g_win.document, console = g.g_console,
+    var window = g.g_win, document = g.g_win.document, console = g.g_console, chrome = g.g_chrome,
         g_win = g.g_win,
         g_doc = g_win.document;
     var g_bTopLevel = (g_win.top === g_win.self), 
         g_frameUrl = g_bTopLevel ? null : g_win.location.href;
-        
+
     var module =
     {
         postMsgToMothership: function (o)

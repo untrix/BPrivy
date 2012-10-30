@@ -15,11 +15,11 @@
  * @ModuleBegin Panel
  */
 function BP_GET_WDL (g)
-{
+{   // NOTE: Requires g.g_win to be the target DOM window. Instantiate a fresh module
+    // for the DOM window where you want to use this.
     "use strict";
     var window = null, document = null, console = null,
-        g_win = g.g_win,
-        g_doc = g_win.document;
+        g_doc = g.g_win.document;
 
     var m;
     /** @import-module-begin Common */
@@ -853,7 +853,7 @@ function BP_GET_WDL (g)
         css: popup ? {border:"none"} : { position:'fixed', top:'0px', right:'0px', padding:'4px', 'border-radius':'4px'},
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:loc },
-        iface:{ _reload:reload, id:eid_panel, autoFill:autoFill, onClosed:onClosed,
+        iface:{ reload:reload, id:eid_panel, autoFill:autoFill, onClosed:onClosed,
                 saveRec:saveRec, delRec:delRec, delTempRec:delTempRec, origCtx:origCtx },
 
             // Create children
@@ -894,12 +894,6 @@ function BP_GET_WDL (g)
             // left = (left>0)? left: 0;
             // this.$el.css({position: 'fixed', top: '0px', 'left': left + "px"});               
             $(this.el).draggable();
-        }},
-        reload: {value: function() 
-        {
-            var _reload = this._reload; // save the func because destroy will delete it from this
-            this.close();//panel should be destroyed before a new one is created.
-            _reload();
         }},
         close: {value: function()
         {

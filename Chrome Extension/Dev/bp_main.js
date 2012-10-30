@@ -8,7 +8,7 @@
 /* JSLint directives */
 /*global $, BP_MOD_PLAT, BP_GET_CONNECT, BP_GET_COMMON, IMPORT, localStorage,
   BP_GET_MEMSTORE, BP_GET_DBFS, BP_GET_FILESTORE, BP_GET_ERROR, BP_GET_TRAITS,
-  BP_GET_CS_PLAT, BP_GET_PLAT, BP_GET_LISTENER */
+  BP_GET_CS_PLAT, BP_GET_PLAT, BP_GET_LISTENER, BP_GET_W$, BP_GET_WDL */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true,
   regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -32,7 +32,7 @@ var BP_PLUGIN;
 var BP_MAIN = (function()
 {
     "use strict";
-    var g = {g_win:window, g_console:console},
+    var g = {g_win:window, g_console:console, g_chrome:chrome},
         g_doc = document;
 
     g.BP_ERROR = BP_GET_ERROR(g);
@@ -45,6 +45,9 @@ var BP_MAIN = (function()
     g.BP_MEMSTORE = BP_GET_MEMSTORE(g);
     g.BP_DBFS = BP_GET_DBFS(g);
     g.BP_FILESTORE = BP_GET_FILESTORE(g);
+    // These are for use by panel.js
+    g.BP_W$ = BP_GET_W$(g);
+    g.BP_WDL = BP_GET_WDL(g);
 
     /** @import-module-begin MainPlatform */
     var m = g.BP_PLAT,
@@ -88,7 +91,7 @@ var BP_MAIN = (function()
      */
     function insertNewRec(rec, dt)
     {
-        var res, dr;
+        var res, dr, root, dnode;
 
         if (!DBFS.getDBPath()) {throw new BPError("", 'UserError', 'NoDBLoaded');}
 
@@ -97,8 +100,7 @@ var BP_MAIN = (function()
             case dt_eRecord:
             case dt_pRecord:
                 dr = MEM_STORE.insertRec(rec, dt);
-                if (dr) 
-                {
+                if (dr) {
                     res = true;
                     if (MEM_STORE.DT_TRAITS.getTraits(dt).toPersist(dr.notes) &&
                         FILE_STORE.UC_TRAITS.insertNewRec.toPersist(dr.notes))
@@ -110,7 +112,7 @@ var BP_MAIN = (function()
             default: // do nothing
         }
         
-        return res;
+        return res ? dr : undefined;
     }
     
     function makeDashResp(result)
@@ -142,23 +144,26 @@ var BP_MAIN = (function()
     
     function saveRecord(rec, dt, callback, dontGet)
     {
-        var result, resp, recs;
-        result = insertNewRec(rec, dt);
-        if (result && (!dontGet)) {
+        var dr, resp, recs;
+        dr = insertNewRec(rec, dt);
+        if (dr && (!dontGet)) {
             recs = MEM_STORE.getDTRecs(BP_CONNECT.lToLoc(rec.l), dt);
         }
-        resp = {result:result, recs:recs};
+        resp = {result:Boolean(dr), recs:recs};
         if (callback) {callback(resp);}
         
+        if (dr) { // event dispatch
+            MEM_STORE.Event.dispatch(dr);
+        }
         return resp;
     }
     
     function saveTempRec(rec, dt, callback, dontGet)
     {
-        var notes, result, resp, recs, loc;
+        var notes, result, resp, recs, loc, dr, dnode, root;
         if (DBFS.getDBPath()) 
         {
-            MEM_STORE.insertTempRec(rec, dt);
+            dr = MEM_STORE.insertTempRec(rec, dt);
             loc = BP_CONNECT.lToLoc(rec.l);
             if (!dontGet) {
                 recs = MEM_STORE.getTRecs(loc);
@@ -168,6 +173,9 @@ var BP_MAIN = (function()
         else {result = false;}
         resp = {result:result, recs:recs};
         if (callback) {callback(resp);}
+        if (dr) { // event dispatch
+            MEM_STORE.Event.dispatch(dr);
+        }
         return resp;
     }
     
@@ -217,11 +225,11 @@ var BP_MAIN = (function()
                 case BP_CONNECT.cm_saveRec:
                     BPError.push("SaveRecord" + rq.dt);
                     bSaveRec = true;
-                    funcSendResponse(saveRecord(rq.rec, rq.dt, null, rq.dontGet));
+                    saveRecord(rq.rec, rq.dt, funcSendResponse, rq.dontGet);
                     break;
                 case BP_CONNECT.cm_tempRec:
                     BPError.push("SaveTempRecord" + rq.dt);
-                    funcSendResponse(saveTempRec(rq.rec, rq.dt, null, rq.dontGet));
+                    saveTempRec(rq.rec, rq.dt, funcSendResponse, rq.dontGet);
                     break;
                 case 'cm_bootLoaded':
                     BPError.push("CSBootLoaded");
@@ -417,12 +425,16 @@ var BP_MAIN = (function()
             }
             
             BPError.atvt = new Activity('InstallListener');
-            var scope = new BP_LISTENER.Scope('temp_' + dt_pRecord, BP_CONNECT.newL({}, dt_pRecord), dt_pRecord);
-            var cback = new BP_LISTENER.CallbackInfo(function(type, details)
-                    {
-                        BP_ERROR.loginfo('Received event ' + type);
-                    });
-            MEM_STORE.listen('bp_change', scope, cback);
+            var scope = new BP_LISTENER.Scope('temp_' + dt_pRecord, dt_pRecord);
+            var cback = new BP_LISTENER.CallbackInfo(function(ev)
+            {
+                BP_ERROR.loginfo('Received event ' + ev.type);
+                var notification = webkitNotifications.createHTMLNotification(
+                  'bp_panel.html'  // html url - can be relative
+                );
+                notification.show();
+            });
+            MEM_STORE.Event.listen('bp_change', scope, cback);
             //chrome.webRequest.onBeforeRequest.addListener(onBefReq, {urls:["http://*/*", "https://*/*"]});
         
             // chrome.tabs.onSelectionChanged.addListener(function(tabId) 

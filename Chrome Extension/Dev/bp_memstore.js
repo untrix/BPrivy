@@ -14,8 +14,7 @@ function BP_GET_MEMSTORE(g)
 {
     "use strict";
     var window = null, document = null, console = null,
-        g_win = g.g_win,
-        g_doc = g_win.document;
+        g_doc = g.g_win.document;
     
     /** @import-module-begin Error */
     var m = g.BP_ERROR,
@@ -677,9 +676,10 @@ function BP_GET_MEMSTORE(g)
         // Note: We need scheme and hostname at a minimum for a valid URL. We also need
         // pathname before we insert into TRIE, hence we'll append a "/" if path is missing.
         // But first ensure that this is indeed a URL.
-        if (! (l /*&& 
-                (typeof l.H === "string") && (l.H.length > 0)*/ ) )
-            {throw new BPError(JSON.stringify(l), "BadURL");}
+        if (!l) {
+            l = {};
+            //throw new BPError(JSON.stringify(l), "BadURL");
+        }
         
         //scm = (l.S?l.S.toLowerCase():null);
 
@@ -691,7 +691,7 @@ function BP_GET_MEMSTORE(g)
             
             if (dictTraits.domain_only) 
             {
-                MOD_ETLD.cullDomain(ha);
+                MOD_ETLD.cullDomain(ha); // removes non-domain segments
             }
         }
         
@@ -1100,7 +1100,7 @@ function BP_GET_MEMSTORE(g)
      * Sets up the supplied record for insertion into the db
      * @param {Object} uct  Use-Case Traits. See function DRecord.UCT
      */
-    function DRecord(rec, dt, uct)
+    function DRecord(rec, dt, uct, dict)
     {
         // Construct url segment iterator.
         Object.defineProperties(this,
@@ -1108,12 +1108,15 @@ function BP_GET_MEMSTORE(g)
             urli: {value:new DURL(rec.l, dt), enumerable:false},
             rec:  {value:rec},
             dt:   {value:dt},
+            notes:{value: {}},
+            dict: {value:dict || dt},
             dtt:  {value:DT_TRAITS.getTraits(dt), enumerable:false},
             uct:  {value:uct, enumerable:false},
-            notes:{value: {}},
-            dnode:{writable:true, enumerable:false}
+            dnode:{writable:true, enumerable:false},
+            root: {writable:true, enumerable:false}
         });
     }
+
     /** @end-class-def DRecord **/
 
     function MemStats ()
@@ -1193,17 +1196,24 @@ function BP_GET_MEMSTORE(g)
         }
     }
 
+    function getRootDNode (dt, dict)
+    {
+        return DNode[dict || dt];
+    }
+
     // _dnode is optional and is only expected to be used at build-time by buildETLD.
     // At runtime, don't pass _dnode
     function insertRec (rec, dt, _dnode)
     {
         if (!_dnode) {_dnode = DNode[dt];}
-        var dr = new DRecord(rec, dt);
+        var dr = new DRecord(rec, dt, null, dt);
+        dr.root = _dnode;
         return DNProto.insert.apply(_dnode, [dr]) ? dr : undefined;
     }
     function insertDrec (dr, _dnode)
     {
         if (!_dnode) {_dnode = DNode[dr.dt];}
+        dr.root = _dnode;
         return DNProto.insert.apply(_dnode, [dr]) ? dr : undefined;
     }
     function insertTempRec(rec, dt)
@@ -1234,16 +1244,12 @@ function BP_GET_MEMSTORE(g)
             }
         }
 
-        dr = new DRecord(rec, dt);
+        dr = new DRecord(rec, dt, null, dict);
+        dr.root = dnode;
         notes = DNProto.insert.apply(dnode, [dr]) ? dr.notes : undefined;
         if (notes)
         {
             BP_ERROR.logdebug("Saved temp pRecord: " + JSON.stringify(rec));
-            if (notes.causedCurrChange) 
-            {
-                DNProto.dispatch.apply(dr.dnode, ['bp_change', rec]);
-                DNProto.dispatch.apply(dnode, ['bp_change', rec]);
-            }
         }
         else {
             BP_ERROR.logwarn("Could not save temp pRecord: " + JSON.stringify(rec));
@@ -1261,14 +1267,14 @@ function BP_GET_MEMSTORE(g)
         xhr.send();
         var resp = xhr.response;        ETLD = JSON.parse(resp);
     }
-        
+
     function clear (dtl)
     {
         var i, dt,            dtList = dtl || Object.keys(DT_TRAITS.traits),            n = dtList.length;        for (i=0; i<n; i++)        {            dt = dtList[i];            DNode[dt] = newDNode();        }
         DNode['temp_'+dt_pRecord] = newDNode();
         MemStats.stats = new MemStats();
     }
-    
+
     function listen (eventType, scope, cbackInfo)
     {
         var dnode;
@@ -1284,6 +1290,28 @@ function BP_GET_MEMSTORE(g)
         }
     }
 
+    DRecord.prototype.dispatch = function()
+    {
+        if (this.notes.causedCurrChange) 
+        {
+            this.root.dispatch('bp_change', this);
+            this.dnode.dispatch('bp_change', this);
+        }
+    };
+    
+    function dispatch (dr)
+    {
+        var root, dnode;
+        if (dr.notes.causedCurrChange) 
+        {
+            root = dr.root  || getRootDNode(dr.dt, dr.dict);
+            dnode= dr.dnode || getDNode(dr.rec.l, dr.dt, dr.dict);
+
+            root.dispatch('bp_change', dr);
+            dnode.dispatch('bp_change', dr);
+        }
+    }
+    
     function DNodeIterHelper(node, up, myURL)
     {
         return Object.defineProperties(this,
@@ -1294,6 +1322,7 @@ function BP_GET_MEMSTORE(g)
             up:     {value:up}
         });
     }
+
     DNodeIterHelper.prototype.nextKey = function ()
     {
         var key, found;
@@ -1456,8 +1485,13 @@ function BP_GET_MEMSTORE(g)
         putDB:       function(dNode, dt){DNode[dt] = dNode;},
         getDB:       function(dt){return DNode[dt];},
         getDNode:    getDNode,
+        getRootDNode:getRootDNode,
         MOD_ETLD:    MOD_ETLD,
-        listen:      listen
+        Event: {
+            listen:  listen,
+            dispatch:dispatch
+        }
+        
     });
 
     BP_ERROR.log("constructed mod_memstore");

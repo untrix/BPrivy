@@ -29,7 +29,7 @@ var BP_MANAGE = (function ()
 {
     "use strict";
     /** @globals-begin */
-    var g = {g_win:window, g_console:console};
+    var g = {g_win:window, g_console:console, g_chrome:chrome};
     g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
     var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
     g.BP_MEMSTORE = BP_CS_PLAT.getBackgroundPage().BP_MAIN.g.BP_MEMSTORE;

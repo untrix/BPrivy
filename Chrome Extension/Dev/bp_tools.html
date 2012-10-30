@@ -92,7 +92,7 @@
         // Construct url segment iterator.
         this.urli = new DURL2(rec.l, dt);
         this.rec = rec;
-        this.dt = dt;
+        this.dt = this.dict = dt;
         //DT_TRAITS.imbue(rec, dt);
         Object.defineProperty(this, "notes", {value: {}});//By default, writable, enumerable, configurable = false
                 

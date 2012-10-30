@@ -89,11 +89,11 @@
      */
 
 function BP_GET_W$(g)
-{
+{   // NOTE: Requires g.g_win to be the target DOM window. Instantiate a fresh module
+    // for the DOM window where you want to use this.
     "use strict";
     var window = null, document = null, console = null,
-        g_win = g.g_win,
-        g_doc = g_win.document;
+        g_doc = g.g_win.document;
     var m;
     /** @import-module-begin CSPlatform */
     m = g.BP_CS_PLAT;

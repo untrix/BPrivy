@@ -15,13 +15,14 @@ function BP_GET_LISTENER(g)
 {   'use strict';
 
     /** @import-module-begin */
-    var BP_PLAT = IMPORT(g.BP_PLAT);
-    var BP_ERROR= IMPORT(g.BP_ERROR);
+    var BP_PLAT = IMPORT(g.BP_PLAT),
+        BP_ERROR= IMPORT(g.BP_ERROR),
+        BP_COMMON = IMPORT(g.BP_COMMON);
     /** @import-module-end **/
 
     /** @globals begin */
     // element that will be used for dispatching and receiving events
-    var dispatchEl = g.g_win;
+    //var dispatchEl = g.g_win;
     
     function CallbackInfo (func, tabId, frameUrl)
     {
@@ -32,25 +33,26 @@ function BP_GET_LISTENER(g)
             frameUrl: {value:frameUrl}
         });
     }
-    function Scope (dict, l, dt)
+    function Scope (dict, dt, l)
     {
         Object.defineProperties(this,
         {
-            dict: {value:dict}, // dt or temp+dt
-            l: {value:l},
-            dt: {value:dt}
+            dict: {value:dict}, // dt or 'temp_'+dt
+            l:    {value:l},
+            dt:   {value:dt}
         });
     }
 
     function dispatchRemote(eventType, detail, tabId, frameUrl)
     {
-        BP_PLAT.rpc(tabId, frameUrl, {cm:'cm_notify', eventType:eventType, detail:detail});
+        // TODO: Implement when needed.
+        //BP_PLAT.rpc(tabId, frameUrl, {cm:'cm_notify', eventType:eventType, detail:detail});
     }
 
     function handlerProxy(ev)
     {
         if ((ev.type === 'bp_task') && ev.detail && ev.detail.func) {
-            ev.detail.func(ev.detail.type, ev.detail.detail);
+            ev.detail.func(ev.detail.detail);
             ev.stopImmediatePropagation();
             ev.preventDefault();
         }
@@ -103,18 +105,18 @@ function BP_GET_LISTENER(g)
     Listeners.prototype.dispatch = function(eventType, _detail)
     {
         var tabs;
-        _detail = _detail || {};
-        _detail.scope = this.scope;
+        var ev = {type:eventType, scope:this.scope, detail:_detail};
         
         if (!this.cbacks[eventType]) { return; }
         if (this.cbacks[eventType].funcs)
         {
             this.cbacks[eventType].funcs.forEach(function(func)
             {
-                var init = {cancelable:true, bubbles:false, detail:{func:func, type:eventType, detail:_detail}};
-                var ev = new CustomEvent('bp_task', init);
+                // var init = {cancelable:true, bubbles:false, detail:{func:func, type:eventType, detail:_detail}};
+                // var ev = new CustomEvent('bp_task', init);
                 try {
-                    dispatchEl.dispatchEvent(ev);
+                    //dispatchEl.dispatchEvent(ev);
+                    func(ev);
                 }
                 catch (err) {
                     BP_ERROR.logwarn(err);
@@ -174,7 +176,7 @@ function BP_GET_LISTENER(g)
         return new Listeners(scope);
     }
     
-    dispatchEl.addEventListener('bp_task', handlerProxy);
+    //dispatchEl.addEventListener('bp_task', handlerProxy);
 
     return Object.freeze(
         {

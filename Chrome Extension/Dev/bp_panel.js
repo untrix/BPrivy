@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global $, BP_DLL, BP_GET_CONNECT, BP_GET_CS_PLAT, IMPORT, BP_GET_COMMON,
+/*global $, BP_DLL, BP_GET_CONNECT, BP_GET_CS_PLAT, IMPORT, BP_GET_COMMON, chrome,
   BP_GET_ERROR, BP_GET_MEMSTORE, BP_GET_W$, BP_GET_TRAITS, BP_GET_WDL, BP_GET_PLAT */
  
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
@@ -32,18 +32,28 @@ function IMPORT(sym)
 {
     "use strict";
     // g => Global Env.
-    var g = {g_win:window, g_console:console};
-    g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
+    var g = {g_win:window, g_console:console, g_chrome:chrome};
+    g.BP_CS_PLAT = chrome.extension.getBackgroundPage().BP_GET_CS_PLAT(g);
     var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
-    g.BP_ERROR = BP_CS_PLAT.getBackgroundPage().BP_GET_ERROR(g);
-    g.BP_COMMON = BP_CS_PLAT.getBackgroundPage().BP_GET_COMMON(g);
-    g.BP_TRAITS = BP_CS_PLAT.getBackgroundPage().BP_GET_TRAITS(g);
-    g.BP_CONNECT = BP_CS_PLAT.getBackgroundPage().BP_GET_CONNECT(g);
-    g.BP_W$ = BP_GET_W$(g);
-    g.BP_WDL = BP_GET_WDL(g);
     // Module object used within bp_main.html
     g.BP_MAIN = BP_CS_PLAT.getBackgroundPage().BP_MAIN;
-    g.BP_PLAT = g.BP_MAIN.BP_PLAT;
+    g.BP_PLAT = g.BP_MAIN.g.BP_PLAT;
+    if (true) {
+        g.BP_ERROR = BP_GET_ERROR(g);
+        g.BP_COMMON = BP_GET_COMMON(g);
+        g.BP_TRAITS = BP_GET_TRAITS(g);
+        g.BP_CONNECT = BP_GET_CONNECT(g);
+        g.BP_W$ = BP_GET_W$(g);
+        g.BP_WDL = BP_GET_WDL(g);
+    }
+    else {
+        g.BP_ERROR = g.BP_MAIN.g.BP_ERROR;
+        g.BP_COMMON = g.BP_MAIN.g.BP_COMMON;
+        g.BP_TRAITS = g.BP_MAIN.g.BP_TRAITS;
+        g.BP_CONNECT = g.BP_MAIN.g.BP_CONNECT;
+        g.BP_W$ = BP_CS_PLAT.getBackgroundPage().BP_GET_W$(g);
+        g.BP_WDL = BP_CS_PLAT.getBackgroundPage().BP_GET_WDL(g);
+    }
     
     var m;
     /** @import-module-begin */
