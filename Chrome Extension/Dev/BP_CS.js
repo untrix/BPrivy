@@ -23,7 +23,6 @@ function IMPORT(sym)
     }
 }
 
-
 (function(g_win)
 {
     'use strict';
@@ -72,8 +71,8 @@ function IMPORT(sym)
     m = g.BP_CONNECT;
     var BP_CONNECT = IMPORT(m),
         getRecs = IMPORT(m.getRecs),
-        newERecord = IMPORT(m.newERecord),
-        newPRecord = IMPORT(m.newPRecord),
+        newEAction = IMPORT(m.newEAction),
+        newPAction = IMPORT(m.newPAction),
         panelClosed = IMPORT(m.panelClosed),
         sendDelActn = IMPORT(m.sendDelActn);
     /** @import-module-begin */
@@ -227,7 +226,7 @@ function IMPORT(sym)
                     (!pair.p && pair.u && (!MOD_DB.has(pair.u))) ||
                     (pair.u && pair.p && (!MOD_DB.matches(pair.u, pair.p))))
                 {
-                    MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(),
+                    MOD_CS.saveTempRec(newPAction(g_doc.location, Date.now(),
                                        pair.u, pair.p), dt_pRecord);
                 }
             }
@@ -1092,7 +1091,7 @@ function IMPORT(sym)
             }
             
             if (bSave) {
-                MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
+                MOD_CS.saveTempRec(newPAction(g_doc.location, Date.now(), uid, pass), dt_pRecord);
             }
         }
 
@@ -2224,8 +2223,8 @@ function IMPORT(sym)
                     e.dataTransfer.dropEffect = 'copy';
     
                     //console.log("dropHandler:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
-                    // Save an ERecord.
-                    var eRec = newERecord(e.target.ownerDocument.location,
+                    // Save an EAction.
+                    var eRec = newEAction(e.target.ownerDocument.location,
                                           Date.now(),
                                           e.dataTransfer.getData(CT_BP_FN), // fieldName
                                           el.tagName,

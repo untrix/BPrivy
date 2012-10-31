@@ -83,8 +83,8 @@ function IMPORT(sym)
     /** @import-module-begin */
     m = g.BP_CONNECT;
     var BP_CONNECT = IMPORT(m),
-        newERecord = IMPORT(m.newERecord),
-        newPRecord = IMPORT(m.newPRecord);
+        newEAction = IMPORT(m.newEAction),
+        newPAction = IMPORT(m.newPAction);
     /** @import-module-begin */
     m = g.BP_WDL;
     var cs_panel_wdt = IMPORT(m.cs_panel_wdt),

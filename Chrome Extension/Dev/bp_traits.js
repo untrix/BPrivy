@@ -160,15 +160,15 @@ function BP_GET_TRAITS(g)
     }
     RecsIterator.prototype.next = function ()
     {
-        var actn = null, t;
+        var iHist = null, t;
         // Find the next item who's current action is not delete.
         while (this._i < this._n)
         {
             t = this._o[this._k[this._i++]];
-            if ((!this._sd) || (t.curr.a!=='d')) { actn=t; break; }
+            if ((!this._sd) || (t.curr.y!=='d')) { iHist=t; break; }
         }
 
-        return actn;
+        return iHist;
     };
     RecsIterator.prototype.num = function ()
     {
@@ -176,7 +176,7 @@ function BP_GET_TRAITS(g)
             n = 0;
         while (i < this._n)
         {
-            if ((!this._sd) || !this._o[this._k[i++]].curr.a) { n++; }
+            if ((!this._sd) || (this._o[this._k[i++]].curr.y!=='d')) { n++; }
         }
         return n;
     };

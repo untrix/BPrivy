@@ -66,7 +66,7 @@ function BP_GET_DBFS(g)
             var vals=[], idx, array;
             while ((array = regex.exec(path)))
             {
-                vals.push(parseSegment((array[1]?array[1]:"") + array[2]));
+                vals.push(parseSegment((array[1] || "") + array[2]));
                 idx = regex.lastIndex;
             }
             // Catch the last field. It has no separator at the end.

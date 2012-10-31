@@ -43,7 +43,7 @@ function BP_GET_WDL (g)
         addHandlers = IMPORT(m.addHandlers); // Compatibility function
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;
-    var newPRecord = IMPORT(m.newPRecord);
+    var newPAction = IMPORT(m.newPAction);
     /** @import-module-begin Error */
     m = g.BP_ERROR;
     var BP_ERROR = IMPORT(m),
@@ -169,7 +169,7 @@ function BP_GET_WDL (g)
             var num = 0;
             BP_COMMON.iterKeys(recsMap, function(k, val)
             {
-                if (!val.curr.a) { num++; }
+                if (val.curr.y!=='d') { num++; }
             });
             return num;
         },
@@ -209,14 +209,14 @@ function BP_GET_WDL (g)
         has: function (uid, considerAll)
         {
             // return (Object.keys(this.pRecsMap).indexOf(username) >=0) ||
-                   // (Object.keys(this.tRecsMap).indexOf(username) >=0);            return (this.pRecsMap && this.pRecsMap[uid] && this.pRecsMap[uid].curr && (considerAll || (this.pRecsMap[uid].curr.a!=='d'))) ||
-                   (this.tRecsMap && this.tRecsMap[uid] && this.tRecsMap[uid].curr && (considerAll || (this.tRecsMap[uid].curr.a!=='d'))) ;
+                   // (Object.keys(this.tRecsMap).indexOf(username) >=0);            return (this.pRecsMap && this.pRecsMap[uid] && this.pRecsMap[uid].curr && (considerAll || (this.pRecsMap[uid].curr.y!=='d'))) ||
+                   (this.tRecsMap && this.tRecsMap[uid] && this.tRecsMap[uid].curr && (considerAll || (this.tRecsMap[uid].curr.y!=='d'))) ;
         },
         had: function (uid) {return this.has(uid, true);},
         hasPass: function (pass)
         {
             var found = false;
-            function checkPass(u, actn) {if (actn.curr.p===pass) {found=true; return true;}}
+            function checkPass(u, iHist) {if (iHist.curr.p===pass) {found=true; return true;}}
             if (!BP_COMMON.iterKeys(this.pRecsMap, checkPass)) {
                 return BP_COMMON.iterKeys(this.tRecsMap, checkPass);
             }
@@ -518,7 +518,7 @@ function BP_GET_WDL (g)
             p = pRec.p;
         }
         /*else { // create a new pRec and save it back to ioItem.
-            pRec = newPRecord(ioItem.loc);
+            pRec = newPAction(ioItem.loc);
             ioItem.rec = pRec; // Save this back to ioItem.
         }*/
         return {
@@ -584,7 +584,7 @@ function BP_GET_WDL (g)
                 oP = ioItem.rec? ioItem.rec.p: undefined;
 
             // save to db
-            var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
+            var pRec = newPAction(ioItem.loc, Date.now(), nU, nP);
             // Save into the main store, not temp store. Therefore toTempStore should be false.
             ioItem.panel.saveRec(pRec, dt_pRecord, function(resp)
             {

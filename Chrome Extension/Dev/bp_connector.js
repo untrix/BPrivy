@@ -123,7 +123,7 @@ function BP_GET_CONNECT(g)
     }
 
     /** Pseudo Inheritance */
-    function Action(dt, loc, date, actn)
+    function Action(dt, loc, date, type)
     {
         // date is number of milliseconds since midnight Jan 1, 1970.
         if (date !== undefined && date !== null)
@@ -142,14 +142,14 @@ function BP_GET_CONNECT(g)
             l: {value: newL(loc, dt), enumerable: true},
             // The action being performed. An undefined value means an insert action. The
             // only other legal value is 'd', meaning delete.
-            a: {value:actn, enumerable: true}
+            y: {value:type, enumerable: true}
         });
     }
-    //Action.prototype.setDeleted = function () { this.a = 'd'; };
+    //Action.prototype.setDeleted = function () { this.y = 'd'; };
     
-    function ERecord(loc, date, actn, fieldName, tagName, id, name, type, formId, formNm)
+    function EAction(loc, date, atype, fieldName, tagName, id, name, type, formId, formNm)
     {
-        Action.apply(this, [dt_eRecord, loc, date, actn]);
+        Action.apply(this, [dt_eRecord, loc, date, atype]);
         Object.defineProperties(this, 
         {
             f: {value: fieldName, enumerable: true}, // key
@@ -162,23 +162,23 @@ function BP_GET_CONNECT(g)
         });
         Object.seal(this);
     }
-    ERecord.prototype = Object.create(Action.prototype,{});
+    EAction.prototype = Object.create(Action.prototype,{});
 
-    ERecord.prototype.toJson = function ()
+    EAction.prototype.toJson = function ()
     {
         return JSON.stringify(this, null, 2);
     };
-    ERecord.prototype.newDelActn = function ()
+    EAction.prototype.newDelActn = function ()
     {
-        return new ERecord(L.prototype.toLoc.apply(this.l), Date.now(), 'd', this.f);
+        return new EAction(L.prototype.toLoc.apply(this.l), Date.now(), 'd', this.f);
     };
-    function newERecord(loc, date, fieldName, tagName, id, name, type, formId, formNm) {
-        return new ERecord(loc, date, undefined, fieldName, tagName, id, name, type, formId, formNm);    
+    function newEAction(loc, date, fieldName, tagName, id, name, type, formId, formNm) {
+        return new EAction(loc, date, undefined, fieldName, tagName, id, name, type, formId, formNm);    
     }
 
-    function PRecord(loc, date, actn, userid, pass)
+    function PAction(loc, date, type, userid, pass)
     {
-        Action.apply(this, [dt_pRecord, loc, date, actn]);
+        Action.apply(this, [dt_pRecord, loc, date, type]);
         Object.defineProperties(this,
             {
                 u: {value: userid, enumerable: true}, // key
@@ -187,18 +187,18 @@ function BP_GET_CONNECT(g)
         );
         Object.seal(this);
     }
-    PRecord.prototype = Object.create(Action.prototype,{});
-    PRecord.prototype.newDelActn = function ()
+    PAction.prototype = Object.create(Action.prototype,{});
+    PAction.prototype.newDelActn = function ()
     {
-        return new PRecord(L.prototype.toLoc.apply(this.l), Date.now(), 'd', this.u);
+        return new PAction(L.prototype.toLoc.apply(this.l), Date.now(), 'd', this.u);
     };    
     
     function getDTProto(dt)
     {
         switch (dt)
         {
-            case dt_pRecord: return PRecord.prototype;
-            case dt_eRecord: return ERecord.prototype;
+            case dt_pRecord: return PAction.prototype;
+            case dt_eRecord: return EAction.prototype;
         }
     }    
     /** ModuleInterfaceGetter Connector */
@@ -255,9 +255,9 @@ function BP_GET_CONNECT(g)
             return rpcToMothership({cm:cm_getDBPath}, callback);
         };
 
-        function newPRecord(loc, date, userid, pass)
+        function newPAction(loc, date, userid, pass)
         {
-            return new PRecord(loc, date, undefined, userid, pass);
+            return new PAction(loc, date, undefined, userid, pass);
         }
         
         function panelClosed(loc)
@@ -277,8 +277,8 @@ function BP_GET_CONNECT(g)
             newL: {value: newL},
             lToLoc: {value: function(l){return L.prototype.toLoc.apply(l);}},
             getDTProto: {value:getDTProto},
-            newERecord: {value: newERecord},
-            newPRecord: {value: newPRecord},
+            newEAction: {value: newEAction},
+            newPAction: {value: newPAction},
             fn_userid: {value: fn_userid},
             fn_pass: {value: fn_pass},
             // MOD_PROTO

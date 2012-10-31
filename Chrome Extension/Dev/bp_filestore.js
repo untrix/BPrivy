@@ -41,7 +41,7 @@ function BP_GET_FILESTORE(g)
         dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-begin connector **/
     m = g.BP_CONNECT; 
-    var newPRecord = IMPORT(m.newPRecord);
+    var newPAction = IMPORT(m.newPAction);
     /** @import-module-begin MemStore **/
     var MEMSTORE = IMPORT(g.BP_MEMSTORE);
     /** @import-module-begin UI Traits **/
@@ -322,9 +322,9 @@ function BP_GET_FILESTORE(g)
         var o={};
         this.flush(DB_FS.getDTFilePath(dt, dbPath), count, bRev);
     };
-    RecsBuf.prototype.pushRec = function (arec)
+    RecsBuf.prototype.pushRec = function (actn)
     {
-        this.push(JSON.stringify(arec));
+        this.push(JSON.stringify(actn));
     };
 
     function insertRec(rec, dt)
@@ -357,13 +357,13 @@ function BP_GET_FILESTORE(g)
             });
         }
 
-        function writeArec (arec, ctx)
+        function writeAction (actn, ctx)
         {
             var fname,
                 buf = ctx.buf,
                 dt = ctx.dt, 
                 dbStats = ctx.dbStats;
-            buf.pushRec(arec);
+            buf.pushRec(actn);
             if (buf.length>=DB_FS.fileCap)
             {
                 fname = DB_FS.makeFileName(DB_FS.cat_Closed, dt);
@@ -374,7 +374,7 @@ function BP_GET_FILESTORE(g)
         
         var dbPath = DB_FS.getDBPath(),
             dt, 
-            dnIt, dn, recs, rIt, acoll, aIt, arec,
+            dnIt, dn, recs, rIt, acoll, aIt, actn,
             buf, o,
             i, dtPath,
             temp,
@@ -400,7 +400,7 @@ function BP_GET_FILESTORE(g)
             dnIt = MEMSTORE.newDNodeIterator(dt);
             buf = new RecsBuf();
             
-            dnIt.walk(writeArec, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted});
+            dnIt.walk(writeAction, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted}, true);
             
             if (buf.length)
             {
@@ -600,11 +600,11 @@ function BP_GET_FILESTORE(g)
         return mergeMain(db2);
     }
     
-    function writeCSV(arec, ctx)
+    function writeCSV(actn, ctx)
     {
         var buf=ctx.buf;
         
-        buf.push(ctx.traits.toCSV(arec));
+        buf.push(ctx.traits.toCSV(actn));
         if (buf.length>=1000) {
             buf.flush(ctx.fpath);
         }
@@ -861,7 +861,7 @@ function BP_GET_FILESTORE(g)
             switch (path.slice(-4).toLowerCase())
             {
                 case ".csv":
-                    BPError.actn = "ImportCSV";
+                    BPError.atvt = new BP_ERROR.Activity("ImportCSV");
                     var csvf = new CSVFile(path),
                         uct = UC_TRAITS.csvImport;
 
@@ -871,7 +871,7 @@ function BP_GET_FILESTORE(g)
                         else {BP_ERROR.loginfo("Importing " + JSON.stringify(csv));}
                         pidx = csvf.pidx;
                         url = parseURL(csv[pidx.url]);
-                        prec = newPRecord(url || {}, 
+                        prec = newPAction(url || {}, 
                                           Date.now(), 
                                           csv[pidx.userid],
                                           csv[pidx.pass]);

@@ -44,7 +44,7 @@ function BP_GET_EDITOR(g)
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;
     var MOD_CONNECT = IMPORT(m),
-        newPRecord = IMPORT(m.newPRecord),
+        newPAction = IMPORT(m.newPAction),
         saveRecord = IMPORT(m.saveRecord),
         cm_getDN = IMPORT(m.cm_getDN),
         cm_getDomn = IMPORT(m.cm_getDomn),
@@ -361,7 +361,7 @@ function BP_GET_EDITOR(g)
             p = pRec.p;
         }
         /*else { // create a new pRec and save it back to ioItem.
-            pRec = newPRecord(ioItem.loc);
+            pRec = newPAction(ioItem.loc);
             ioItem.rec = pRec; // Save this back to ioItem.
         }*/
         return {
@@ -423,7 +423,7 @@ function BP_GET_EDITOR(g)
                 oP = ioItem.rec? ioItem.rec.p: undefined;
 
             // save to db
-            var pRec = newPRecord(ioItem.loc, Date.now(), nU, nP);
+            var pRec = newPAction(ioItem.loc, Date.now(), nU, nP);
             saveRecord(pRec, dt_pRecord, function(resp)
             {
                 var oRec;
