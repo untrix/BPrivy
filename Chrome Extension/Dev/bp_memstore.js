@@ -140,7 +140,7 @@ function BP_GET_MEMSTORE(g)
                 );
     }
 
-    function isValidARec(that)
+    function isValidAction(that)
     {
         if (that  && 
                 //(typeof that.dt === "string") &&
@@ -166,7 +166,7 @@ function BP_GET_MEMSTORE(g)
     // Most properties defined in DEFAULT_TRAITS are optional for urlMap type dictionaries.
     // Omitting second-level properties (e.g. dict.url_scheme) implies false for
     // boolean properties.
-    var DEFAULT_TRAITS = Object.freeze(    {        // dict: Properties referenced by dictionary/trie/URLA.        // dict.url_xyz=true implies that xyz will be matched in insertions and lookups from dictionary.        dict: DICT_TRAITS[undefined],        // action: properties referenced by the Actions class.        actions: { // not needed by dt_etld            // history=true asserts we're interested in maintaining history.            // Will cause Actions class to keep history in memory            // A value of false asserts the opposite. Will            // cause Actions to only keep current value in memory.            history: 0        },
+    var DEFAULT_TRAITS = Object.freeze(    {        // dict: Properties referenced by dictionary/trie/URLA.        // dict.url_xyz=true implies that xyz will be matched in insertions and lookups from dictionary.        dict: DICT_TRAITS[undefined],        // action: properties referenced by the ActionHistory class.        actions: { // not needed by dt_etld            // history=true asserts we're interested in maintaining history.            // Will cause ActionHistory class to keep history in memory            // A value of false asserts the opposite. Will            // cause ActionHistory to only keep current value in memory.            history: 0        },
         file: {
             // An assert action is one that re-asserts the existing value. When a record
             // is received that has the same value as the most current value for its key,
@@ -217,7 +217,7 @@ function BP_GET_MEMSTORE(g)
             }},
             isValidCSV: {value:function(rec)
             {
-                return (isValidARec(rec) && 
+                return (isValidAction(rec) && 
                     (typeof rec.u === "string") &&
                     (typeof rec.p === "string"));
             }},
@@ -258,7 +258,7 @@ function BP_GET_MEMSTORE(g)
             }},
             isValidCSV: {value:function(rec)
             {
-                return (isValidARec(rec) && 
+                return (isValidAction(rec) && 
                     (typeof rec.f === "string") &&
                     (typeof rec.t === "string"));
             }},
@@ -326,8 +326,8 @@ function BP_GET_MEMSTORE(g)
     /** @globals-end **/
 
     /**
-     * @begin-class-def Actions
-     * Represents Actions on a given item/key. Figures out the latest value etc.
+     * @begin-class-def ActionHistory
+     * Represents ActionHistory on a given item/key. Figures out the latest value etc.
      * Inserted records should be Action Records with timestamps in them. If no timestamp
      * is found, the current timestamp will be inserted.
      */
@@ -336,7 +336,7 @@ function BP_GET_MEMSTORE(g)
      * For an argument, it expects an Action Record or an Object object created from a
      * JSON serialized Action Record.
      */
-    function Actions(dt, jo)
+    function ActionHistory(dt, jo)
     {
         var tr = DT_TRAITS.getTraits(dt);
         if (jo)
@@ -366,7 +366,7 @@ function BP_GET_MEMSTORE(g)
     }
     
     /** Helper function invoked by insertNewVal only
-    Actions.prototype.delHelper = function (dItem, i)
+    ActionHistory.prototype.delHelper = function (dItem, i)
     {
         var valStr = dItem.traits.valStr(dItem);
         delete this[valStr];
@@ -374,7 +374,7 @@ function BP_GET_MEMSTORE(g)
         
     
     /**
-     * This is a helper function intended to be invoked by Actions.prototype.insert only.
+     * This is a helper function intended to be invoked by ActionHistory.prototype.insert only.
      * 
      * Inserts a new value into the collection. Assumes that the value does not already
      * exist within the collection and that it has been verified to be recent enough
@@ -388,7 +388,7 @@ function BP_GET_MEMSTORE(g)
      * will go wrong. So ensure that the value is unique and also recent enough to be
      * inserted here.
      */
-    Actions.prototype.insertNewVal = function (valStr, drec)
+    ActionHistory.prototype.insertNewVal = function (valStr, drec)
     {
         var dtt = drec.dtt,
             max = dtt.actions.history + 1,
@@ -459,7 +459,7 @@ function BP_GET_MEMSTORE(g)
     };
     
     /**
-     * Helper function to be invoked by Actions.prototype.insert only.
+     * Helper function to be invoked by ActionHistory.prototype.insert only.
      * Is invoked when a new action is to be inserted with a value that already exists
      * in the collection.
      * Updates an existing arec with the provided timestamp. It also repositions the
@@ -468,7 +468,7 @@ function BP_GET_MEMSTORE(g)
      * list-visit order. Therefore we'll just visit from position 0 onwards because that
      * is convenient for coding.
      */
-    Actions.prototype.updateTm = function (oarec, drec, valStr)
+    ActionHistory.prototype.updateTm = function (oarec, drec, valStr)
     {
         var arecs = this.arecs, 
             narec = drec.rec,
@@ -534,9 +534,9 @@ function BP_GET_MEMSTORE(g)
      *  be wasted effort.
      *  A consequence of the above strategy, is that records inserted
      *  at file-loading time will be older than those already present in the data-structure.
-     *  Therefore we'll optimize the Actions.arecs datastructure insertions for the case
+     *  Therefore we'll optimize the ActionHistory.arecs datastructure insertions for the case
      *  where inserted records have older timestamps than those already present in the
-     *  data-structure. That is, when linearly traversing the Actions.arecs array, we
+     *  data-structure. That is, when linearly traversing the ActionHistory.arecs array, we
      *  visit the older items first and then work our way to the newer ones.
      *  
      *  This approach is suboptimal for new record insertions which occur at runtime
@@ -551,7 +551,7 @@ function BP_GET_MEMSTORE(g)
      *  import is supposed to be a rare activity only - the user is not expected to repeat
      *  that action again.
      */
-    Actions.prototype.insert = function(drec)
+    ActionHistory.prototype.insert = function(drec)
     {
         var arec = drec.rec,
             dtt = drec.dtt,
@@ -635,11 +635,11 @@ function BP_GET_MEMSTORE(g)
             drec.notes.isRecentUnique = true;
         }
     };
-    Actions.prototype.newIt = function ()
+    ActionHistory.prototype.newIt = function ()
     {
-        return new TimeIterator(this);
+        return new ActionIterator(this);
     };
-    function TimeIterator(acns)
+    function ActionIterator(acns)
     {
         Object.defineProperties(this,
         {
@@ -647,13 +647,13 @@ function BP_GET_MEMSTORE(g)
             arecs:  {value:acns.arecs}
         });
     }
-    TimeIterator.prototype.next = function ()
+    ActionIterator.prototype.next = function ()
     {
         // Return records in chronological order
         return this.arecs[--this.i]; // TODO: Should we floor 'this.i' at -1?
     };
-    function newActions(dt, jo) {
-        return new Actions(dt, jo);
+    function newActionHistory(dt, jo) {
+        return new ActionHistory(dt, jo);
     }
     /** @end-class-defn **/
 
@@ -912,7 +912,7 @@ function BP_GET_MEMSTORE(g)
             r.insert(drec);
         }
         else {
-            (recsMap[ki] = newActions(dt)).insert(drec);
+            (recsMap[ki] = newActionHistory(dt)).insert(drec);
             //drec.notes.newKey = true;
         }
     };
@@ -1170,10 +1170,10 @@ function BP_GET_MEMSTORE(g)
         return DNProto.findPRecsMap.apply(DNode['temp_'+dt_pRecord],[newL(loc,dt_pRecord)]);
     }
 
-    function numTRecs (loc)
-    {
-        return (new BP_TRAITS.RecsIterator(getTRecs(loc))).num();
-    }
+    // function numTRecs (loc, skipDeleted)
+    // {
+        // return (new BP_TRAITS.RecsIterator(getTRecs(loc), skipDeleted)).num();
+    // }
     /**
      * Returns dt_eRecord and dt_pRecord matching loc as per the respective dt traits
      */
@@ -1410,7 +1410,7 @@ function BP_GET_MEMSTORE(g)
      * visits all actions, both current as well as historical.
      * @param {Object} callback
      */
-    DNodeIterator.prototype.walk = function (callback, ctx)
+    DNodeIterator.prototype.walk = function (callback, ctx, skipDeleted)
     {
         var dn, recs, rIt, acoll, aIt, arec;
         while ((dn=this.next()))
@@ -1418,10 +1418,10 @@ function BP_GET_MEMSTORE(g)
             // Can't code dn.getData(dt) because dn maybe a JSON parsed object.
             if ((recs=DNProto.getData.apply(dn, [this.dt])))
             {
-                rIt = new BP_TRAITS.RecsIterator(recs);
+                rIt = new BP_TRAITS.RecsIterator(recs, skipDeleted);
                 while ((acoll=rIt.next()))
                 {
-                    aIt = new TimeIterator(acoll);
+                    aIt = new ActionIterator(acoll);
                     for (arec=aIt.next(); 
                          arec; 
                          arec=aIt.next())
@@ -1435,10 +1435,11 @@ function BP_GET_MEMSTORE(g)
 
     /**
      * Walks the DNode tree and calls a callback for each current-record in the tree. It
-     * visits only current records of the Actions collections. Skips the historical records.
+     * visits only current records of the ActionHistory collections. Skips the historical records.
+     * Also won't emit deleted items - i.e. if (curr.a === 'd')
      * @param {Object} callback
      */
-    DNodeIterator.prototype.walkCurr = function (callback, ctx)
+    DNodeIterator.prototype.walkCurr = function (callback, ctx, skipDeleted)
     {
         var dn, recs, rIt, acoll, aIt, arec;
         while ((dn=this.next()))
@@ -1446,7 +1447,7 @@ function BP_GET_MEMSTORE(g)
             // Can't write dn.getData(dt) because dn maybe a JSON parsed object.
             if ((recs=DNProto.getData.apply(dn, [this.dt])))
             {
-                rIt = new BP_TRAITS.RecsIterator(recs);
+                rIt = new BP_TRAITS.RecsIterator(recs, skipDeleted);
                 while ((acoll=rIt.next()))
                 {
                     callback(acoll.curr, ctx);

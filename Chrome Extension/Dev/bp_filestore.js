@@ -624,7 +624,7 @@ function BP_GET_FILESTORE(g)
         
         buf = new RecsBuf("\n");
         buf.push(traits.csvHeader());
-        MEMSTORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits});
+        MEMSTORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits}, true);
         buf.flush(fpath);
     }
     

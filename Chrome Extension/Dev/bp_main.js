@@ -300,7 +300,7 @@ var BP_MAIN = (function()
                 case 'cm_bootLoaded':
                     BPError.push("CSBootLoaded");
                     //BP_PLAT.showPageAction(sender.tab.id);
-                    //funcSendResponse({result:true, cm:((MEMSTORE.numTRecs(rq.loc)) ? 'cm_loadDll' : undefined) });
+                    //funcSendResponse({result:true, cm:((MEMSTORE.numTRecs(rq.loc, true)) ? 'cm_loadDll' : undefined) });
                     funcSendResponse({result:true});
                     break;
                 case cm_getRecs:

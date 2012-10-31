@@ -111,7 +111,7 @@ function BP_GET_CONNECT(g)
         return ((this.H===l2.H) && (this.P===l2.P));
     };
     /**
-     * Returns a partial Location object suitable for passing as an argument to ARec constructor.
+     * Returns a partial Location object suitable for passing as an argument to Action constructor.
      */
     L.prototype.toLoc = function ()
     {
@@ -119,11 +119,11 @@ function BP_GET_CONNECT(g)
     };
 
     function newL (loc, dt) { 
-        return (new L(loc,dt)); 
+        return (new L(loc,dt));
     }
 
     /** Pseudo Inheritance */
-    function ARec(dt, loc, date, actn)
+    function Action(dt, loc, date, actn)
     {
         // date is number of milliseconds since midnight Jan 1, 1970.
         if (date !== undefined && date !== null)
@@ -145,11 +145,11 @@ function BP_GET_CONNECT(g)
             a: {value:actn, enumerable: true}
         });
     }
-    //ARec.prototype.setDeleted = function () { this.a = 'd'; };
+    //Action.prototype.setDeleted = function () { this.a = 'd'; };
     
     function ERecord(loc, date, actn, fieldName, tagName, id, name, type, formId, formNm)
     {
-        ARec.apply(this, [dt_eRecord, loc, date, actn]);
+        Action.apply(this, [dt_eRecord, loc, date, actn]);
         Object.defineProperties(this, 
         {
             f: {value: fieldName, enumerable: true}, // key
@@ -162,7 +162,7 @@ function BP_GET_CONNECT(g)
         });
         Object.seal(this);
     }
-    ERecord.prototype = Object.create(ARec.prototype,{});
+    ERecord.prototype = Object.create(Action.prototype,{});
 
     ERecord.prototype.toJson = function ()
     {
@@ -178,7 +178,7 @@ function BP_GET_CONNECT(g)
 
     function PRecord(loc, date, actn, userid, pass)
     {
-        ARec.apply(this, [dt_pRecord, loc, date, actn]);
+        Action.apply(this, [dt_pRecord, loc, date, actn]);
         Object.defineProperties(this,
             {
                 u: {value: userid, enumerable: true}, // key
@@ -187,7 +187,7 @@ function BP_GET_CONNECT(g)
         );
         Object.seal(this);
     }
-    PRecord.prototype = Object.create(ARec.prototype,{});
+    PRecord.prototype = Object.create(Action.prototype,{});
     PRecord.prototype.newDelActn = function ()
     {
         return new PRecord(L.prototype.toLoc.apply(this.l), Date.now(), 'd', this.u);

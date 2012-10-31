@@ -165,8 +165,8 @@ function IMPORT(sym)
             close();
             m_bUserClosed = false;
             var ctx = {
-                it: new RecsIterator(MOD_DB.pRecsMap),
-                it2: new RecsIterator(MOD_DB.tRecsMap),
+                it: new RecsIterator(MOD_DB.pRecsMap, true),
+                it2: new RecsIterator(MOD_DB.tRecsMap, true),
                 reload:MOD_PANEL.create, // this function
                 onClosed:onClosed,
                 saveRec: MOD_CS.saveRec,

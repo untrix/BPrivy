@@ -145,7 +145,7 @@ function BP_GET_TRAITS(g)
         }
     });
     
-    function RecsIterator (recsMap, sort)
+    function RecsIterator (recsMap, skipDeletes, sort)
     {
         var k = recsMap ? (sort ? Object.keys(recsMap).sort() : Object.keys(recsMap)) : MOD_COMMON.EMPTY_ARRAY;
         Object.defineProperties(this,
@@ -153,21 +153,19 @@ function BP_GET_TRAITS(g)
             _o: {value: recsMap},
             _k: {value: k},
             _n: {value: k.length},
-            _i: {value: 0, writable:true}
+            _i: {value: 0, writable:true},
+            _sd: {value: skipDeletes}
         });
         Object.seal(this);
     }
-    /**
-     * Iterates over non-deleted items. 
-     */
     RecsIterator.prototype.next = function ()
     {
         var actn = null, t;
         // Find the next item who's current action is not delete.
-        while (this._i < this._n) 
+        while (this._i < this._n)
         {
             t = this._o[this._k[this._i++]];
-            if (!t.curr.a) { actn=t; break; }
+            if ((!this._sd) || (t.curr.a!=='d')) { actn=t; break; }
         }
 
         return actn;
@@ -176,9 +174,9 @@ function BP_GET_TRAITS(g)
     {
         var i = 0,
             n = 0;
-        while (i < this._n) 
+        while (i < this._n)
         {
-            if (!this._o[this._k[i++]].curr.a) { n++; }
+            if ((!this._sd) || !this._o[this._k[i++]].curr.a) { n++; }
         }
         return n;
     };
