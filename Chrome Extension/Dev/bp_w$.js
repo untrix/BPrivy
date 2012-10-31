@@ -344,7 +344,12 @@ function BP_GET_W$(g)
         for (i=0, n=wdl.children? wdl.children.length:0; i<n; i++) {
             cwdl = wdl.children[i];
             if (cwdl !== w$undefined) {
-                w$el.append(w$exec(cwdl, ctx, true));
+                try {
+                    w$el.append(w$exec(cwdl, ctx, true));
+                }
+                catch (err) {
+                    logwarn(err);
+                }
             }
         }
         // now the iterative children
@@ -356,12 +361,12 @@ function BP_GET_W$(g)
 
             if (typeof wdi === 'function') { isFunc = true; }
 
-            for (i=0,j=1,_cwdl=wdi; ((rec = it.next())); i++, _cwdl=wdi) 
+            for (j=1,_cwdl=wdi; ((rec = it.next())); _cwdl=wdi) 
             {try {
                 if (isFunc) {
                     ctx.w$rec = rec;
                     ctx.w$i = j;
-                    _cwdl = _cwdl(ctx);
+                    _cwdl = wdi(ctx);
                 } // compile wdi to wdl
                 if (_cwdl !== w$undefined) {
                     w$el.append(w$exec(_cwdl, ctx, true));
@@ -379,7 +384,39 @@ function BP_GET_W$(g)
         if (wdl.iterate2) {
             iterate(wdl.iterate2.it, wdl.iterate2.wdi);
         } 
-        
+
+        function walk (it, wdi)
+        {
+            var rec, isFunc=false, _cwdl, j;
+            
+            if (!it || !wdi) {return;}
+
+            if (typeof wdi === 'function') { isFunc = true; }
+
+            //for (j=1,_cwdl=wdi; ((rec = it.next())); _cwdl=wdi)
+            j = 1;
+            it.walk(function(rec)
+            {try {
+                _cwdl = wdi;
+                if (isFunc) {
+                    ctx.w$rec = rec;
+                    ctx.w$i = j;
+                    _cwdl = wdi(ctx);
+                } // compile wdi to wdl
+                if (_cwdl !== w$undefined) {
+                    w$el.append(w$exec(_cwdl, ctx, true));
+                    j++;
+                }
+            } catch (e) {
+                logwarn(e);
+            }});
+
+            it = null;
+        }
+        if (wdl.walk) {
+            walk(wdl.walk.it, wdl.walk.wdi);
+        }
+
         // Populate w$el's interface post-children
         if (wdl._iface) { w$evalProps(wdl._iface, w$, ctx, w$el); }
         // Insert text nodes after children

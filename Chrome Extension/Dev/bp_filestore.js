@@ -43,7 +43,7 @@ function BP_GET_FILESTORE(g)
     m = g.BP_CONNECT; 
     var newPRecord = IMPORT(m.newPRecord);
     /** @import-module-begin MemStore **/
-    var MEM_STORE = IMPORT(g.BP_MEMSTORE);
+    var MEMSTORE = IMPORT(g.BP_MEMSTORE);
     /** @import-module-begin UI Traits **/
     var eid_pfx = IMPORT(g.BP_TRAITS.eid_pfx);
     /** @import-module-begin **/
@@ -64,8 +64,8 @@ function BP_GET_FILESTORE(g)
         csvImport: {
         // noTmUpdates: Set to true implies that if a record has the same key and value
         //               but has a newer timestamp from that already present in the DB,
-        //               then it will be discarded by the MEM_STORE. In other words,
-        //               'newRepeats' will be discarded by the MEM_STORE. By default they're
+        //               then it will be discarded by the MEMSTORE. In other words,
+        //               'newRepeats' will be discarded by the MEMSTORE. By default they're
         //               kept.
         //               If it had the same key+value but an older timestamp, it would be
         //               discarded anyway ('oldRepeat');
@@ -93,7 +93,7 @@ function BP_GET_FILESTORE(g)
     
     function unloadDB()
     {
-        MEM_STORE.clear(); // unload the previous DB.
+        MEMSTORE.clear(); // unload the previous DB.
         DB_FS.setDBPath(null);
     }
     
@@ -111,7 +111,7 @@ function BP_GET_FILESTORE(g)
     {
         var i, dr,
             //loaded=0,
-            ftraits = MEM_STORE.DT_TRAITS.getTraits(dt).file,
+            ftraits = MEMSTORE.DT_TRAITS.getTraits(dt).file,
             // Have BPPlugin format the return data like a JSON array. It is more efficient
             // to do this inside the plugin because it can prefix and suffix the data
             // without having to copy it over. In the case of javascript strings are immutable
@@ -142,7 +142,7 @@ function BP_GET_FILESTORE(g)
         if (recs && (typeof recs === 'object') && recs.constructor === Array)
         {
             // Loading records in reverse chronological order for faster insertion into
-            // MEM_STORE.
+            // MEMSTORE.
             
             // Remove the first entry that we artifically inserted above.
             delete recs[0];
@@ -152,12 +152,12 @@ function BP_GET_FILESTORE(g)
             {
                 try
                 {
-                    dr = MEM_STORE.insertRec(rec, dt);
+                    dr = MEMSTORE.insertRec(rec, dt);
                     // In case of file-import, the imported records need to be persisted
                     // to the local DB. Such records are merely saved to buf here - not
                     // actually written to file (that's done later). But we need to check with
                     // both DT and UC traits whether the record should be persisted.
-                    if (buf && MEM_STORE.DT_TRAITS.getTraits(dt).toPersist(dr.notes) && 
+                    if (buf && MEMSTORE.DT_TRAITS.getTraits(dt).toPersist(dr.notes) && 
                         UC_TRAITS.importFile.toPersist(dr.notes))
                     {
                         buf.pushRec(rec);
@@ -167,7 +167,7 @@ function BP_GET_FILESTORE(g)
                 {
                     var bpe = new BPError(e);
                     BP_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
-                    MEM_STORE.getStats().bad++;
+                    MEMSTORE.getStats().bad++;
                 }
             },0);
             
@@ -218,7 +218,7 @@ function BP_GET_FILESTORE(g)
                     file_names = Object.keys(f);
     
                     // Load files in reverse chronological order for faster insertion into
-                    // MEM_STORE.
+                    // MEMSTORE.
                     file_names.sort(function (x,y)
                     {
                         return DB_FS.mtmCmp(dt, f[y], f[x]);
@@ -258,10 +258,10 @@ function BP_GET_FILESTORE(g)
         dbPath = DB_FS.verifyDBForLoad(dbPath);
 
         BP_ERROR.log("loadingDB " + dbPath);
-        MEM_STORE.clear(); // unload the previous DB.
+        MEMSTORE.clear(); // unload the previous DB.
         
         loadDBFiles(dbPath, dbStats, exclude);
-        memStats = MEM_STORE.getStats();
+        memStats = MEMSTORE.getStats();
         DB_FS.setDBPath(dbPath, dbStats);
                 
         BP_ERROR.log("Loaded DB " + dbPath + ". files loaded: "+dbStats.numLoaded()+
@@ -392,12 +392,12 @@ function BP_GET_FILESTORE(g)
         // stored on NFS) or through sky-drives such as DropBox. New records will be
         // written only to .3ao files.        tempDTFiles(newDBMap(dbPath));
         // Clear old records and load DB to memory - including the temp files created above.        dbPath = loadDB(dbPath, dbStats);
-        // Iterate the MEM_STORE and write recs to the appropriate files.
+        // Iterate the MEMSTORE and write recs to the appropriate files.
         dbStatsCompacted = newDBMap(dbPath);
         for (i=0; i<DB_FS.dtl.length; i++)
         {
             dt = DB_FS.dtl[i];
-            dnIt = MEM_STORE.newDNodeIterator(dt);
+            dnIt = MEMSTORE.newDNodeIterator(dt);
             buf = new RecsBuf();
             
             dnIt.walk(writeArec, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted});
@@ -613,7 +613,7 @@ function BP_GET_FILESTORE(g)
     function exportCsvDT(dt, fpath)
     {
         var dbPath = DB_FS.getDBPath(),
-            traits = MEM_STORE.DT_TRAITS.getTraits(dt),
+            traits = MEMSTORE.DT_TRAITS.getTraits(dt),
             buf;
         if (!dbPath) {
             throw new BPError("", "UserError", "NoDBLoaded");
@@ -624,7 +624,7 @@ function BP_GET_FILESTORE(g)
         
         buf = new RecsBuf("\n");
         buf.push(traits.csvHeader());
-        MEM_STORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits});
+        MEMSTORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits});
         buf.flush(fpath);
     }
     
@@ -673,7 +673,7 @@ function BP_GET_FILESTORE(g)
             throw new BPError(o.err);
         }
         
-        MEM_STORE.clear(); // unload the previous DB.
+        MEMSTORE.clear(); // unload the previous DB.
         DB_FS.setDBPath(dbPath); // The DB is deemed loaded (though it is empty)
         return dbPath; // same as return DB_FS.getDBPath();
     }
@@ -875,20 +875,20 @@ function BP_GET_FILESTORE(g)
                                           Date.now(), 
                                           csv[pidx.userid],
                                           csv[pidx.pass]);
-                        if (!MEM_STORE.PREC_TRAITS.isValidCSV(prec))
+                        if (!MEMSTORE.PREC_TRAITS.isValidCSV(prec))
                         {
                             BP_ERROR.log("Discarding invalid csv record - " + JSON.stringify(csv));
                             prec = null; continue;
                         }
                         else
                         {
-                            drec = new MEM_STORE.DRecord(prec, dt_pRecord, uct);
+                            drec = new MEMSTORE.DRecord(prec, dt_pRecord, uct);
                         }
                         
-                        if ((dr=MEM_STORE.insertDrec(drec)))
+                        if ((dr=MEMSTORE.insertDrec(drec)))
                         {
                             try {
-                                if (MEM_STORE.DT_TRAITS.getTraits(dt_pRecord).toPersist(dr.notes) && uct.toPersist(dr.notes)) {
+                                if (MEMSTORE.DT_TRAITS.getTraits(dt_pRecord).toPersist(dr.notes) && uct.toPersist(dr.notes)) {
                                     insertRec(prec, dt_pRecord);
                                 }
                             } catch (e) {

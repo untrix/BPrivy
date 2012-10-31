@@ -19,8 +19,9 @@ function BP_GET_PLAT(gg)
     var window = null, document = null, console = null, chrome = gg.g_chrome;
         
     /** @import-module-begin */
-    var BP_ERROR = IMPORT(gg.BP_ERROR),
-        BP_COMMON = IMPORT(gg.BP_COMMON);
+    var BP_ERROR = IMPORT(gg.BP_ERROR);
+    /** @import-module-begin */
+    var BP_COMMON = IMPORT(gg.BP_COMMON);
     /** @import-module-end **/
     
     var g = {contextMenuID: null, mW: null},
@@ -52,22 +53,6 @@ function BP_GET_PLAT(gg)
                         chrome.browserAction.setTitle({title:"Empty or restricted page", tabId:tab.id});
                         break;
                 }
-                
-                // var url = "bp_panel.html",
-                    // args = "location=0,menubar=0,resizable=yes,status=0,titlebar=0,toolbar=0,width=350,height=96";
-                // var createData = {
-                    // url: "bp_panel.html",
-                    // width: 350,
-                    // height: 96,
-                    // focused: true,
-                    // type: "panel"
-                // };
-                // if (g.mW) {g.mW.close();}
-                // g.mW = window.open(url, 'mini-wallet', args, true);
-                // if (window.focus) {g.mW.focus();}
-                // if (g.mW){chrome.windows.update(g.mW, {focused:true});}
-                // else {g.mW = chrome.windows.create(createData, function (w){g.mW = w.id;});}
-                //chrome.browserAction.setPopup({popup:url});
             }
             else
             { // Unset badge text
@@ -83,14 +68,6 @@ function BP_GET_PLAT(gg)
         if (info.menuItemId === g.contextMenuID)
         {
             bpClick(tab, info.frameUrl);
-            //BP_ERROR.loginfo("BPMenuItem was clicked on page " + info.pageUrl);
-            // chrome.tabs.insertCSS(tab.id, CSS_INJECT_DETAILS, function()
-            // {
-                // chrome.tabs.executeScript(tab.id, JS_INJECT_DETAILS, function()
-                // {
-                    // bpClick(tab, info.frameUrl);
-                // });
-            // });
         }
     }
 
@@ -102,24 +79,21 @@ function BP_GET_PLAT(gg)
         //BP_ERROR.loginfo("Menu Item ID " + menu_id + " Created");
     
         chrome.browserAction.onClicked.addListener(bpClick);
-        // chrome.browserAction.onClicked.addListener(function(tab)
-        // {
-            // chrome.windows.create({url:'/bp_panel.html', type:'panel', focused:true, width:322, height:100});
-        // });
         chrome.pageAction.onClicked.addListener(bpClick);
        
         g.contextMenuID = menu_id;
         MOD_WIN = mod_win;
         //BP_ERROR.loginfo("Menu Item ID = " + g.contextMenuID);
     }
-
+    
     var module =
     {
         registerMsgListener: function(foo) {chrome.extension.onRequest.addListener(foo);},
         sendRequestToTab: function(tabID, obj) {chrome.tabs.sendRequest(tabID, obj);},
         initScaffolding: initScaffolding,
         bpClick: bpClick,
-        showPageAction: function(tabId) {chrome.pageAction.show(tabId);}
+        showPageAction: function(tabId) {chrome.pageAction.show(tabId);},
+        notifications: gg.webkitNotifications
     };
     
     Object.seal(module);

@@ -52,7 +52,7 @@ var ProtoJobTracker = Object.create(events.EventEmitter.prototype,{
     logEnd: {value: function(self)
     {   'use strict';
         if (!self) {self=this;}
-        console.log(self.name + ' end');
+        console.log('<-- Job ended: ' + self.name);
     }},    end: {value: function(){this.done();}}
 });
 
@@ -70,6 +70,7 @@ function Async (name, _done)
     else {
         o.on('done', ProtoJobTracker.logEnd);
     }
+    console.log('--> Job created: ' + name);
     return Object.seal(o);
 }
 

@@ -657,13 +657,16 @@ function BP_GET_WDL (g)
             panel = w$ctx.panel,
             bInp = w$ctx.io_bInp,
             autoFill = panel.autoFill,
+            isNewItem = w$ctx.isNewItem,
+            itemList = w$ctx.itemList,
             isTRec = w$ctx.isTRec;
         return {
         cons: IoItem,
         tag:'div', 
         attr:{ class:css_class_li },
         ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.prototype.toggleIO },
-        iface: { acns:acns, rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec },
+        iface: { acns:acns, rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec,
+                 isNewItem:isNewItem, itemList:itemList },
         on: {mousedown:stopPropagation},
             children:[
             FButton.wdt,
@@ -729,16 +732,28 @@ function BP_GET_WDL (g)
         deleteRecord: {value: function()
         {
             var self = this,
-                panel = this.panel;
+                panel = this.panel,
+                isNewItem = this.isNewItem,
+                itemList = this.itemList;
             function handleResp(resp)
             {
                 if (resp.result!==true) {
                     BP_ERROR.warn(resp.err);
                 }
-                else {self.destroy();}
+                else {
+                    self.destroy();
+                    if (isNewItem) {
+                        itemList.newItemCreated = false;
+                    }
+                }
             }
 
-            if (!this.rec) {self.destroy();}
+            if (!this.rec) {
+                self.destroy();
+                if (isNewItem) {
+                    itemList.newItemCreated = false;
+                }
+            }
             else {
                 if (!this.isTRec) {
                     self.panel.delRec(this.rec, dt_pRecord, handleResp);
@@ -820,13 +835,12 @@ function BP_GET_WDL (g)
         }},
         newItem: {value: function()
         {
-            if (!this.newItemCreated) {
+            if ((!this.isTRec) && (!this.newItemCreated)) {
                 var ctx = BP_COMMON.copy2(this.panel.origCtx, {});
-                BP_COMMON.copy2({io_bInp:true, loc:this.loc, panel:this.panel, isTRec:this.isTRec }, ctx);
+                BP_COMMON.copy2({io_bInp:true, loc:this.loc, panel:this.panel, itemList:this, isNewItem:true }, ctx);
                 w$exec(IoItem.wdi, ctx).appendTo(this);
                 this.newItemCreated = true;
             }
-            
         }}
     });
     

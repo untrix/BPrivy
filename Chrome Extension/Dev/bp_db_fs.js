@@ -427,7 +427,7 @@ function BP_GET_DBFS(g)
                         file_names = Object.keys(f);
         
                         // List files in reverse chronological order for faster insertion into
-                        // MEM_STORE.
+                        // MEMSTORE.
                         
                         for (j=0; j < file_names.length; j++)
                         {

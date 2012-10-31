@@ -88,6 +88,7 @@ if (argv.length < 2)
 
 var src = abs(argv[0]),
     bld = abs(argv[1]),
+    all = (argv[2] === 'all'),
     release = abs(bld, 'release'),
     minjs = abs(bld, 'minjs'),
     dist = abs(bld, 'dist'),
@@ -106,7 +107,7 @@ var src = abs(argv[0]),
     ],
     release_main_js=['bp_error.js', 'bp_common.js', 'bp_traits.js', "bp_main_chrome.js", "bp_cs_chrome.js",
                      "bp_listener.js", "bp_connector.js", "bp_memstore.js", "bp_db_fs.js",
-                     "bp_filestore.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js" ],
+                     "bp_filestore.js", "bp_notifications.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js" ],
     // release_manage_js=["bp_error.js","bp_common.js","bp_traits.js","bp_cs_chrome.js","bp_w$.js",
                        // "bp_connector.js", "bp_db_fs.js", "bp_editor.wdl.js", "bp_manage.js"],
     release_manage_js=["bp_cs_chrome.js", "bp_w$.js", "bp_editor.wdl.js", "bp_listener.js", "bp_manage.js"],
@@ -165,25 +166,34 @@ catIfNeeded(qualifyA(src,release_main_js), src + path.sep + 'bp_main.cat.js');
 catIfNeeded(qualifyA(src,release_manage_js), src + path.sep + 'bp_manage.cat.js');
 catIfNeeded(qualifyA(src,release_panel_js), src + path.sep + 'bp_panel.cat.js');
 
-var ch2 = child.fork('buildminify.js', [src, minjs]);
-ch2.on('exit', async.runHere(function childExit(code, signal)
+if (all)
 {
-    copy(minjs, release, release_js);
-    copy(src, release, release_others);
-    copy(minjs, dist, release_js);
-    copy(src, dist, release_others);
-    var pem_dir = path.dirname(bld);
-    copy(pem_dir, dist, ['key.pem']);
-
-}));
-ch2.disconnect();
+    var ch2 = child.fork('buildminify.js', [src, minjs]);
+    ch2.on('exit', async.runHere(function childExit(code, signal)
+    {
+        copy(minjs, release, release_js);
+        copy(src, release, release_others);
+        copy(minjs, dist, release_js);
+        copy(src, dist, release_others);
+        var pem_dir = path.dirname(bld);
+        copy(pem_dir, dist, ['key.pem']);
+    
+    }));
+    ch2.disconnect();
+}
 
 // Ensure that (the handwritten) manifest.json is valid.
 bp.processFiles(src+path.sep, release+path.sep, release_json, bp.cleanJson, async);
-bp.processFiles(src+path.sep, dist+path.sep, release_json, bp.cleanJson, async);
+if (all) {
+    bp.processFiles(src+path.sep, dist+path.sep, release_json, bp.cleanJson, async);
+}
 
-var async2 = bp.newAsync('package');
-// Interleave async and async2 here.
-async.on('done', async2.runHere(function() {bp.buildPackage(src, bld, async2);}));
+var async2;
+if (all)
+{
+    async2 = bp.newAsync('package');
+    // Interleave async and async2 here.
+    async.on('done', async2.runHere(function() {bp.buildPackage(src, bld, async2);}));    
+}
 async.end();
-async2.end();
+if (async2) {async2.end();}

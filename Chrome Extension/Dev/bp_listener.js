@@ -13,6 +13,7 @@
  */
 function BP_GET_LISTENER(g)
 {   'use strict';
+    var window = null, document = null, console = null;
 
     /** @import-module-begin */
     var BP_PLAT = IMPORT(g.BP_PLAT),

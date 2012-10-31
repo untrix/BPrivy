@@ -8,7 +8,8 @@
 /* JSLint directives */
 /*global $, BP_MOD_PLAT, BP_GET_CONNECT, BP_GET_COMMON, IMPORT, localStorage,
   BP_GET_MEMSTORE, BP_GET_DBFS, BP_GET_FILESTORE, BP_GET_ERROR, BP_GET_TRAITS,
-  BP_GET_CS_PLAT, BP_GET_PLAT, BP_GET_LISTENER, BP_GET_W$, BP_GET_WDL */
+  BP_GET_CS_PLAT, BP_GET_PLAT, BP_GET_LISTENER, BP_GET_W$, BP_GET_WDL, chrome,
+  webkitNotifications, BP_GET_NOTIFICATIONS */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true,
   regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -26,13 +27,76 @@ function IMPORT(sym)
     }
 }
 
+/**
+ * @ModuleBegin NOTIFICATIONS
+ */
+function BP_GET_NOTIFICATIONS(g)
+{   'use strict';
+    var window = null, document = null, console = null;
+
+    /** @import-module-begin */
+    var BP_ERROR    = IMPORT(g.BP_ERROR),
+        BPError     = IMPORT(BP_ERROR.BPError);
+    var BP_COMMON   = IMPORT(g.BP_COMMON);
+    var MEMSTORE    = IMPORT(g.BP_MEMSTORE);
+    var BP_LISTENER = IMPORT(g.BP_LISTENER);
+    var BP_CONNECT  = IMPORT(g.BP_CONNECT),
+        dt_pRecord  = IMPORT(BP_CONNECT.dt_pRecord);
+    var BP_PLAT     = IMPORT(g.BP_PLAT);
+    /** @import-module-end **/
+
+    /** @globals-begin */
+    var g_notification;
+    /** @globals-end **/
+
+    function onClose(ev)
+    {
+        g_notification = null;
+    }
+
+    function create()
+    {
+        g_notification = BP_PLAT.notifications.createHTMLNotification(
+          'bp_notification.html'  // html url - can be relative
+        );
+        g_notification.onerror = onClose;
+        g_notification.onclose = onClose;
+        g_notification.onclick = onClose;
+        g_notification.show();                
+    }
+    
+    function onChange(ev)
+    {
+        if (!g_notification) {
+            if (ev.detail.drec && ev.detail.drec.rec && ev.detail.drec.rec.a !== 'd') {
+                create();
+            }
+        }
+    }
+    
+    function init()
+    {
+        BPError.push('InitNotifications');
+        var scope = new BP_LISTENER.Scope('temp_' + dt_pRecord, dt_pRecord);
+        var cback = new BP_LISTENER.CallbackInfo(onChange);
+        MEMSTORE.Event.listen('bp_change', scope, cback);
+    }
+    
+    return Object.freeze(
+    {
+        init: init
+    });
+}
 var BP_PLUGIN;
 /** @globals-end */
 
 var BP_MAIN = (function()
 {
     "use strict";
-    var g = {g_win:window, g_console:console, g_chrome:chrome},
+    var g = {g_win:window, 
+             g_console:console, 
+             g_chrome:chrome, 
+             webkitNotifications: webkitNotifications},
         g_doc = document;
 
     g.BP_ERROR = BP_GET_ERROR(g);
@@ -45,6 +109,7 @@ var BP_MAIN = (function()
     g.BP_MEMSTORE = BP_GET_MEMSTORE(g);
     g.BP_DBFS = BP_GET_DBFS(g);
     g.BP_FILESTORE = BP_GET_FILESTORE(g);
+    g.BP_NOTIFICATIONS= BP_GET_NOTIFICATIONS(g);
     // These are for use by panel.js
     g.BP_W$ = BP_GET_W$(g);
     g.BP_WDL = BP_GET_WDL(g);
@@ -68,7 +133,7 @@ var BP_MAIN = (function()
     var cm_getDBPath = IMPORT(m.cm_getDBPath);
     /** @import-module-begin MemStore */
     m = g.BP_MEMSTORE;
-    var MEM_STORE = IMPORT(m),
+    var MEMSTORE = IMPORT(m),
         MOD_ETLD = IMPORT(m.MOD_ETLD);
     var FILE_STORE = IMPORT(g.BP_FILESTORE);
     /** @import-module-begin Error */
@@ -79,6 +144,7 @@ var BP_MAIN = (function()
     /** @import-module-begin */
     var DBFS = IMPORT(g.BP_DBFS);
     var BP_LISTENER = IMPORT(g.BP_LISTENER);
+    var BP_NOTIFICATIONS = IMPORT(g.BP_NOTIFICATIONS);
     /** @import-module-end **/    m = null;
 
     var MOD_WIN; // defined later.
@@ -99,10 +165,10 @@ var BP_MAIN = (function()
         {
             case dt_eRecord:
             case dt_pRecord:
-                dr = MEM_STORE.insertRec(rec, dt);
+                dr = MEMSTORE.insertRec(rec, dt);
                 if (dr) {
                     res = true;
-                    if (MEM_STORE.DT_TRAITS.getTraits(dt).toPersist(dr.notes) &&
+                    if (MEMSTORE.DT_TRAITS.getTraits(dt).toPersist(dr.notes) &&
                         FILE_STORE.UC_TRAITS.insertNewRec.toPersist(dr.notes))
                     {
                         res = FILE_STORE.insertRec(rec, dt);
@@ -122,14 +188,14 @@ var BP_MAIN = (function()
             dbName:DBFS.getDBName(),
             dbPath:DBFS.getDBPath(),
             dbStats:DBFS.getDBStats(),
-            memStats:MEM_STORE.getStats()
+            memStats:MEMSTORE.getStats()
         };
     }
     
     function getRecs (loc, callback)
     {
         var recs, resp={loc:loc};
-        recs = MEM_STORE.getRecs(loc);
+        recs = MEMSTORE.getRecs(loc);
         resp.dbInfo = {
             dbName : DBFS.getDBName(),
             dbPath : DBFS.getDBPath()
@@ -147,13 +213,13 @@ var BP_MAIN = (function()
         var dr, resp, recs;
         dr = insertNewRec(rec, dt);
         if (dr && (!dontGet)) {
-            recs = MEM_STORE.getDTRecs(BP_CONNECT.lToLoc(rec.l), dt);
+            recs = MEMSTORE.getDTRecs(BP_CONNECT.lToLoc(rec.l), dt);
         }
         resp = {result:Boolean(dr), recs:recs};
         if (callback) {callback(resp);}
         
         if (dr) { // event dispatch
-            MEM_STORE.Event.dispatch(dr);
+            MEMSTORE.Event.dispatch(dr);
         }
         return resp;
     }
@@ -163,10 +229,10 @@ var BP_MAIN = (function()
         var notes, result, resp, recs, loc, dr, dnode, root;
         if (DBFS.getDBPath()) 
         {
-            dr = MEM_STORE.insertTempRec(rec, dt);
+            dr = MEMSTORE.insertTempRec(rec, dt);
             loc = BP_CONNECT.lToLoc(rec.l);
             if (!dontGet) {
-                recs = MEM_STORE.getTRecs(loc);
+                recs = MEMSTORE.getTRecs(loc);
             }
             result = true;
         }
@@ -174,7 +240,7 @@ var BP_MAIN = (function()
         resp = {result:result, recs:recs};
         if (callback) {callback(resp);}
         if (dr) { // event dispatch
-            MEM_STORE.Event.dispatch(dr);
+            MEMSTORE.Event.dispatch(dr);
         }
         return resp;
     }
@@ -234,7 +300,7 @@ var BP_MAIN = (function()
                 case 'cm_bootLoaded':
                     BPError.push("CSBootLoaded");
                     //BP_PLAT.showPageAction(sender.tab.id);
-                    //funcSendResponse({result:true, cm:((MEM_STORE.numTRecs(rq.loc)) ? 'cm_loadDll' : undefined) });
+                    //funcSendResponse({result:true, cm:((MEMSTORE.numTRecs(rq.loc)) ? 'cm_loadDll' : undefined) });
                     funcSendResponse({result:true});
                     break;
                 case cm_getRecs:
@@ -299,11 +365,11 @@ var BP_MAIN = (function()
                     break;
                 case BP_CONNECT.cm_getDB:
                     BPError.push("GetDB");
-                    funcSendResponse({result:true, dB:MEM_STORE.getDB(rq.dt)});
+                    funcSendResponse({result:true, dB:MEMSTORE.getDB(rq.dt)});
                     break;
                 case BP_CONNECT.cm_getDN:
                     BPError.push("GetDNode");
-                    funcSendResponse({result:true, dN:MEM_STORE.getDNode(rq.l, rq.dt)});
+                    funcSendResponse({result:true, dN:MEMSTORE.getDNode(rq.l, rq.dt)});
                     break;
                 case BP_CONNECT.cm_getDomn:
                     BPError.push("GetDomain");
@@ -412,8 +478,8 @@ var BP_MAIN = (function()
             initScaffolding(g_doc, MOD_WIN);
             registerMsgListener(onRequest);
             DBFS.init();
-            MEM_STORE.loadETLD();
-            MEM_STORE.clear();
+            MEMSTORE.loadETLD();
+            MEMSTORE.clear();
             if (dbPath)
             {
                 BPError.atvt = new Activity('LoadDBAtInit');
@@ -423,18 +489,8 @@ var BP_MAIN = (function()
                     throw new BPError("DB Load Failed");
                 }
             }
-            
-            BPError.atvt = new Activity('InstallListener');
-            var scope = new BP_LISTENER.Scope('temp_' + dt_pRecord, dt_pRecord);
-            var cback = new BP_LISTENER.CallbackInfo(function(ev)
-            {
-                BP_ERROR.loginfo('Received event ' + ev.type);
-                var notification = webkitNotifications.createHTMLNotification(
-                  'bp_panel.html'  // html url - can be relative
-                );
-                notification.show();
-            });
-            MEM_STORE.Event.listen('bp_change', scope, cback);
+            // Initialize notifications after everything has loaded.
+            BP_NOTIFICATIONS.init();
             //chrome.webRequest.onBeforeRequest.addListener(onBefReq, {urls:["http://*/*", "https://*/*"]});
         
             // chrome.tabs.onSelectionChanged.addListener(function(tabId) 
@@ -444,7 +500,7 @@ var BP_MAIN = (function()
         catch (e)
         {
             delete localStorage['db.path'];
-            MEM_STORE.clear();
+            MEMSTORE.clear();
             BP_ERROR.logwarn(e);
         }
     }

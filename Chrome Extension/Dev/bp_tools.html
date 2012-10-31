@@ -58,7 +58,7 @@
     function bpPluginLoaded ()
     {
       var FILESTORE = IMPORT(BP_FILESTORE),
-          MEM_STORE  = IMPORT(BP_MEMSTORE),
+          MEMSTORE  = IMPORT(BP_MEMSTORE),
           dt_etld = IMPORT(BP_CONNECT.dt_etld),
           ETLDDict;
 
@@ -66,7 +66,7 @@
       console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
       FILESTORE.init();
 
-    // Pretends to be MEM_STORE.DURL
+    // Pretends to be MEMSTORE.DURL
     function DURL2 (l) // host.domain
     {
         var ha;
@@ -83,10 +83,10 @@
         });
         Object.seal(this);
     }
-    DURL2.prototype = MEM_STORE.DURL.prototype;
+    DURL2.prototype = MEMSTORE.DURL.prototype;
       
  
-    // Pretends to be MEM_STORE.DRecord
+    // Pretends to be MEMSTORE.DRecord
     function DRecord2(rec, dt)
     {
         // Construct url segment iterator.
@@ -130,7 +130,7 @@
                   
                   etld = new ETLDMark(csv[0]);
                   dnode.insert(new DRecord2(etld, dt_etld));
-                  //MEM_STORE.insertRec(etld, dt_etld, dnode);
+                  //MEMSTORE.insertRec(etld, dt_etld, dnode);
               }
       }
       
@@ -143,7 +143,7 @@
           if (BP_PLUGIN.chooseFile(o))
           {
             console.log("ChooseFile returned:" + o.path);
-            ETLDDict = MEM_STORE.newDNode();
+            ETLDDict = MEMSTORE.newDNode();
             loadETLD(o.path, ETLDDict);
           }
           

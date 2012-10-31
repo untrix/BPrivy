@@ -622,7 +622,7 @@ function BP_GET_EDITOR(g)
         cons: PanelList,
         tag:'div',
         addClass: 'accordion-body accordion-inner',
-        ctx:{ 'io_bInp':io_bInp, w$:{ itemList:'w$el' } },
+        ctx:{ /*'io_bInp':io_bInp,*/ w$:{ itemList:'w$el' } },
         iface:{ loc:loc, panel:panel },
             iterate:{ it:it, wdi:IoItem.wdi },
         _iface:{ w$ctx:{ nB:'nB' } }
@@ -670,9 +670,10 @@ function BP_GET_EDITOR(g)
         addClass: "accordion-group com-untrix-dnode",         
         // Post w$el creation steps.
         ctx:{ w$:{ panel:"w$el" }, loc:loc, it:rIt },// TODO: populate loc and rIt directly.
-        // Copy props to the Wel object for future use.
+        // Copy props to the widget object for future use.
         // NOTE: rIt references MEMSTORE indirectly.
-        iface:{ 'dt':dt, 'rIt':rIt, 'loc':loc,  w$:{ panel:"w$el" }, dNIdx:dNIdx },
+        iface:{ 'dt':dt, 'rIt':rIt, 'loc':loc,  w$:{ panel:"w$el" }, 
+                dNIdx:dNIdx, isOpen:bOpen },
 
             // Create children
             children:[
@@ -694,7 +695,7 @@ function BP_GET_EDITOR(g)
         _iface:{ w$ctx:{itemList:'itemList', nB:'nB' } }
         };
     };
-    DNodeWdl.prototype = w$defineProto(DNodeWdl,// same syntax as Object.defineProperties
+    DNodeWdl.prototype = w$defineProto(DNodeWdl, // Same syntax as Object.defineProperties
     {
         reload: {value: function(bOpen)
         {

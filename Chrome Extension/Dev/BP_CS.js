@@ -228,12 +228,7 @@ function IMPORT(sym)
                     (pair.u && pair.p && (!MOD_DB.matches(pair.u, pair.p))))
                 {
                     MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(),
-                                       pair.u, pair.p), dt_pRecord, function(resp)
-                    {
-                        if (resp.result) {
-                            MOD_PANEL.create();
-                        }
-                    });
+                                       pair.u, pair.p), dt_pRecord);
                 }
             }
         };
@@ -1097,12 +1092,7 @@ function IMPORT(sym)
             }
             
             if (bSave) {
-                MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord, function(resp)
-                {
-                    if (resp.result) {
-                        MOD_PANEL.create();
-                    }
-                });
+                MOD_CS.saveTempRec(newPRecord(g_doc.location, Date.now(), uid, pass), dt_pRecord);
             }
         }
 
