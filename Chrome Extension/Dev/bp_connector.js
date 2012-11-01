@@ -20,6 +20,8 @@ function BP_GET_CONNECT(g)
     var window = null, document = null, console = null,
         g_win = g.g_win,
         g_doc = g_win.document;
+    /** @import-module-begin **/
+    var BP_COMMON = IMPORT(g.BP_COMMON);
     /** @import-module-begin CSPlatform **/
     var m = IMPORT(g.BP_CS_PLAT),
         postMsgToMothership = IMPORT(m.postMsgToMothership),
@@ -140,12 +142,14 @@ function BP_GET_CONNECT(g)
             // as well as on disk and processing cycles as well. This becomes important when one has to
             // ingest thousands of records (ETLD has about 7K records)
             l: {value: newL(loc, dt), enumerable: true},
-            // The action being performed. An undefined value means an insert action. The
-            // only other legal value is 'd', meaning delete.
-            y: {value:type, enumerable: true}
+            // Type of action. Can have one of the following enumerated values:
+            // 1. undefined: insert action
+            // 2. 'd': delete action
+            // 3. 'pd': Permanent delete (empty recycle-bin) action.
+            a: {value:type, enumerable: true}
         });
     }
-    //Action.prototype.setDeleted = function () { this.y = 'd'; };
+    //Action.prototype.setDeleted = function () { this.a = 'd'; };
     
     function EAction(loc, date, atype, fieldName, tagName, id, name, type, formId, formNm)
     {
@@ -200,7 +204,53 @@ function BP_GET_CONNECT(g)
             case dt_pRecord: return PAction.prototype;
             case dt_eRecord: return EAction.prototype;
         }
-    }    
+    }
+
+    // This shoudl ideally be part of ItemHistory class, but that would require a dependency
+    // on Memstore, which is not a good idea since this function is used by bp_cs.
+    function itemDeleted(iHist){return Boolean(iHist.curr.a);}
+    function itemPermDeleted(iHist){return Boolean(iHist.curr.a==='pd');}
+    
+    function ItemIterator (itemsMap, skipDeleted, sort)
+    {
+        var k = itemsMap ? (sort ? Object.keys(itemsMap).sort() : Object.keys(itemsMap)) : BP_COMMON.EMPTY_ARRAY;
+        Object.defineProperties(this,
+        {
+            _o: {value: itemsMap},
+            _k: {value: k},
+            _n: {value: k.length},
+            _i: {value: 0, writable:true},
+            _sd: {value: skipDeleted}
+        });
+        Object.seal(this);
+    }
+    ItemIterator.prototype.next = function ()
+    {
+        var iHist = null, t;
+        // Find the next item.
+        while (this._i < this._n)
+        {
+            t = this._o[this._k[this._i++]];
+            // Return this item  unless we're skipping 
+            // deletes and ths was a deleted item.
+            if (!(this._sd && itemDeleted(t))) { 
+                iHist=t; break; 
+            }
+        }
+
+        return iHist;
+    };
+    ItemIterator.prototype.num = function ()
+    {
+        var i = 0,
+            n = 0;
+        while (i < this._n)
+        {
+            if ((!this._sd) || (!itemDeleted(this._o[this._k[i++]]))) { n++; }
+        }
+        return n;
+    };
+
     /** ModuleInterfaceGetter Connector */
     function getModuleInterface(url)
     {
@@ -269,7 +319,7 @@ function BP_GET_CONNECT(g)
         var iface = {};
         Object.defineProperties(iface, 
         {
-            // MOD_DD
+            // MOD_DT
             dt_eRecord: {value: dt_eRecord},
             dt_pRecord: {value: dt_pRecord},
             dt_etld:    {value: dt_etld},
@@ -279,6 +329,9 @@ function BP_GET_CONNECT(g)
             getDTProto: {value:getDTProto},
             newEAction: {value: newEAction},
             newPAction: {value: newPAction},
+            itemDeleted:{value: itemDeleted},
+            itemPermDeleted:    {value: itemPermDeleted},
+            ItemIterator:{value: ItemIterator},
             fn_userid: {value: fn_userid},
             fn_pass: {value: fn_pass},
             // MOD_PROTO

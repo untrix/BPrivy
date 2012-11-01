@@ -60,8 +60,7 @@ function IMPORT(sym)
     var BP_COMMON = IMPORT(g.BP_COMMON);
     /** @import-module-begin Traits */
     m = IMPORT(g.BP_TRAITS);
-    var RecsIterator = IMPORT(m.RecsIterator),
-        dt_eRecord = IMPORT(m.dt_eRecord),
+    var dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord),
         fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
         fn_userid2= IMPORT(m.fn_userid2),
@@ -83,6 +82,7 @@ function IMPORT(sym)
     /** @import-module-begin */
     m = g.BP_CONNECT;
     var BP_CONNECT = IMPORT(m),
+        ItemIterator = IMPORT(m.ItemIterator),
         newEAction = IMPORT(m.newEAction),
         newPAction = IMPORT(m.newPAction);
     /** @import-module-begin */
@@ -165,8 +165,8 @@ function IMPORT(sym)
             close();
             m_bUserClosed = false;
             var ctx = {
-                it: new RecsIterator(MOD_DB.pRecsMap, true),
-                it2: new RecsIterator(MOD_DB.tRecsMap, true),
+                it: new ItemIterator(MOD_DB.pRecsMap, true),
+                it2: new ItemIterator(MOD_DB.tRecsMap, true),
                 reload:MOD_PANEL.create, // this function
                 onClosed:onClosed,
                 saveRec: MOD_CS.saveRec,

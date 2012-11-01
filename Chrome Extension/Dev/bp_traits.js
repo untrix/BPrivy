@@ -145,47 +145,10 @@ function BP_GET_TRAITS(g)
         }
     });
     
-    function RecsIterator (recsMap, skipDeletes, sort)
-    {
-        var k = recsMap ? (sort ? Object.keys(recsMap).sort() : Object.keys(recsMap)) : MOD_COMMON.EMPTY_ARRAY;
-        Object.defineProperties(this,
-        {
-            _o: {value: recsMap},
-            _k: {value: k},
-            _n: {value: k.length},
-            _i: {value: 0, writable:true},
-            _sd: {value: skipDeletes}
-        });
-        Object.seal(this);
-    }
-    RecsIterator.prototype.next = function ()
-    {
-        var iHist = null, t;
-        // Find the next item who's current action is not delete.
-        while (this._i < this._n)
-        {
-            t = this._o[this._k[this._i++]];
-            if ((!this._sd) || (t.curr.y!=='d')) { iHist=t; break; }
-        }
-
-        return iHist;
-    };
-    RecsIterator.prototype.num = function ()
-    {
-        var i = 0,
-            n = 0;
-        while (i < this._n)
-        {
-            if ((!this._sd) || (this._o[this._k[i++]].curr.y!=='d')) { n++; }
-        }
-        return n;
-    };
-
     var iface = {};
     Object.defineProperties(iface,
     {
         UI_TRAITS: {value: UI_TRAITS},
-        RecsIterator: {value: RecsIterator},
         dt_eRecord: {value: dt_eRecord},
         dt_pRecord: {value: dt_pRecord},
         dt_etld: {value: dt_etld},

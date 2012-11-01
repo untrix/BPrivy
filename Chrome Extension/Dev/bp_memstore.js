@@ -183,7 +183,7 @@ function BP_GET_MEMSTORE(g)
         // Returns value converted to a string suitable to be used as a property name
         valStr: function(actn)
         {
-            if (actn.a==='d') { // delete action
+            if (actn.a) { // delete action
                 return this.DELETE_ACTION_VAL;
             }
             else {return "V}" + actn.v;}
@@ -223,7 +223,7 @@ function BP_GET_MEMSTORE(g)
             }},
             valStr: {value: function(actn)
             {
-                if (actn.a==='d') { // Implies a delete action
+                if (actn.a) { // Implies a delete action
                     return this.DELETE_ACTION_VAL;
                 }
                 else { // insert action
@@ -264,7 +264,7 @@ function BP_GET_MEMSTORE(g)
             }},
             valStr: {value: function(actn)
             {
-                if (actn.a==='d') { // Implies a delete action
+                if (actn.a) { // Implies a delete action
                     return this.DELETE_ACTION_VAL;
                 }
 
@@ -395,9 +395,8 @@ function BP_GET_MEMSTORE(g)
             actn = drec.actn,
             actions = this.actions,
             len = actions.length,
-            res,
-            memStats = MemStats.stats,
-            isDelete = Boolean(actn.a==='d');
+            res, ins, fluff,
+            memStats = MemStats.stats;
         
         if (len===0)        {            // This will happen the first time a key is created            actions[0] = actn;            actions[valStr] = actn;
             memStats.loaded++;        }        else if (actn.tm<=actions[len-1].tm)        {            // In the case of loadDB, we load records in reverse chronological order. That            // allows us to simply push subsequent records to the end of the array.            actions.push(actn);            actions[valStr] = actn;
@@ -412,22 +411,27 @@ function BP_GET_MEMSTORE(g)
             // Arecs are sorted in reverse chronological order here starting with the newest
             // at position 0
             
-            res = this.actions.some (function (item, i, items)
-            {
+            res = this.actions.some (function (_actn, i, _actions)
+            {   // NOTE: Ensure that 'this' is bound to enclosing ItemHistory object
                 var dItm, l;
-                if (actn.tm >= items[i].tm)
+                if (actn.tm >= _actions[i].tm)
                 {
                     // Insert one new item
-                    items.splice(i, 0, actn);
+                    _actions.splice(i, 0, actn);
                     memStats.loaded++;
                     // Update the value index
-                    items[valStr] = actn;
-                    // Delete upto one item
-                    if ((l=items.length)>max)
+                    _actions[valStr] = actn;
+                    if (actn.a==='pd')
                     {
-                        dItm = items[l-1];
-                        items.length = max; // remove item from array
-                        delete items[dtt.valStr(dItm)]; // remove val-index
+                        // Delete all actions to the rhs of this one.
+                        ItemHistory.prototype.GC.apply(this,[i, drec]);
+                    }
+                    // Delete upto one item
+                    else if ((l=_actions.length)>max)
+                    {
+                        dItm = _actions[l-1];
+                        _actions.length = max; // remove item from array
+                        delete _actions[dtt.valStr(dItm)]; // remove val-index
                         memStats.fluff++; memStats.loaded--;
                         drec.notes.causedOverflow = true;
                     }
@@ -438,8 +442,8 @@ function BP_GET_MEMSTORE(g)
                     // This is the last element in the iteration and our new record
                     // happens to be older than this one too. Therefore append it
                     // to the end of the list.
-                    items.push(actn);
-                    items[valStr] = actn;
+                    _actions.push(actn);
+                    _actions[valStr] = actn;
                     memStats.loaded++;
                     // We don't need to check for item-overflow because that has already
                     // been checked before we were invoked.
@@ -474,7 +478,8 @@ function BP_GET_MEMSTORE(g)
             nActn = drec.actn,
             notes = drec.notes,
             tm = nActn.tm,
-            i, bDone;
+            ins=-1,
+            i, bDone, fluff;
 
         i = actions.indexOf(oActn);
         if (i !== -1)
@@ -492,29 +497,59 @@ function BP_GET_MEMSTORE(g)
                         // insert one item
                         actions.splice(i+1, 0, nActn);
                         actions[valStr] = nActn;
+                        ins = i+1;
                         bDone = true;
                         break;
                     }
                 }
                 if (!bDone) {
                     // insert item at the beginning.
-                    actions.splice(0, 0, nActn);
+                    actions.splice(0, 0, nActn);//TODO: use unshift here
                     actions[valStr] = nActn;
+                    ins = 0;
                     this.curr = actions[0];
                     notes.causedCurrChange = true;
                 }
             }
             else {
                 // else the item was already at the top. Replace it with the new item.
-                actions.splice(0, 0, nActn);
+                actions.splice(0, 0, nActn);//TODO: use unshift here
                 actions[valStr] = nActn;
+                ins = 0;
+                this.curr = actions[0];
+            }
+            
+            if ((nActn.a==='pd')) {
+                // Delete actions to the right hand side of GC-point.
+                ItemHistory.prototype.GC.apply(this,[ins, drec]);
             }
         }
         else {
             throw new BPError("Internal Error", "SkipRecord", "UpgradeItemNotFound");
         }
     };
-    
+    /**
+     * Garbage Collects all actions to the right of position i. Call this method only
+     * if action at position i is of type 'pd' (permanent delete).
+     */
+    ItemHistory.prototype.GC = function(i, drec)
+    {   // ASSERT: this.actions[i].a === 'pd'
+        var fluff, dItm, j,
+            len = this.actions.length,
+            memStats = MemStats.stats;
+        if (i<0) {return;}
+        for (j = i+1; j < len; j++)
+        {
+            dItm = this.actions[j];                     // action to be removed
+            delete this.actions[drec.dtt.valStr(dItm)]; // remove from val-index
+        }
+        fluff = (j-i-1);
+        this.actions.splice(i+1, fluff);
+        memStats.fluff += fluff;
+        memStats.loaded -= fluff;
+        memStats.gcd += fluff;
+        drec.notes.causedGC = true;
+    };
     /** 
      *  Method. Insert a record into the Action Records collection 
      *  We're optimizing the file-loading use-case over new item insertions. This is so because
@@ -552,24 +587,36 @@ function BP_GET_MEMSTORE(g)
      *  that action again.
      */
     ItemHistory.prototype.insert = function(drec)
-    {
+    {   // TODO: Make changes to account for GC records
         var actn = drec.actn,
             dtt = drec.dtt,
             valStr = dtt.valStr(actn),
             max = dtt.iHistory.history + 1,
             oActn,
-            memStats = MemStats.stats;
+            memStats = MemStats.stats,
+            len = this.actions.length;
             
         Object.freeze(actn);
         
-        if (this.actions.length === max && actn.tm <= this.actions[max-1].tm) 
+        if (len && (actn.tm <= this.actions[len-1].tm))
         {
-            // This record should not be inserted. Its date&time are older than the
-            // oldest record we have and our collection is already full.
-            drec.notes.isOverflow = true;
-            memStats.fluff++;
-            return;
+            if (len >= max)
+            {
+                // This record should not be inserted. Its date&time are older than the
+                // oldest record we have and our collection is already full or
+                drec.notes.isOverflow = true;
+                memStats.fluff++;
+                return;
+            }
+            else if (this.actions[len-1].a==='pd')
+            {
+                // This record is older than the PermDelete point.
+                drec.notes.isGCd = true;
+                memStats.fluff++;
+                return;
+            }
         }
+
         
         // Now check if we already have this value.
         oActn = this.actions[valStr];
@@ -639,6 +686,19 @@ function BP_GET_MEMSTORE(g)
     {
         return new ActionIterator(this);
     };
+    ItemHistory.prototype.makePDAction = function()
+    {
+        // ASSERT: itemDeleted(iHist)===true
+        if (this.curr.a === 'pd') {return this.curr;}
+        // ASSERT: this.cur.a === 'd'. That is, the record
+        // has no value in it (has key though). Hence we don't need to worry
+        // about removing the value from the record.
+        var gcActn = BP_COMMON.copy2(this.curr, {});
+        gcActn.a = 'pd';
+        gcActn.tm = Date.now();
+        return gcActn;
+    };
+    
     function ActionIterator(iHist)
     {
         Object.defineProperties(this,
@@ -1106,7 +1166,7 @@ function BP_GET_MEMSTORE(g)
         Object.defineProperties(this,
         {
             urli: {value:new DURL(actn.l, dt), enumerable:false},
-            actn:  {value:actn},
+            actn: {value:actn},
             dt:   {value:dt},
             notes:{value: {}},
             dict: {value:dict || dt},
@@ -1125,14 +1185,15 @@ function BP_GET_MEMSTORE(g)
         {
             loaded: {value:0, writable:true, enumerable:true},
             fluff:  {value: 0, writable:true, enumerable:true},
-            bad:    {value:0, writable:true, enumerable:true}
+            bad:    {value:0, writable:true, enumerable:true},
+            gcd:    {value:0, writable:true, enumerable:true} // gc'd actions.
         });
     }
     MemStats.prototype.clr = function ()
     {
         this.loaded = this.fluff = this.bad = 0;
     };
-    MemStats.prototype.update = function (notes)
+/*    MemStats.prototype.update = function (notes)
     {
         if (notes && notes.isRecentUnique) {
             if (notes.causedOverflow) {
@@ -1148,7 +1209,7 @@ function BP_GET_MEMSTORE(g)
         else {
             this.bad++;
         }
-    };
+    };*/
 
     function getDTRecs (loc, dt)
     {
@@ -1172,7 +1233,7 @@ function BP_GET_MEMSTORE(g)
 
     // function numTRecs (loc, skipDeleted)
     // {
-        // return (new BP_TRAITS.RecsIterator(getTRecs(loc), skipDeleted)).num();
+        // return (new BP_CONNECT.ItemIterator(getTRecs(loc), skipDeleted)).num();
     // }
     /**
      * Returns dt_eRecord and dt_pRecord matching loc as per the respective dt traits
@@ -1410,23 +1471,34 @@ function BP_GET_MEMSTORE(g)
      * visits all actions, both current as well as historical.
      * @param {Object} callback
      */
-    DNodeIterator.prototype.walk = function (callback, ctx, skipDeleted)
+    DNodeIterator.prototype.walk = function (callback, ctx, args)
     {
-        var dn, recs, rIt, acoll, aIt, actn;
+        var dn, iMap, iIt, iHist, aIt, actn,
+            doGC = args.doGC,  // convert deletes to permanent deletes as you go
+            skipDeleted = args.skipDeleted; // skip deleted items
         while ((dn=this.next()))
         {
             // Can't code dn.getData(dt) because dn maybe a JSON parsed object.
-            if ((recs=DNProto.getData.apply(dn, [this.dt])))
+            if ((iMap=DNProto.getData.apply(dn, [this.dt])))
             {
-                rIt = new BP_TRAITS.RecsIterator(recs, skipDeleted);
-                while ((acoll=rIt.next()))
+                iIt = new BP_CONNECT.ItemIterator(iMap);
+                while ((iHist=iIt.next()))
                 {
-                    aIt = new ActionIterator(acoll);
-                    for (actn=aIt.next(); 
-                         actn; 
-                         actn=aIt.next())
+                    if (BP_CONNECT.itemPermDeleted(iHist))
                     {
-                        callback(actn, ctx);
+                        callback(iHist.curr, ctx);
+                    }
+                    else if (doGC && (BP_CONNECT.itemDeleted(iHist)) )
+                    {
+                        callback(ItemHistory.prototype.makePDAction.apply(iHist), ctx);
+                    }
+                    else
+                    {
+                        aIt = new ActionIterator(iHist);
+                        for (actn=aIt.next(); actn; actn=aIt.next())
+                        {
+                            callback(actn, ctx);
+                        }
                     }
                 }
             }
@@ -1435,33 +1507,49 @@ function BP_GET_MEMSTORE(g)
 
     /**
      * Walks the DNode tree and calls a callback for each current-record in the tree. It
-     * visits only current records of the ItemHistory collections. Skips the historical records.
-     * Also won't emit deleted items if skipDeleted is true
+     * visits only current actions of the ItemHistory collections. That is, it skips the 
+     * historical actions. It also entirely skips deleted or gc'd items. The idea is to
+     * provide a snapshot of the un-deleted items.
      * @param {Object} callback
-     * @param {Boolean} skipDeleted Won't return actions from an action-history whose
-     * latest action is a delete.
      */
-    DNodeIterator.prototype.walkCurr = function (callback, ctx, skipDeleted)
+    DNodeIterator.prototype.walkCurr = function (callback, ctx)
     {
-        var dn, recs, rIt, acoll, aIt, actn;
+        var dn, iMap, iIt, iHist, aIt, actn;
         while ((dn=this.next()))
         {
             // Can't write dn.getData(dt) because dn maybe a JSON parsed object.
-            if ((recs=DNProto.getData.apply(dn, [this.dt])))
+            if ((iMap=DNProto.getData.apply(dn, [this.dt])))
             {
-                rIt = new BP_TRAITS.RecsIterator(recs, skipDeleted);
-                while ((acoll=rIt.next()))
+                iIt = new BP_CONNECT.ItemIterator(iMap, true);
+                while ((iHist=iIt.next()))
                 {
-                    callback(acoll.curr, ctx);
+                    callback(iHist.curr, ctx);
                 }
             }
         }        
     };
-    function newDNodeIterator (dt)
+    function newDNodeIterator (dt, dict)
     {
-        return new DNodeIterator(DNode[dt], dt);
+        return new DNodeIterator(getRootDNode(dt, dict), dt);
     }
 
+    /**
+     * Proxy of DNodeIterator.prototype.walkCurr. Meant for use by w$exec.
+     * @param {Object} dt:   Data Type of items to walk.
+     * @param {Object} dict: Optional, dict to walk. (e.g. dt_pRecord or 'temp_'+dt_pRecord)
+     */
+    function DataWalker(dt, dict)
+    {
+        Object.defineProperties(this,
+        {
+            dnIt: {value: newDNodeIterator(dt, dict)}
+        });
+    }
+    DataWalker.prototype.walk = function (callback, ctx)
+    {
+        this.dnIt.walkCurr(callback, ctx);
+    };
+    
     //Assemble the interface    
     var iface = Object.freeze(
     {
@@ -1483,6 +1571,7 @@ function BP_GET_MEMSTORE(g)
         DNProto:     DNProto,
         DNODE_TAG:   DNODE_TAG,
         newDNodeIterator: newDNodeIterator,
+        DataWalker:  DataWalker,
         getDT:       function(dt){return DNode[dt];},
         getStats:    function(){return MemStats.stats;},
         putDB:       function(dNode, dt){DNode[dt] = dNode;},
@@ -1494,7 +1583,6 @@ function BP_GET_MEMSTORE(g)
             listen:  listen,
             dispatch:dispatch
         }
-        
     });
 
     BP_ERROR.log("constructed mod_memstore");

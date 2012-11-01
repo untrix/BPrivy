@@ -385,17 +385,17 @@ function BP_GET_W$(g)
             iterate(wdl.iterate2.it, wdl.iterate2.wdi);
         } 
 
-        function walk (it, wdi)
+        function walk (walker, wdi)
         {
             var rec, isFunc=false, _cwdl, j;
             
-            if (!it || !wdi) {return;}
+            if (!walker || !wdi) {return;}
 
             if (typeof wdi === 'function') { isFunc = true; }
 
             //for (j=1,_cwdl=wdi; ((rec = it.next())); _cwdl=wdi)
             j = 1;
-            it.walk(function(rec)
+            walker.walk(function(rec)
             {try {
                 _cwdl = wdi;
                 if (isFunc) {
@@ -411,10 +411,10 @@ function BP_GET_W$(g)
                 logwarn(e);
             }});
 
-            it = null;
+            walker = null;
         }
         if (wdl.walk) {
-            walk(wdl.walk.it, wdl.walk.wdi);
+            walk(wdl.walk.walker, wdl.walk.wdi);
         }
 
         // Populate w$el's interface post-children

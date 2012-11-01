@@ -43,7 +43,8 @@ function BP_GET_WDL (g)
         addHandlers = IMPORT(m.addHandlers); // Compatibility function
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;
-    var newPAction = IMPORT(m.newPAction);
+    var newPAction = IMPORT(m.newPAction),
+        BP_CONNECT = IMPORT(m);
     /** @import-module-begin Error */
     m = g.BP_ERROR;
     var BP_ERROR = IMPORT(m),
@@ -167,9 +168,9 @@ function BP_GET_WDL (g)
         numRecs: function(recsMap)
         {
             var num = 0;
-            BP_COMMON.iterKeys(recsMap, function(k, val)
+            BP_COMMON.iterKeys(recsMap, function(k, iHist)
             {
-                if (val.curr.y!=='d') { num++; }
+                if (!itemDeleted(iHist)) { num++; }
             });
             return num;
         },
@@ -209,8 +210,10 @@ function BP_GET_WDL (g)
         has: function (uid, considerAll)
         {
             // return (Object.keys(this.pRecsMap).indexOf(username) >=0) ||
-                   // (Object.keys(this.tRecsMap).indexOf(username) >=0);            return (this.pRecsMap && this.pRecsMap[uid] && this.pRecsMap[uid].curr && (considerAll || (this.pRecsMap[uid].curr.y!=='d'))) ||
-                   (this.tRecsMap && this.tRecsMap[uid] && this.tRecsMap[uid].curr && (considerAll || (this.tRecsMap[uid].curr.y!=='d'))) ;
+                   // (Object.keys(this.tRecsMap).indexOf(username) >=0);            return (this.pRecsMap && this.pRecsMap[uid] && this.pRecsMap[uid].curr &&
+                        (considerAll || (!BP_CONNECT.itemDeleted(this.pRecsMap[uid])))) ||
+                   (this.tRecsMap && this.tRecsMap[uid] && this.tRecsMap[uid].curr &&
+                        (considerAll || (!BP_CONNECT.itemDeleted(this.tRecsMap[uid])))) ;
         },
         had: function (uid) {return this.has(uid, true);},
         hasPass: function (pass)

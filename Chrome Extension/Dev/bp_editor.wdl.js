@@ -656,7 +656,7 @@ function BP_GET_EDITOR(g)
         recs = DNProto.getData.apply(dNode, [dt]);//dNode.getData(dt)
         // If this node has no data, then have it be skipped.    
         if (!recs) {return w$undefined;}        
-        rIt = new MOD_TRAITS.RecsIterator(recs, true);
+        rIt = new MOD_CONNECT.ItemIterator(recs, true);
         if ((!emptyOk) && (!rIt.num())) {return w$undefined;}
         
         loc = MOD_COMMON.parseURL('http://' + dNode[DNODE_TAG.URL]);

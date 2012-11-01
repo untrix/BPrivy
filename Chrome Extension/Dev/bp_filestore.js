@@ -400,7 +400,7 @@ function BP_GET_FILESTORE(g)
             dnIt = MEMSTORE.newDNodeIterator(dt);
             buf = new RecsBuf();
             
-            dnIt.walk(writeAction, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted}, true);
+            dnIt.walk(writeAction, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted}, {doGC:true});
             
             if (buf.length)
             {
@@ -624,7 +624,7 @@ function BP_GET_FILESTORE(g)
         
         buf = new RecsBuf("\n");
         buf.push(traits.csvHeader());
-        MEMSTORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits}, true);
+        MEMSTORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits});
         buf.flush(fpath);
     }
     
