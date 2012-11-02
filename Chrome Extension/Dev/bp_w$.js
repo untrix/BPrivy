@@ -183,12 +183,12 @@ function BP_GET_W$(g)
     };
     WidgetElement.prototype.$ = function () {return $(this.el); };
     // Returns an object to be used as a prototype for a widget element.
-    function w$defineProto (cons, props) // props has same syntax as Object.defineProperties
+    function w$defineProto (cons, props, ancestorProto) // props has same syntax as Object.defineProperties
     {
         // var proto = newInherited(WidgetElement.prototype);
         // Object.defineProperties(proto, props);
         // return proto;
-        cons.prototype = Object.create(WidgetElement.prototype, props);
+        cons.prototype = Object.create((ancestorProto || WidgetElement.prototype), props);
         cons.prototype.constructor = cons;
         return cons.prototype;
     }
@@ -336,7 +336,7 @@ function BP_GET_W$(g)
         if (wdl.ctx)  {
             w$evalProps(wdl.ctx, w$, ctx, ctx);
         }
-        
+
         // Populate element's interface pre-children
         if (wdl.iface) { w$evalProps(wdl.iface, w$, ctx, w$el); }
 
@@ -352,7 +352,7 @@ function BP_GET_W$(g)
                 }
             }
         }
-        // now the iterative children
+
         function iterate (it, wdi)
         {
             var rec, isFunc=false, _cwdl, j;
@@ -378,9 +378,11 @@ function BP_GET_W$(g)
             
             it = null;
         }
+        // now the iterative children-1
         if (wdl.iterate) {
             iterate(wdl.iterate.it, wdl.iterate.wdi);
         } 
+        // iterative children-2
         if (wdl.iterate2) {
             iterate(wdl.iterate2.it, wdl.iterate2.wdi);
         } 
@@ -413,6 +415,7 @@ function BP_GET_W$(g)
 
             walker = null;
         }
+        // iterative children using the walk API
         if (wdl.walk) {
             walk(wdl.walk.walker, wdl.walk.wdi);
         }

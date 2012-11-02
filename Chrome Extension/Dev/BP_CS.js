@@ -10,19 +10,6 @@
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
-//////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE OR GLOBAL ///////////////////
-function IMPORT(sym)
-{
-    'use strict';
-    var window = null, document = null, console = null;
-    if(sym===undefined || sym===null) {
-        throw new ReferenceError("Linker:Symbol Not Found");
-    }
-    else {
-        return sym;
-    }
-}
-
 (function(g_win)
 {
     'use strict';

@@ -133,7 +133,7 @@ var srcFile=SRC+'bp_manage.less',
     distTarget2 = abs(DST, 'dist', 'bp_manage.css');
 
 if (doBuild([srcFile], devTarget2)) {
-    recess(srcFile, {compile:true, compress:false}, async.runHere(makeRecessCback2(devTarget2)));
+    recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(devTarget2)));
 }
 if (doBuild([srcFile], releaseTarget2)) { 
     recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(releaseTarget2)));
@@ -153,6 +153,28 @@ if (doBuild([srcFile], distTarget2)) {
 // if (doBuild([srcFile], distTarget3)) {
     // recess(srcFile, {compile:true, compress:true}, async.runHere(makeRecessCback2(distTarget3)));
 // }
+devTarget = abs(SRC, 'bp_notification.css');
+devTargetUncompressed = abs(SRC, 'bp_notification.full.css');
+releaseTarget = abs(DST, 'release', 'bp_notification.css');
+distTarget = abs(DST, 'dist', 'bp_notification.css');
+
+srcFiles=[SRC+'bp_notification.less', TMPDIR+'bp.dev.less'];
+if (doBuild(srcFiles, devTarget)) {
+    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(devTarget)));
+}
+srcFiles=[SRC+'bp_notification.less', TMPDIR+'bp.dev.less'];
+if (doBuild(srcFiles, devTargetUncompressed)) {
+    recess(srcFiles, {compile:true, compress:false}, async.runHere(makeRecessCback(devTargetUncompressed)));
+}
+srcFiles = [SRC+'bp_notification.less', TMPDIR+'bp.release.less']; // reverse order of concatenation
+if (doBuild(srcFiles, releaseTarget)) { 
+    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(releaseTarget)));
+}
+srcFiles = [SRC+'bp_notification.less', TMPDIR+'bp.dist.less']; // reverse order of concatenation
+if (doBuild(srcFiles, distTarget)) {
+    recess(srcFiles, {compile:true, compress:true}, async.runHere(makeRecessCback(distTarget)));
+}
+
 
 
 

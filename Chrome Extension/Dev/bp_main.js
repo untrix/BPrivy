@@ -9,28 +9,14 @@
 /*global $, BP_MOD_PLAT, BP_GET_CONNECT, BP_GET_COMMON, IMPORT, localStorage,
   BP_GET_MEMSTORE, BP_GET_DBFS, BP_GET_FILESTORE, BP_GET_ERROR, BP_GET_TRAITS,
   BP_GET_CS_PLAT, BP_GET_PLAT, BP_GET_LISTENER, BP_GET_W$, BP_GET_WDL, chrome,
-  webkitNotifications, BP_GET_NOTIFICATIONS */
+  webkitNotifications */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true,
   regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true */
 
-/** @globals-begin */
-//////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE OR GLOBAL ///////////////////
-function IMPORT(sym)
-{
-    'use strict';
-    var window = null, document = null, console = null;
-    if(sym===undefined || sym===null) {
-        throw new ReferenceError("Linker:Symbol Not Found");
-    }
-    else {
-        return sym;
-    }
-}
-
 /**
- * @ModuleBegin NOTIFICATIONS
+ * @ModuleBegin NTNF_CNTR
  */
-function BP_GET_NOTIFICATIONS(g)
+function BP_GET_NTNF_CNTR(g)
 {   'use strict';
     var window = null, document = null, console = null;
 
@@ -51,6 +37,7 @@ function BP_GET_NOTIFICATIONS(g)
 
     function onClose(ev)
     {
+        BP_ERROR.loginfo('BP_NTFN_CNTR: onClose invoked');
         g_notification = null;
     }
 
@@ -68,7 +55,7 @@ function BP_GET_NOTIFICATIONS(g)
     function onChange(ev)
     {
         if (!g_notification) {
-            if (ev.detail.drec && ev.detail.drec.rec && ev.detail.drec.rec.a !== 'd') {
+            if (ev.detail.drec && ev.detail.drec.actn && ev.detail.drec.actn.a !== 'd') {
                 create();
             }
         }
@@ -109,7 +96,7 @@ var BP_MAIN = (function()
     g.BP_MEMSTORE = BP_GET_MEMSTORE(g);
     g.BP_DBFS = BP_GET_DBFS(g);
     g.BP_FILESTORE = BP_GET_FILESTORE(g);
-    g.BP_NOTIFICATIONS= BP_GET_NOTIFICATIONS(g);
+    g.BP_NTNF_CNTR= BP_GET_NTNF_CNTR(g);
     // These are for use by panel.js
     g.BP_W$ = BP_GET_W$(g);
     g.BP_WDL = BP_GET_WDL(g);
@@ -144,7 +131,7 @@ var BP_MAIN = (function()
     /** @import-module-begin */
     var DBFS = IMPORT(g.BP_DBFS);
     var BP_LISTENER = IMPORT(g.BP_LISTENER);
-    var BP_NOTIFICATIONS = IMPORT(g.BP_NOTIFICATIONS);
+    var BP_NTNF_CNTR = IMPORT(g.BP_NTNF_CNTR);
     /** @import-module-end **/    m = null;
 
     var MOD_WIN; // defined later.
@@ -442,9 +429,6 @@ var BP_MAIN = (function()
             delete g_tabs[id];
         }
 
-        function notifySaved(l) {}
-        function notifyUnsaved(l) {}
-
         return Object.freeze (
         {
             clickReq: clickReq,
@@ -490,7 +474,7 @@ var BP_MAIN = (function()
                 }
             }
             // Initialize notifications after everything has loaded.
-            BP_NOTIFICATIONS.init();
+            BP_NTNF_CNTR.init();
             //chrome.webRequest.onBeforeRequest.addListener(onBefReq, {urls:["http://*/*", "https://*/*"]});
         
             // chrome.tabs.onSelectionChanged.addListener(function(tabId) 

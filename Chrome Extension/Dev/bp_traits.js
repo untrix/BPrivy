@@ -57,8 +57,9 @@ function BP_GET_TRAITS(g)
         fn_userid2= "u2",// userid field of signup/register forms for auto-capture but not autofill.
         fn_pass = "p",   // Represents field password. Copy value from P_UI_TRAITS.
         fn_pass2= "p2",  // password field of signup/register forms for auto-capture but not autofill
-        fn_btn = "b";    // submit button for both signin and signup. Currently not saved in eRecs.
+        fn_btn = "b",    // submit button for both signin and signup. Currently not saved in eRecs.
                          // usage limited to bp_cs, but included here to ensure no name-clash.
+        fn_site = "s";   // Field used to display site (hostname/path) in UI
         
     var eid_pfx = "com-untrix-";
 
@@ -159,6 +160,7 @@ function BP_GET_TRAITS(g)
         fn_pass: {value: fn_pass},
         fn_pass2:{value: fn_pass2},
         fn_btn: {value: fn_btn},
+        fn_site:{value: fn_site},
         eid_pfx: {value: eid_pfx},
         CT_BP_FN: {value: CT_BP_FN},
         CT_TEXT_PLAIN: {value: CT_TEXT_PLAIN},

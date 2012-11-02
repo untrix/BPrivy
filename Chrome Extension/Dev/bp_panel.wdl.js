@@ -170,7 +170,7 @@ function BP_GET_WDL (g)
             var num = 0;
             BP_COMMON.iterKeys(recsMap, function(k, iHist)
             {
-                if (!itemDeleted(iHist)) { num++; }
+                if (!BP_CONNECT.itemDeleted(iHist)) { num++; }
             });
             return num;
         },
@@ -360,7 +360,8 @@ function BP_GET_WDL (g)
     {
         return {
         tag: 'a',
-        attr:{ class:css_class_xButton, href:BP_CS_PLAT.getURL("/bp_manage.html"), target:"_blank" },
+        attr:{ class:css_class_xButton, href:BP_CS_PLAT.getURL("/bp_manage.html"),
+               target:"_blank", title:'Open settings page' },
         css:{ width:'20px' },
             children:[
             {tag:"i",
@@ -383,7 +384,8 @@ function BP_GET_WDL (g)
         return {
         cons: XButton,
         html:'<button type="button"></button>',
-        css:{ float:'right' },
+        css:{ float:'right', width:'20px' },
+        attr:{ title:'Dismiss' },
         //attr:{ /*class:css_class_xButton,*/},
         //text:u_cir_X,
         on:{ click:XButton.prototype.x },
@@ -432,7 +434,7 @@ function BP_GET_WDL (g)
         return {
         cons: FButton,
         html:'<button type="button"></button>',
-        attr:{class:css_class_tButton, title:'auto fill', disabled:disabled },
+        attr:{ class:css_class_tButton, title:'auto fill', disabled:disabled },
         ctx:{ w$:{ fButton:"w$el" } },
         on:{ click:FButton.prototype.onClick },
         css:{ width:'20px', cursor: (disabled?'not-allowed':undefined) },
@@ -453,6 +455,7 @@ function BP_GET_WDL (g)
         cons: DButton,
         html:'<button type="button"></button>',
         css:{ float:'right', width:'20px' },
+        attr:{ title:'Delete password' },
         on:{ click:DButton.prototype.onClick },
         _iface:{ ioItem:ioItem },
             children:[
@@ -479,13 +482,13 @@ function BP_GET_WDL (g)
         return {
          cons: TButton,
          html:'<button type="button">',
-         attr:{ class:css_class_tButton, /*id:eid_tButton+w$i*/ },
+         attr:{ class:css_class_tButton, title:'Edit/Submit' },
          on:{ click:TButton.prototype.toggleIO2 },
          css:{ width:'20px' },
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
-            addClass:bInp? "icon-ok" :"icon-eye-open",
+            addClass:bInp? "icon-check" :"icon-edit",
             ctx:{ w$:{icon:'w$el'} }
             }],
          _iface:{ w$ctx:{ ioItem:"ioItem", icon:'icon' } }
@@ -497,12 +500,12 @@ function BP_GET_WDL (g)
         {
             var bInp = this.ioItem.toggleIO();
             if (bInp) {
-                this.icon.removeClass('icon-eye-open');
-                this.icon.addClass('icon-ok');
+                this.icon.removeClass('icon-edit');
+                this.icon.addClass('icon-check');
             }
             else {
-                this.icon.removeClass('icon-ok');
-                this.icon.addClass('icon-eye-open');                    
+                this.icon.removeClass('icon-check');
+                this.icon.addClass('icon-edit');                    
             }
         }}
     });
@@ -536,10 +539,10 @@ function BP_GET_WDL (g)
              prop:{ disabled:(u&&(!isTRec))?true:false },
              addClass:css_class_field+css_class_userIn,
              ctx:{ w$:{ u:'w$el' } },
-             _iface:{ value: u } 
+             _iface:{ value: u }
             },
             {tag:'input',
-             attr:{ type:'text', value:p, placeholder:'Password' },
+             attr:{ type:'password', value:p, placeholder:'Password' },
              addClass:css_class_field+css_class_passIn,
              ctx:{ w$:{p:'w$el'} },
              _iface:{ value: p },
@@ -654,8 +657,8 @@ function BP_GET_WDL (g)
     function IoItem () {}
     IoItem.wdi = function (w$ctx)
     {
-        var acns=w$ctx.w$rec,
-            rec = acns? acns.curr: undefined,
+        var iHist=w$ctx.w$rec,
+            rec = iHist? iHist.curr: undefined,
             loc = w$ctx.loc,
             panel = w$ctx.panel,
             bInp = w$ctx.io_bInp,
@@ -668,7 +671,7 @@ function BP_GET_WDL (g)
         tag:'div', 
         attr:{ class:css_class_li },
         ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.prototype.toggleIO },
-        iface: { acns:acns, rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec,
+        iface: { rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec,
                  isNewItem:isNewItem, itemList:itemList },
         on: {mousedown:stopPropagation},
             children:[
