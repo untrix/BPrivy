@@ -185,6 +185,7 @@
       
     MOD_CS = (function()
     {
+        var g_tabId;
         /*
          * Show panel using the dbInfo returned in the response.
          */
@@ -228,6 +229,7 @@
                 if (tabs.length) 
                 {
                     loc = BP_COMMON.parseURL(tabs[0].url) || {};
+                    g_tabId = tabs[0].id;
                     //BP_PLAT.bpClick(tabs[0]);
                     BP_ERROR.logdebug("popup.loc = " + JSON.stringify(loc));
                     //if (loc) {
@@ -235,7 +237,7 @@
                     // }
                     // else {
                         // cbackShowPanel();
-                    // }
+                    // }
                 }
             });
         }
@@ -259,7 +261,7 @@
                 if (callbackFunc) {
                     callbackFunc(resp);
                 }
-            });
+            }, false, g_tabId);
         }
 
         function delRec (rec, dt, callbackFunc, toTemp)
@@ -273,7 +275,7 @@
                 if (callbackFunc) {
                     callbackFunc(resp);
                 }
-            }, false, toTemp);
+            }, false, toTemp, g_tabId);
         }
 
         function main()
@@ -288,7 +290,7 @@
             showPanelAsync: showPanelAsync,
             saveRec: function(a,b,c) {saveRec(a,b,c);},
             delRec: function(a,b,c) {delRec(a,b,c);},
-            delTempRec: function(a,b,c) {delRec(a,b,c,true);},
+            delTempRec: function(a,b,c) {delRec(a,b,c,true);}
         });
     }());
     

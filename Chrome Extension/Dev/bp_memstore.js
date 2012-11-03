@@ -1231,10 +1231,10 @@ function BP_GET_MEMSTORE(g)
         return DNProto.findPRecsMap.apply(DNode['temp_'+dt_pRecord],[newL(loc,dt_pRecord)]);
     }
 
-    // function numTRecs (loc, skipDeleted)
-    // {
-        // return (new BP_CONNECT.ItemIterator(getTRecs(loc), skipDeleted)).num();
-    // }
+    function numTRecs (loc, skipDeleted)
+    {
+        return (new BP_CONNECT.ItemIterator(getTRecs(loc), skipDeleted)).num();
+    }
     /**
      * Returns dt_eRecord and dt_pRecord matching loc as per the respective dt traits
      */
@@ -1559,7 +1559,7 @@ function BP_GET_MEMSTORE(g)
         getRecs:     getRecs,
         getDTRecs:   getDTRecs,
         getTRecs:    getTRecs,
-        //numTRecs:    numTRecs,
+        numTRecs:    numTRecs,
         DT_TRAITS:   DT_TRAITS,
         PREC_TRAITS: PREC_TRAITS,
         EREC_TRAITS: EREC_TRAITS,

@@ -40,6 +40,7 @@ function BP_GET_PLAT(gg)
         {
             if (!resp) 
             { // Set badge text
+                // TODO: Remove badge related code when we're sure that its not needed
                 switch (BP_COMMON.getScheme(tab.url))
                 {
                     case "file:":
@@ -56,6 +57,7 @@ function BP_GET_PLAT(gg)
             }
             else
             { // Unset badge text
+                // TODO: Remove badge related code when we're sure that its not needed
                 chrome.browserAction.setBadgeText({text:"", tabId:tab.id});
                 chrome.browserAction.setTitle({title:"", tabId:tab.id});
                 MOD_WIN.clickResp(tab.url);
@@ -85,6 +87,21 @@ function BP_GET_PLAT(gg)
         MOD_WIN = mod_win;
         //BP_ERROR.loginfo("Menu Item ID = " + g.contextMenuID);
     }
+
+    function showBadge(details)
+    {
+        try {
+            chrome.browserAction.setBadgeText({text:details.text || "", tabId:details.tabId});
+        } catch (e) {}
+        try {
+            chrome.browserAction.setTitle({title:details.title || "", tabId:details.tabId});
+        } catch (e) {}
+    }
+
+    function removeBadge(details)
+    {
+        showBadge({tabId:details.tabId, title:"", color:[0,0,0,0]});
+    }
     
     var module =
     {
@@ -93,7 +110,9 @@ function BP_GET_PLAT(gg)
         initScaffolding: initScaffolding,
         bpClick: bpClick,
         showPageAction: function(tabId) {chrome.pageAction.show(tabId);},
-        notifications: gg.webkitNotifications
+        notifications: gg.webkitNotifications,
+        showBadge: showBadge,
+        removeBadge: removeBadge
     };
     
     Object.seal(module);

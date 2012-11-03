@@ -1306,7 +1306,8 @@
                 // value unless it exists as a known userid in the password DB. There
                 // is a rare chance that we may not catch a valid username this way
                 // if it was not captured in the DB already.
-                return (el.value !== el.defaultValue) || MOD_DB.had(el.value);
+                //return (el.value !== el.defaultValue) || MOD_DB.had(el.value);
+                return true;
             }
             else { //if (fn===fn_pass)
                 // Websites sometimes supply defaultValue as placeholders. Those are

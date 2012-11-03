@@ -176,7 +176,7 @@ function BP_GET_LISTENER(g)
     { 
         return new Listeners(scope);
     }
-    
+
     //dispatchEl.addEventListener('bp_task', handlerProxy);
 
     return Object.freeze(

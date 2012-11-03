@@ -16,12 +16,12 @@
  * This file does not get loaded in production.
  */
 
-// chrome.extension.sendRequest({cm:'cm_bootLoaded', loc:document.location}, function(resp)
-// { 'use strict';
-    // // if (resp.result && resp.cm && (resp.cm === 'cm_loadDll')) {
-        // // BP_DLL.onDllLoad();
-    // // }
-// });
+chrome.extension.sendRequest({cm:'cm_bootLoaded', loc:document.location}, function(resp)
+{ 'use strict';
+    // if (resp.result && resp.cm && (resp.cm === 'cm_loadDll')) {
+        // BP_DLL.onDllLoad();
+    // }
+});
 if (BP_BOOT.scan(document)) 
 {
     BP_DLL.onDllLoad();

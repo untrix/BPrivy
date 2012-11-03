@@ -41,7 +41,7 @@ function BP_GET_NTNF_CNTR(g)
         g_notification = null;
     }
 
-    function create()
+    /*function create()
     {
         g_notification = BP_PLAT.notifications.createHTMLNotification(
           'bp_notification.html'  // html url - can be relative
@@ -50,15 +50,15 @@ function BP_GET_NTNF_CNTR(g)
         g_notification.onclose = onClose;
         g_notification.onclick = onClose;
         g_notification.show();                
-    }
+    }*/
     
     function onChange(ev)
     {
-        if (!g_notification) {
+        /*if (!g_notification) {
             if (ev.detail.drec && ev.detail.drec.actn && ev.detail.drec.actn.a !== 'd') {
                 create();
             }
-        }
+        }*/
     }
     
     function init()
@@ -69,9 +69,34 @@ function BP_GET_NTNF_CNTR(g)
         MEMSTORE.Event.listen('bp_change', scope, cback);
     }
     
+    function dispatch(eventType, tabId, loc)
+    {
+        switch(eventType)
+        {
+            case 'bp_boot_loaded':
+                if (!loc.protocol || (loc.protocol.indexOf('http')!==0)) {break;}
+                if (MEMSTORE.numTRecs(loc, true)) {
+                    BP_PLAT.showBadge({tabId:tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
+                }
+                break;
+            case 'bp_saved_temp':
+                if (MEMSTORE.numTRecs(loc, true)) {
+                    BP_PLAT.showBadge({tabId:tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
+                }
+                else {
+                    BP_PLAT.removeBadge({tabId:tabId});
+                }
+                break;
+        }
+       
+    }
+
     return Object.freeze(
     {
-        init: init
+        init: init,
+        Event: {
+            dispatch: dispatch
+        }
     });
 }
 var BP_PLUGIN;
@@ -96,7 +121,7 @@ var BP_MAIN = (function()
     g.BP_MEMSTORE = BP_GET_MEMSTORE(g);
     g.BP_DBFS = BP_GET_DBFS(g);
     g.BP_FILESTORE = BP_GET_FILESTORE(g);
-    g.BP_NTNF_CNTR= BP_GET_NTNF_CNTR(g);
+    g.BP_NTFN_CNTR= BP_GET_NTNF_CNTR(g);
     // These are for use by panel.js
     g.BP_W$ = BP_GET_W$(g);
     g.BP_WDL = BP_GET_WDL(g);
@@ -131,7 +156,7 @@ var BP_MAIN = (function()
     /** @import-module-begin */
     var DBFS = IMPORT(g.BP_DBFS);
     var BP_LISTENER = IMPORT(g.BP_LISTENER);
-    var BP_NTNF_CNTR = IMPORT(g.BP_NTNF_CNTR);
+    var BP_NTFN_CNTR = IMPORT(g.BP_NTFN_CNTR);
     /** @import-module-end **/    m = null;
 
     var MOD_WIN; // defined later.
@@ -195,7 +220,7 @@ var BP_MAIN = (function()
         return resp;
     }
     
-    function saveRecord(rec, dt, callback, dontGet)
+    function saveRecord(rec, dt, callback, dontGet, _/*tabId*/)
     {
         var dr, resp, recs;
         dr = insertNewRec(rec, dt);
@@ -211,7 +236,7 @@ var BP_MAIN = (function()
         return resp;
     }
     
-    function saveTempRec(rec, dt, callback, dontGet)
+    function saveTempRec(rec, dt, callback, dontGet, tabId)
     {
         var notes, result, resp, recs, loc, dr, dnode, root;
         if (DBFS.getDBPath()) 
@@ -227,20 +252,21 @@ var BP_MAIN = (function()
         resp = {result:result, recs:recs};
         if (callback) {callback(resp);}
         if (dr) { // event dispatch
+            BP_NTFN_CNTR.Event.dispatch('bp_saved_temp', tabId, loc);
             MEMSTORE.Event.dispatch(dr);
         }
         return resp;
     }
     
-    function sendDelActn(_rec, dt, callback, dontGet, toTemp)
+    function sendDelActn(_rec, dt, callback, dontGet, toTemp, tabId)
     {
         var del = BP_CONNECT.getDTProto(dt).newDelActn.apply(_rec);
         //BP_ERROR.logdebug('Producing Delete Action' + (toTemp?' to temp: ':': ') + JSON.stringify(del));
         if (toTemp) {
-            saveTempRec(del, dt, callback, dontGet);
+            saveTempRec(del, dt, callback, dontGet, tabId);
         }
         else {
-            saveRecord(del, dt, callback, dontGet);                
+            saveRecord(del, dt, callback, dontGet, tabId);                
         }
     }
     
@@ -269,7 +295,7 @@ var BP_MAIN = (function()
         var result, recs, dbPath, dbStats, fnames, notes,
             cm = rq.cm,
             bSaveRec;
-        BP_ERROR.logdebug("onRequest: " + cm + (rq.dt ? (" dt="+rq.dt) : ""));
+        //BP_ERROR.loginfo("onRequest: " + cm + (rq.dt ? (" dt="+rq.dt) : ""));
         
         rq.atvt ? (BPError.atvt = new Activity(rq.atvt)) : (BPError.atvt = new Activity("BPMain::OnRequest"));
         
@@ -278,17 +304,19 @@ var BP_MAIN = (function()
                 case BP_CONNECT.cm_saveRec:
                     BPError.push("SaveRecord" + rq.dt);
                     bSaveRec = true;
-                    saveRecord(rq.rec, rq.dt, funcSendResponse, rq.dontGet);
+                    saveRecord(rq.rec, rq.dt, funcSendResponse, rq.dontGet, sender.tab.id);
                     break;
                 case BP_CONNECT.cm_tempRec:
                     BPError.push("SaveTempRecord" + rq.dt);
-                    saveTempRec(rq.rec, rq.dt, funcSendResponse, rq.dontGet);
+                    saveTempRec(rq.rec, rq.dt, funcSendResponse, rq.dontGet, sender.tab.id);
+                    
                     break;
                 case 'cm_bootLoaded':
                     BPError.push("CSBootLoaded");
                     //BP_PLAT.showPageAction(sender.tab.id);
                     //funcSendResponse({result:true, cm:((MEMSTORE.numTRecs(rq.loc, true)) ? 'cm_loadDll' : undefined) });
                     funcSendResponse({result:true});
+                    BP_NTFN_CNTR.Event.dispatch('bp_boot_loaded', sender.tab.id, rq.loc);
                     break;
                 case cm_getRecs:
                     BPError.push("GetRecs");
@@ -474,7 +502,7 @@ var BP_MAIN = (function()
                 }
             }
             // Initialize notifications after everything has loaded.
-            BP_NTNF_CNTR.init();
+            BP_NTFN_CNTR.init();
             //chrome.webRequest.onBeforeRequest.addListener(onBefReq, {urls:["http://*/*", "https://*/*"]});
         
             // chrome.tabs.onSelectionChanged.addListener(function(tabId) 

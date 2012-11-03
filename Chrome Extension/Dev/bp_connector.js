@@ -246,7 +246,8 @@ function BP_GET_CONNECT(g)
             n = 0;
         while (i < this._n)
         {
-            if ((!this._sd) || (!itemDeleted(this._o[this._k[i++]]))) { n++; }
+            if ((!this._sd) || (!itemDeleted(this._o[this._k[i]]))) { n++; }
+            ++i;
         }
         return n;
     };
