@@ -185,7 +185,7 @@
       
     MOD_CS = (function()
     {
-        var g_tabId;
+        var g_tabId, g_frameUrl;
         /*
          * Show panel using the dbInfo returned in the response.
          */
@@ -226,22 +226,16 @@
             chrome.tabs.query({currentWindow:true, highlighted:true}, function(tabs)
             {
                 var loc;
-                if (tabs.length) 
+                if (tabs.length)
                 {
                     loc = BP_COMMON.parseURL(tabs[0].url) || {};
                     g_tabId = tabs[0].id;
-                    //BP_PLAT.bpClick(tabs[0]);
                     BP_ERROR.logdebug("popup.loc = " + JSON.stringify(loc));
-                    //if (loc) {
-                        getRecs(loc, cbackShowPanel);
-                    // }
-                    // else {
-                        // cbackShowPanel();
-                    // }
+                    getRecs(loc, cbackShowPanel);
                 }
             });
         }
-        
+
         /**
          * Invoked by bp_cs_boot when it detects a possible signin/up form on the page.
          */

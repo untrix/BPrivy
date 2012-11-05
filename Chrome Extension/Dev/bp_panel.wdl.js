@@ -880,7 +880,7 @@ function BP_GET_WDL (g)
             children:[
             {tag:"div", attr:{ id:eid_panelTitle },
                 children:[
-                showRecs ? ShowButton.wdt : w$undefined,
+                //showRecs ? ShowButton.wdt : w$undefined,
                 showRecs ? NButton.wdt : w$undefined,
                 cs_panelTitleText_wdt,
                 XButton.wdt,
