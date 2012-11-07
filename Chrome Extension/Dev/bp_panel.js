@@ -7,7 +7,8 @@
 
 /* JSLint directives */
 /*global $, BP_DLL, BP_GET_CONNECT, BP_GET_CS_PLAT, IMPORT, BP_GET_COMMON, chrome,
-  BP_GET_ERROR, BP_GET_MEMSTORE, BP_GET_W$, BP_GET_TRAITS, BP_GET_WDL, BP_GET_PLAT */
+  BP_GET_ERROR, BP_GET_MEMSTORE, BP_GET_W$, BP_GET_TRAITS, BP_GET_WDL, BP_GET_PLAT,
+  BP_GET_LISTENER */
  
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -19,19 +20,21 @@
 {
     "use strict";
     // g => Global Env.
-    var g = {g_win:window, g_console:console, g_chrome:chrome};
+    var g = {g_win:window, g_console:console, g_chrome:chrome},
+        DEBUG = false;
     g.BP_CS_PLAT = chrome.extension.getBackgroundPage().BP_GET_CS_PLAT(g);
     var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
     // Module object used within bp_main.html
     g.BP_MAIN = BP_CS_PLAT.getBackgroundPage().BP_MAIN;
     g.BP_PLAT = g.BP_MAIN.g.BP_PLAT;
-    if (true) {
+    if (false) {
         g.BP_ERROR = BP_GET_ERROR(g);
         g.BP_COMMON = BP_GET_COMMON(g);
         g.BP_TRAITS = BP_GET_TRAITS(g);
         g.BP_CONNECT = BP_GET_CONNECT(g);
         g.BP_W$ = BP_GET_W$(g);
         g.BP_WDL = BP_GET_WDL(g);
+        g.BP_MEMSTORE = g.BP_MAIN.g.BP_MEMSTORE;
     }
     else {
         g.BP_ERROR = g.BP_MAIN.g.BP_ERROR;
@@ -40,6 +43,7 @@
         g.BP_CONNECT = g.BP_MAIN.g.BP_CONNECT;
         g.BP_W$ = BP_CS_PLAT.getBackgroundPage().BP_GET_W$(g);
         g.BP_WDL = BP_CS_PLAT.getBackgroundPage().BP_GET_WDL(g);
+        g.BP_MEMSTORE = g.BP_MAIN.g.BP_MEMSTORE;
     }
     
     var m;
@@ -87,6 +91,7 @@
         BPError = IMPORT(m.BPError);
     /** @import-module-begin */
     var BP_PLAT = IMPORT(g.BP_PLAT);
+    var BP_MEMSTORE = IMPORT(g.BP_MEMSTORE);
     /** @import-module-end **/ m = null;
 
     /** @globals-begin */
@@ -107,7 +112,7 @@
 
     MOD_PANEL = (function()
     {
-        var m_panel, m_id_panel, m_bUserClosed = false;
+        var m_panel, m_id_panel, m_bUserClosed = false, m_bAutoFillable;
         
         function close()
         {
@@ -143,7 +148,6 @@
             m_panel = undefined;
             m_id_panel = undefined;
             m_bUserClosed = true;
-            //panelClosed(g_loc);
             window.close();
         }
 
@@ -159,7 +163,8 @@
                 saveRec: MOD_CS.saveRec,
                 delRec: MOD_CS.delRec,
                 delTempRec: MOD_CS.delTempRec,
-                //autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined), 
+                //autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined),
+                autoFill: m_bAutoFillable ? MOD_CS.autoFill : undefined,
                 dbName:MOD_DB.dbName,
                 dbPath:MOD_DB.dbPath,
                 popup:true,
@@ -179,13 +184,19 @@
             create: create,
             destroy: destroy,
             onClosed: onClosed,
-            userClosed: userClosed
+            userClosed: userClosed,
+            autoFillable: function(b) {m_bAutoFillable = b;}
         });
     }());
       
     MOD_CS = (function()
     {
-        var g_tabId, g_frameUrl;
+        var g_tabId, g_frameUrl, g_loc, g_site;
+        
+        function autoFill(userid, pass)
+        {
+            BP_PLAT.sendMessage(g_tabId, g_frameUrl, {cm:'cm_autoFill', userid:userid, pass:pass});
+        }
         /*
          * Show panel using the dbInfo returned in the response.
          */
@@ -196,7 +207,7 @@
                 if (resp && (resp.result===true))
                 {
                     var db = resp.db;
-                    BP_ERROR.loginfo("cbackShowPanel@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
+                    BP_ERROR.loginfo("cbackShowPanel@bp_panel.js received DB-Records\n"/* + JSON.stringify(db)*/);
                     try { // failure here shouldn't block rest of the call-flow
                         MOD_DB.ingest(resp.db, resp.dbInfo, resp.loc);
                     } 
@@ -215,34 +226,75 @@
                 BP_ERROR.logwarn(err);
             }
 
-            //if ((!bConditional) || MOD_FILL.info().autoFillable() || MOD_DB.numUnsaved) {
-            //if ((!bConditional) || MOD_DB.numUnsaved) {
-                MOD_PANEL.create();
-            //}
+            MOD_PANEL.create();
         }
         
-        function showPanelAsync()
-        {
-            chrome.tabs.query({currentWindow:true, highlighted:true}, function(tabs)
-            {
-                var loc;
-                if (tabs.length)
-                {
-                    loc = BP_COMMON.parseURL(tabs[0].url) || {};
-                    g_tabId = tabs[0].id;
-                    BP_ERROR.logdebug("popup.loc = " + JSON.stringify(loc));
-                    getRecs(loc, cbackShowPanel);
-                }
-            });
-        }
-
-        /**
-         * Invoked by bp_cs_boot when it detects a possible signin/up form on the page.
-         */
-        function onDllLoad ()
+        function onLoad()
         {
             document.body.style.margin = '2px';
-            showPanelAsync();
+            chrome.tabs.query({currentWindow:true, highlighted:!DEBUG, index:DEBUG?0:undefined}, function(tabs)
+            {
+                if (!tabs.length) {cbackShowPanel(); return;}
+                g_tabId = tabs[0].id;
+                g_frameUrl = tabs[0].url;
+                
+                g_loc = BP_COMMON.parseURL(g_frameUrl) || {};
+                BP_ERROR.logdebug('onLoad@bp_panel.js: highlighted tabs url is ' + g_frameUrl);
+                getRecs(g_loc, function(recsResp)
+                {
+                    g_site = recsResp.db ? recsResp.db.site : undefined;
+                    BP_ERROR.logdebug('onLoad@bp_panel.js: site url is ' + g_site);
+                    cbackShowPanel(recsResp);
+                    //chrome.tabs.update(g_tabId, {highlighted:true}, function(){});
+                    if ( (BP_COMMON.isSupportedScheme(g_loc.protocol)) &&
+                         (g_loc.hostname !== 'chrome.google.com') )// This is a very troublesome URL.
+                    {
+                        BP_PLAT.sendMessage(g_tabId, null, {cm:'cm_autoFillStatus'}, function(resp2)
+                        {
+                            var loc, bReload, site;
+                            BP_ERROR.logdebug('onLoad@bp_panel.js: received clickBP response: ' + JSON.stringify(resp2));
+                            if (!resp2) 
+                            {
+                                BP_ERROR.logdebug('onLoad@bp_panel.js: cm_autoFillStatus returned error');
+                                return;
+                            }
+                            
+                            if (resp2.frameUrl && (resp2.frameUrl !== g_frameUrl))
+                            {
+                                /*loc = BP_COMMON.parseURL(resp2.frameUrl);
+                                site = BP_MEMSTORE.getSite(loc, dt_pRecord);
+                                BP_ERROR.logdebug('onLoad@bp_panel.js: cm_autoFillStatus returned site = ' + site);
+                                if (site !== g_site) {
+                                    g_frameUrl = resp2.frameUrl;
+                                    g_site = site;
+                                    bReload = true;
+                                }*/
+                               g_frameUrl = resp2.frameUrl;
+                               g_site = site;
+                               loc = BP_COMMON.parseURL(g_frameUrl);
+                               bReload = true;
+                            }
+
+                            MOD_PANEL.autoFillable(Boolean(resp2.autoFillable));
+
+                            if (!bReload && resp2.autoFillable) {
+                                BP_ERROR.logdebug('onLoad@bp_panel.js: reloading');
+                                // TODO: Instead of reload this should simply be 
+                                // MOD_PANEL.makeAutoFillable() - but we don't have that
+                                // API yet.
+                                cbackShowPanel(recsResp);
+                            }
+                            else if (bReload) {
+                                BP_ERROR.logdebug('onLoad@bp_panel.js: refetching');
+                                getRecs(loc, function(resp3)
+                                {
+                                    cbackShowPanel(resp3);    
+                                });
+                            }
+                        });
+                    }
+                });
+            });
         }
 
         function saveRec (rec, dt, callbackFunc)
@@ -272,22 +324,16 @@
             }, false, toTemp, g_tabId);
         }
 
-        function main()
-        {
-            //BP_DLL.onDllLoad = onDllLoad;
-            onDllLoad();
-        }
-
         return Object.freeze(
         {
-            main: main,
-            showPanelAsync: showPanelAsync,
+            onLoad: onLoad,
             saveRec: function(a,b,c) {saveRec(a,b,c);},
             delRec: function(a,b,c) {delRec(a,b,c);},
-            delTempRec: function(a,b,c) {delRec(a,b,c,true);}
+            delTempRec: function(a,b,c) {delRec(a,b,c,true);},
+            autoFill: autoFill
         });
     }());
     
-    MOD_CS.main();
+    MOD_CS.onLoad();
     BP_ERROR.log("loaded CS");    
 }());

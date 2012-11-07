@@ -25,7 +25,8 @@
         dt_eRecord = "e",
         DICT_TRAITS,
         head = (document.head || document.getElementsByTagName( "head" )[0] || document.documentElement),
-        g_bTopLevel = (window.top === window.self);
+        g_bTopLevel = (window.top === window.self),
+        g_myUrl = window.location.href;
 
     function loadBP_CS(dll_init_func)
     {
@@ -111,44 +112,47 @@
         });
     }
 
+    function onClickBP(req, sender, sendResp)
+    {
+        console.log("onMessage@bp_cs_boot: Handling received message in document " + document.location.href);
+        sendResp({result:true, frameUrl:g_myUrl});
+        loadBP_CS(function(){if (BP_DLL.onClickBP) {BP_DLL.onClickBP();}});
+    }
+
+    function onAutoFillStatus(req, sender, callback)
+    {
+        loadBP_CS(function()
+        {
+            if (BP_DLL.onAutoFillStatus) {
+                BP_DLL.onAutoFillStatus(req, sender, callback);
+            }
+            else 
+            {
+               callback(
+                {
+                    autoFillable:false,
+                    frameUrl: g_myUrl
+                }); 
+            }
+        });
+    }
+    
     function onMessage(req, sender, sendResp)
     {
-        var myUrl, com;
-        
-        myUrl = window.location.href;
-        // // Ignore the request if it is not meant for us.
-        // if ((req.frameUrl && (req.frameUrl !== myUrl)) || ((!req.frameUrl) && (!isTopLevel(window))) )
-        // {
-            // return;
-        // }
-        if (req.frameUrl)
-        {
-            if (req.frameUrl !== myUrl) {return;}
-            // else we're good
-        }
-        else // req does not have frameUrl
-        {
-            if (!document.hasFocus()) 
-            {
-                if (!g_bTopLevel) {
-                    return; // top-level window will handle this message
-                }
-                // else we're top-level window and our tab is active/visible, otherwise
-                // chrome would not have sent us this message.
-            }
-            else // doc has focus
-            {
-                if (document.activeElement.localName === 'iframe')
-                {
-                    return; // iframe will handle this message
-                }
-                // else we're the most nested browsing context that is focussed
-            }
-        }
+        if (!BP_BOOT.amDestFrame(req)) {return;}
 
-        console.log("onMessage@bp_cs_boot: Handling received message in document " + document.location.href);
-        sendResp({ack:true});
-        loadBP_CS(function(){if (BP_DLL.onClickBP) {BP_DLL.onClickBP();}});
+        switch(req.cm)
+        {
+            case 'cm_clickBP':
+                onClickBP(req, sender, sendResp);
+                break;                    
+            case 'cm_autoFillStatus':
+                onAutoFillStatus(req, sender, sendResp);
+                return true; // allows us to exit without invoking callback.
+                break;
+            default: // do nothing.
+                break;
+        }
     }
 
     chrome.extension.onMessage.addListener(onMessage);
@@ -159,14 +163,16 @@
             // loadDll();
         // }
     });
+    if (document.hasFocus())  {BP_BOOT.onFocus();}
+    window.addEventListener('focus', BP_BOOT.onFocus);
     if (BP_BOOT.scan(document)) {
         loadDll();
     }
     else {
-        BP_BOOT.observe(document, function(mutations,observer)
+        BP_BOOT.observe(document, function(mutations, observer)
         {
             if ((!BP_DLL.bLoaded) && BP_BOOT.scan(document)) {
-                observer.disconnect();
+                if (observer) {observer.disconnect();}
                 loadDll();
                 BP_DLL.bLoaded = true;
             }

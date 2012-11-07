@@ -21,14 +21,17 @@ chrome.extension.sendRequest({cm:'cm_bootLoaded', loc:document.location}, functi
     // if (resp.result && resp.cm && (resp.cm === 'cm_loadDll')) {
         // BP_DLL.onDllLoad();
     // }
-});
+});
+
+if (document.hasFocus())  {BP_BOOT.onFocus();}window.addEventListener('focus', BP_BOOT.onFocus);
+
 if (BP_BOOT.scan(document)) 
 {
     BP_DLL.onDllLoad();
 }
 else 
 {
-    BP_BOOT.observe(document, function(mutations,observer)
+    BP_BOOT.observe(document, function(mutations, observer)
     {
         if ((!BP_DLL.bLoaded) && BP_BOOT.scan(document)) {
             observer.disconnect();

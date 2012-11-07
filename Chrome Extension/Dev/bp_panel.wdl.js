@@ -530,19 +530,20 @@ function BP_GET_WDL (g)
         return {
         cons: IItemP,
         tag:'div', addClass:css_class_ioFields,
+        attr:{ 'data-untrix':true },
         ctx:{ w$:{iItem:'w$el'} },
         //on:{ 'submit':ioItem.toggleIO },
         iface:{ ioItem:ioItem },
             children: [
             {tag:'input',
-             attr:{ type:'text', value:u, placeholder:'Username' },
+             attr:{ type:'text', value:u, placeholder:'Username', 'data-untrix':true },
              prop:{ disabled:(u&&(!isTRec))?true:false },
              addClass:css_class_field+css_class_userIn,
              ctx:{ w$:{ u:'w$el' } },
              _iface:{ value: u }
             },
             {tag:'input',
-             attr:{ type:'password', value:p, placeholder:'Password' },
+             attr:{ type:'password', value:p, placeholder:'Password', 'data-untrix':true },
              addClass:css_class_field+css_class_passIn,
              ctx:{ w$:{p:'w$el'} },
              _iface:{ value: p },
@@ -630,18 +631,19 @@ function BP_GET_WDL (g)
             return {
             cons: OItemP,
             tag:'div',
+            attr:{ 'data-untrix':true },
             addClass:css_class_ioFields,
             ctx:{ w$:{ oItem:'w$el' } },
                 children:[
                 {tag:'data',
-                 attr:{ draggable:true },
+                 attr:{ draggable:true, 'data-untrix':true },
                  addClass:css_class_field+css_class_userOut,
                  text:u,
                  ctx:{ w$:{ u:'w$el' } },
                  _iface:{ fn:fn_userid, value:u }
                 },
                 {tag:'data',
-                 attr:{ draggable:true },
+                 attr:{ draggable:true, 'data-untrix':true },
                  addClass:css_class_field+css_class_passOut,
                  text:'*****',
                  ctx:{ w$:{p:'w$el' } },
@@ -669,7 +671,7 @@ function BP_GET_WDL (g)
         return {
         cons: IoItem,
         tag:'div', 
-        attr:{ class:css_class_li },
+        attr:{ class:css_class_li, 'data-untrix':true },
         ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.prototype.toggleIO },
         iface: { rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec,
                  isNewItem:isNewItem, itemList:itemList },
@@ -869,7 +871,7 @@ function BP_GET_WDL (g)
         return {
         cons:Panel, // static prototype object.
         tag:"article",
-        attr:{ id:eid_panel },
+        attr:{ id:eid_panel, 'data-untrix':true },
         css: popup ? {border:"none"} : { position:'fixed', top:'0px', right:'0px', padding:'4px', 'border-radius':'4px'},
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:loc },

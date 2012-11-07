@@ -69,26 +69,25 @@ function BP_GET_NTNF_CNTR(g)
         MEMSTORE.Event.listen('bp_change', scope, cback);
     }
     
-    function dispatch(eventType, tabId, loc)
+    function dispatch(eventType, detail)
     {
         switch(eventType)
         {
             case 'bp_boot_loaded':
-                if (!loc.protocol || (loc.protocol.indexOf('http')!==0)) {break;}
-                if (MEMSTORE.numTRecs(loc, true)) {
-                    BP_PLAT.showBadge({tabId:tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
+                if (!detail.loc.protocol || (detail.loc.protocol.indexOf('http')!==0)) {break;}
+                if (MEMSTORE.numTRecs(detail.loc, true)) {
+                    BP_PLAT.showBadge({tabId:detail.tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
                 }
                 break;
             case 'bp_saved_temp':
-                if (MEMSTORE.numTRecs(loc, true)) {
-                    BP_PLAT.showBadge({tabId:tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
+                if (MEMSTORE.numTRecs(detail.loc, true)) {
+                    BP_PLAT.showBadge({tabId:detail.tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
                 }
                 else {
-                    BP_PLAT.removeBadge({tabId:tabId});
+                    BP_PLAT.removeBadge({tabId:detail.tabId});
                 }
                 break;
         }
-       
     }
 
     return Object.freeze(
@@ -252,7 +251,7 @@ var BP_MAIN = (function()
         resp = {result:result, recs:recs};
         if (callback) {callback(resp);}
         if (dr) { // event dispatch
-            BP_NTFN_CNTR.Event.dispatch('bp_saved_temp', tabId, loc);
+            BP_NTFN_CNTR.Event.dispatch('bp_saved_temp', {tabId:tabId, loc:loc});
             MEMSTORE.Event.dispatch(dr);
         }
         return resp;
@@ -316,7 +315,7 @@ var BP_MAIN = (function()
                     //BP_PLAT.showPageAction(sender.tab.id);
                     //funcSendResponse({result:true, cm:((MEMSTORE.numTRecs(rq.loc, true)) ? 'cm_loadDll' : undefined) });
                     funcSendResponse({result:true});
-                    BP_NTFN_CNTR.Event.dispatch('bp_boot_loaded', sender.tab.id, rq.loc);
+                    BP_NTFN_CNTR.Event.dispatch('bp_boot_loaded', {tabId:sender.tab.id, loc:rq.loc});
                     break;
                 case cm_getRecs:
                     BPError.push("GetRecs");
@@ -406,10 +405,15 @@ var BP_MAIN = (function()
                     }
                     catch (err) {BP_ERROR.log(err);}
                     break;
-                case "watchF":
-                    BPError.push("WatchForm");
-                    console.log("Watching Form: "+rq.url);
-                    g_forms[rq.url] = true;
+                // case "watchF":
+                    // BPError.push("WatchForm");
+                    // BP_ERROR.logdebug("Watching Form: "+rq.url);
+                    // g_forms[rq.url] = true;
+                    // break;
+                case 'cm_onFocus':
+                    BPError.push("cmOnFocus");
+                    BP_NTFN_CNTR.Event.dispatch('bp_on_focus', {tabId:sender.tab.id, loc:rq.loc});
+                    BP_ERROR.logdebug('onRequest@bp_main.js received cmOnFocus: ' + JSON.stringify(rq));
                     break;
                 default: // do nothing
             }
@@ -434,7 +438,7 @@ var BP_MAIN = (function()
         function clickReq (url)
         {
             //return getRecs(BP_COMMON.parseURL(url));
-            return {};
+            return {cm: BP_CONNECT.cm_clickBP};
         }
         
         function clickResp (url) 

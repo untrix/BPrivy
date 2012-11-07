@@ -32,7 +32,7 @@ function BP_GET_PLAT(gg)
 
     function bpClick(tab, frameUrl)
     {
-        var req = MOD_WIN.clickReq(frameUrl || tab.url);
+        var req = MOD_WIN.clickReq(frameUrl || tab.url); // MOD_WIN is a vestige at this time.
         req.click = true;
         if (frameUrl) {req.frameUrl = frameUrl;} // Direct message to the frame where the click happened.
         chrome.tabs.sendMessage(tab.id, req,
@@ -60,7 +60,7 @@ function BP_GET_PLAT(gg)
                 // TODO: Remove badge related code when we're sure that its not needed
                 chrome.browserAction.setBadgeText({text:"", tabId:tab.id});
                 chrome.browserAction.setTitle({title:"", tabId:tab.id});
-                MOD_WIN.clickResp(tab.url);
+                MOD_WIN.clickResp(tab.url);// MOD_WIN is a vestige at this time.
             }
         });
     }  
@@ -69,7 +69,7 @@ function BP_GET_PLAT(gg)
     {
         if (info.menuItemId === g.contextMenuID)
         {
-            bpClick(tab, info.frameUrl);
+            bpClick(tab, info.frameUrl || info.pageUrl);
         }
     }
 
@@ -102,6 +102,12 @@ function BP_GET_PLAT(gg)
     {
         showBadge({tabId:details.tabId, title:"", color:[0,0,0,0]});
     }
+
+    function sendMessage(tabId, frameUrl, req, callback)
+    {
+        req.frameUrl = frameUrl;
+        chrome.tabs.sendMessage(tabId, req, callback);
+    }
     
     var module =
     {
@@ -112,7 +118,8 @@ function BP_GET_PLAT(gg)
         showPageAction: function(tabId) {chrome.pageAction.show(tabId);},
         notifications: gg.webkitNotifications,
         showBadge: showBadge,
-        removeBadge: removeBadge
+        removeBadge: removeBadge,
+        sendMessage: sendMessage
     };
     
     Object.seal(module);

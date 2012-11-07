@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global chrome, $ */
+/*global chrome, $, BP_BOOT */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -53,34 +53,13 @@ function BP_GET_CS_PLAT(g)
         {
             chrome.extension.onMessage.addListener(function(req, sender, callback)
             {
-                if (req.frameUrl)
-                { 
-                    if (g_frameUrl !== req.frameUrl)
-                    {
-                        return;
-                    }
-                }
-                else // frame url not provided
+                if (BP_BOOT.amDestFrame(req))
                 {
-                    var tag = g_doc.activeElement.localName;
-                    if (g_doc.hasFocus())
-                    {
-                        if (tag==='iframe')
-                        {
-                            return;
-                        }
-                    }
-                    else // document not focussed
-                    {
-                        if (!g_bTopLevel)
-                        {
-                            return;
-                        }
-                    }
+                    //console.log("MsgListener@bp_cs_chrome: Handling received message in document " + g_doc.location.href);
+                    // Foo should return true if it wants to return without invoking callback,
+                    // but wants to delegate that to some other async function.
+                    return foo(req, sender, callback);
                 }
-                
-                //console.log("MsgListener@bp_cs_chrome: Handling received message in document " + g_doc.location.href);
-                foo(req, sender, callback);
             });
         },
         

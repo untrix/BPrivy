@@ -6,7 +6,7 @@
  */
 /* JSLint directives */
 /*global $, console, chrome, BP_GET_CONNECT, BP_GET_CS_PLAT, BP_GET_COMMON, IMPORT,
-  BP_GET_ERROR, BP_GET_WDL, BP_GET_W$, BP_GET_TRAITS, BP_MOD_BOOT, BP_DLL */
+  BP_GET_ERROR, BP_GET_WDL, BP_GET_W$, BP_GET_TRAITS, BP_BOOT, BP_DLL */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -80,6 +80,7 @@
     /** @globals-begin */
     var g_loc = IMPORT(g_win.location),
         g_doc = IMPORT(g_win.document),
+        g_myUrl = g_win.location.href,
         settings = {AutoFill:true, ShowPanelIfNoFill: true}, // User Settings
         data_ct = "untrix_ct",
         data_fn = "untrix_fn", // Careful here. HTML5 will take all capitals in the IDL name
@@ -736,6 +737,10 @@
             });
             return out;
         };
+        /**
+         * Get the first focussable form, or if no focussable forms exist, then return
+         * the first form in the list (usually sorted in tree-order).
+         */
         Forms.prototype.getFirstFocussed = function ()
         {
             var first, focussable=[], t, t1;
@@ -762,7 +767,11 @@
             }
 
             // TODO: Take z-index into account instead of returning focussable[0]
-            return (first || focussable[0]);
+            // We call this method only for all those forms for which FInfo.isVisible()
+            // returns true. Assumption is that at least one form will be focussable.
+            // However that turns out to be wrong in the case of icloud.com - and hence
+            // if no focussable form is found, we return the first one.
+            return (first || focussable[0] || this._a[0]);
         };
         Forms.prototype.getClicked = function (ev)
         {
@@ -938,6 +947,7 @@
         };
         FillInfo.prototype.hook = function ()
         {
+            BP_BOOT.autoFillable(this.autoFillable());
             this.signin.some(FormInfo.prototype.hook);
             this.signup.some(FormInfo.prototype.hook);
         };
@@ -1017,7 +1027,10 @@
                 uid = undefined, pass = undefined, // Default values *must* be undefined, not null.
                 uEl, pEl, bSave;
             
-            if (!fInfo) {return;}
+            if (!fInfo) {
+                BP_ERROR.logdebug("onChange discarded event");
+                return;
+            }
 
             fn = $this.data(data_fn);
             pair = $this.data(data_pair);
@@ -1344,10 +1357,10 @@
             }
             
             if ((cntxt instanceof HTMLFormElement) && cntxt.elements.length) { // cntxt is a form element
-                $el1 = $(cntxt.elements).filter(function(){return this.webkitMatchesSelector(g_uSel);}).filter(':visible');
+                $el1 = $(cntxt.elements).filter(function(){return this.webkitMatchesSelector(g_uSel);}).not('[data-untrix]').filter(':visible');
             }
             else {
-                $el1 = $(g_uSel, $(cntxt)).filter(':visible');
+                $el1 = $(g_uSel, $(cntxt)).not('data-untrix').filter(':visible');
             }
             
             if ((!fInfo) || fInfo.isEmpty() || (stage<2)) {
@@ -1430,10 +1443,10 @@
             }
 
             if (cntnr) {
-                $candids = $('input[type="password"]', cntnr);//.filter(':visible');
+                $candids = $('input[type="password"]:not([data-untrix])', cntnr);//.filter(':visible');
             }
             else if (form) {
-                $candids = $(form.elements).filter(':password');//.filter(':visible');
+                $candids = $(form.elements).filter(':password:not([data-untrix])');//.filter(':visible');
             }
 
             // In second and subsequent stages we can take advantage of knowledge gathered
@@ -1521,9 +1534,9 @@
 
             // Cast a wider net and fetch all candidate fields with strict match and
             // find forms enclosing them.
-            // NOTE: Strict filters will be applied by *Candidates.
+            // NOTE: Strict filters will be applied by u/pCandidates.
             // We're assuming that m_info.scraped
-            // is empty. This is stage-1 scanning.
+            // is empty. This is stage-1 of scanning.
             uCandidates(ctxEl, 1).us.forEach(function(uEl)
             {
                 processField.apply(uEl, [uEl, fn_userid]);
@@ -1695,18 +1708,18 @@
             if (fmInfo.form.localName === 'form') 
             {   // Look for submit buttons or just buttons
                 //jQuery filter is case-sensitive, hence prefering :submit over [type=submit]
-                $sub = $(fmInfo.form.elements).filter(':submit:visible');
-                $sub = $sub.add($('input[type=image]:visible', fmInfo.cntnr));
+                $sub = $(fmInfo.form.elements).filter(':submit:not([data-untrix]):visible');
+                $sub = $sub.add($('input[type=image]:not([data-untrix]):visible', fmInfo.cntnr));
                 if (!$sub.length) {
                     // Didn't find submit buttons. Now look for plain buttons.
-                    $btn = $(fmInfo.form.elements).filter('input[type=button],button:not([type])').filter(':visible');
+                    $btn = $(fmInfo.form.elements).filter('input[type=button],button:not([type])').not('[data-untrix]').filter(':visible');
                 }
             }
             else
             {
-                $sub = $(':submit:visible,input[type=image]:visible', fmInfo.cntnr);
+                $sub = $(':submit:not([data-untrix]):visible,input[type=image]:not([data-untrix]):visible', fmInfo.cntnr);
                 if (!$sub.length) {
-                    $btn = $('input[type=button],button:not([type]):visible', fmInfo.cntnr);
+                    $btn = $('input[type=button]:not([data-untrix]):visible,button:not([type]):not([data-untrix]):visible', fmInfo.cntnr);
                 }
             }
 
@@ -2056,7 +2069,7 @@
                                 return;
                             }
                             fill(pair.u, userid);
-                            fill(pair.p, pass);
+                            fill(pair.p, decrypt(pass));
                         });
                     }
                     else 
@@ -2067,7 +2080,7 @@
                         }
                         if (fInfo.ps.length) {
                             // noUser case
-                            fill(fInfo.ps[0], pass);
+                            fill(fInfo.ps[0], decrypt(pass));
                         }
                     }
                 }
@@ -2076,7 +2089,7 @@
         {
             if (!g_bInited) {try
             {
-                BP_BOOT.observe(g_doc, MOD_CS.onMutation, {bRemoved:true});
+                BP_BOOT.observe(g_doc, MOD_CS.onMutation, {bRemoved:true, filterMutes:true});
                 addEventListener(g_doc, 'change', onChange);
                 addEventListener(g_doc, 'keydown', onEnter);
                 //addEventListener(g_doc, 'click', onClick);
@@ -2125,7 +2138,7 @@
         function isPassword (el)
          {
              if (el.localName !== 'input') {return false;}
-            return (el.type === "password");
+            return (el.type === "password") && (!el.dataset.untrix);
          }
     
         function isField (ft, el)
@@ -2240,9 +2253,9 @@
         function setupDNDWatchers(ctx)
         {
             var $el;
-            $el = $(ctx).filter(function(){return this.webkitMatchesSelector(MOD_FILL.g_uSel+",input[type=password]");});
-            //$el = $el.add($(ctx).filter(':password'));
-            $el = $el.add($(MOD_FILL.g_uSel+",input[type=password]", ctx));
+            $el = $(ctx).filter(function(){return this.webkitMatchesSelector(MOD_FILL.g_uSel+",input[type=password]:not([data-untrix])");});
+            //$el = $el.add($(ctx).filter(':password:not([data-untrix])'));
+            $el = $el.add($(MOD_FILL.g_uSel+",input[type=password]:not([data-untrix])", ctx));
 
             $el.each(function(i, el)
             {
@@ -2406,7 +2419,13 @@
                     BP_ERROR.logdebug(resp.err);
                 }
 
-                try { // We need to rescan because new e-recs may change the scan results.
+                try { 
+                    // We need to rescan because new e-recs may change the scan results.
+                    // Also, if the recs were not received, and MOD_DB was cleared, then we need
+                    // to reflect that in the scan results.
+                    // Also, we take this opportunity to rescan the page in case a form was
+                    // made visible without triggering a mutation. Such is the case with 
+                    // Twitter's signing drop-down on the logout page.
                     MOD_FILL.scan();
                 }
                 catch (err) {
@@ -2446,9 +2465,6 @@
             getRecs(g_loc, function (resp)
             {
                 onGotRecs(resp);
-                // if (MOD_DB.numUnsaved) {
-                    // MOD_PANEL.create();
-                // }
             });
         }
 
@@ -2471,15 +2487,54 @@
         }
         
         /**
-         * Invoked upon receipt of a click message from bp_main - only if popup was not
-         * set in the manifest file.
+         * Invoked upon receipt of a click message from bp_panel.js.
          */
         function onClickBP (request, _ /*sender*/, sendResponse)
         {
-            onClickComm();
-            if (sendResponse) {sendResponse({ack:true});}
+            onDllLoad();
+            if (sendResponse) {sendResponse({ack:true, frameUrl:g_myUrl});}
         }
     
+        function onGetFrameUrl (req, sender, callback)
+        {   
+            callback({result:true, frameUrl:g_myUrl});
+        }
+    
+        function onAutoFillStatus(req, sender, sendResp)
+        {
+            MOD_FILL.init(); // init only if not already done
+            MOD_DND.init(); // init only if not already done
+            getRecs(g_loc, function (resp)
+            {
+                onGotRecs(resp);
+                BP_ERROR.logdebug('onAutoFilLStatus@bp_cs.js: autoFillable = ' + MOD_FILL.info().autoFillable() + " or " + BP_BOOT.isAutoFillable());
+                sendResp(
+                {
+                    autoFillable:MOD_FILL.info().autoFillable(),
+                    frameUrl: g_myUrl
+                });
+            });
+        }
+        
+        function onMessage(req, sender, sendResp)
+        {
+            switch(req.cm)
+            {
+                case 'cm_clickBP':
+                    onClickBP(req, sender, sendResp);
+                    break;
+                case 'cm_autoFillStatus':
+                    onAutoFillStatus(req, sender, sendResp);
+                    return true; // allows us to return without calling sendResp.
+                    break;
+                case 'cm_autoFill':
+                    MOD_FILL.autoFill(req.userid, req.pass);
+                    sendResp({result:true});
+                default:
+                    break;
+            }
+        }
+
         function setupCommand(doc, func)
         {
             var com = doc.getElementById("com-untrix-uwallet-click");
@@ -2532,18 +2587,19 @@
             }, false, toTemp);
         }
 
-        function main()
+        function onLoad()
         {
-            registerMsgListener(onClickBP);
+            registerMsgListener(onMessage);
             setupCommand(g_doc, onClickComm);
             BP_DLL.onClickComm = onClickComm;
             BP_DLL.onDllLoad = onDllLoad;
             BP_DLL.onClickBP = onClickBP;
+            BP_DLL.onAutoFillStatus = onAutoFillStatus;
         }
 
         return Object.freeze(
         {
-            main: main,
+            onLoad: onLoad,
             onMutation: onMutation,
             saveRec: function(a,b,c) {saveRec(a,b,c);},
             saveTempRec: function(a,b,c) {saveRec(a,b,c,true);},
@@ -2552,7 +2608,7 @@
         });
     }());
     
-    MOD_CS.main();
+    MOD_CS.onLoad();
     console.log("loaded CS");    
 }(window));
 

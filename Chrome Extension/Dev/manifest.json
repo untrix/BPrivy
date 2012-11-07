@@ -1,6 +1,6 @@
 {
   "name": "BPrivy",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "manifest_version": 2,
   "minimum_chrome_version": "7",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
@@ -9,19 +9,21 @@
 	     "128": "icons/icon128.png",
   	     "16": "icons/icon16.png"
 	   },
-  "permissions": ["contextMenus", "tabs", "webRequest", "<all_urls>", "notifications"],
+  "permissions": ["contextMenus", "tabs", "webRequest", "notifications"],
   "background": {"page": "bp_Main.html"},
-  "content_scripts": [
+  "content_scripts1": [
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
+    "exclude_matches": ["*://chrome.google.com/webstore*"],
     "js": ["bp_cs_boot.cat.js"],
     "run_at": "document_idle",
     "all_frames": true
     }
   ],
-  "content_scripts2": [
+  "content_scripts": [
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
+    "exclude_matches": ["*://chrome.google.com/webstore*"],
     "js": ["tp/jquery.js",
            "tp/jquery-ui.js",
            "bp_cs_boot_head.js",

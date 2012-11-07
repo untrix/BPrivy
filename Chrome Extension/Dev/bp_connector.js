@@ -39,7 +39,11 @@ function BP_GET_CONNECT(g)
     /** @import-module-end **/    m = null;
 
     /** @constant */
-    var cm_getRecs      = "cm_recs",     // Represents a getDB command
+    var cm_clickBP      = "cm_clickBP",  // Extension button clicked/activated
+        cm_getFrameUrl  = "cm_getFrameUrl", //Called by panel.js to determine active frame.
+        cm_autoFillStatus="cm_autoFillStatus",
+        cm_autoFill     = "cm_autoFill",
+        cm_getRecs      = "cm_recs",     // Represents a getDB command
         cm_loadDB       = "cm_load",
         cm_unloadDB     = "cm_unload",
         cm_mergeDB      = "cm_mrgDb",
@@ -336,8 +340,12 @@ function BP_GET_CONNECT(g)
             fn_userid: {value: fn_userid},
             fn_pass: {value: fn_pass},
             // MOD_PROTO
+            cm_clickBP: {value: cm_clickBP},
+            cm_getFrameUrl:{value:cm_getFrameUrl},
+            cm_autoFillStatus:{value:cm_autoFillStatus},
+            cm_autoFill:{value:cm_autoFill},
             cm_getRecs: {value: cm_getRecs},
-            cm_loadDB: {value: cm_loadDB},
+            cm_loadDB:  {value: cm_loadDB},
             cm_unloadDB: {value: cm_unloadDB},
             cm_mergeInDB: {value: cm_mergeInDB},
             cm_mergeOutDB: {value: cm_mergeOutDB},

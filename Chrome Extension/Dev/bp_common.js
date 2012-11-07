@@ -41,16 +41,21 @@ function BP_GET_COMMON(g)
     var PROTO_HTTP = "http:",
         PROTO_HTTPS = "https:",
         EMPTY_OBJECT = Object.freeze({}),
-        EMPTY_ARRAY  = Object.freeze([]);
+        EMPTY_ARRAY  = Object.freeze([]),
+        PROTO_SUPPORTED = ['http:', 'https:', 'ftp:', 'file:'];
     /** Global url regexpression used for all invocations of parseURL. Remember that lastIndex prop. and flags are shared ! */
     //var g_url_regexp = /^(?:([A-Za-z]+):)(\/\/)?([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
     var g_url_regexp = /^(?:([A-Za-z]+):\/\/)(?:([0-9.\-A-Za-z]+)(?::(\d+))?)?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
     /** @globals-end **/
    
-   
     function toJson(o)
     {
         return JSON.stringify(o, null, 2);
+    }
+    
+    function isSupportedScheme(scheme)
+    {
+        return (PROTO_SUPPORTED.indexOf(scheme) !== -1);
     }
     
   // // URL decomposition IDL attributes
@@ -278,6 +283,7 @@ function BP_GET_COMMON(g)
         pass_aliases: {value: pass_aliases},
         url_aliases: {value: url_aliases},
         toJson: {value: toJson},
+        isSupportedScheme:{value:isSupportedScheme},
         parseURL: {value: parseURL},
         getScheme: {value: getScheme},
         stripQuotes: {value: stripQuotes},
@@ -304,57 +310,3 @@ function BP_GET_COMMON(g)
     return iface;
         
 }
-
-    // Function.prototype.defineMethod = function (name, value)
-    // {
-        // this.prototype[name] = value;
-        // return this;
-    // };
-//     
-    // var bp_common_clone = function ()
-    // {
-        // if ((typeof this) !== "object") {
-            // return;
-        // }
-//         
-        // var o = {}, temp_name;
-        // for (temp_name in this) {
-            // if (this.hasOwnProperty(temp_name)) {
-                // o[temp_name] = this[temp_name];
-            // }
-        // }
-        // return o;
-    // };
-    
-    //Object.defineProperty(Object.prototype, "bp_common_clone", {value: bp_common_clone, writable: false, enumerable: false, configurable: false});
-
-    // function isDocVisible(g_doc) {
-        // /*properties is */
-        // return ((g_doc.webkitVisibilityState && (g_doc.webkitVisibilityState === 'visible')) || ($(g_doc.body).is(":visible")));
-    // }
-// 
-    // function isFrameVisible(frame)
-    // {
-        // var retval = true;
-        // BP_ERROR.loginfo("Entered IsFrameVisible");
-        // if (frame.hidden) {
-            // retval = false;
-        // }
-        // else if (!frame.style) {
-            // retval = true;
-        // }
-        // else// frame.style exists
-        // {
-            // if(frame.style.visibility && frame.style.visibility === 'hidden') {
-                // retval = false;
-            // }
-            // else if(frame.style.display && frame.style.display === 'none') {
-                // retval = false;
-            // }
-        // }
-// 
-        // BP_ERROR.loginfo("Exiting IsFrameVisible");
-        // return retval;
-    // }
-
-

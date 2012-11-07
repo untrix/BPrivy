@@ -69,7 +69,7 @@ function BP_GET_MEMSTORE(g)
                        // (e.g. !educ.ar). See publicsuffix.org for details.
             DATA:  'D', // Prefix for data - e.g. De for E-Rec, Dp for P-Rec etc.
             ITER:  "I", // Property used by DNodeIterator to save notes
-            URL:   "U",
+            URL:   "U", // 'Site': Concatenation of URL segments leading upto the DNode.
             LISTENERS: 'L', // Event Listeners for a given dnode or entire tree (in case of root node only)
             //PORT: 'NO',
             //HTTP: 'NS',
@@ -798,6 +798,8 @@ function BP_GET_MEMSTORE(g)
         {
             _a      : {value: urla, enumerable: true}, //writable=false, configurable=false
             _i      : {value: 0, writable: true, enumerable: true}, //configurable=false
+            ha      : {value: ha},
+            pa      : {value: pa}
         });
         Object.seal(this);
     }
@@ -861,6 +863,25 @@ function BP_GET_MEMSTORE(g)
         else if (i1.count() < i2.count()) {return SUBSET;}
         else {return SUPERSET;}
     };
+    DURL.prototype.getSite = function ()
+    {
+        var site = "";
+        if (this.ha) {
+            site += this.ha.reverse().join('.');
+        }
+        if (this.pa) {
+            site += '/';
+            site += this.pa.join('/');
+        }
+        return site;
+    };
+    
+    function getSite(loc, dt)
+    {
+        var l = BP_CONNECT.newL(loc, dt),
+            urli = new DURL(l, dt);
+        return urli.getSite();
+    }
     /** @end-class-defn DURL **/
     
     /** @begin-class-def DNode */
@@ -1108,23 +1129,22 @@ function BP_GET_MEMSTORE(g)
     /**
      * Returns dt_pRecord records that best match urli.
      */
-    DNProto.findPRecsMap = function(l) 
+    DNProto.findPRecsMap = function(l, out) 
     {
         var n = this, n2, urli = new DURL(l, dt_pRecord);
         // Walk down the dictionary tree.
         do {
-            // save node if it has the desired data type
-            if (DNProto.getData.apply(n, [dt_pRecord])) {n2 = n; /*idb = urli.pos();*/}
+            //if (DNProto.getData.apply(n, [dt_pRecord])) {n2 = n; /*idb = urli.pos();*/}
+            n2 = n; // we need an exact DURL match hence replacing above line with this one.
             n = DNProto.tryFind.apply(n, [urli]);
         } while (n);
 
         // While constructing DURL during insert we've already ensured that
         // inserts will be below TLD level - and just one level below TLD.
         // Therefore we need an exact DURL-match, not a substring match here.
-        // TODO: Need to change code to look for exact DURL match instead of
-        // prefix-match.
         if (n2) 
         {
+            if (out) {out.dNode = n2;}
             return DNProto.getData.apply(n2, [dt_pRecord]);
         }
     };
@@ -1211,13 +1231,13 @@ function BP_GET_MEMSTORE(g)
         }
     };*/
 
-    function getDTRecs (loc, dt)
+    function getDTRecs (loc, dt, out)
     {
         var recs;
         switch (dt)
         {
             case dt_pRecord:
-                recs = DNProto.findPRecsMap.apply(DNode[dt_pRecord],[newL(loc,dt_pRecord)]);
+                recs = DNProto.findPRecsMap.apply(DNode[dt_pRecord],[newL(loc,dt_pRecord), out]);
                 break;
             case dt_eRecord:
                 recs = DNProto.findERecsMapArray.apply(DNode[dt_eRecord], [newL(loc,dt_eRecord)]);
@@ -1226,9 +1246,9 @@ function BP_GET_MEMSTORE(g)
         return recs; 
     }
     
-    function getTRecs (loc)
+    function getTRecs (loc, out)
     {
-        return DNProto.findPRecsMap.apply(DNode['temp_'+dt_pRecord],[newL(loc,dt_pRecord)]);
+        return DNProto.findPRecsMap.apply(DNode['temp_'+dt_pRecord],[newL(loc,dt_pRecord), out]);
     }
 
     function numTRecs (loc, skipDeleted)
@@ -1240,12 +1260,16 @@ function BP_GET_MEMSTORE(g)
      */
     function  getRecs (loc)
     {
-        var kdb, pdb, r;
+        var kdb, pdb, r, out = {};
         r = {};
         r.eRecsMapArray = getDTRecs(loc, dt_eRecord);
-        r.pRecsMap = getDTRecs(loc, dt_pRecord);
+        r.pRecsMap = getDTRecs(loc, dt_pRecord, out);
         r.tRecsMap = getTRecs(loc);
-
+        if (out.dNode) {
+            // Site that pertains to the pRecords. Should be same as DURL(l, dt_pRecord)
+            // concatenated back into a URL. 
+            r.site = out.dNode[DNODE_TAG.URL];
+        }
         return r;
     }
 
@@ -1567,6 +1591,7 @@ function BP_GET_MEMSTORE(g)
         loadETLD:    loadETLD,
         newDNode:    newDNode, // used by build_tools
         DURL:        DURL, // used by build_tools
+        getSite:     getSite,
         DRecord:     DRecord,
         DNProto:     DNProto,
         DNODE_TAG:   DNODE_TAG,
