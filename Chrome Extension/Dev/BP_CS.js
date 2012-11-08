@@ -2007,6 +2007,8 @@
          */
         function scan(ctxEl)
         {
+            var autoFillableStatus = m_info.autoFillable(),
+                autoFillableStatus2;
             m_info.clearAll();            if (ctxEl && (ctxEl.localName==='input')) {
                 ctxEl = ctxEl.parentElement;
             }
@@ -2030,6 +2032,10 @@
             }
             
             m_info.hook();
+            autoFillableStatus2 = m_info.autoFillable();
+            if (autoFillableStatus !== autoFillableStatus2) {
+                BP_CONNECT.autoFillStatus(autoFillableStatus2);
+            }
         }
         
         // Assumes input element and fills it

@@ -67,11 +67,11 @@ function BP_GET_LISTENER(g)
     {
         Object.defineProperties(this,
         {
-            scope: scope,
+            scope: {value: scope},
             cbacks: {value:{}},
         });
     }
-    Listeners.prototype.add = function(eventType, cbackInfo)
+    Listeners.prototype.add = Listeners.prototype.listen = function(eventType, cbackInfo)
     {
         var func = cbackInfo.func,
             tabId = cbackInfo.tabId,

@@ -83,7 +83,7 @@
             com = document.createElement('command');
             com.type="command";
             com.accessKey = 'q';
-            com.tabindex = -1; // ensures that the command won't get sequentially focussed.
+            com.tabindex = -1; // ensures that the command won't get sequentially focused.
             com.id = eidCommand;
             com.addEventListener('click', func);
             head.insertBefore(com, head.firstChild);

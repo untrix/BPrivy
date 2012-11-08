@@ -16,6 +16,7 @@ var BP_BOOT = (function()
     var g_uSel = 'input[type="text"],input:not([type]),input[type="email"],input[type="tel"],input[type="number"]',
         g_uReg2= /(log|sign)(in|on)|signup|(user|account)(id|name|number|email)|^(id|user|uid|uname)$|identity|authentication/i,
         g_fReg2 = /(log|sign)(in|on)|^(auth)$|register|registration|authentication|enroll|join|ssoform|regform|(create)(user|account)/i,
+        g_topLevelTags = ['iframe', 'body', 'html', 'head', 'frameset'],
         g_bTopLevel = (window.top === window.self),
         g_myUrl = window.location.href,
         g_autoFillable = false;
@@ -164,13 +165,18 @@ var BP_BOOT = (function()
             }*/
            return g_autoFillable;
         }
-        
+
         return true;
     }
 
     function onFocus(ev)
     {
-        chrome.extension.sendRequest({cm:'cm_onFocus', isTopLevel:g_bTopLevel, url:g_myUrl});
+        var elName = document.activeElement.localName.toLowerCase();
+
+        if (elName !== 'iframe')
+        {
+            chrome.extension.sendRequest({cm:'cm_onFocus', isTopLevel:g_bTopLevel, elName:elName, url:g_myUrl});
+        }
     }
 
     function onBlur(ev)

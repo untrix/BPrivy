@@ -1375,7 +1375,7 @@ function BP_GET_MEMSTORE(g)
         }
     }
 
-    DRecord.prototype.dispatch = function()
+    DRecord.prototype.trigger = function()
     {
         if (this.notes.causedCurrChange) 
         {
@@ -1384,7 +1384,7 @@ function BP_GET_MEMSTORE(g)
         }
     };
     
-    function dispatch (dr)
+    function trigger (dr)
     {
         var root, dnode;
         if (dr.notes.causedCurrChange) 
@@ -1606,7 +1606,7 @@ function BP_GET_MEMSTORE(g)
         MOD_ETLD:    MOD_ETLD,
         Event: {
             listen:  listen,
-            dispatch:dispatch
+            trigger:trigger
         }
     });
 
