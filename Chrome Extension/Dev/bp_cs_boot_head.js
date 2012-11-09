@@ -16,9 +16,7 @@ var BP_BOOT = (function()
     var g_uSel = 'input[type="text"],input:not([type]),input[type="email"],input[type="tel"],input[type="number"]',
         g_uReg2= /(log|sign)(in|on)|signup|(user|account)(id|name|number|email)|^(id|user|uid|uname)$|identity|authentication/i,
         g_fReg2 = /(log|sign)(in|on)|^(auth)$|register|registration|authentication|enroll|join|ssoform|regform|(create)(user|account)/i,
-        g_topLevelTags = ['iframe', 'body', 'html', 'head', 'frameset'],
         g_bTopLevel = (window.top === window.self),
-        g_myUrl = window.location.href,
         g_autoFillable = false;
     
     function filterUntrix(els)
@@ -140,30 +138,34 @@ var BP_BOOT = (function()
     
     function amDestFrame(req)
     {
+        var activeElement;
+        
         if (req.frameUrl)
         {
-            if (req.frameUrl !== g_myUrl) {return false;}
+            if (req.frameUrl !== document.location.href) {return false;}
             // else we're good
         }
         else // req does not have frameUrl
         {
-            /*if (!document.hasFocus())
+            if (!document.hasFocus())
             {
                 if (!g_bTopLevel) {
                     return false; // top-level window will handle this message
                 }
-                // else we're top-level window and our tab is active/visible, otherwise
-                // chrome would not have sent us this message.
+                // else we're top-level window and our tab is highlighted, otherwise
+                // we would not have sent us this message.
             }
             else // doc has focus
             {
-                if (document.activeElement.localName === 'iframe')
+                activeElement = document.activeElement;
+                if ((activeElement.localName === 'iframe') ||
+                    (activeElement.localName === 'object' && activeElement.contentWindow))
                 {
                     return false; // iframe will handle this message
                 }
                 // else we're the most nested browsing context that is focussed
-            }*/
-           return g_autoFillable;
+            }
+           //return g_autoFillable;
         }
 
         return true;
@@ -175,13 +177,13 @@ var BP_BOOT = (function()
 
         if (elName !== 'iframe')
         {
-            chrome.extension.sendRequest({cm:'cm_onFocus', isTopLevel:g_bTopLevel, elName:elName, url:g_myUrl});
+            chrome.extension.sendRequest({cm:'cm_onFocus', isTopLevel:g_bTopLevel, elName:elName, frameUrl:document.location.href});
         }
     }
 
-    function onBlur(ev)
+    function onUnload(ev)
     {
-        chrome.extension.sendRequest({cm:'cm_onBlur', isTopLevel:g_bTopLevel, url:g_myUrl});
+        chrome.extension.sendRequest({cm:'cm_onUnload', url:document.location.href});
     }
 
     return Object.freeze(
@@ -191,6 +193,7 @@ var BP_BOOT = (function()
             amDestFrame: amDestFrame,
             autoFillable: function(b) {g_autoFillable=b;},
             isAutoFillable: function() {return g_autoFillable;},
-            onFocus: onFocus
+            onFocus: onFocus,
+            onUnload: onUnload
         });
 }());

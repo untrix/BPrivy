@@ -17,3 +17,6 @@ function IMPORT(sym)
         return sym;
     }
 }
+
+// Dummy function
+function IMPORT_LATER() {"use strict";}

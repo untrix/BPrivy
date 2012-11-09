@@ -51,7 +51,8 @@
     var BP_COMMON = IMPORT(g.BP_COMMON);
     /** @import-module-begin Traits */
     m = IMPORT(g.BP_TRAITS);
-    var dt_eRecord = IMPORT(m.dt_eRecord),
+    var BP_TRAITS = IMPORT(m),
+        dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord),
         fn_userid = IMPORT(m.fn_userid),   // Represents data-type userid
         fn_userid2= IMPORT(m.fn_userid2),
@@ -96,11 +97,12 @@
 
     /** @globals-begin */
     var data_ct = "untrix_ct",
-        data_fn = "untrix_fn", // Careful here. HTML5 will take all capitals in the IDL name
+        data_fn = "untrix_fn", // Careful here ! HTML5 will take all capitals in the IDL name
                                // and convert to lowercase with a hyphen prefix. Not sure
                                // if the normalized name needs to be used in querySelector
                                // of whether the IDL name will suffice. For the time being
                                // I am steering clear of hyphens and uppercase.
+        // sel => selector
         sel_fn_u = "[data-"+data_fn+"="+fn_userid+']',
         sel_fn_p = "[data-"+data_fn+"="+fn_pass+']',
         sel_ct_u = "[data-"+data_ct+"="+CT_BP_USERID+']',
@@ -229,71 +231,109 @@
             MOD_PANEL.create();
         }
         
+        function heuristicFrameUrl(tabId, tabUrl)
+        {
+            var lastFocused = BP_MAIN.MOD_WIN.getLastFocused(tabId),
+                frameUrl = lastFocused ? lastFocused.frameUrl : undefined,
+                autoFillable;
+            
+            if (frameUrl) 
+            {
+                if (!lastFocused.isTopLevel) {
+                    // Is a nested browsing context (i.e. Frame)
+                    BP_ERROR.logdebug('heuristicFrameUrl: lastFocused is nested browsing context. returning ' + frameUrl);
+                    return frameUrl;
+                }
+                else { // topLevel browsing context
+                    if ( lastFocused.elName === 'input' ) {
+                        BP_ERROR.logdebug('heuristicFrameUrl: lastFocused is top-level browsing context. elName = ' + lastFocused.elName + ' returning ' + frameUrl);
+                        return frameUrl;
+                    }
+                    else {
+                        autoFillable = BP_MAIN.MOD_WIN.getAutoFillable(tabId);
+                        if (autoFillable[frameUrl]) {
+                            BP_ERROR.logdebug('heuristicFrameUrl: returning autoFillable top-level window: ' + frameUrl);
+                            return frameUrl;
+                        }
+                        else {
+                            // top-window is not autofillable. Check if any other frame is autofillable.
+                            var frames = Object.keys(autoFillable);
+                            if (frames.length) {
+                                BP_ERROR.logdebug('heuristicFrameUrl: force returning first autoFillable frameUrl = ' + frames[0]);
+                                return frames[0]; // pick the first autofillabel frame.
+                            }
+                            else {
+                                BP_ERROR.logdebug('heuristicFrameUrl: No autofillable frame found. returning top-level frameUrl = ' + frameUrl);
+                                return frameUrl;
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                BP_ERROR.logdebug('heuristicFrameUrl: returning tabUrl: ' + tabUrl);
+                return tabUrl;
+            }
+        }
+        
         function onLoad()
         {
             document.body.style.margin = '2px';
             chrome.tabs.query({currentWindow:true, highlighted:!DEBUG, index:DEBUG?0:undefined}, function(tabs)
             {
+                var recsResp, resp3, lastFocused;
+
                 if (!tabs.length) {cbackShowPanel(); return;}
+
                 g_tabId = tabs[0].id;
-                g_frameUrl = tabs[0].url;
-                
+                g_frameUrl = heuristicFrameUrl(g_tabId, tabs[0].url);
+
                 g_loc = BP_COMMON.parseURL(g_frameUrl) || {};
-                BP_ERROR.logdebug('onLoad@bp_panel.js: highlighted tabs url is ' + g_frameUrl);
-                getRecs(g_loc, function(recsResp)
+                BP_ERROR.logdebug('onLoad@bp_panel.js: target frame url is ' + g_frameUrl);
+
+                recsResp = getRecs(g_loc);
+                g_site = recsResp.db ? recsResp.db.site : undefined;
+                BP_ERROR.logdebug('onLoad@bp_panel.js: site url is ' + g_site);
+                MOD_PANEL.autoFillable(BP_MAIN.MOD_WIN.getAutoFillable(g_tabId)[g_frameUrl]);
+                cbackShowPanel(recsResp);
+
+                //chrome.tabs.update(g_tabId, {highlighted:true}, function(){});
+                /*if ( (BP_COMMON.isSupportedScheme(g_loc.protocol)) &&
+                     (g_loc.hostname !== 'chrome.google.com') )// This is a very troublesome URL.
                 {
-                    g_site = recsResp.db ? recsResp.db.site : undefined;
-                    BP_ERROR.logdebug('onLoad@bp_panel.js: site url is ' + g_site);
-                    cbackShowPanel(recsResp);
-                    //chrome.tabs.update(g_tabId, {highlighted:true}, function(){});
-                    if ( (BP_COMMON.isSupportedScheme(g_loc.protocol)) &&
-                         (g_loc.hostname !== 'chrome.google.com') )// This is a very troublesome URL.
+                    BP_PLAT.sendMessage(g_tabId, g_frameUrl, {cm:'cm_autoFillable'}, function(resp2)
                     {
-                        BP_PLAT.sendMessage(g_tabId, null, {cm:'cm_autoFillStatus'}, function(resp2)
+                        var loc, bReload, site;
+                        BP_ERROR.logdebug('onLoad@bp_panel.js: received clickBP response: ' + JSON.stringify(resp2));
+                        if (!resp2) 
                         {
-                            var loc, bReload, site;
-                            BP_ERROR.logdebug('onLoad@bp_panel.js: received clickBP response: ' + JSON.stringify(resp2));
-                            if (!resp2) 
-                            {
-                                BP_ERROR.logdebug('onLoad@bp_panel.js: cm_autoFillStatus returned error');
-                                return;
-                            }
-                            
-                            if (resp2.frameUrl && (resp2.frameUrl !== g_frameUrl))
-                            {
-                                /*loc = BP_COMMON.parseURL(resp2.frameUrl);
-                                site = BP_MEMSTORE.getSite(loc, dt_pRecord);
-                                BP_ERROR.logdebug('onLoad@bp_panel.js: cm_autoFillStatus returned site = ' + site);
-                                if (site !== g_site) {
-                                    g_frameUrl = resp2.frameUrl;
-                                    g_site = site;
-                                    bReload = true;
-                                }*/
-                               g_frameUrl = resp2.frameUrl;
-                               g_site = site;
-                               loc = BP_COMMON.parseURL(g_frameUrl);
-                               bReload = true;
-                            }
+                            BP_ERROR.logdebug('onLoad@bp_panel.js: cm_autoFillable returned error');
+                            return;
+                        }
+                        
+                        // if (resp2.frameUrl && (resp2.frameUrl !== g_frameUrl))
+                        // {
+                           // g_frameUrl = resp2.frameUrl;
+                           // g_site = site;
+                           // loc = BP_COMMON.parseURL(g_frameUrl);
+                           // bReload = true;
+                        // }
+                        MOD_PANEL.autoFillable(Boolean(resp2.autoFillable));
 
-                            MOD_PANEL.autoFillable(Boolean(resp2.autoFillable));
-
-                            if (!bReload && resp2.autoFillable) {
-                                BP_ERROR.logdebug('onLoad@bp_panel.js: reloading');
-                                // TODO: Instead of reload this should simply be 
-                                // MOD_PANEL.makeAutoFillable() - but we don't have that
-                                // API yet.
-                                cbackShowPanel(recsResp);
-                            }
-                            else if (bReload) {
-                                BP_ERROR.logdebug('onLoad@bp_panel.js: refetching');
-                                getRecs(loc, function(resp3)
-                                {
-                                    cbackShowPanel(resp3);    
-                                });
-                            }
-                        });
-                    }
-                });
+                        if (!bReload && resp2.autoFillable) {
+                            BP_ERROR.logdebug('onLoad@bp_panel.js: reloading');
+                            // TODO: Instead of reload this should simply be 
+                            // MOD_PANEL.makeAutoFillable() - but we don't have that
+                            // API yet.
+                            cbackShowPanel(recsResp);
+                        }
+                        else if (bReload) {
+                            BP_ERROR.logdebug('onLoad@bp_panel.js: refetching');
+                            resp3 = getRecs(loc);
+                            cbackShowPanel(resp3);
+                        }
+                    });
+                }*/
             });
         }
 

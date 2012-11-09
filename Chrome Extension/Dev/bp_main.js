@@ -6,10 +6,10 @@
  */
 
 /* JSLint directives */
-/*global $, BP_MOD_PLAT, BP_GET_CONNECT, BP_GET_COMMON, IMPORT, localStorage,
+/*global $, BP_MOD_PLAT, BP_GET_CONNECT, BP_GET_COMMON, IMPORT, IMPORT_LATER, localStorage,
   BP_GET_MEMSTORE, BP_GET_DBFS, BP_GET_FILESTORE, BP_GET_ERROR, BP_GET_TRAITS,
   BP_GET_CS_PLAT, BP_GET_PLAT, BP_GET_LISTENER, BP_GET_W$, BP_GET_WDL, chrome,
-  webkitNotifications */
+  webkitNotifications, BP_MAIN */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true,
   regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -20,7 +20,7 @@
 function BP_GET_NTNF_CNTR(g)
 {   'use strict';
     var window = null, document = null, console = null;
-
+    
     /** @import-module-begin */
     var BP_ERROR    = IMPORT(g.BP_ERROR),
         BPError     = IMPORT(BP_ERROR.BPError);
@@ -30,7 +30,7 @@ function BP_GET_NTNF_CNTR(g)
     var BP_CONNECT  = IMPORT(g.BP_CONNECT),
         dt_pRecord  = IMPORT(BP_CONNECT.dt_pRecord);
     var BP_PLAT     = IMPORT(g.BP_PLAT);
-    var MOD_EVENTS  = IMPORT(g.MOD_EVENTS);
+    var MOD_EVENTS  = IMPORT_LATER(BP_MAIN, MOD_EVENTS); // delayed import at init time.
 
     /** @import-module-end **/
 
@@ -90,10 +90,12 @@ function BP_GET_NTNF_CNTR(g)
 
     function init()
     {
+        MOD_EVENTS = IMPORT(BP_MAIN.MOD_EVENTS); // Delayed bind.
+
         BPError.push('InitNotifications');
         var scope = new BP_LISTENER.Scope('temp_' + dt_pRecord, dt_pRecord);
         var cback = new BP_LISTENER.CallbackInfo(onChange);
-        MEMSTORE.Event.listen('bp_change', scope, cback);
+        //MEMSTORE.Event.listen('bp_change', scope, cback);
         MOD_EVENTS.listen('bp_boot_loaded', new BP_LISTENER.CallbackInfo(onEvent));
         MOD_EVENTS.listen('bp_saved_temp', new BP_LISTENER.CallbackInfo(onEvent));
     }
@@ -125,7 +127,6 @@ var BP_MAIN = (function()
     g.BP_MEMSTORE = BP_GET_MEMSTORE(g);
     g.BP_DBFS = BP_GET_DBFS(g);
     g.BP_FILESTORE = BP_GET_FILESTORE(g);
-    g.MOD_EVENTS = g.BP_LISTENER.newListeners();
     g.BP_NTFN_CNTR= BP_GET_NTNF_CNTR(g);
     // These are for use by panel.js, they are not used by bp_main.js
     g.BP_W$ = BP_GET_W$(g);
@@ -140,6 +141,8 @@ var BP_MAIN = (function()
     m = g.BP_TRAITS;
     var dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord);
+    /** @import-module-begin */
+    var BP_COMMON = IMPORT(g.BP_COMMON);
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;
     var BP_CONNECT = IMPORT(g.BP_CONNECT);
@@ -162,10 +165,10 @@ var BP_MAIN = (function()
     var DBFS = IMPORT(g.BP_DBFS);
     var BP_LISTENER = IMPORT(g.BP_LISTENER);
     var BP_NTFN_CNTR = IMPORT(g.BP_NTFN_CNTR);
-    var MOD_EVENTS = g.MOD_EVENTS;
     /** @import-module-end **/    m = null;
 
-    var MOD_WIN;    // defined later.
+    var MOD_WIN,    // defined later.
+        MOD_EVENTS = BP_LISTENER.newListeners();
     var g_forms = {}; // Form submissions to watch for
         //g_listener = BP_LISTENER.newListener();
     
@@ -420,11 +423,19 @@ var BP_MAIN = (function()
                     BPError.push("cmOnFocus");
                     rq.tabId = sender.tab.id;
                     MOD_EVENTS.dispatch('bp_on_focus', rq);
-                    BP_ERROR.logdebug('onRequest@bp_main.js received ' + cm + ": " + JSON.stringify(rq));
+                    //BP_ERROR.logdebug('onRequest@bp_main.js received ' + cm + ": " + JSON.stringify(rq));
                     break;
-                case 'cm_onFocusDebug':
-                    BPError.push("cmOnFocus");
-                    BP_ERROR.logdebug('onRequest@bp_main.js received ' + cm + ": " + JSON.stringify(rq));
+                case 'cm_onUnload':
+                    BPError.push("cmOnUnload");
+                    rq.tabId = sender.tab.id;
+                    MOD_EVENTS.dispatch('bp_on_unload', rq);
+                    //BP_ERROR.logdebug('onRequest@bp_main.js received ' + cm + ": " + JSON.stringify(rq));
+                    break;
+                case 'cm_autoFillable':
+                    rq.tabId = sender.tab.id;
+                    MOD_EVENTS.dispatch('bp_autoFillable', rq);
+                    //BPError.push("cmOnFocus");
+                    //BP_ERROR.logdebug('onRequest@bp_main.js received ' + cm + ": " + JSON.stringify(rq));
                     break;
                 default: // do nothing
             }
@@ -446,6 +457,17 @@ var BP_MAIN = (function()
     {
         var g_tabs = {};
 
+        function makeTabInfo(tabId)
+        {
+            if (!tabId) {return;}
+            if (!g_tabs[tabId]) {
+                g_tabs[tabId] = {
+                    lastFocused: undefined,
+                    autoFillable: {}
+                };
+            }
+            return g_tabs[tabId];
+        }
         function clickReq (url)
         {
             //return getRecs(BP_COMMON.parseURL(url));
@@ -455,30 +477,71 @@ var BP_MAIN = (function()
         function clickResp (url) 
         {}
 
-        function onFocus(ev)
+        function onTabRemoved( tabId )
         {
-            var tabId = ev.detail.tabId;
-            
-            if (!g_tabs[tabId]) {
-                g_tabs[tabId] = {};
-            }
-            
-            g_tabs[tabId].lastFocused = ev.detail;
-        }
-        
-        function onTabRemoved(tabId, removeInfo)
-        {
+            BP_ERROR.logdebug('onTabRemoved@MOD_WIN: tabId = ' + tabId );
             delete g_tabs[tabId];
         }
         
-        chrome.tabs.onRemoved.addListener(onTabRemoved);
-        MOD_EVENTS.listen('bp_on_focus', new BP_LISTENER.CallbackInfo(onFocus));
+        // is chrome specific.
+        function onTabUpdated( tabId, changeInfo, tab )
+        {
+            if (changeInfo.url) {
+                BP_ERROR.logdebug('onTabUpdated@MOD_WIN: tabId = ' + tabId + ' url = ' + changeInfo.url);
+                // if the tab has navigated to another page, then delete all previous
+                // data.
+                delete g_tabs[tabId];
+            }
+        }
+        
+        function onFocus(ev)
+        {
+            var tabInfo = makeTabInfo(ev.detail.tabId);
+            BP_ERROR.logdebug('onFocus@MOD_WIN: tabId = ' + ev.detail.tabId + ' url = ' + ev.detail.frameUrl);
+            if (tabInfo) {tabInfo.lastFocused = ev.detail;}
+        }
+        
+        function onUnload(ev)
+        {
+            BP_ERROR.logdebug('onUnload@MOD_WIN: tabId = ' + ev.detail.tabId + ' url = ' + ev.detail.url);
+            delete g_tabs[ev.detail.tabId];
+        }
+        
+        function onAutoFillable(ev)
+        {
+            // tabId, autoFillable, frameUrl
+            var tabInfo = makeTabInfo(ev.detail.tabId);
+            
+            if (tabInfo && ev.detail.frameUrl) {
+                if (ev.detail.autoFillable) {
+                    tabInfo.autoFillable[ev.detail.frameUrl] = true;
+                }
+                else {
+                    delete tabInfo.autoFillable[ev.detail.frameUrl];
+                }
+            }
+        }
+
+        
+        function getLastFocused(tabId) {
+            return g_tabs[tabId] ? g_tabs[tabId].lastFocused : BP_COMMON.EMPTY_OBJECT;
+        }
+
+        function getAutoFillable(tabId) {
+            return g_tabs[tabId] ? g_tabs[tabId].autoFillable : BP_COMMON.EMPTY_OBJECT;
+        }
+        
+        chrome.tabs.onUpdated.addListener(onTabUpdated);
+        chrome.tabs.onRemoved.addListener(onTabRemoved);        MOD_EVENTS.listen('bp_on_focus', new BP_LISTENER.CallbackInfo(onFocus));
+        MOD_EVENTS.listen('bp_on_unload', new BP_LISTENER.CallbackInfo(onUnload));
+        MOD_EVENTS.listen('bp_autoFillable', new BP_LISTENER.CallbackInfo(onAutoFillable));
 
         return Object.freeze (
         {
             clickReq: clickReq,
             clickResp: clickResp,
-            getLastFocused: function(tabId) {return g_tabs[tabId];}
+            getLastFocused: getLastFocused,
+            getAutoFillable: getAutoFillable
         });
     }());
 
@@ -487,7 +550,7 @@ var BP_MAIN = (function()
         var dbPath;
 
         function bpPluginLoaded ()
-        { "use strict";
+        {
           BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');
           if (!BP_PLUGIN.getpid) {
               BP_ERROR.warn(
@@ -517,14 +580,8 @@ var BP_MAIN = (function()
                     throw new BPError("DB Load Failed");
                 }
             }
-            // Initialize notifications after everything has loaded.
-            BP_NTFN_CNTR.init();
-            //chrome.webRequest.onBeforeRequest.addListener(onBefReq, {urls:["http://*/*", "https://*/*"]});
-        
-            // chrome.tabs.onSelectionChanged.addListener(function(tabId) 
-            // {
-                // chrome.pageAction.show(tabId);
-            // });        } 
+            // Initialize notifications only after everything has loaded.
+            BP_NTFN_CNTR.init();        } 
         catch (e)
         {
             delete localStorage['db.path'];
@@ -544,7 +601,8 @@ var BP_MAIN = (function()
             sendDelActn: sendDelActn,
             getRecs: getRecs,
             getDBPath: getDBPath,
-            MOD_WIN: MOD_WIN
+            MOD_WIN: MOD_WIN,
+            MOD_EVENTS: MOD_EVENTS
         });
 }());
 

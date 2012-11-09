@@ -119,12 +119,12 @@
         loadBP_CS(function(){if (BP_DLL.onClickBP) {BP_DLL.onClickBP();}});
     }
 
-    function onAutoFillStatus(req, sender, callback)
+    function onAutoFillable(req, sender, callback)
     {
         loadBP_CS(function()
         {
-            if (BP_DLL.onAutoFillStatus) {
-                BP_DLL.onAutoFillStatus(req, sender, callback);
+            if (BP_DLL.onAutoFillable) {
+                BP_DLL.onAutoFillable(req, sender, callback);
             }
             else 
             {
@@ -146,8 +146,8 @@
             case 'cm_clickBP':
                 onClickBP(req, sender, sendResp);
                 break;                    
-            case 'cm_autoFillStatus':
-                onAutoFillStatus(req, sender, sendResp);
+            case 'cm_autoFillable':
+                onAutoFillable(req, sender, sendResp);
                 return true; // allows us to exit without invoking callback.
                 break;
             default: // do nothing.
@@ -163,6 +163,9 @@
             // loadDll();
         // }
     });
+    if (window.top === window.self) {
+        window.addEventListener('unload', BP_BOOT.onUnload);
+    }
     if (document.hasFocus())  {BP_BOOT.onFocus();}
     window.addEventListener('focus', BP_BOOT.onFocus);
     if (BP_BOOT.scan(document)) {

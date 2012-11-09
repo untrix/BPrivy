@@ -2034,7 +2034,7 @@
             m_info.hook();
             autoFillableStatus2 = m_info.autoFillable();
             if (autoFillableStatus !== autoFillableStatus2) {
-                BP_CONNECT.autoFillStatus(autoFillableStatus2);
+                BP_CONNECT.putAutoFillable({autoFillable:autoFillableStatus2, frameUrl: g_myUrl});
             }
         }
         
@@ -2497,7 +2497,8 @@
          */
         function onClickBP (request, _ /*sender*/, sendResponse)
         {
-            onDllLoad();
+            //onDllLoad();
+            onClickComm();
             if (sendResponse) {sendResponse({ack:true, frameUrl:g_myUrl});}
         }
     
@@ -2506,14 +2507,14 @@
             callback({result:true, frameUrl:g_myUrl});
         }
     
-        function onAutoFillStatus(req, sender, sendResp)
+        function onAutoFillable(req, sender, sendResp)
         {
             MOD_FILL.init(); // init only if not already done
             MOD_DND.init(); // init only if not already done
             getRecs(g_loc, function (resp)
             {
                 onGotRecs(resp);
-                BP_ERROR.logdebug('onAutoFilLStatus@bp_cs.js: autoFillable = ' + MOD_FILL.info().autoFillable() + " or " + BP_BOOT.isAutoFillable());
+                BP_ERROR.logdebug('onAutoFillable@bp_cs.js: autoFillable = ' + MOD_FILL.info().autoFillable() + " or " + BP_BOOT.isAutoFillable());
                 sendResp(
                 {
                     autoFillable:MOD_FILL.info().autoFillable(),
@@ -2529,8 +2530,8 @@
                 case 'cm_clickBP':
                     onClickBP(req, sender, sendResp);
                     break;
-                case 'cm_autoFillStatus':
-                    onAutoFillStatus(req, sender, sendResp);
+                case 'cm_autoFillable':
+                    onAutoFillable(req, sender, sendResp);
                     return true; // allows us to return without calling sendResp.
                     break;
                 case 'cm_autoFill':
@@ -2600,7 +2601,7 @@
             BP_DLL.onClickComm = onClickComm;
             BP_DLL.onDllLoad = onDllLoad;
             BP_DLL.onClickBP = onClickBP;
-            BP_DLL.onAutoFillStatus = onAutoFillStatus;
+            BP_DLL.onAutoFillable = onAutoFillable;
         }
 
         return Object.freeze(

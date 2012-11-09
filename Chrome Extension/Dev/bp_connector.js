@@ -41,7 +41,7 @@ function BP_GET_CONNECT(g)
     /** @constant */
     var cm_clickBP      = "cm_clickBP",  // Extension button clicked/activated
         cm_getFrameUrl  = "cm_getFrameUrl", //Called by panel.js to determine active frame.
-        cm_autoFillStatus="cm_autoFillStatus",
+        cm_autoFillable="cm_autoFillable", // get or put autoFillable Status
         cm_autoFill     = "cm_autoFill",
         cm_getRecs      = "cm_recs",     // Represents a getDB command
         cm_loadDB       = "cm_load",
@@ -320,6 +320,12 @@ function BP_GET_CONNECT(g)
             postMsgToMothership({cm:cm_closed, loc:loc});   
         }
         
+        function putAutoFillable(rq)
+        {
+            rq.cm = cm_autoFillable;
+            postMsgToMothership(rq);
+        }
+        
         //Assemble the interface    
         var iface = {};
         Object.defineProperties(iface, 
@@ -342,7 +348,7 @@ function BP_GET_CONNECT(g)
             // MOD_PROTO
             cm_clickBP: {value: cm_clickBP},
             cm_getFrameUrl:{value:cm_getFrameUrl},
-            cm_autoFillStatus:{value:cm_autoFillStatus},
+            cm_autoFillable:{value:cm_autoFillable},
             cm_autoFill:{value:cm_autoFill},
             cm_getRecs: {value: cm_getRecs},
             cm_loadDB:  {value: cm_loadDB},
@@ -368,7 +374,8 @@ function BP_GET_CONNECT(g)
             sendDelActn: {value: sendDelActn},
             getRecs: {value: getRecs},
             getDBPath: {value: getDBPath},
-            panelClosed: {value: panelClosed}
+            panelClosed: {value: panelClosed},
+            putAutoFillable: {value: putAutoFillable}
         });
         Object.freeze(iface);
 

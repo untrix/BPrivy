@@ -68,6 +68,8 @@ function BP_GET_TRAITS(g)
         CT_BP_FN = CT_BP_PREFIX + 'fn',
         CT_BP_PASS = CT_BP_PREFIX + fn_pass,
         CT_BP_USERID = CT_BP_PREFIX + fn_userid;
+        
+    var dom_topLevelTags = ['body', 'html', 'head', 'frameset'];
 
     var FT = Object.freeze({
         text: 1,
@@ -166,7 +168,9 @@ function BP_GET_TRAITS(g)
         CT_TEXT_PLAIN: {value: CT_TEXT_PLAIN},
         CT_BP_PREFIX: {value: CT_BP_PREFIX},
         CT_BP_USERID: {value: CT_BP_USERID},
-        CT_BP_PASS: {value: CT_BP_PASS}
+        CT_BP_PASS: {value: CT_BP_PASS},
+        dom_topLevelTags: {value: dom_topLevelTags},
+        isTopLevelTag: {value: function(elName) {return (dom_topLevelTags.indexOf(elName) !== -1);} }
     }); Object.freeze(iface);
     
     BP_ERROR.log("constructed mod_traits");
