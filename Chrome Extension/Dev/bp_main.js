@@ -497,14 +497,19 @@ var BP_MAIN = (function()
         function onFocus(ev)
         {
             var tabInfo = makeTabInfo(ev.detail.tabId);
-            BP_ERROR.logdebug('onFocus@MOD_WIN: tabId = ' + ev.detail.tabId + ' url = ' + ev.detail.frameUrl);
+            BP_ERROR.logdebug('onFocus@MOD_WIN: ' + JSON.stringify(ev.detail));
             if (tabInfo) {tabInfo.lastFocused = ev.detail;}
         }
         
         function onUnload(ev)
         {
-            BP_ERROR.logdebug('onUnload@MOD_WIN: tabId = ' + ev.detail.tabId + ' url = ' + ev.detail.url);
-            delete g_tabs[ev.detail.tabId];
+            BP_ERROR.logdebug('onUnload@MOD_WIN: ' + JSON.stringify(ev.detail));
+            if (ev.detail.isTopLevel) {
+                delete g_tabs[ev.detail.tabId];
+            }
+            else {
+                delete g_tabs[ev.detail.tabId].autoFillable[ev.detail.frameUrl];
+            }
         }
         
         function onAutoFillable(ev)
@@ -521,7 +526,6 @@ var BP_MAIN = (function()
                 }
             }
         }
-
         
         function getLastFocused(tabId) {
             return g_tabs[tabId] ? g_tabs[tabId].lastFocused : BP_COMMON.EMPTY_OBJECT;

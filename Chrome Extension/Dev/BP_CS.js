@@ -943,7 +943,7 @@
         };
         FillInfo.prototype.autoFillable = function ()
         {
-            return (this.signin.length()>0) && this.signin.get(0).isVisible();
+            return Boolean((this.signin.length()>0) && this.signin.get(0).isVisible());
         };
         FillInfo.prototype.hook = function ()
         {
@@ -2050,7 +2050,7 @@
             inp.value = val;
             trigger(inp, 'input');
             inp.blur();
-            inp.focus();
+            //inp.focus(); // refocusing causes the field to clear on some websites.
             // trigger(inp, 'change');
         }
         

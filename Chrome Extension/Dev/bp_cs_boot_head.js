@@ -17,8 +17,10 @@ var BP_BOOT = (function()
         g_uReg2= /(log|sign)(in|on)|signup|(user|account)(id|name|number|email)|^(id|user|uid|uname)$|identity|authentication/i,
         g_fReg2 = /(log|sign)(in|on)|^(auth)$|register|registration|authentication|enroll|join|ssoform|regform|(create)(user|account)/i,
         g_bTopLevel = (window.top === window.self),
+        g_browsingContextContainers = ['iframe', 'object', 'embed'],
+        g_mediaElements = ['img', 'audio', 'video'],
         g_autoFillable = false;
-    
+
     function filterUntrix(els)
     {
         if (els) {
@@ -102,11 +104,14 @@ var BP_BOOT = (function()
             {
                 var bRlvnt = false, i, node,
                     added=[], removed=[],
-                    nodes=mutation.addedNodes || [];
+                    nodes=mutation.addedNodes || [],
+                    elName;
                 for (i=nodes.length-1; i>=0; --i)
                 {
                     node = nodes[i];
-                    if ((node.nodeType===node.ELEMENT_NODE)&&(node.localName!=='iframe')&&((!node.dataset) || (!node.dataset.untrix)))
+                    elName = node.localName;
+                    if ((node.nodeType===node.ELEMENT_NODE)&&(g_browsingContextContainers.indexOf(elName)===-1)&&
+                        ((!node.dataset) || (!node.dataset.untrix)))
                     {
                         if ((!options) || (!options.tagName) || (options.tagName === node.localName)) {
                             bRlvnt = true;
@@ -121,7 +126,8 @@ var BP_BOOT = (function()
                     for (i=nodes.length-1; i>=0; --i)
                     {
                         node = nodes[i];
-                        if ((node.nodeType===node.ELEMENT_NODE)&&(node.localName!=='iframe')&&((!node.dataset) || (!node.dataset.untrix)))
+                        if ((node.nodeType===node.ELEMENT_NODE)&&(g_browsingContextContainers.indexOf(elName)===-1)&&
+                            ((!node.dataset) || (!node.dataset.untrix)))
                         {
                             if ((!options.tagName) || (options.tagName === node.localName)) {
                                 bRlvnt = true;
@@ -183,7 +189,7 @@ var BP_BOOT = (function()
 
     function onUnload(ev)
     {
-        chrome.extension.sendRequest({cm:'cm_onUnload', url:document.location.href});
+        chrome.extension.sendRequest({cm:'cm_onUnload', isTopLevel:g_bTopLevel, frameUrl:document.location.href});
     }
 
     return Object.freeze(

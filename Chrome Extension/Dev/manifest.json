@@ -9,11 +9,11 @@
 	     "128": "icons/icon128.png",
   	     "16": "icons/icon16.png"
 	   },
-  "permissions": ["contextMenus", "tabs", "webRequest", "notifications"],
+  "permissions": ["contextMenus", "tabs", "webRequest", "webNavigation", "notifications"],
   "background": {"page": "bp_Main.html"},
   "content_scripts": [
     {
-    "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
+    "matches": ["http://*/*", "https://*/*", "ftp://*/*"],
     "exclude_matches": ["*://chrome.google.com/webstore*"],
     "js": ["bp_cs_boot.cat.js"],
     "run_at": "document_idle",

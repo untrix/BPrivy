@@ -42,7 +42,7 @@ function BP_GET_COMMON(g)
         PROTO_HTTPS = "https:",
         EMPTY_OBJECT = Object.freeze({}),
         EMPTY_ARRAY  = Object.freeze([]),
-        PROTO_SUPPORTED = ['http:', 'https:', 'ftp:', 'file:'];
+        PROTO_SUPPORTED = ['http:', 'https:', 'ftp:'];
     /** Global url regexpression used for all invocations of parseURL. Remember that lastIndex prop. and flags are shared ! */
     //var g_url_regexp = /^(?:([A-Za-z]+):)(\/\/)?([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
     var g_url_regexp = /^(?:([A-Za-z]+):\/\/)(?:([0-9.\-A-Za-z]+)(?::(\d+))?)?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;

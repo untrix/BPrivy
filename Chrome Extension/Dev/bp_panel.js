@@ -187,7 +187,8 @@
             destroy: destroy,
             onClosed: onClosed,
             userClosed: userClosed,
-            autoFillable: function(b) {m_bAutoFillable = b;}
+            putAutoFillable: function(b) {m_bAutoFillable = Boolean(b);},
+            isAutoFillable: function () {return Boolean(m_bAutoFillable);}
         });
     }());
       
@@ -231,11 +232,12 @@
             MOD_PANEL.create();
         }
         
-        function heuristicFrameUrl(tabId, tabUrl)
+        function heuristicFrameUrl(tabId, tabUrl )
         {
             var lastFocused = BP_MAIN.MOD_WIN.getLastFocused(tabId),
                 frameUrl = lastFocused ? lastFocused.frameUrl : undefined,
-                autoFillable;
+                autoFillable, fillableUrls,
+                fillableUrl, i, j, found;
             
             if (frameUrl) 
             {
@@ -257,10 +259,11 @@
                         }
                         else {
                             // top-window is not autofillable. Check if any other frame is autofillable.
-                            var frames = Object.keys(autoFillable);
-                            if (frames.length) {
-                                BP_ERROR.logdebug('heuristicFrameUrl: force returning first autoFillable frameUrl = ' + frames[0]);
-                                return frames[0]; // pick the first autofillabel frame.
+                            fillableUrls = Object.keys(autoFillable);
+
+                            if (fillableUrls.length) {
+                                BP_ERROR.logdebug('heuristicFrameUrl: force returning first autoFillable frameUrl = ' + fillableUrl);
+                                return fillableUrls[0];
                             }
                             else {
                                 BP_ERROR.logdebug('heuristicFrameUrl: No autofillable frame found. returning top-level frameUrl = ' + frameUrl);
@@ -275,7 +278,7 @@
                 return tabUrl;
             }
         }
-        
+
         function onLoad()
         {
             document.body.style.margin = '2px';
@@ -293,17 +296,21 @@
 
                 recsResp = getRecs(g_loc);
                 g_site = recsResp.db ? recsResp.db.site : undefined;
-                BP_ERROR.logdebug('onLoad@bp_panel.js: site url is ' + g_site);
-                MOD_PANEL.autoFillable(BP_MAIN.MOD_WIN.getAutoFillable(g_tabId)[g_frameUrl]);
+
+                //BP_ERROR.logdebug('onLoad@bp_panel.js: site url is ' + g_site);
+                MOD_PANEL.putAutoFillable(BP_MAIN.MOD_WIN.getAutoFillable(g_tabId)[g_frameUrl]);
                 cbackShowPanel(recsResp);
 
-                //chrome.tabs.update(g_tabId, {highlighted:true}, function(){});
-                /*if ( (BP_COMMON.isSupportedScheme(g_loc.protocol)) &&
+                // the following is needed to perform an on-demand scan on the page to catch
+                // those cases where a form may have just been displayed but not trigger a
+                // mutation event (happens if the element existed from the start but was
+                // originally hidden, and later displayed).
+                if ( (BP_COMMON.isSupportedScheme(g_loc.protocol)) &&
                      (g_loc.hostname !== 'chrome.google.com') )// This is a very troublesome URL.
                 {
                     BP_PLAT.sendMessage(g_tabId, g_frameUrl, {cm:'cm_autoFillable'}, function(resp2)
                     {
-                        var loc, bReload, site;
+                        var loc, bRepaint, bReload, site;
                         BP_ERROR.logdebug('onLoad@bp_panel.js: received clickBP response: ' + JSON.stringify(resp2));
                         if (!resp2) 
                         {
@@ -318,22 +325,25 @@
                            // loc = BP_COMMON.parseURL(g_frameUrl);
                            // bReload = true;
                         // }
-                        MOD_PANEL.autoFillable(Boolean(resp2.autoFillable));
+                        if (MOD_PANEL.isAutoFillable() !== Boolean(resp2.autoFillable)) {
+                            MOD_PANEL.putAutoFillable(Boolean(resp2.autoFillable));
+                            bRepaint = true;;
+                        }
 
-                        if (!bReload && resp2.autoFillable) {
+                        if (!bReload && bRepaint) {
                             BP_ERROR.logdebug('onLoad@bp_panel.js: reloading');
                             // TODO: Instead of reload this should simply be 
-                            // MOD_PANEL.makeAutoFillable() - but we don't have that
+                            // MOD_PANEL.makeAutoFillable(true/false) - but we don't have that
                             // API yet.
                             cbackShowPanel(recsResp);
                         }
-                        else if (bReload) {
+                        /*else if (bReload) {
                             BP_ERROR.logdebug('onLoad@bp_panel.js: refetching');
                             resp3 = getRecs(loc);
                             cbackShowPanel(resp3);
-                        }
+                        }*/
                     });
-                }*/
+                }
             });
         }
 

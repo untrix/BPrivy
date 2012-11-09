@@ -163,9 +163,9 @@
             // loadDll();
         // }
     });
-    if (window.top === window.self) {
+    //if (window.top === window.self) {
         window.addEventListener('unload', BP_BOOT.onUnload);
-    }
+    //}
     if (document.hasFocus())  {BP_BOOT.onFocus();}
     window.addEventListener('focus', BP_BOOT.onFocus);
     if (BP_BOOT.scan(document)) {
