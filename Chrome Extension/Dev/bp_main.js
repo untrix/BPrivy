@@ -330,7 +330,7 @@ var BP_MAIN = (function()
                     break;
                 case cm_getRecs:
                     BPError.push("GetRecs");
-                    chrome.pageAction.show(sender.tab.id);
+                    //chrome.pageAction.show(sender.tab.id);
                     funcSendResponse(getRecs(rq.loc));
                     break;
                 case cm_loadDB:

@@ -62,28 +62,77 @@ var BP_BOOT = (function()
         }        return Boolean(el || els.length);
     }
 
+    function hasRelevantNodes(nodes)
+    {
+        var  i, node, elName;
+        for (i=nodes.length-1; i>=0; --i)
+        {
+            node = nodes[i];
+            elName = node.localName;
+            if ((node.nodeType===node.ELEMENT_NODE)&&(g_browsingContextContainers.indexOf(elName)===-1)&&
+                ((!node.dataset) || (!node.dataset.untrix)))
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    function isRelevant(mutation, options)
+    {
+        var bRlvnt = false,
+            added=[], removed=[],
+            elName;
+
+        bRlvnt = hasRelevantNodes(mutation.addedNodes || []);
+
+        if ((!bRlvnt) && options && options.bRemoved)
+        {
+            bRlvnt = hasRelevantNodes(mutation.removedNodes || []);
+        }
+
+        return bRlvnt;
+    }
+
     function observe(doc, callback, options)
     {
-        var observer = new WebKitMutationObserver(onMutation);
-        options = options || {};
+        var observer = new WebKitMutationObserver(onMutation),
+            lastBatchTime=0,// used only in batch-mode
+            numMutationEvents=0,// used only in batch-mode
+            timerHandle,// used only in batch-mode
+            batchInterval = options.batchInterval || 500;// used only in batch-mode
+
+        // Take over the options object.
+        options = Object.freeze(options || {});
         
         observer.observe(doc,
-            {
-                childList:true,
-                subtree:true
-                // attributes:true,
-                // attributeFilter: ['offsetWidth', 'offsetHeight', 'style', 'class', 'hidden', 'display'],
-                // attributeOldValue: true
-            });
+        {
+            childList:true,
+            subtree:true
+            // attributes:true,
+            // attributeFilter: ['offsetWidth', 'offsetHeight', 'style', 'class', 'hidden', 'display'],
+            // attributeOldValue: true
+        });
+
+        function onTimeout()
+        {
+            console.log('onTimeout@bp_cs_boot.js: numMutationEvents='+numMutationEvents);
+            lastBatchTime = Date.now();
+            timerHandle = 0;
+            numMutationEvents = 0;
+            callback({}, observer);
+        }
 
         function onMutation(mutations, observer)
         {
             //console.log("onMutation entered:\n");
-            var i, n, bCall, mutes=[];
-            
+            var i, n, bCall, mutes=[], 
+                now=0;//Used in batch-mode only.
+
             for (i=0, n=mutations.length; i<n; i++)
             {
-                if (isRelevant(mutations[i]))
+                if (isRelevant(mutations[i], options))
                 {
                     bCall = true;
                     if (options.filterMutes) {
@@ -95,53 +144,34 @@ var BP_BOOT = (function()
                 }
             }
 
-            if (bCall) {
-                console.log("Mutation observed:\n");
-                callback(options.filterMutes?mutes:mutations, observer);
-            }
-
-            function isRelevant(mutation)
+            if (bCall) 
             {
-                var bRlvnt = false, i, node,
-                    added=[], removed=[],
-                    nodes=mutation.addedNodes || [],
-                    elName;
-                for (i=nodes.length-1; i>=0; --i)
+                if (options.doBatch)
                 {
-                    node = nodes[i];
-                    elName = node.localName;
-                    if ((node.nodeType===node.ELEMENT_NODE)&&(g_browsingContextContainers.indexOf(elName)===-1)&&
-                        ((!node.dataset) || (!node.dataset.untrix)))
-                    {
-                        if ((!options) || (!options.tagName) || (options.tagName === node.localName)) {
-                            bRlvnt = true;
-                            break;
-                        }
+                    numMutationEvents++;
+                    now = Date.now();
+                    if (timerHandle) {
+                        return;
+                    }
+                    else if ((now - lastBatchTime) < batchInterval) {
+                        timerHandle = window.setTimeout(onTimeout, batchInterval);
+                        return;
+                    }
+                    else {
+                        lastBatchTime = now;
+                        console.log("Handling Mutation in batch mode")
                     }
                 }
-                
-                if ((!bRlvnt) && options && options.bRemoved)
+                else
                 {
-                    nodes=mutation.removedNodes ||[];
-                    for (i=nodes.length-1; i>=0; --i)
-                    {
-                        node = nodes[i];
-                        if ((node.nodeType===node.ELEMENT_NODE)&&(g_browsingContextContainers.indexOf(elName)===-1)&&
-                            ((!node.dataset) || (!node.dataset.untrix)))
-                        {
-                            if ((!options.tagName) || (options.tagName === node.localName)) {
-                                bRlvnt = true;
-                                break;
-                            }
-                        }
-                    }
+                    console.log("Handling Mutation in serial mode");    
                 }
 
-                return bRlvnt;
+                callback(options.doBatch ? {} : (options.filterMutes?mutes:mutations), observer);
             }
         }
     }
-    
+
     function amDestFrame(req)
     {
         var activeElement;

@@ -38,7 +38,7 @@ function BP_GET_PLAT(gg)
         chrome.tabs.sendMessage(tab.id, req,
         function(resp)
         {
-            if (!resp) 
+            /*if (!resp) 
             { // Set badge text
                 // TODO: Remove badge related code when we're sure that its not needed
                 switch (BP_COMMON.getScheme(tab.url))
@@ -55,11 +55,12 @@ function BP_GET_PLAT(gg)
                         break;
                 }
             }
-            else
+            else*/
+           if (resp)
             { // Unset badge text
                 // TODO: Remove badge related code when we're sure that its not needed
-                chrome.browserAction.setBadgeText({text:"", tabId:tab.id});
-                chrome.browserAction.setTitle({title:"", tabId:tab.id});
+                //chrome.browserAction.setBadgeText({text:"", tabId:tab.id});
+                //chrome.browserAction.setTitle({title:"", tabId:tab.id});
                 MOD_WIN.clickResp(tab.url);// MOD_WIN is a vestige at this time.
             }
         });
@@ -80,8 +81,8 @@ function BP_GET_PLAT(gg)
         var menu_id = chrome.contextMenus.create(menuProperties);
         //BP_ERROR.loginfo("Menu Item ID " + menu_id + " Created");
     
-        chrome.browserAction.onClicked.addListener(bpClick);
-        chrome.pageAction.onClicked.addListener(bpClick);
+        //chrome.browserAction.onClicked.addListener(bpClick);
+        //chrome.pageAction.onClicked.addListener(bpClick);
        
         g.contextMenuID = menu_id;
         MOD_WIN = mod_win;

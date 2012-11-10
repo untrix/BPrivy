@@ -34,12 +34,12 @@ if (BP_BOOT.scan(document))
 }
 else 
 {
-    BP_BOOT.observe(document, function(mutations, observer)
-    {
+    BP_BOOT.observe(document, function(_, observer)
+    {   "use strict";
         if ((!BP_DLL.bLoaded) && BP_BOOT.scan(document)) {
             observer.disconnect();
             BP_DLL.onDllLoad();
             BP_DLL.bLoaded = true;
         }
-    });
+    },{doBatch:true});
 }

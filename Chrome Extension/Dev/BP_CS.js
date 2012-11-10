@@ -2095,7 +2095,7 @@
         {
             if (!g_bInited) {try
             {
-                BP_BOOT.observe(g_doc, MOD_CS.onMutation, {bRemoved:true, filterMutes:true});
+                BP_BOOT.observe(g_doc, MOD_CS.onMutation, {bRemoved:true, doBatch:true});
                 addEventListener(g_doc, 'change', onChange);
                 addEventListener(g_doc, 'keydown', onEnter);
                 //addEventListener(g_doc, 'click', onClick);
@@ -2259,7 +2259,7 @@
         function setupDNDWatchers(ctx)
         {
             var $el;
-            $el = $(ctx).filter(function(){return this.webkitMatchesSelector(MOD_FILL.g_uSel+",input[type=password]:not([data-untrix])");});
+            $el = $(ctx).filter(function(){return (this.nodeType===this.ELEMENT_NODE) && this.webkitMatchesSelector(MOD_FILL.g_uSel+",input[type=password]:not([data-untrix])");});
             //$el = $el.add($(ctx).filter(':password:not([data-untrix])'));
             $el = $el.add($(MOD_FILL.g_uSel+",input[type=password]:not([data-untrix])", ctx));
 
@@ -2296,7 +2296,7 @@
             if (!g_bInited) {try
             {
                 setupDNDWatchers();
-                BP_BOOT.observe(g_doc, onMutation, {tagName:'input', filterMutes:true});
+                BP_BOOT.observe(g_doc, onMutation, {filterMutes:true});
                 g_bInited=true;
             }
             catch (ex)
@@ -2452,7 +2452,7 @@
         /**
          *  Invoked when a mutation event is received. 
          */
-        function onMutation(mutations, observer)
+        function onMutation(_/*mutations*/, __/*observer*/)
         {
             MOD_FILL.scan(g_doc);
             MOD_FILL.setMutationScanned();
@@ -2554,6 +2554,7 @@
                 com.tabindex = -1;// ensures that the command won't get sequentially focussed.
                 com.id = "com-untrix-uwallet-click";
                 com.addEventListener('click', func);
+                com.dataset.untrix = true;
                 head.insertBefore(com, head.firstChild);
                 
                 console.log("bp_cs: Instrumented Command");

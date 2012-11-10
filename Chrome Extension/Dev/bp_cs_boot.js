@@ -86,6 +86,7 @@
             com.tabindex = -1; // ensures that the command won't get sequentially focused.
             com.id = eidCommand;
             com.addEventListener('click', func);
+            com.dataset.untrix = true;
             head.insertBefore(com, head.firstChild);
             console.log("Instrumented command");
         }
@@ -172,13 +173,13 @@
         loadDll();
     }
     else {
-        BP_BOOT.observe(document, function(mutations, observer)
+        BP_BOOT.observe(document, function(_/*mutations*/, observer)
         {
             if ((!BP_DLL.bLoaded) && BP_BOOT.scan(document)) {
-                if (observer) {observer.disconnect();}
+                observer.disconnect();
                 loadDll();
                 BP_DLL.bLoaded = true;
             }
-        });
+        },{doBatch:true});
     }
 }());
