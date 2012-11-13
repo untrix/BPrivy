@@ -101,7 +101,7 @@ var BP_BOOT = (function()
             lastBatchTime=0,// used only in batch-mode
             numMutationEvents=0,// used only in batch-mode
             timerHandle,// used only in batch-mode
-            batchInterval = options.batchInterval || 500;// used only in batch-mode
+            batchInterval = options.batchInterval || 1000;// used only in batch-mode
 
         // Take over the options object.
         options = Object.freeze(options || {});
@@ -154,7 +154,7 @@ var BP_BOOT = (function()
                         return;
                     }
                     else if ((now - lastBatchTime) < batchInterval) {
-                        timerHandle = window.setTimeout(onTimeout, batchInterval);
+                        timerHandle = window.setTimeout(onTimeout, batchInterval + lastBatchTime - now);
                         return;
                     }
                     else {

@@ -2367,10 +2367,13 @@
                 delTempRec: MOD_CS.delTempRec,
                 autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined), 
                 dbName:MOD_DB.dbName,
-                dbPath:MOD_DB.dbPath
+                dbPath:MOD_DB.dbPath,
+                openPath: BP_CONNECT.openPath
+                // onBlur: close
             };
             m_panel = w$exec(cs_panel_wdt, ctx);
             m_id_panel = m_panel.id;
+            //window.setTimeout(close, 30000);
             BP_COMMON.delProps(ctx); // Clear DOM refs in the ctx to aid GC
         }
         

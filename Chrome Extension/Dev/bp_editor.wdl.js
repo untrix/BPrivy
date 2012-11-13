@@ -104,15 +104,16 @@ function BP_GET_EDITOR(g)
     {
         var loc = ctx.loc,
             host = loc.hostname,
+            site_url = MOD_COMMON.locToURL(loc),
             i = ctx.panel ? ctx.panel.dNIdx : undefined; //ctx.editor ? ++(ctx.editor.i): undefined
         return {
             tag:'a',
-            attr:{ href:"http://"+host, target:"_blank" },
+            attr:{ href:site_url, target:"_blank" },
             addClass: "com-untrix-dNodeTitle",
-            iface:{ "url":"http://"+host },
+            iface:{ "site_url":site_url },
             on:{ click: function (e)
             {
-                //window.open(this.url);
+                //window.open(this.site_url);
                 //e.preventDefault();
                 e.stopPropagation();
             }},
@@ -511,6 +512,27 @@ function BP_GET_EDITOR(g)
         }}
     });
     
+    /**
+     * Settings/Options page link 
+     */
+    /*function LinkButton(){}
+    LinkButton.wdt = function (w$ctx)
+    {
+        var url = w$ctx.ioItem ? w$ctx.ioItem.url : undefined;
+
+        return {
+        tag: 'a',
+        addClass: 'com-untrix-B',
+        attr:{ href:url,
+               target:"_blank", title:('Open page '+url) },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle', cursor:'auto' },
+            addClass:'icon-globe'
+            }]
+        };
+    };*/
+
     function IoItem () {}
     IoItem.wdi = function (w$ctx)
     {
@@ -518,17 +540,18 @@ function BP_GET_EDITOR(g)
             rec = acns? acns.curr: undefined,
             loc = w$ctx.loc,
             panel = w$ctx.panel,
-            bInp = w$ctx.io_bInp;
+            bInp = w$ctx.io_bInp,
+            url = rec.l ? MOD_CONNECT.L.prototype.toURL.apply(rec.l) : undefined;
             //autoFill = panel.autoFill;
         return {
         cons: IoItem,
         tag:'div', 
         //addClass: "span8",
         ctx:{ w$:{ ioItem:'w$el' } },
-        iface: { 'acns':acns, 'rec':rec, 'loc':loc, 'panel':panel, 'bInp':bInp },
+        iface: { 'acns':acns, 'rec':rec, 'loc':loc, 'url':url, 'panel':panel, 'bInp':bInp },
         on: {mousedown:stopPropagation},
             children:[
-            //TButton.wdt,
+            //LinkButton.wdt,
             bInp ? IItemP.wdt : OItemP.wdt,
             DButton.wdt
             ],

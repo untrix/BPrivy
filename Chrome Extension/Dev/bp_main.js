@@ -88,6 +88,20 @@ function BP_GET_NTNF_CNTR(g)
         }
     }
 
+    // is chrome specific.
+    function onTabUpdated( tabId, changeInfo, tab )
+    {
+        if (changeInfo.url) {
+            //BP_ERROR.logdebug('onTabUpdated@MOD_WIN: tabId = ' + tabId + ' url = ' + changeInfo.url);
+            // if the tab has navigated to another page, then delete all previous
+            // data.
+            var loc = BP_COMMON.parseURL(changeInfo.url);
+            if (loc && MEMSTORE.numTRecs(loc, true)) {
+                    BP_PLAT.showBadge({tabId:tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
+                }
+        }
+    }
+
     function init()
     {
         MOD_EVENTS = IMPORT(BP_MAIN.MOD_EVENTS); // Delayed bind.
@@ -96,7 +110,8 @@ function BP_GET_NTNF_CNTR(g)
         var scope = new BP_LISTENER.Scope('temp_' + dt_pRecord, dt_pRecord);
         var cback = new BP_LISTENER.CallbackInfo(onChange);
         //MEMSTORE.Event.listen('bp_change', scope, cback);
-        MOD_EVENTS.listen('bp_boot_loaded', new BP_LISTENER.CallbackInfo(onEvent));
+        chrome.tabs.onUpdated.addListener(onTabUpdated);
+        //MOD_EVENTS.listen('bp_boot_loaded', new BP_LISTENER.CallbackInfo(onEvent));
         MOD_EVENTS.listen('bp_saved_temp', new BP_LISTENER.CallbackInfo(onEvent));
     }
     
@@ -137,6 +152,8 @@ var BP_MAIN = (function()
         BP_PLAT = IMPORT(m);
     var registerMsgListener = IMPORT(m.registerMsgListener);
     var initScaffolding = IMPORT(m.initScaffolding);
+    /** @import-module-begin **/
+    var BP_CS_PLAT = g.BP_CS_PLAT;
     /** @import-module-begin **/
     m = g.BP_TRAITS;
     var dt_eRecord = IMPORT(m.dt_eRecord),
@@ -432,10 +449,15 @@ var BP_MAIN = (function()
                     //BP_ERROR.logdebug('onRequest@bp_main.js received ' + cm + ": " + JSON.stringify(rq));
                     break;
                 case 'cm_autoFillable':
+                BPError.push("cmAutoFillable");
                     rq.tabId = sender.tab.id;
                     MOD_EVENTS.dispatch('bp_autoFillable', rq);
                     //BPError.push("cmOnFocus");
                     //BP_ERROR.logdebug('onRequest@bp_main.js received ' + cm + ": " + JSON.stringify(rq));
+                    break;
+                case 'cm_openPath':
+                BPError.push("cmOpenPath");
+                    MOD_WIN.openPath(rq.path);
                     break;
                 default: // do nothing
             }
@@ -535,6 +557,21 @@ var BP_MAIN = (function()
             return g_tabs[tabId] ? g_tabs[tabId].autoFillable : BP_COMMON.EMPTY_OBJECT;
         }
         
+        function openPath (path)
+        {
+            var url = BP_CS_PLAT.getURL(path);
+            
+            chrome.tabs.query({url:url}, function(tabs)
+            {
+                if (tabs.length) {
+                    chrome.tabs.update(tabs[0].id, {active:true});
+                }
+                else {
+                    chrome.tabs.create({url:url, active:true});
+                }
+            });
+        }
+        
         chrome.tabs.onUpdated.addListener(onTabUpdated);
         chrome.tabs.onRemoved.addListener(onTabRemoved);        MOD_EVENTS.listen('bp_on_focus', new BP_LISTENER.CallbackInfo(onFocus));
         MOD_EVENTS.listen('bp_on_unload', new BP_LISTENER.CallbackInfo(onUnload));
@@ -545,7 +582,8 @@ var BP_MAIN = (function()
             clickReq: clickReq,
             clickResp: clickResp,
             getLastFocused: getLastFocused,
-            getAutoFillable: getAutoFillable
+            getAutoFillable: getAutoFillable,
+            openPath: openPath
         });
     }());
 

@@ -108,12 +108,14 @@ function BP_GET_CONNECT(g)
                 value: (loc.hostname || undefined)},
             P: {enumerable:true,
                 value: (DICT_TRAITS[dt].url_path && loc.pathname && (loc.pathname !== "/"))?loc.pathname:undefined}
-            //U = loc.href; Was introduced for CSV exports. Removed later for performance.
+            //U: {enumerable:true,
+                //value: loc.href}
         });
         Object.seal(this);
     }
     L.prototype.equal = function(l2)
     {
+        // scheme/protocol is left out on purpose
         return ((this.H===l2.H) && (this.P===l2.P));
     };
     /**
@@ -121,7 +123,27 @@ function BP_GET_CONNECT(g)
      */
     L.prototype.toLoc = function ()
     {
-        return {hostname:this.H, pathname:(this.P||"/")};
+        if (this.U) {
+            return BP_COMMON.parseURL(this.U);
+        }
+        else {
+            return {hostname:this.H, pathname:(this.P||"/")};
+        }
+    };
+    L.prototype.toURL = function ()
+    {
+        var url;
+        if (this.U) {return this.U;}
+        
+        url = "http://";
+        if (this.H) {
+            url += this.H;
+        }
+        if (this.P) {
+            url += this.P;
+        }
+        
+        return url;
     };
 
     function newL (loc, dt) { 
@@ -326,6 +348,11 @@ function BP_GET_CONNECT(g)
             postMsgToMothership(rq);
         }
         
+        function openPath(path)
+        {
+            postMsgToMothership({cm:'cm_openPath', path:path});
+        }
+        
         //Assemble the interface    
         var iface = {};
         Object.defineProperties(iface, 
@@ -336,6 +363,7 @@ function BP_GET_CONNECT(g)
             dt_etld:    {value: dt_etld},
             DICT_TRAITS: {value: DICT_TRAITS},
             newL: {value: newL},
+            L: {value: L},
             lToLoc: {value: function(l){return L.prototype.toLoc.apply(l);}},
             getDTProto: {value:getDTProto},
             newEAction: {value: newEAction},
@@ -375,7 +403,8 @@ function BP_GET_CONNECT(g)
             getRecs: {value: getRecs},
             getDBPath: {value: getDBPath},
             panelClosed: {value: panelClosed},
-            putAutoFillable: {value: putAutoFillable}
+            putAutoFillable: {value: putAutoFillable},
+            openPath: {value: openPath}
         });
         Object.freeze(iface);
 

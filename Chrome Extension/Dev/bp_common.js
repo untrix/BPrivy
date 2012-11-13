@@ -73,7 +73,7 @@ function BP_GET_COMMON(g)
 
         if (segs) 
         {
-            var loc = {};
+            var loc = {href:url};
             //['url', 'scheme', 'slash', 'host', 'port', 'path', 'query', 'hash']
             if (segs[1]) { loc.protocol = segs[1] + ":";} // ':' is appended in order to stay consistent with Google Chrome
             if (segs[2]) { loc.hostname = segs[2];}
@@ -89,6 +89,35 @@ function BP_GET_COMMON(g)
             }
             else {return loc;} // Without protocol and hostname we deem this string a non-URL for our purposes.
         }
+    }
+    
+    function locToURL(loc)
+    {
+        var url;
+        if (loc.href) {return loc.href;}
+        
+        url = "";
+        if (!loc) {return;}
+        if (loc.protocol) {
+            url += (loc.protocol + "//");
+        }
+        if (loc.hostname)  {
+            url += loc.hostname;
+        }
+        if (loc.port) {
+            url += (":" + loc.port);
+        }
+        if (loc.pathname) {
+            url += (loc.pathname);
+        }
+        if (loc.search) {
+            url += ("?" + loc.search);
+        }
+        if (loc.hash) {
+            url += ("#" + loc.hash);
+        }
+        
+        return url;
     }
     
     function parseURL2(url)
@@ -285,6 +314,7 @@ function BP_GET_COMMON(g)
         toJson: {value: toJson},
         isSupportedScheme:{value:isSupportedScheme},
         parseURL: {value: parseURL},
+        locToURL: {value: locToURL},
         getScheme: {value: getScheme},
         stripQuotes: {value: stripQuotes},
         encrypt: {value: encrypt},

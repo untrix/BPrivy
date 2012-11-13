@@ -307,7 +307,8 @@ function BP_GET_WDL (g)
         {
             var isVisible;
             
-            ev.stopPropagation(); ev.preventDefault();
+            ev.stopPropagation(); 
+            ev.preventDefault();
             
             if (this.panel.itemList) {
                 isVisible = this.panel.itemList.toggle();
@@ -358,10 +359,14 @@ function BP_GET_WDL (g)
     function SButton(){}
     SButton.wdt = function (w$ctx)
     {
+        var panel = w$ctx.panel;
+
         return {
         tag: 'a',
+        on:{ click:SButton.prototype.onClick },
         attr:{ class:css_class_xButton, href:BP_CS_PLAT.getURL("/bp_manage.html"),
                target:"_blank", title:'Open settings page' },
+        iface:{ panel:panel },
         css:{ width:'20px' },
             children:[
             {tag:"i",
@@ -370,6 +375,15 @@ function BP_GET_WDL (g)
             }]
         };
     };
+    SButton.prototype = w$defineProto(SButton,
+    {
+        onClick: {value: function (e)
+        {
+            e.stopPropagation(); // We don't want the enclosing web-page to interefere
+            e.preventDefault(); // Causes event to get cancelled if cancellable
+            this.panel.openPath('/bp_manage.html');
+        }}
+    });
 
     /**
      * Panel Dismiss/Close button - 'x' button 
@@ -661,7 +675,8 @@ function BP_GET_WDL (g)
     {
         var iHist=w$ctx.w$rec,
             rec = iHist? iHist.curr: undefined,
-            loc = w$ctx.loc,
+            recLoc = (rec  && rec.l) ? BP_CONNECT.lToLoc(rec.l) : undefined,
+            loc = recLoc || w$ctx.loc,
             panel = w$ctx.panel,
             bInp = w$ctx.io_bInp,
             autoFill = panel.autoFill,
@@ -675,7 +690,7 @@ function BP_GET_WDL (g)
         ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.prototype.toggleIO },
         iface: { rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec,
                  isNewItem:isNewItem, itemList:itemList },
-        on: {mousedown:stopPropagation},
+        on: {mousedown:stopPropagation}, // Needed to allow dragging.
             children:[
             FButton.wdt,
             TButton.wdt,
@@ -694,7 +709,8 @@ function BP_GET_WDL (g)
                 oI = this.oItem,
                 ctx={ioItem:this, autoFill:this.panel.autoFill},
                 res,
-                self = this;
+                self = this,
+                panel = this.panel;
             if (iI)
             { // Create output element
                 res = iI.checkInput();
@@ -714,12 +730,16 @@ function BP_GET_WDL (g)
                     iI.saveInput(function(resp)
                     {
                         if ((resp.result===true)) {
-                            if (self.isTRec) {self.deleteRecord();}
-                            self.panel.reload();
+                            
+                            if (self.isTRec) {
+                                // will destroy the self object.
+                                self.deleteRecord();
+                            }
+                            panel.reload();
                         }
                         else {
                             BP_ERROR.warn(resp.err);
-                            self.panel.reload();
+                            panel.reload();
                         }
                     });
                 }
@@ -866,17 +886,21 @@ function BP_GET_WDL (g)
             origCtx = BP_COMMON.copy2(ctx, {}),
             dbName = ctx.dbName,
             showRecs = (UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)&&dbName),
-            popup = ctx.popup;
+            popup = ctx.popup,
+            openPath = ctx.openPath,
+            onBlur = ctx.onBlur;
         
         return {
         cons:Panel, // static prototype object.
         tag:"article",
-        attr:{ id:eid_panel, 'data-untrix':true },
+        attr:{ id:eid_panel, 'data-untrix':true/*, tabindex:-1*/ },
         css: popup ? {border:"none"} : { position:'fixed', top:'0px', right:'0px', padding:'4px', 'border-radius':'4px'},
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:loc },
+        //on:{ 'blur': onBlur },
         iface:{ reload:reload, id:eid_panel, autoFill:autoFill, onClosed:onClosed,
-                saveRec:saveRec, delRec:delRec, delTempRec:delTempRec, origCtx:origCtx },
+                saveRec:saveRec, delRec:delRec, delTempRec:delTempRec, origCtx:origCtx,
+                openPath:openPath },
 
             // Create children
             children:[
