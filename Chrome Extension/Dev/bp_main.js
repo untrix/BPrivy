@@ -501,7 +501,7 @@ var BP_MAIN = (function()
 
         function onTabRemoved( tabId )
         {
-            BP_ERROR.logdebug('onTabRemoved@MOD_WIN: tabId = ' + tabId );
+            //BP_ERROR.logdebug('onTabRemoved@MOD_WIN: tabId = ' + tabId );
             delete g_tabs[tabId];
         }
         
@@ -509,7 +509,7 @@ var BP_MAIN = (function()
         function onTabUpdated( tabId, changeInfo, tab )
         {
             if (changeInfo.url) {
-                BP_ERROR.logdebug('onTabUpdated@MOD_WIN: tabId = ' + tabId + ' url = ' + changeInfo.url);
+                //BP_ERROR.logdebug('onTabUpdated@MOD_WIN: tabId = ' + tabId + ' url = ' + changeInfo.url);
                 // if the tab has navigated to another page, then delete all previous
                 // data.
                 delete g_tabs[tabId];
@@ -519,18 +519,20 @@ var BP_MAIN = (function()
         function onFocus(ev)
         {
             var tabInfo = makeTabInfo(ev.detail.tabId);
-            BP_ERROR.logdebug('onFocus@MOD_WIN: ' + JSON.stringify(ev.detail));
+            //BP_ERROR.logdebug('onFocus@MOD_WIN: ' + JSON.stringify(ev.detail));
             if (tabInfo) {tabInfo.lastFocused = ev.detail;}
         }
         
         function onUnload(ev)
         {
-            BP_ERROR.logdebug('onUnload@MOD_WIN: ' + JSON.stringify(ev.detail));
+            //BP_ERROR.logdebug('onUnload@MOD_WIN: ' + JSON.stringify(ev.detail));
             if (ev.detail.isTopLevel) {
                 delete g_tabs[ev.detail.tabId];
             }
             else {
-                delete g_tabs[ev.detail.tabId].autoFillable[ev.detail.frameUrl];
+                if (g_tabs[ev.detail.tabId]) {
+                    delete g_tabs[ev.detail.tabId].autoFillable[ev.detail.frameUrl];
+                }
             }
         }
         

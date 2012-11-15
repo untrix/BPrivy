@@ -211,7 +211,7 @@
                 if (resp && (resp.result===true))
                 {
                     var db = resp.db;
-                    BP_ERROR.loginfo("cbackShowPanel@bp_panel.js received DB-Records\n"/* + JSON.stringify(db)*/);
+                    //BP_ERROR.loginfo("cbackShowPanel@bp_panel.js received DB-Records\n"/* + JSON.stringify(db)*/);
                     try { // failure here shouldn't block rest of the call-flow
                         MOD_DB.ingest(resp.db, resp.dbInfo, resp.loc);
                     } 
@@ -244,18 +244,18 @@
             {
                 if (!lastFocused.isTopLevel) {
                     // Is a nested browsing context (i.e. Frame)
-                    BP_ERROR.logdebug('heuristicFrameUrl: lastFocused is nested browsing context. returning ' + frameUrl);
+                    //BP_ERROR.logdebug('heuristicFrameUrl: lastFocused is nested browsing context. returning ' + frameUrl);
                     return frameUrl;
                 }
                 else { // topLevel browsing context
                     if ( lastFocused.elName === 'input' ) {
-                        BP_ERROR.logdebug('heuristicFrameUrl: lastFocused is top-level browsing context. elName = ' + lastFocused.elName + ' returning ' + frameUrl);
+                        //BP_ERROR.logdebug('heuristicFrameUrl: lastFocused is top-level browsing context. elName = ' + lastFocused.elName + ' returning ' + frameUrl);
                         return frameUrl;
                     }
                     else {
                         autoFillable = BP_MAIN.MOD_WIN.getAutoFillable(tabId);
                         if (autoFillable[frameUrl]) {
-                            BP_ERROR.logdebug('heuristicFrameUrl: returning autoFillable top-level window: ' + frameUrl);
+                            //BP_ERROR.logdebug('heuristicFrameUrl: returning autoFillable top-level window: ' + frameUrl);
                             return frameUrl;
                         }
                         else {
@@ -263,11 +263,11 @@
                             fillableUrls = Object.keys(autoFillable);
 
                             if (fillableUrls.length) {
-                                BP_ERROR.logdebug('heuristicFrameUrl: force returning first autoFillable frameUrl = ' + fillableUrl);
+                                //BP_ERROR.logdebug('heuristicFrameUrl: force returning first autoFillable frameUrl = ' + fillableUrl);
                                 return fillableUrls[0];
                             }
                             else {
-                                BP_ERROR.logdebug('heuristicFrameUrl: No autofillable frame found. returning top-level frameUrl = ' + frameUrl);
+                                //BP_ERROR.logdebug('heuristicFrameUrl: No autofillable frame found. returning top-level frameUrl = ' + frameUrl);
                                 return frameUrl;
                             }
                         }
@@ -275,7 +275,7 @@
                 }
             }
             else {
-                BP_ERROR.logdebug('heuristicFrameUrl: returning tabUrl: ' + tabUrl);
+                //BP_ERROR.logdebug('heuristicFrameUrl: returning tabUrl: ' + tabUrl);
                 return tabUrl;
             }
         }
@@ -293,7 +293,7 @@
                 g_frameUrl = heuristicFrameUrl(g_tabId, tabs[0].url);
 
                 g_loc = BP_COMMON.parseURL(g_frameUrl) || {};
-                BP_ERROR.logdebug('onLoad@bp_panel.js: target frame url is ' + g_frameUrl);
+                //BP_ERROR.logdebug('onLoad@bp_panel.js: target frame url is ' + g_frameUrl);
 
                 recsResp = getRecs(g_loc);
                 g_site = recsResp.db ? recsResp.db.site : undefined;
@@ -312,7 +312,7 @@
                     BP_PLAT.sendMessage(g_tabId, g_frameUrl, {cm:'cm_autoFillable'}, function(resp2)
                     {
                         var loc, bRepaint, bReload, site;
-                        BP_ERROR.logdebug('onLoad@bp_panel.js: received clickBP response: ' + JSON.stringify(resp2));
+                        //BP_ERROR.logdebug('onLoad@bp_panel.js: received cm_autoFillable response: ' + JSON.stringify(resp2));
                         if (!resp2) 
                         {
                             BP_ERROR.logdebug('onLoad@bp_panel.js: cm_autoFillable returned error');
@@ -332,7 +332,7 @@
                         }
 
                         if (!bReload && bRepaint) {
-                            BP_ERROR.logdebug('onLoad@bp_panel.js: reloading');
+                            //BP_ERROR.logdebug('onLoad@bp_panel.js: reloading');
                             // TODO: Instead of reload this should simply be 
                             // MOD_PANEL.makeAutoFillable(true/false) - but we don't have that
                             // API yet.

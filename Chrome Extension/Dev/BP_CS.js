@@ -1493,14 +1493,14 @@
         function assignBuddys(fInfo)
         {
             if (!fInfo) {return;}
-            
+
             fInfo.buddys = [];
             var u = getLastEl(fInfo.us);
             if (u) {
                 iterArray2(fInfo.ps, fInfo, function(p)
                 {
                     this.buddys.push({'u':u, 'p':p});
-                });                
+                });
             }
         }
 
