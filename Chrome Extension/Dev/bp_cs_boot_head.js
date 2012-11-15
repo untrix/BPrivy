@@ -154,6 +154,12 @@ var BP_BOOT = (function()
                         return;
                     }
                     else if ((now - lastBatchTime) < batchInterval) {
+                        // NOTE: Makes the scanning response sluggish. May prevent timely detection
+                        // of password fields that show up at the last moment (e.g. in Farmer's Insurance' case).
+                        // The user may type the password and quickly hit enter, even before the timer
+                        // expired (therefore no page-scan would've happened after the new password
+                        // field appeared). We expect the user to take at least one second to type the
+                        // password, hence we should probably be okay if the batchInterval is <= 1000.
                         timerHandle = window.setTimeout(onTimeout, batchInterval + lastBatchTime - now);
                         return;
                     }

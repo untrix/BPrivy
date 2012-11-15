@@ -348,7 +348,8 @@
                         }
                         else {
                             num = this.numVisibleEls();
-                            this.cntnr = offsetAncestor(tEl, 5, num, true) || getAncestor(tEl, 5, num, true);
+                            //this.cntnr = offsetAncestor(tEl, 5, num, true) || getAncestor(tEl, 5, num, true);
+                            this.cntnr = offsetAncestor(tEl, num, true) || getAncestor(tEl, 5, num, true);
                         }
                     }
                 }
@@ -1302,6 +1303,22 @@
             return $(out);
         }
         
+        /**
+         * Returns last element in tabbing order. 
+         */
+        function getLastEl(els)
+        {
+            var last = els[0];
+            iterArray2(els, null, function(el)
+            {
+                if (isAfter(el, last)) {
+                    last = el;
+                }
+            });
+            
+            return last;
+        }
+        
         function hasVal(el, fn)
         {
             if  (!el || !el.value || 
@@ -1490,7 +1507,7 @@
             return fInfo;
         }
 
-        function assignBuddys(fInfo)
+        /*function assignBuddys(fInfo)
         {
             if (!fInfo) {return;}
 
@@ -1502,6 +1519,24 @@
                     this.buddys.push({'u':u, 'p':p});
                 });
             }
+        }*/
+        function assignBuddys( fInfo )
+        {
+            if (!fInfo) {return;}
+
+            fInfo.buddys = [];
+            // Sometimes the detected fInfo may encapsulate both the signin as well as
+            // signup forms. This is because offsetAncestor may be too broad a scope. Hence, 
+            // we cannot assume only one username field per fInfo.
+            // There could be one for the signup form and another for the signin form.
+            // Will try to fix the offsetAncestor issue sometime later.
+            iterArray2(fInfo.ps, fInfo, function(p)
+            {
+                var $us = getElsBefore(p, $(fInfo.us));
+                if ($us.length) {
+                    this.buddys.push({'u':getLastEl($us), 'p':p});
+                }
+            });
         }
 
         /**
@@ -1673,22 +1708,6 @@
                 // return ud.el;
             // }
         // }
-        /**
-         * Returns last element in tabbing order. 
-         */
-        function getLastEl(els)
-        {
-            var last = els[0];
-            iterArray2(els, null, function(el)
-            {
-                if (isAfter(el, last)) {
-                    last = el;
-                }
-            });
-            
-            return last;
-        }
-        
         function findEl(eRec, ctxEl)
         {
             var $ctx = ctxEl ? $(ctxEl) : undefined;
