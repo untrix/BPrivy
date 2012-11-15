@@ -502,7 +502,7 @@ function BP_GET_WDL (g)
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
-            addClass:bInp? "icon-check" :"icon-edit",
+            addClass:bInp? "icon-ok" :"icon-pencil",
             ctx:{ w$:{icon:'w$el'} }
             }],
          _iface:{ w$ctx:{ ioItem:"ioItem", icon:'icon' } }
@@ -514,12 +514,12 @@ function BP_GET_WDL (g)
         {
             var bInp = this.ioItem.toggleIO();
             if (bInp) {
-                this.icon.removeClass('icon-edit');
-                this.icon.addClass('icon-check');
+                this.icon.removeClass('icon-pencil');
+                this.icon.addClass('icon-ok');
             }
             else {
-                this.icon.removeClass('icon-check');
-                this.icon.addClass('icon-edit');                    
+                this.icon.removeClass('icon-ok');
+                this.icon.addClass('icon-pencil');                    
             }
         }}
     });

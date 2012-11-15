@@ -348,8 +348,7 @@
                         }
                         else {
                             num = this.numVisibleEls();
-                            //this.cntnr = offsetAncestor(tEl, 5, num, true) || getAncestor(tEl, 5, num, true);
-                            this.cntnr = offsetAncestor(tEl, num, true) || getAncestor(tEl, 5, num, true);
+                            this.cntnr = offsetAncestor(tEl, 5, num, true) || getAncestor(tEl, 5, num, true);
                         }
                     }
                 }
@@ -1096,15 +1095,19 @@
             }
         }
 
-        function offsetAncestor(el, numInp, visibleOnly, ctxEl)
+        function offsetAncestor(el, maxLevels, numInp, visibleOnly, ctxEl)
         {
-            var p, tE = el, tF, $i;
+            var p, tE = el, tF, $i, levels;
             while ((!p) && $(tE).is(':visible')) 
             {
                 // el is visible. Find its positioned ancestor.
                 tF = $(tE).offsetParent()[0];
-                
-                if (tF)
+                levels = $(tE).parentsUntil(tF).length;
+                if ( levels >= maxLevels )
+                {
+                    break;
+                }
+                else if (tF)
                 {
                     if ((ctxEl && (tF===ctxEl)) || (tF===g_doc.body) || (tF===g_doc.documentElement) || (tF===g_doc)) {
                         break; // exit the loop.
@@ -1195,7 +1198,7 @@
             if (!fInfo.cntnr) 
             {
                 // Return ancestor upto 5 levels above, containing at least 2 visible input elements.
-                fInfo.cntnr = offsetAncestor(el, 2, true, ctxEl) || getAncestor(el, 5, 3, true, ctxEl);
+                fInfo.cntnr = offsetAncestor(el, 5, 2, true, ctxEl) || getAncestor(el, 5, 3, true, ctxEl);
                 if (!fInfo.form) {fInfo.form = fInfo.cntnr;}
             }
 
@@ -1236,9 +1239,13 @@
          */
         function isBefore(lhs, rhs)
         {
-            if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
+            // in the case of www.farmers.com, the submit-button had tabIndex=0 whereas
+            // the username and password input fields were 1 and 2 respectively. Yet,
+            // submit button was after them both in tree-order. Hence, we'll go with
+            // tree-order and ignore tabbing order. Hence, commenting out the below.
+            /*if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
                 return (lhs.tabIndex < rhs.tabIndex);
-            }
+            }*/
 
             return (lhs.compareDocumentPosition(rhs) & lhs.DOCUMENT_POSITION_FOLLOWING);
         }
@@ -1247,9 +1254,13 @@
          */
         function isAfter(lhs, rhs)
         {
-            if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
+            // in the case of www.farmers.com, the submit-button had tabIndex=0 whereas
+            // the username and password input fields were 1 and 2 respectively. Yet,
+            // submit button was after them both in tree-order. Hence, we'll go with
+            // tree-order and ignore tabbing order. Hence, commenting out the below.
+            /*if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
                 return (lhs.tabIndex > rhs.tabIndex);
-            }
+            }*/
             
             return (lhs.compareDocumentPosition(rhs) & lhs.DOCUMENT_POSITION_PRECEDING);
         }
@@ -1767,7 +1778,9 @@
                 {
                     var rVal = ((!this.href) || (this.href==='#') ||
                                 (this.href===this.baseURI) ||
-                                (this.href===this.baseURI+'#')) &&
+                                (this.href===this.baseURI+'#') ||
+                                // TODO: onclick is experimental. Remove if it generates false positives
+                                this.onclick) &&
                                 this.offsetWidth && this.offsetHeight; // isVisible
 
                     return (rVal && lP) ? isAfter(this, lP) : rVal;

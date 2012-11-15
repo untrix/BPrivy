@@ -91,11 +91,11 @@ function BP_GET_NTNF_CNTR(g)
     // is chrome specific.
     function onTabUpdated( tabId, changeInfo, tab )
     {
-        if (changeInfo.url) {
+        if (changeInfo.url || (changeInfo.status==='loading')) {
             //BP_ERROR.logdebug('onTabUpdated@MOD_WIN: tabId = ' + tabId + ' url = ' + changeInfo.url);
             // if the tab has navigated to another page, then delete all previous
             // data.
-            var loc = BP_COMMON.parseURL(changeInfo.url);
+            var loc = BP_COMMON.parseURL(tab.url);
             if (loc && MEMSTORE.numTRecs(loc, true)) {
                     BP_PLAT.showBadge({tabId:tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
                 }
@@ -508,7 +508,7 @@ var BP_MAIN = (function()
         // is chrome specific.
         function onTabUpdated( tabId, changeInfo, tab )
         {
-            if (changeInfo.url) {
+            if (changeInfo.url || (changeInfo.status==='loading')) {
                 //BP_ERROR.logdebug('onTabUpdated@MOD_WIN: tabId = ' + tabId + ' url = ' + changeInfo.url);
                 // if the tab has navigated to another page, then delete all previous
                 // data.

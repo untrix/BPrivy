@@ -270,10 +270,10 @@ function BP_GET_ERROR(g)
     {
         var be = new BPError(arg);
         if (be.err.acode === 'Unsupported') {
-            g_console.log(be.toString());
+            g_console.error(be.toString());
         }
         else {
-            g_console.log(be.toString());
+            g_console.error(be.toString());
         }
     }
     
