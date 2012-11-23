@@ -1,10 +1,10 @@
 {
   "name": "BPrivy",
-  "version": "0.6.8",
+  "version": "0.6.9",
   "manifest_version": 2,
   "minimum_chrome_version": "7",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
-  "description":"U-Wallet: Portable Passwords. Secure, syncable, mergable, movable, copyable, learnable!",
+  "description":"U-Wallet: Personal, Private and Portable Passwords. The U-Wallet storage is local (as in no cloud), Sync-able and physically mobile.",
   "icons": {
 	     "128": "icons/icon128.png",
   	     "16": "icons/icon16.png"

@@ -2222,14 +2222,14 @@
                 if (r.dtMatched) {
                     e.dataTransfer.dropEffect= 'copy';
                     //$(e.currentTarget).focus();
+                    e.preventDefault(); // cancel the event signalling that we've handled it.
+                    e.stopImmediatePropagation();
                 }
-                else {
-                    e.dataTransfer.dropEffect = 'none'; // Prevent drop here.
-                }
-                
-                //console.info("dropEffect set to " + e.dataTransfer.dropEffect);
-                e.preventDefault(); // cancel the event signalling that we've handled it.
-                e.stopImmediatePropagation();
+                /*else {
+                    e.dataTransfer.dropEffect = 'none'; // 'none' => Prevent drop here.
+                    e.preventDefault(); // cancel the event signalling that we've handled it.
+                    e.stopImmediatePropagation();
+                }*/
             }
             //return true; // return true to signal that we're not cancelling the event (some code out there)
         }
@@ -2243,19 +2243,20 @@
                 el, form;
             
             if (r.isBPDrag) {
-                // Cancel event to tell browser that we've handled it and to prevent it from
-                // overriding us with a default action.                        
-                e.preventDefault();
-                
-                if (!r.dtMatched) {
+
+                /*if (!r.dtMatched) {
+                    e.preventDefault();
                     // This is our drag-event, but Data-type and field-type don't match.
                     // Abort the drop.
                     // prevent browser from dropping the password into a visible field.
                     // or prevent browser from dropping userid into a password field.
                     e.dataTransfer.dropEffect = 'none';
-                }                     
-                else 
-                {
+                }
+                else*/
+                if (r.dtMatched) {
+                    // Cancel event to tell browser that we've handled it and to prevent it from
+                    // overriding us with a default action.                        
+                    e.preventDefault();
                     el = e.currentTarget;
                     form = el.form;
                     // Tell browser to set vlaue of 'current drag operation' to 'copy'
