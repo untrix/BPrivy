@@ -14,6 +14,24 @@ The following software is required to build the BPrivy plugin:
 	6. .\b2 install-proper
 		This will install into C:\Boost
 	7. cd C:\Boost\lib
+7.2 Bulid openssl libraries:
+	1. Download and unzip openssl v1.0.0c to - say - $Openssl_Dist. The distribution may alread be in the SCM.
+	2. Read $Openssl_Dist/INSTALL.W32
+	3. Download and install nasm as instructed in INSTALL.W32 (http://nasm.sourceforge.net/), or form the thirdparty CD.
+	4. Download and install ActiveState Perl as instructed in INSTALL.w32 (from 	http://www.activestate.com/ActivePerl), or from the thirdparty CD.
+	5. Open a command prompt and make sure that no Unix env. is in the path (e.g. remove cygwin, MinGW etc. from the path).
+	6. Open up Visual Studio 2010 and open a command prompt (Tools->Visual Studio Command Prompt). Inside the command prompt execute the rest of the procedure:
+		You can also setup the visual studio environment (C:\Program Files (x86)\Microsoft Visual Studio 10\Common7\Tools\vsvars32.bat). But the above is preferrable.
+	7. Follow instructions from INSTALL.W32 to build the static libraries with some additional options.
+		7.a		perl Configure VC-WIN32 --prefix=c:\openssl no-idea no-mdc2 no-rc5
+		Refer to the Configure & README files for a description of these options.
+		7.b		ms\do_nasm
+		7.c		nmake -f ms\nt.mak
+				nmake -f ms\ntdll.mak
+		7.d		nmake -f ms\nt.mak test (Make sure that all tests pass).
+				nmake -f ms\ntdll.mak test
+		7.e		nmake -f ms\nt.mak install (installs to C:\openssl)
+				nmake -f ms\ntdll.mak install
 8. Eventhough FireBreath documentation says that you can use system-boost libs by supplying "-D WITH_SYSTEM_BOOST=1", that doesn't actually work. CMake simply ignores all the command-line variables supplied. Supplying the variables inside a 'cmake initial-cache file' worked, so I've used that technique. The following more intrusive techniques also worked but are not necessary. But I'm keeping them below in case we'll need those for other build environments.
 
 	Hence these will need to be set inside firebreath1.7\CMakeLists.txt file. At the top somewhere add the line:

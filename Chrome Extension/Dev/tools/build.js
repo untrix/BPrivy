@@ -111,9 +111,9 @@ var src = abs(argv[0]),
     // release_manage_js=["bp_error.js","bp_common.js","bp_traits.js","bp_cs_chrome.js","bp_w$.js",
                        // "bp_connector.js", "bp_db_fs.js", "bp_editor.wdl.js", "bp_manage.js"],
     release_manage_js=["bp_build.js", "bp_cs_chrome.js", "bp_w$.js", "bp_editor.wdl.js", "bp_listener.js", "bp_manage.js"],
-    //release_panel_js=["bp_panel.js"],
-    release_panel_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_traits.js', "bp_connector.js",
-                      "bp_w$.js", "bp_panel.wdl.js", "bp_panel.js"],
+    release_panel_js=["bp_build.js", "bp_panel.js"],
+    //release_panel_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_traits.js', "bp_connector.js",
+    //                  "bp_w$.js", "bp_panel.wdl.js", "bp_panel.js"],
     release_notification_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_traits.js', "bp_connector.js",
                       "bp_w$.js", "bp_listener.js", "bp_memstore.js", "bp_notification.js"],
     release_others = [
@@ -167,7 +167,7 @@ catIfNeeded(qualifyA(src,release_cs_js), src + path.sep + 'bp_cs.cat.js');
 catIfNeeded(qualifyA(src,release_main_js), src + path.sep + 'bp_main.cat.js');
 catIfNeeded(qualifyA(src,release_manage_js), src + path.sep + 'bp_manage.cat.js');
 catIfNeeded(qualifyA(src,release_panel_js), src + path.sep + 'bp_panel.cat.js');
-catIfNeeded(qualifyA(src,release_notification_js), src + path.sep + 'bp_notification.cat.js');
+//catIfNeeded(qualifyA(src,release_notification_js), src + path.sep + 'bp_notification.cat.js');
 
 if (all)
 {

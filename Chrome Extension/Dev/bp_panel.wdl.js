@@ -890,6 +890,7 @@ function BP_GET_WDL (g)
             openPath = ctx.openPath,
             onBlur = ctx.onBlur;
         
+        //BP_ERROR.logdebug('In panel.wdt. showRecs = ' + showRecs);
         return {
         cons:Panel, // static prototype object.
         tag:"article",

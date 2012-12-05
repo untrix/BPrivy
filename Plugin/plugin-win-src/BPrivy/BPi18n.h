@@ -41,7 +41,7 @@ namespace bp
 
 	// In Windows Unicode is only supported in wstring
 	// std::string don't support unicode (i.e. utf-8)
-	// Also, in general unicode is the only wide-character
+	// Also, in general unicode is the only wide-character set
 	// in the world. Therefore it is safer to keep all
 	// unicode data in wide-char instead of in utf-8. Specifically in Windows,
 	/// wchar_t implies unicode, and presumably so in all other operating systems.

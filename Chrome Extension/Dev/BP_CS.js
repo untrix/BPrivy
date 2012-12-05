@@ -125,7 +125,8 @@
             g_fSel2= "[name*=signin],[name=auth],[name*=login],[name*=account],[name*=register],"+
                      "[name*=registration],[name*=signon],[name*=regform],"+
                      "[id*=signin],#auth,[id*=login],[id*=account],[id*=register],[id*=signon],[id*=regform]",
-            g_fReg2 = /(log|sign)(in|on)|^(auth)$|register|registration|authentication|enroll|join|ssoform|regform|(create)(user|account)/i,
+            // TODO: Inserted 'password' into g_fReg2 at 0.6.9. Needs to be tested for false-positives.
+            g_fReg2 = /(log|sign)(in|on)|^(auth)$|register|registration|authentication|enroll|join|ssoform|regform|password|(create)(user|account)/i,
             g_fSel3= "[name=create],[name*=auth],#create,[id*=auth]",
             g_fReg3= /^create$|auth|sso|account/i,
             g_fSel1_2= "[name*=enroll],[name*=createaccount],[name*=createuser],"+

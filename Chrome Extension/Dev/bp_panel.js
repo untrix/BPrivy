@@ -21,7 +21,7 @@
     "use strict";
     // g => Global Env.
     var g = {g_win:window, g_console:console, g_chrome:chrome},
-        DEBUG = false;
+        DEBUG = DEBUG || false;
     g.BP_CS_PLAT = chrome.extension.getBackgroundPage().BP_GET_CS_PLAT(g);
     var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
     // Module object used within bp_main.html
@@ -153,7 +153,7 @@
             window.close();
         }
 
-        function create(loc)
+        function create(/*loc*/)
         {
             close();
             m_bUserClosed = false;
@@ -222,7 +222,7 @@
                 else 
                 {
                     MOD_DB.clear(); // Just to be on the safe side
-                    BP_ERROR.logdebug(resp.err);
+                    (resp && BP_ERROR.logdebug(resp.err));
                 }
             }
             catch (err) 
@@ -287,7 +287,11 @@
             {
                 var recsResp, resp3, lastFocused;
 
-                if (!tabs.length) {cbackShowPanel(); return;}
+                if (!tabs.length) {
+                    BP_ERROR.logdebug('No tabs shown?');
+                    cbackShowPanel(); 
+                    return;
+                }
 
                 g_tabId = tabs[0].id;
                 g_frameUrl = heuristicFrameUrl(g_tabId, tabs[0].url);
@@ -386,5 +390,5 @@
     }());
     
     MOD_CS.onLoad();
-    BP_ERROR.log("loaded CS");    
+    BP_ERROR.log("loaded panel.js");    
 }());

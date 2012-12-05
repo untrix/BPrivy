@@ -29,7 +29,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test.cpp">
+    <ClCompile Include="..\crypt_src\crypt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

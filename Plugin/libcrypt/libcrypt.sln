@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libscrypt", "libscrypt_proj\libscrypt.vcxproj", "{7375675C-69BF-4E82-BBDF-E483B08B612C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcrypt", "libcrypt_proj\libcrypt.vcxproj", "{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crypt", "crypt\crypt.vcxproj", "{B06CD584-9BD8-4AA6-A362-81D070AC553E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7375675C-69BF-4E82-BBDF-E483B08B612C} = {7375675C-69BF-4E82-BBDF-E483B08B612C}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj", "{E35AAD06-9E4E-4705-BAA6-AB94AE1C1903}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7375675C-69BF-4E82-BBDF-E483B08B612C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7375675C-69BF-4E82-BBDF-E483B08B612C}.Debug|Win32.Build.0 = Debug|Win32
+		{7375675C-69BF-4E82-BBDF-E483B08B612C}.Release|Win32.ActiveCfg = Release|Win32
+		{7375675C-69BF-4E82-BBDF-E483B08B612C}.Release|Win32.Build.0 = Release|Win32
+		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.Debug|Win32.Build.0 = Debug|Win32
+		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.Release|Win32.ActiveCfg = Release|Win32
+		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.Release|Win32.Build.0 = Release|Win32
+		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.Debug|Win32.Build.0 = Debug|Win32
+		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.Release|Win32.ActiveCfg = Release|Win32
+		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.Release|Win32.Build.0 = Release|Win32
+		{E35AAD06-9E4E-4705-BAA6-AB94AE1C1903}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E35AAD06-9E4E-4705-BAA6-AB94AE1C1903}.Debug|Win32.Build.0 = Debug|Win32
+		{E35AAD06-9E4E-4705-BAA6-AB94AE1C1903}.Release|Win32.ActiveCfg = Release|Win32
+		{E35AAD06-9E4E-4705-BAA6-AB94AE1C1903}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -2,6 +2,7 @@
 /firebreath1.7/
 /plugin-*/*
 /boost*/*
+/openssl-*/*
 *.dll
 *.exe
 *.lib

@@ -24,7 +24,7 @@ namespace bp
 
 	utf8 i18n::LocaleToUtf8(const char* s)
 	{
-		const char* conv_err = "BPError: could not convert error string to wcs";
+		static const char* conv_err = "BPError: could not convert error string to wcs";
 		// Convert from locale charset to UNICODE by converting to wchar_t.
 		size_t n = mbstowcs(NULL, s, 0);
 		if (n) 
@@ -46,7 +46,7 @@ namespace bp
 
 	ustring i18n::LocaleToUnicode(const std::string& str)
 	{
-		const wchar_t conv_err[] = L"BPError: could not convert error string to wcs";
+		static const wchar_t conv_err[] = L"BPError: could not convert error string to wcs";
 		// Convert from locale charset to UNICODE by converting to wchar_t.
 		const char* s = str.c_str();
 		size_t n = mbstowcs(NULL, s, 0);

@@ -1,7 +1,6 @@
 #ifndef H_BP_ErrorHandling
 #define H_BP_ErrorHandling
 
-#include "APITypes.h"
 #include <string> // for std::string
 #include <cstdint> // for uint64_t and uint32_t
 #include <boost/filesystem.hpp>

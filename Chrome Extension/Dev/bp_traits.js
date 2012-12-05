@@ -98,9 +98,12 @@ function BP_GET_TRAITS(g)
             dt: {value: dt_pRecord},
             key: {value: {uiName:"Username", apiName:"u", ft:FT.text}},
             fields: {value: [{uiName:"Password", apiName:"p", ft:FT.pass}]},
-            protocols: {value: ['http:', 'https:', 'ftp:']},
-            showRecs:  {value: function(loc) {if (loc && loc.protocol) {
-                return this.protocols.indexOf(loc.protocol.toLowerCase())!==-1;}}}
+            protocols: {value: ['http:', 'https:', 'ftp:', 'chrome-extension:']},
+            showRecs:  {value: function(loc) {
+                //BP_ERROR.logdebug('PUiTraits.showRecs: loc = ' + JSON.stringify(loc));
+                //if (loc && loc.protocol) {return this.protocols.indexOf(loc.protocol.toLowerCase())!==-1;}
+                return (loc && loc.protocol && loc.hostname);
+                }}
         }));
     }
     PUiTraits.prototype = DEFAULT_UI_TRAITS;

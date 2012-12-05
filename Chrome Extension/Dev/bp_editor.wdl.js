@@ -541,7 +541,7 @@ function BP_GET_EDITOR(g)
             loc = w$ctx.loc,
             panel = w$ctx.panel,
             bInp = w$ctx.io_bInp,
-            url = rec.l ? MOD_CONNECT.L.prototype.toURL.apply(rec.l) : undefined;
+            url = (rec && rec.l) ? MOD_CONNECT.L.prototype.toURL.apply(rec.l) : undefined;
             //autoFill = panel.autoFill;
         return {
         cons: IoItem,
