@@ -1,6 +1,6 @@
 #include "CryptCtx.h"
-#include "Types.h"
 #include "Utils.h"
+#include "Error.h"
 #include <cstdio> // for sprintf
 #include <libscrypt.h>
 #include <openssl/rand.h>
@@ -8,14 +8,6 @@
 
 namespace crypt
 {
-	const wstring Error::CODE_BAD_PARAM = L"BadParameter";
-	const wstring Error::CODE_NO_MEM = L"NoMemory";
-	const wstring Error::CODE_OS_ERROR = L"OSError";
-	const wstring Error::CODE_CRYPTO_ERROR = L"CryptoError";
-	const wstring Error::CODE_INTERNAL_ERROR = L"InternalError";
-	const wstring Error::CODE_NO_CSP = L"NoCSP";
-	CryptCtx::map CryptCtx::s_ctxMap;
-	unsigned int CryptCtx::s_lastHandle = 0;
 
 	void
 	initLibcrypt()
@@ -29,6 +21,17 @@ namespace crypt
 	{
 		ERR_free_strings();
 	}
+
+	/*****************************************************************/
+	/***************************** Error *****************************/
+	/*****************************************************************/
+	const wstring Error::CODE_BAD_PARAM = L"BadParameter";
+	const wstring Error::CODE_NO_MEM = L"NoMemory";
+	const wstring Error::CODE_OS_ERROR = L"OSError";
+	const wstring Error::CODE_CRYPTO_ERROR = L"CryptoError";
+	const wstring Error::CODE_INTERNAL_ERROR = L"InternalError";
+	const wstring Error::CODE_NO_CSP = L"NoCSP";
+	const wstring Error::CODE_BAD_FMT = L"WrongFormatVer";
 
 	void
 	Error::ThrowOpensslError()
@@ -66,6 +69,10 @@ namespace crypt
 			return conv_err;
 		}
 	}
+
+	/*****************************************************************/
+	/************************** CryptInfo ****************************/
+	/*****************************************************************/
 
 	CryptInfo::CryptInfo(uint8_t cipher, uint16_t keyLen) :
 		m_logN(LOGN), m_r(R), m_p(P),
@@ -140,18 +147,22 @@ namespace crypt
 		m_signature.zero();
 	}
 	
+	/*****************************************************************/
+	/*************************** CryptCtx ****************************/
+	/*****************************************************************/
+	CryptCtx::map CryptCtx::s_ctxMap;
+	unsigned int CryptCtx::s_lastHandle = 0;
+
 	CryptCtx::CryptCtx(const std::string& cryptInfo) : m_info(cryptInfo)
 	{}
 	CryptCtx::CryptCtx(CipherEnum cipher, unsigned int keyLen) : 
 		m_info(cipher, keyLen)
 	{}
-
 	void
 	CryptCtx::zero()
 	{
 		m_dk.zero();
 	}
-
 	const CryptCtx& CryptCtx::Get(unsigned int handle)
 	{
 		if (handle==0) {throw Error(Error::CODE_BAD_PARAM);}
@@ -164,7 +175,6 @@ namespace crypt
 			throw Error(Error::CODE_BAD_PARAM, Error::LocaleToUnicode(e.what()));
 		}
 	}
-
 	void CryptCtx::Destroy(unsigned int handle)
 	{
 		try {
@@ -176,7 +186,6 @@ namespace crypt
 			throw Error(Error::CODE_BAD_PARAM, Error::LocaleToUnicode(e.what()));
 		}
 	}
-
 	unsigned int
 	CryptCtx::Make(Buf<wchar_t>& $, CipherEnum cipher, unsigned int key_len)
 	{
@@ -195,7 +204,6 @@ namespace crypt
 
 		return handle;
 	}
-
 	unsigned int
 	CryptCtx::Make(Buf<wchar_t>& $, std::string& cryptInfo)
 	{
@@ -244,7 +252,7 @@ namespace crypt
 			}
 			outlen += finlen;
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			// TODO: base64-encode
+			PutHeader(out, outbuf, outlen);
 			// out.assign((const char*) ((const uint8_t*) outbuf), outlen);
 		}
 		catch (...)
@@ -252,5 +260,12 @@ namespace crypt
 			EVP_CIPHER_CTX_cleanup(&ctx);
 			throw;
 		}
+	}
+
+	void
+	CryptCtx::PutHeader(std::string& out, Buf<uint8_t>& outbuf,
+						size_t dataSize)
+	{
+
 	}
 }

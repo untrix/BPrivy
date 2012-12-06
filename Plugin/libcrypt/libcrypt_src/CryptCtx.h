@@ -17,30 +17,6 @@ namespace crypt
 	void	initLibcrypt	();
 	void	unloadLibcrypt	();
 
-	struct Error
-	{
-		Error(const wstring& c) : code(c), errc(0) {}
-		Error(unsigned int c) : code(CODE_OS_ERROR), errc(c) {}
-		Error(const wstring& c, const wstring& msg) : code(c), msg(msg), errc(0) {}
-		Error(const wstring& c, const std::string& msg) 
-			: code(c), msg(LocaleToUnicode(msg)), errc(0) {}
-
-		wstring code;
-		wstring msg;
-		unsigned int errc;
-
-		static wstring LocaleToUnicode(const std::string& str);
-		static void		ThrowOpensslError();
-
-		// Error Codes
-		static const wstring	CODE_BAD_PARAM;
-		static const wstring	CODE_NO_MEM;
-		static const wstring	CODE_OS_ERROR;
-		static const wstring	CODE_CRYPTO_ERROR;
-		static const wstring	CODE_INTERNAL_ERROR;
-		static const wstring	CODE_NO_CSP;
-	};
-
 	typedef enum {
 		/** 
 		* THESE NUMBERS CAN NEVER CHANGE BECAUSE
@@ -53,19 +29,6 @@ namespace crypt
 	typedef enum {
 		DEFAULT_KEY_LEN = 32 // Key Length in #bytes
 	} CRYPT_CONSTANT;
-
-	/** Fixed Cipher related params required by openssl */
-	class CipherParams
-	{
-	public:
-		/*IV_LEN_BF = 8, //IV length in #bytes
-		IV_LEN_AES= 16,
-		BLK_SZ_BF = 8, //block size in #bytes
-		BLK_SZ_AES= 16,*/
-		// iv should be the size of the block. Hence it depends
-		// on cipher block size. AES has 16 bytes and BF has 8 bytes.
-							CipherParams	(CipherEnum);
-	};
 
 	struct CryptInfo
 	{
@@ -89,18 +52,18 @@ namespace crypt
 		} CONSTANT;
 
 		/** Following are persisted to disk */
-		uint8_t		m_logN;
-		uint32_t	m_r;
-		uint32_t	m_p;
-		uint8_t		m_cipher; // Cipher Enum
-		uint8_t		m_keyLen; // Key Length in #bytes.
-		Array<uint8_t, SCRYPT_SALT_SIZE> m_salt;
-		Array<uint8_t, SIG_SIZE> m_signature;
+		size_t		m_logN;
+		size_t		m_r;
+		size_t		m_p;
+		CipherEnum	m_cipher; // Cipher Enum
+		size_t		m_keyLen; // Key Length in #bytes.
+		Buf<uint8_t> m_salt;
+		Buf<uint8_t> m_signature;
 
 		/** Following are ephemeral */
 		const EVP_CIPHER*	m_EVP_CIPHER;
-		uint8_t 			m_ivLen;  // IV size in #bytes
-		uint8_t				m_blkSize;// cipher's block size in #bytes
+		size_t		m_ivLen;  // IV size in #bytes
+		size_t		m_blkSize;// cipher's block size in #bytes
 
 					CryptInfo		(uint8_t cipher, uint16_t keyLen);
 					CryptInfo		(const std::string& cryptInfo);
@@ -156,6 +119,9 @@ namespace crypt
 									CryptCtx			(const std::string& cryptInfo);
 		virtual						~CryptCtx			() {zero();}
 		virtual void				zero				();
+		void						PutHeader			(std::string& out,
+														 Buf<uint8_t>& outbuf,
+														 size_t dataSize);
 
 	private:
 									CryptCtx			(const CryptCtx&);// not to be defined
@@ -165,6 +131,7 @@ namespace crypt
 		static map					s_ctxMap;
 		static unsigned int			s_lastHandle;
 
+		/** Object variables */
 		Array<uint8_t, SCRYPT_DK_SIZE> m_dk;
 		const CryptInfo				m_info;
 	};
