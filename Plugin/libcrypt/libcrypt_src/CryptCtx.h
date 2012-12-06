@@ -18,12 +18,9 @@ namespace crypt
 	void	unloadLibcrypt	();
 
 	typedef enum {
-		/** 
-		* THESE NUMBERS CAN NEVER CHANGE BECAUSE
-		* THEY ARE BURNT INTO DB FILES ON DISK.
-		*/
-		BF_CBC = 1, // Blowfish in CBC mode
-		AES_CBC= 2  // AES (Rijndael) in CBC mode
+		CPHR_NULL = 0,
+		CIPHER_BF_CBC = 1, // Blowfish in CBC mode
+		CIPHER_AES_CBC     // AES (Rijndael) in CBC mode
 	} CipherEnum;
 
 	typedef enum {
@@ -36,19 +33,8 @@ namespace crypt
 			LOGN = 15,
 			R = 8,
 			P = 1,
-			LOGN_SIZE = 1,
-			R_SIZE = 4,
-			P_SIZE = 4,
-			CIPHER_SIZE = 1,
-			KEYLEN_SIZE = 1,
 			SALT_SIZE = SCRYPT_SALT_SIZE,
 			SIG_SIZE = 32,
-			BUF_SIZE = (LOGN_SIZE+
-						R_SIZE+
-						P_SIZE+
-						CIPHER_SIZE+
-						KEYLEN_SIZE+
-						SALT_SIZE+SIG_SIZE)
 		} CONSTANT;
 
 		/** Following are persisted to disk */
@@ -57,26 +43,22 @@ namespace crypt
 		size_t		m_p;
 		CipherEnum	m_cipher; // Cipher Enum
 		size_t		m_keyLen; // Key Length in #bytes.
-		Buf<uint8_t> m_salt;
-		Buf<uint8_t> m_signature;
+		Array<uint8_t, SALT_SIZE> m_salt;
+		Array<uint8_t, SIG_SIZE>  m_signature;
 
 		/** Following are ephemeral */
 		const EVP_CIPHER*	m_EVP_CIPHER;
 		size_t		m_ivLen;  // IV size in #bytes
 		size_t		m_blkSize;// cipher's block size in #bytes
 
-					CryptInfo		(uint8_t cipher, uint16_t keyLen);
+					CryptInfo		(CipherEnum cipher, size_t keyLen);
 					CryptInfo		(const std::string& cryptInfo);
 					~CryptInfo		() {zero();}
 		void		zero			();
-		bool		Marshall		(std::string& cryptInfo);
-		void		Verify			() const;
-		void		Sign			();
 
 	private:
 					CryptInfo		(const CryptInfo&);// not to be defined
 		CryptInfo&	operator=		(const CryptInfo&);// not to be defined
-		void		Unmarshall		(const std::string&);
 		void		ConstructCommon	(CipherEnum);
 	};
 
@@ -93,7 +75,7 @@ namespace crypt
 		* @param key_len. The length of the key to be generated for en/decryption.
 		*/
 		static unsigned	int			Make				(Buf<wchar_t>& $,
-														 CipherEnum cipher = BF_CBC,
+														 CipherEnum cipher = CIPHER_BF_CBC,
 														 unsigned int key_len = DEFAULT_KEY_LEN);
 		/**
 		*	Creates and stores a crypt-ctx and returns its handle. This handle should
@@ -139,12 +121,12 @@ namespace crypt
 	inline CipherEnum
 	CryptCtx::CipherStrToEnum(const wstring& cipher)
 	{
-		if (cipher == L"AES_CBC") {
-			return AES_CBC;
+		if (cipher == L"CIPHER_AES_CBC") {
+			return CIPHER_AES_CBC;
 		}
-		else // || if (cipher == L"BF_CBC")
+		else // || if (cipher == L"CIPHER_BF_CBC")
 		{
-			return BF_CBC;
+			return CIPHER_BF_CBC;
 		}
 	};
 }

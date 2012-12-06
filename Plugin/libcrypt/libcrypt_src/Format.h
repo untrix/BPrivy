@@ -9,12 +9,12 @@
 
 namespace crypt
 {
-	class Loader
+	class Parser
 	{
 	public:
-							Loader		(const char* buf, size_t len)
+							Parser		(const char* buf, size_t len)
 								: m_buf((uint8_t*)buf), m_len(len), m_pos(0) {}
-		virtual				~Loader		();
+		virtual				~Parser		();
 		void				Rewind		() {m_pos = 0;}
 		uint8_t				GetU8		();
 		uint16_t			GetU16		();
@@ -27,58 +27,16 @@ namespace crypt
 		size_t				m_pos;
 	};
 
-	class Saver
+	class Serializer
 	{
 	public:
-							Saver		();
+		Serializer	(std::string& outbuf) : m_buf(outbuf) {}
 		void				PutU8		(const uint8_t&);
 		void				PutU16		(const uint16_t&);
 		void				PutU32		(const uint32_t&);
 		void				PutBuf		(const Buf<uint8_t>&, size_t len);
 		void				dump		(std::string&);
-		std::basic_string<uint8_t>	m_buf;
-	};
-
-	struct FDesc
-	{
-		typedef enum {UINT, BUF} FieldType;
-		size_t index;
-		size_t size;
-		FieldType type;
-		FDesc(size_t index, size_t size, FieldType t)
-			: index(index), size(size), type(t) {}
-	};
-
-	struct FormatConstants
-	{
-		static const unsigned int	FMT_NUM_FLDS_CRYPTINFO1;
-	};
-
-	class FormatBase : public FormatConstants
-	{
-	public:
-									FormatBase	(unsigned int ID, size_t NUM_FLDS)
-										: FORMAT_VER(ID), NUM_FIELDS(NUM_FLDS), BUF_SIZE(0) {}
-		size_t						BufSize		();
-		template <T> T				GetField	(unsigned int field_seq, 
-												 const Buf<uint8_t>& buf) const
-		{
-			if (field_seq >= NUM_FIELDS) {
-				throw Error(Error::CODE_BAD_PARAM, L"Format::GetField. field_index >= NUM_FIELDS");
-			}
-			FDesc& desc = m_fields[field_seq];
-
-		}
-		const unsigned int			FORMAT_VER;
-		const size_t				NUM_FIELDS;
-
-	protected:
-		std::vector<FDesc>			m_fields;
-		std::vector<size_t>			m_offsets;
-		virtual						~FormatBase();
-
-	private:
-		size_t						BUF_SIZE;
+		std::string&		m_buf;
 	};
 
 	/** 
@@ -94,7 +52,12 @@ namespace crypt
 		virtual ~Format();
 	};
 
-	/** Serialization Format Version 1 for CryptInfo */
+	/** 
+	* Serialization Format Version 1 for CryptInfo. Carries code that is
+	* used to marshall and unmarshall data to/from files. Hence the format
+	* can never be changed once it is put to use. If you want to change the
+	* format, then write a new class and increment the VER template parameter.
+	*/
 	template <>
 	class Format<CryptInfo, 1>
 	{
@@ -108,65 +71,88 @@ namespace crypt
 			VAL_CIPHER_AES_CBC = 2, // AES (Rijndael) in CBC mode
 			VAL_FMT_VER = 1,
 			FMT_SALT_SIZE = 32,
-			FMT_SIG_SIZE = 32
+			FMT_SIG_SIZE = 32,
+			FMT_TOTAL_SIZE = 76
 		} Constants;
 
-		uint8_t CipherEnumToVal(CipherEnum cipher)
+		static uint8_t CipherEnumToVal(CipherEnum cipher)
 		{
 			switch (cipher)
 			{
-			case CipherEnum::BF_CBC:
+			case CIPHER_BF_CBC:
 				return VAL_CIPHER_BF_CBC;
 				break;
-			case CipherEnum::AES_CBC:
+			case CIPHER_AES_CBC:
 				return VAL_CIPHER_AES_CBC;
 				break;
 			default:
 				throw Error(Error::CODE_BAD_PARAM, L"Bad cipher-enum");
 			}
 		}
-		CipherEnum CipherValToEnum(uint8_t cipher)
+
+		static CipherEnum CipherValToEnum(uint8_t cipher)
 		{
 			switch (cipher)
 			{
 				case VAL_CIPHER_BF_CBC:
-					return CipherEnum::BF_CBC;
+					return CIPHER_BF_CBC;
 				case VAL_CIPHER_AES_CBC:
-					return CipherEnum::AES_CBC;
+					return CIPHER_AES_CBC;
 				default:
 					throw Error(Error::CODE_BAD_PARAM, L"Bad cipher-val");
 			}
 		}
-		void Marshall (const CryptInfo& obj, std::string& outbuf)
+
+		static void Verify(const std::string& inbuf, const CryptCtx& ctx)
 		{
-			Saver saver;
-			saver.PutU8(VAL_FMT_VER);
-			saver.PutU8(obj.m_logN);
-			saver.PutU32(obj.m_r);
-			saver.PutU32(obj.m_p);
-			saver.PutU8(CipherEnumToVal(obj.m_cipher));
-			saver.PutU8(obj.m_keyLen);
-			saver.PutBuf(obj.m_salt, FMT_SALT_SIZE);
-			saver.PutBuf(obj.m_signature, FMT_SIG_SIZE);
-			saver.dump(outbuf);
+			return; // TBD:
 		}
-		void Unmarshall (CryptInfo& obj, const std::string& inbuf)
+
+		static void Sign (Serializer& serialize, const CryptCtx& ctx)
 		{
-			Loader loader(inbuf.data(), inbuf.size());
-			if (loader.GetU8() != VAL_FMT_VER) {
+			Array<uint8_t, FMT_SIG_SIZE> tBuf;
+			tBuf.zero(); // right now just writing zeroes.
+			serialize.PutBuf(tBuf, FMT_SIG_SIZE);
+		}
+
+		static void Marshall (const CryptInfo& obj, std::string& outbuf, const CryptCtx& ctx)
+		{
+			Serializer serialize(outbuf);
+			serialize.PutU8(VAL_FMT_VER);
+			serialize.PutU8(obj.m_logN);
+			serialize.PutU32(obj.m_r);
+			serialize.PutU32(obj.m_p);
+			serialize.PutU8(CipherEnumToVal(obj.m_cipher));
+			serialize.PutU8(obj.m_keyLen);
+			serialize.PutBuf(obj.m_salt, FMT_SALT_SIZE);
+			Sign(serialize, ctx);
+			//serialize.PutBuf(obj.m_signature, FMT_SIG_SIZE);
+			Error::Assert(serialize.m_buf.size() == FMT_TOTAL_SIZE);
+		}
+
+		static size_t GetVersion(const std::string& inbuf)
+		{
+			Parser parse(inbuf.data(), inbuf.size());
+			return parse.GetU8();
+		}
+
+		static void Unmarshall (CryptInfo& obj, const std::string& inbuf)
+		{
+			Parser parse(inbuf.data(), inbuf.size());
+			if ((parse.GetU8() != VAL_FMT_VER) || (inbuf.size() != FMT_TOTAL_SIZE)) {
 				throw Error(Error::CODE_BAD_FMT);
 			}
-			obj.m_logN = loader.GetU8();
-			obj.m_r = loader.GetU32();
-			obj.m_p = loader.GetU32();
-			obj.m_cipher = CipherValToEnum(loader.GetU8());
-			obj.m_keyLen = loader.GetU8();
-			loader.GetBuf(obj.m_salt, FMT_SALT_SIZE);
-			loader.GetBuf(obj.m_signature, FMT_SIG_SIZE);
+			obj.m_logN = parse.GetU8();
+			obj.m_r = parse.GetU32();
+			obj.m_p = parse.GetU32();
+			obj.m_cipher = CipherValToEnum(parse.GetU8());
+			obj.m_keyLen = parse.GetU8();
+			parse.GetBuf(obj.m_salt, FMT_SALT_SIZE);
+			parse.GetBuf(obj.m_signature, FMT_SIG_SIZE);
 		}
 	};
 
-	typedef Format<CryptInfo, 1> FormatCryptInfo;
+	typedef Format<CryptInfo, 1> FormatCryptInfo1;
 }
 
 #endif

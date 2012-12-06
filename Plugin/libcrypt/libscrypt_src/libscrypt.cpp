@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <Utils.h>
-#include <CryptCtx.h>
+#include <Error.h>
 #include "libscrypt.h"
 
 extern "C" {
@@ -24,10 +24,10 @@ deriveKey(const Buf<wchar_t>& passwd, uint8_t logN, uint32_t r, uint32_t p,
 	//uint8_t header[96];
 	//size_t headerBufLen = 512;
 	uint64_t N = (uint64_t)(1) << logN;
-	size_t passwdLen = passwd.LENGTH;
+	size_t passwdLen = passwd.length();
 	// NOTE: passwdBytes MUST be always 4 x passwdLen regardless of
 	// whether wchar_t is 2 or 4 bytes long.
-	Buf<uint8_t> passwdBytes(passwdLen*4);
+	BufHeap<uint8_t> passwdBytes(passwdLen*4);
 	//SHA256_CTX ctx;
 	//uint8_t * key_hmac = &dk[32];
 	//HMAC_SHA256_CTX hctx;

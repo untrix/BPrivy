@@ -1,14 +1,15 @@
+#include <libscrypt.h>
 #include "CryptCtx.h"
 #include "Utils.h"
 #include "Error.h"
+#include "Format.h"
 #include <cstdio> // for sprintf
-#include <libscrypt.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
 
 namespace crypt
 {
-
+	using std::wstring;
 	void
 	initLibcrypt()
 	{
@@ -46,6 +47,14 @@ namespace crypt
 		}
 	}
 
+	void
+	Error::Assert(bool cond)
+	{
+		if (!cond) {
+			throw Error(Error::CODE_INTERNAL_ERROR);
+		}
+	}
+
 	wstring 
 	Error::LocaleToUnicode(const std::string& str)
 	{
@@ -56,7 +65,7 @@ namespace crypt
 		if (n) 
 		{
 			n++; // Add one for null terminator
-			Buf<wchar_t> buf(n);//throws
+			BufHeap<wchar_t> buf(n);//throws
 			size_t r = mbstowcs((wchar_t*)buf, s, n);
 			if (r == (size_t)-1) {
 				return conv_err;
@@ -74,7 +83,7 @@ namespace crypt
 	/************************** CryptInfo ****************************/
 	/*****************************************************************/
 
-	CryptInfo::CryptInfo(uint8_t cipher, uint16_t keyLen) :
+	CryptInfo::CryptInfo(CipherEnum cipher, size_t keyLen) :
 		m_logN(LOGN), m_r(R), m_p(P),
 		m_cipher(cipher), m_keyLen(keyLen)
 	{
@@ -83,7 +92,7 @@ namespace crypt
 	}
 	CryptInfo::CryptInfo(const std::string& cryptInfo)
 	{
-		Unmarshall(cryptInfo);
+		FormatCryptInfo1::Unmarshall(*this, cryptInfo);
 		ConstructCommon(m_cipher);
 	}
 	void
@@ -91,10 +100,10 @@ namespace crypt
 	{
 		switch(cipher)
 		{
-		case AES_CBC:
+		case CIPHER_AES_CBC:
 			m_EVP_CIPHER = EVP_aes_256_cbc();
 			break;
-		case BF_CBC:
+		case CIPHER_BF_CBC:
 			m_EVP_CIPHER = EVP_bf_cbc();
 			break;
 		default:
@@ -103,46 +112,12 @@ namespace crypt
 		m_ivLen = EVP_CIPHER_iv_length(m_EVP_CIPHER);
 		m_blkSize = EVP_CIPHER_block_size(m_EVP_CIPHER);
 	}
-	void
-	CryptInfo::Unmarshall(const std::string& cryptInfo)
-	{
-		if (cryptInfo.size() != BUF_SIZE) {
-			throw Error(Error::CODE_BAD_PARAM,
-						L"Crypt-info data is corrupted");
-		}
 
-		Array<uint8_t, BUF_SIZE> buf;
-		hexToByteBuf(cryptInfo, buf, buf.LENGTH);
-
-		size_t count = 0;
-		m_logN = buf[count]; count += LOGN_SIZE;
-		m_r = be32dec(&buf[count]); count += R_SIZE;
-		m_p = be32dec(&buf[count]); count += P_SIZE;
-		m_cipher = buf[count]; count += CIPHER_SIZE;
-		m_keyLen = buf[count]; count += KEYLEN_SIZE;
-		memcpy(m_salt, &buf[count], SALT_SIZE); count+=SALT_SIZE;
-		memcpy(m_signature, &buf[count], SIG_SIZE); count += SIG_SIZE;
-	}
-	bool 
-	CryptInfo::Marshall(std::string& cryptInfo)
-	{
-		Array<uint8_t, BUF_SIZE> buf;
-
-		size_t count = 0;
-		buf[count] = m_logN; count += LOGN_SIZE;
-		be32enc(&buf[count], m_r); count += R_SIZE;
-		be32enc(&buf[count], m_p); count += P_SIZE;
-		buf[count] = m_cipher; count += CIPHER_SIZE;
-		buf[count] = m_keyLen; count += KEYLEN_SIZE;
-		memcpy(&buf[count], m_salt, SCRYPT_SALT_SIZE); count+=SALT_SIZE;
-		memcpy(&buf[count], m_signature, SIG_SIZE); count += SIG_SIZE;
-
-		return byteToHexStr(buf, BUF_SIZE, cryptInfo);
-	}
 	void
 	CryptInfo::zero()
 	{
-		m_logN = m_r = m_p = m_cipher = m_keyLen = 0;
+		m_logN = m_r = m_p = m_keyLen = 0;
+		m_cipher = CPHR_NULL;
 		m_salt.zero();
 		m_signature.zero();
 	}
@@ -217,7 +192,7 @@ namespace crypt
 		deriveKey($, info.m_logN, info.m_r, info.m_p, pCtx->m_dk, info.m_salt);
 		// zero out passwd
 		$.zero();
-		pCtx->m_info.Verify();
+		FormatCryptInfo1::Verify(cryptInfo, *pCtx);
 
 		handle = CryptCtx::MakeHandle();
 		s_ctxMap.insert(CryptCtx::map::value_type(handle, pCtx));
@@ -236,11 +211,11 @@ namespace crypt
 			EVP_CIPHER_CTX_set_key_length(&ctx, m_info.m_keyLen);
 
 			size_t ivLength = EVP_CIPHER_iv_length(m_info.m_EVP_CIPHER);
-			Buf<uint8_t> iv(ivLength);
+			BufHeap<uint8_t> iv(ivLength);
 			EVP_EncryptInit_ex(&ctx, m_info.m_EVP_CIPHER, NULL, m_dk, iv);
 			int outlen = 0;
 
-			Buf<uint8_t> outbuf(in.size() + m_info.m_blkSize);
+			BufHeap<uint8_t> outbuf(in.size() + m_info.m_blkSize);
 			if(!EVP_EncryptUpdate(&ctx, outbuf, &outlen, (const unsigned char*)in.data(), in.size()))
 			{
 				Error::ThrowOpensslError();

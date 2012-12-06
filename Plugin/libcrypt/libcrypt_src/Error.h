@@ -1,10 +1,13 @@
 #ifndef _LIBCRYPT_ERROR_H_
 #define _LIBCRYPT_ERROR_H_
+#include <string>
 
 namespace crypt
 {
-	struct Error
+	using std::wstring;
+	class Error
 	{
+	public:
 		Error(const wstring& c) : code(c), errc(0) {}
 		Error(unsigned int c) : code(CODE_OS_ERROR), errc(c) {}
 		Error(const wstring& c, const wstring& msg) : code(c), msg(msg), errc(0) {}
@@ -17,6 +20,7 @@ namespace crypt
 
 		static wstring LocaleToUnicode(const std::string& str);
 		static void		ThrowOpensslError();
+		static void		Assert(bool cond);
 
 		// Error Codes
 		static const wstring	CODE_BAD_PARAM;

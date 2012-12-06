@@ -46,7 +46,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(Plugin-Src);$(SrcDir);$(ProjectDir);$(OpensslInclude);$(LibscryptSrc)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SrcDir);$(ProjectDir);$(OpensslInclude);$(LibscryptSrc)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <AdditionalOptions>/D "_CRT_SECURE_NO_WARNINGS" %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -64,7 +64,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(Plugin-Src);$(SrcDir);$(ProjectDir);$(OpensslInclude);$(LibscryptSrc)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SrcDir);$(ProjectDir);$(OpensslInclude);$(LibscryptSrc)</AdditionalIncludeDirectories>
       <AdditionalOptions>/D "_CRT_SECURE_NO_WARNINGS" %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
