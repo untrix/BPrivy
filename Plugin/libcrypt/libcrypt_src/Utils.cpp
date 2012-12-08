@@ -75,4 +75,50 @@ namespace crypt
 
 		return true;
 	}
+
+	std::wstring	LocaleToUnicode(const std::string& str)
+	{
+		static const wchar_t conv_err[] = L"BPError: could not convert error string to wcs";
+		// Convert from locale charset to UNICODE by converting to wchar_t.
+		const char* s = str.c_str();
+		size_t n = mbstowcs(NULL, s, 0);
+		if (n) 
+		{
+			n++; // Add one for null terminator
+			BufHeap<wchar_t> buf(n);//throws
+			size_t r = mbstowcs((wchar_t*)buf, s, n);
+			if (r == (size_t)-1) {
+				return conv_err;
+			}
+			else {
+				return (wchar_t*)buf;
+			}
+		}
+		else {
+			return conv_err;
+		}
+	}
+
+	std::string UnicodeToLocale(const std::wstring& wstr)
+	{
+		static const char conv_err[] = "BPError: could not convert error string to wcs";
+		// Convert from locale charset to UNICODE by converting to wchar_t.
+		const wchar_t* ws = wstr.c_str();
+		size_t n = wcstombs(NULL, ws, 0);
+		if (n) 
+		{
+			n++; // Add one for null terminator
+			BufHeap<char> buf(n);//throws
+			size_t r = wcstombs((char*)buf, ws, n);
+			if (r == (size_t)-1) {
+				return conv_err;
+			}
+			else {
+				return (char*)buf;
+			}
+		}
+		else {
+			return conv_err;
+		}
+	}
 }

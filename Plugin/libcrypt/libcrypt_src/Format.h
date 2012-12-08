@@ -12,8 +12,8 @@ namespace crypt
 	class Parser
 	{
 	public:
-							Parser		(const char* buf, size_t len)
-								: m_buf((uint8_t*)buf), m_len(len), m_pos(0) {}
+							Parser		(const uint8_t* buf, size_t len)
+								: m_buf(buf), m_len(len), m_pos(0) {}
 		virtual				~Parser		();
 		void				Rewind		() {m_pos = 0;}
 		uint8_t				GetU8		();
@@ -22,7 +22,7 @@ namespace crypt
 		void				GetBuf		(Buf<uint8_t>& buf, size_t len);
 
 	private:
-		uint8_t*			m_buf;
+		const uint8_t*		m_buf;
 		size_t				m_len;
 		size_t				m_pos;
 	};
@@ -52,6 +52,61 @@ namespace crypt
 		virtual ~Format();
 	};
 
+	/**
+	* Serialization format version 1 for Crypt Header. Right now we have room
+	* for 15 versions.
+	*/
+	class CryptHeader 
+	{
+	public:
+		size_t	m_headerSize;
+		size_t	m_encryptedSize;
+	};
+
+	template <>
+	class Format<CryptHeader, 1>
+	{
+	public:
+		// Format Constants
+		typedef enum {
+			VAL_FMT_VER = 1,
+			FMT_HEADER_HEADER_SIZE = 1
+		} Constant;
+
+		static size_t	GetHeaderSize	(size_t encryptedSize);
+		static void marshall(const CryptHeader& header, Buf<uint8_t>& outbuf);
+	};
+	size_t
+	Format<CryptHeader, 1>::GetHeaderSize(size_t encryptedSize)
+	{
+		if (encryptedSize <= 0xFF) {
+			return 1 + FMT_HEADER_HEADER_SIZE;
+		}
+		else if (encryptedSize <= 0xFFFF) {
+			return 2 + FMT_HEADER_HEADER_SIZE;
+		}
+		else if (encryptedSize <= 0xFFFFFFFF) {
+			return 4 + FMT_HEADER_HEADER_SIZE;
+		}
+		else {
+			throw Error(Error::CODE_BAD_PARAM, L"Data size is too large");
+		}
+
+		return 5;
+	}
+	void
+	Format<CryptHeader, 1>::marshall(const CryptHeader& header,
+									 Buf<uint8_t>& outbuf)
+	{
+		// MS Nibble represents header version.
+		uint8_t HEADER_VER = (VAL_FMT_VER << 4) & 0x10;
+		// LS Nibble represents size of the encrypted data to follow.
+		uint8_t HEADER_TRAILER_SIZE = header.m_headerSize - 1;
+		HEADER_TRAILER_SIZE &= 0x0F;
+
+		outbuf[0] = HEADER_VER || HEADER_TRAILER_SIZE;
+		outbuf.PutU32(1, header.m_encryptedSize);
+	}
 	/** 
 	* Serialization Format Version 1 for CryptInfo. Carries code that is
 	* used to marshall and unmarshall data to/from files. Hence the format
@@ -73,7 +128,7 @@ namespace crypt
 			FMT_SALT_SIZE = 32,
 			FMT_SIG_SIZE = 32,
 			FMT_TOTAL_SIZE = 76
-		} Constants;
+		} Constant;
 
 		static uint8_t CipherEnumToVal(CipherEnum cipher)
 		{

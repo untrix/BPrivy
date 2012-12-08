@@ -5,6 +5,11 @@
 namespace crypt
 {
 	using std::wstring;
+	using std::string;
+
+	string		UnicodeToLocale(const std::wstring&);
+	wstring		LocaleToUnicode(const std::string&);
+
 	class Error
 	{
 	public:
@@ -18,9 +23,10 @@ namespace crypt
 		wstring msg;
 		unsigned int errc;
 
-		static wstring LocaleToUnicode(const std::string& str);
 		static void		ThrowOpensslError();
-		static void		Assert(bool cond);
+		static void		Assert(bool cond, 
+							   const wstring& c = CODE_INTERNAL_ERROR,
+							   const wstring& msg = MSG_EMPTY);
 
 		// Error Codes
 		static const wstring	CODE_BAD_PARAM;
@@ -30,6 +36,7 @@ namespace crypt
 		static const wstring	CODE_INTERNAL_ERROR;
 		static const wstring	CODE_NO_CSP;
 		static const wstring	CODE_BAD_FMT;
+		static const wstring	MSG_EMPTY;
 	};
 }
 

@@ -48,34 +48,10 @@ namespace crypt
 	}
 
 	void
-	Error::Assert(bool cond)
+	Error::Assert(bool cond, const wstring& c, const wstring& m)
 	{
 		if (!cond) {
-			throw Error(Error::CODE_INTERNAL_ERROR);
-		}
-	}
-
-	wstring 
-	Error::LocaleToUnicode(const std::string& str)
-	{
-		static const wchar_t conv_err[] = L"BPError: could not convert error string to wcs";
-		// Convert from locale charset to UNICODE by converting to wchar_t.
-		const char* s = str.c_str();
-		size_t n = mbstowcs(NULL, s, 0);
-		if (n) 
-		{
-			n++; // Add one for null terminator
-			BufHeap<wchar_t> buf(n);//throws
-			size_t r = mbstowcs((wchar_t*)buf, s, n);
-			if (r == (size_t)-1) {
-				return conv_err;
-			}
-			else {
-				return (wchar_t*)buf;
-			}
-		}
-		else {
-			return conv_err;
+			throw Error(c, m);
 		}
 	}
 
@@ -201,8 +177,9 @@ namespace crypt
 	}
 
 	void
-	CryptCtx::Encrypt(const std::string& in, std::string& out)
+	CryptCtx::Encrypt(const std::string& in, BufHeap<uint8_t>& out) const
 	{
+		const static size_t MAX_HEADER_SIZE = 9;
 		EVP_CIPHER_CTX ctx;
 		EVP_CIPHER_CTX_init(&ctx);
 
@@ -213,10 +190,14 @@ namespace crypt
 			size_t ivLength = EVP_CIPHER_iv_length(m_info.m_EVP_CIPHER);
 			BufHeap<uint8_t> iv(ivLength);
 			EVP_EncryptInit_ex(&ctx, m_info.m_EVP_CIPHER, NULL, m_dk, iv);
-			int outlen = 0;
 
-			BufHeap<uint8_t> outbuf(in.size() + m_info.m_blkSize);
-			if(!EVP_EncryptUpdate(&ctx, outbuf, &outlen, (const unsigned char*)in.data(), in.size()))
+			CryptHeader header;
+			header.m_encryptedSize = in.size();
+			header.m_headerSize = Format<CryptHeader, 1>::GetHeaderSize(header.m_encryptedSize);
+			BufHeap<uint8_t> outbuf(in.size() + m_info.m_blkSize + header.m_headerSize);
+
+			int outlen = 0;
+			if(!EVP_EncryptUpdate(&ctx, &(outbuf[hSize]), &outlen, (const unsigned char*)in.data(), in.size()))
 			{
 				Error::ThrowOpensslError();
 			}
@@ -227,20 +208,13 @@ namespace crypt
 			}
 			outlen += finlen;
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			PutHeader(out, outbuf, outlen);
-			// out.assign((const char*) ((const uint8_t*) outbuf), outlen);
+			Format<CryptHeader, 1>::marshall(outbuf, outlen, hSize);
+			out.adopt(outbuf);
 		}
 		catch (...)
 		{
 			EVP_CIPHER_CTX_cleanup(&ctx);
 			throw;
 		}
-	}
-
-	void
-	CryptCtx::PutHeader(std::string& out, Buf<uint8_t>& outbuf,
-						size_t dataSize)
-	{
-
 	}
 }

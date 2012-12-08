@@ -91,9 +91,9 @@ namespace crypt
 		static void					Destroy				(unsigned int handle);
 		const CryptInfo&			GetInfo				() const {return m_info;}
 		void						Encrypt				(const std::string& in,
-														 std::string& out);
-		void						Decrypt				(const std::string& in,
-														 std::string& out);
+														 BufHeap<uint8_t>& out) const;
+		void						Decrypt				(const BufHeap<uint8_t>& in,
+														 std::string& out) const;
 
 	protected:
 									CryptCtx			(CipherEnum cipher,
@@ -101,9 +101,10 @@ namespace crypt
 									CryptCtx			(const std::string& cryptInfo);
 		virtual						~CryptCtx			() {zero();}
 		virtual void				zero				();
-		void						PutHeader			(std::string& out,
-														 Buf<uint8_t>& outbuf,
-														 size_t dataSize);
+		static size_t				GetHeaderSize		(size_t inSize);
+		void						PutHeader			(Buf<uint8_t>& outbuf,
+														 size_t dataSize,
+														 size_t headerSize) const;
 
 	private:
 									CryptCtx			(const CryptCtx&);// not to be defined
@@ -115,7 +116,7 @@ namespace crypt
 
 		/** Object variables */
 		Array<uint8_t, SCRYPT_DK_SIZE> m_dk;
-		const CryptInfo				m_info;
+		const CryptInfo					m_info;
 	};
 
 	inline CipherEnum
