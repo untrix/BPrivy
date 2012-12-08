@@ -56,12 +56,6 @@ namespace crypt
 	* Serialization format version 1 for Crypt Header. Right now we have room
 	* for 15 versions.
 	*/
-	class CryptHeader 
-	{
-	public:
-		size_t	m_headerSize;
-		size_t	m_encryptedSize;
-	};
 
 	template <>
 	class Format<CryptHeader, 1>
@@ -76,6 +70,8 @@ namespace crypt
 		static size_t	GetHeaderSize	(size_t encryptedSize);
 		static void marshall(const CryptHeader& header, Buf<uint8_t>& outbuf);
 	};
+	typedef Format<CryptHeader, 1> CryptHeaderFormat1;
+
 	size_t
 	Format<CryptHeader, 1>::GetHeaderSize(size_t encryptedSize)
 	{

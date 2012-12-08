@@ -177,7 +177,7 @@ namespace crypt
 	}
 
 	void
-	CryptCtx::Encrypt(const std::string& in, BufHeap<uint8_t>& out) const
+	CryptCtx::Encrypt(const std::string& in, CipherText& out) const
 	{
 		const static size_t MAX_HEADER_SIZE = 9;
 		EVP_CIPHER_CTX ctx;
@@ -191,24 +191,30 @@ namespace crypt
 			BufHeap<uint8_t> iv(ivLength);
 			EVP_EncryptInit_ex(&ctx, m_info.m_EVP_CIPHER, NULL, m_dk, iv);
 
-			CryptHeader header;
-			header.m_encryptedSize = in.size();
-			header.m_headerSize = Format<CryptHeader, 1>::GetHeaderSize(header.m_encryptedSize);
-			BufHeap<uint8_t> outbuf(in.size() + m_info.m_blkSize + header.m_headerSize);
+			int hSize = CryptHeaderFormat1::GetHeaderSize(in.size()+m_info.m_blkSize);
+			BufHeap<uint8_t> outbuf(hSize + in.size() + m_info.m_blkSize);
 
 			int outlen = 0;
-			if(!EVP_EncryptUpdate(&ctx, &(outbuf[hSize]), &outlen, (const unsigned char*)in.data(), in.size()))
+			if(!EVP_EncryptUpdate(&ctx,
+								  &(outbuf[hSize]), 
+								  &outlen,
+								  (const unsigned char*)in.data(), 
+								  in.size()))
 			{
 				Error::ThrowOpensslError();
 			}
+
 			int finlen = 0;
 			if(!EVP_EncryptFinal_ex(&ctx, &(outbuf[outlen]), &finlen))
 			{
 				Error::ThrowOpensslError();
 			}
+
 			outlen += finlen;
 			EVP_CIPHER_CTX_cleanup(&ctx);
-			Format<CryptHeader, 1>::marshall(outbuf, outlen, hSize);
+
+			CryptHeaderFormat1::marshall(header, outbuf);
+			CipherText header(hSize, outlen, outbuf);
 			out.adopt(outbuf);
 		}
 		catch (...)

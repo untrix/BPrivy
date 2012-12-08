@@ -64,7 +64,9 @@ namespace crypt
 	{
 	public:
 		void		zero			() {if (m_buf) {memset(m_buf, 0, sizeof m_buf);}}
-		size_t		size			() const {return (m_buf ? sizeof m_buf : 0);}
+		/** Size of the buffer in # of bytes */
+		size_t		size			() const {return (m_buf ? (sizeof m_buf) : 0);}
+		/** Number of T elements in the m_buf array */
 		size_t		length			() const {return m_len;}		
 					operator T*		() {return m_buf;}
 					operator const T* () const {return m_buf;}
@@ -78,6 +80,7 @@ namespace crypt
 		virtual		~Buf			() {zero();}
 		/** Buffer memory management is done by derived concrete classes */
 		T*			m_buf;
+		// Array length. # of T elements in m_buf
 		size_t		m_len;
 	private:
 					Buf				(const Buf&); // disabled
@@ -102,8 +105,10 @@ namespace crypt
 		// WARNING: This constructor will only work on PODs and shallow
 		// structs.
 		explicit		BufHeap			(const T* c_str);
+						BufHeap			(BufHeap<T>&& that);
+		/** Move operator capable of accepting expiring values (xvalue) */
+		BufHeap&		operator=		(BufHeap<T>&& that);
 		virtual			~BufHeap		() {Delete();}
-		void			adopt			(BufHeap<T>& that);
 	private:
 						BufHeap			(const Buf&);// not to be defined
 		BufHeap&		operator=		(const Buf&);// not to be defined
@@ -132,9 +137,8 @@ namespace crypt
 	template <typename T>
 	BufHeap<T>::BufHeap(const T* c_str)
 	{
-		if (!c_str) {
-			throw Error(Error::CODE_BAD_PARAM, L"BufHeap: c_str is null");
-		}
+		Error::Assert((!c_str), Error::CODE_BAD_PARAM, L"BufHeap: c_str is null");
+
 		size_t i;
 		for (i=0; c_str[i] != 0; i++){}
 
@@ -154,12 +158,16 @@ namespace crypt
 		}
 	}
 
-	template <typename T> void
-	BufHeap<T>::adopt(BufHeap<T>& that)
+	template <typename T>
+	BufHeap<T>::BufHeap(BufHeap&& that) {*this = that;}
+
+	template <typename T> BufHeap<T>&
+	BufHeap<T>::operator=(BufHeap<T>&& that)
 	{
 		Delete();
 		m_buf = that.m_buf; that.m_buf = NULL;
 		m_len = that.m_len; that.m_len = 0;
+		return *this;
 	}
 
 	//WARNING: Buf and its descendants use memory operations like memset and memcpy.

@@ -62,6 +62,42 @@ namespace crypt
 		void		ConstructCommon	(CipherEnum);
 	};
 
+	struct CryptHeader 
+	{
+		CryptHeader(size_t h, size_t e) : m_headerSize(h), m_encryptedSize(e) {}
+		void zero() {m_headerSize = m_encryptedSize = 0;}
+		size_t	m_headerSize;
+		size_t	m_encryptedSize;
+	};
+
+	struct CipherText : public BufHeap<uint8_t>
+	{
+	public:
+		CryptHeader m_header;
+		
+		CipherText	(BufHeap<uint8_t>&& buf, CryptHeader& h)
+			: BufHeap<uint8_t>(buf), m_header(h) {}
+
+		// Move semantics
+		CipherText	(CipherText&& other) 
+			: BufHeap<uint8_t>(other), m_header(other.m_header)
+		{
+			other.m_header.zero();
+		}
+
+		// Move semantics
+		CipherText&	operator=(CipherText&& other)
+		{
+			m_header = other.m_header;
+			other.m_header.zero();
+			BufHeap<uint8_t>::operator=((BufHeap<uint8_t>&&)other);
+			return *this;
+		}
+	private:
+		CipherText& operator= (const CipherText&); // disabled
+					CipherText(const CipherText&); // disabled
+	};
+
 	class CryptCtx
 	{
 	public:
