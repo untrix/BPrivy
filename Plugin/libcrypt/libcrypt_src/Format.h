@@ -12,9 +12,9 @@ namespace crypt
 	class Parser
 	{
 	public:
-							Parser		(const uint8_t* buf, size_t len)
-								: m_buf(buf), m_len(len), m_pos(0) {}
-		virtual				~Parser		();
+							Parser		(const Buf<uint8_t>& buf)
+								: m_buf(buf), m_pos(0) {}
+		virtual				~Parser		() {}
 		void				Rewind		() {m_pos = 0;}
 		uint8_t				GetU8		();
 		uint16_t			GetU16		();
@@ -22,26 +22,42 @@ namespace crypt
 		void				GetBuf		(Buf<uint8_t>& buf, size_t len);
 
 	private:
-		const uint8_t*		m_buf;
-		size_t				m_len;
+		const uint8_t*		getP		();
+		const Buf<uint8_t>&	m_buf;
 		size_t				m_pos;
 	};
+	inline const uint8_t*
+	Parser::getP()
+	{
+		/** NOTE: m_pos is #bytes, not #elements */
+		return ((const uint8_t*)m_buf) + m_pos;
+	}
 
 	class Serializer
 	{
 	public:
-		Serializer	(std::string& outbuf) : m_buf(outbuf) {}
-		void				PutU8		(const uint8_t&);
-		void				PutU16		(const uint16_t&);
-		void				PutU32		(const uint32_t&);
+		Serializer			(Buf<uint8_t>& outbuf) 
+								: m_buf(outbuf), m_pos(0) {}
+		void				PutU8		(uint8_t);
+		void				PutU16		(uint16_t);
+		void				PutU32		(uint32_t);
 		void				PutBuf		(const Buf<uint8_t>&, size_t len);
-		void				dump		(std::string&);
-		std::string&		m_buf;
+		size_t				getPos		() const {return m_pos;}
+		Buf<uint8_t>&		m_buf;
+	private:
+		uint8_t*			getP		();
+		size_t				m_pos; // Byte position of next insertion point.
 	};
-
+	inline uint8_t*
+	Serializer::getP()
+	{
+		/** NOTE: m_pos is #bytes, not #elements */
+		return ((uint8_t*)m_buf) + m_pos;
+	}
 	/** 
 	* This template is setup such that only its specializations may be constructed.
-	* This code is never intended to be used. Look at specializations.
+	* This generalized code is never meant to be used. Look at specializations for
+	* meaningful code.
 	*/
 	template <typename T, size_t VER>
 	class Format
@@ -49,16 +65,18 @@ namespace crypt
 	private:
 		Format() {}
 		Format(const Format&);
-		virtual ~Format();
+		virtual ~Format() = 0; // prevents instantiation of this generalized code.
 	};
 
 	/**
-	* Serialization format version 1 for Crypt Header. Right now we have room
-	* for 15 versions.
+	* Serialization format version 1 for Crypt Header. Since the version# is
+	* serialized into a nibble, we have room for 14 versions - 0x1 through 0xE.
+	* Value 0x0 is reserved as a NULL value and value 0xF is reserved as a hook
+	* into a larger format (e.g. one using an entire byte for the version).
 	*/
 
 	template <>
-	class Format<CryptHeader, 1>
+	class Format<CipherBlob, 1>
 	{
 	public:
 		// Format Constants
@@ -68,41 +86,10 @@ namespace crypt
 		} Constant;
 
 		static size_t	GetHeaderSize	(size_t encryptedSize);
-		static void marshall(const CryptHeader& header, Buf<uint8_t>& outbuf);
+		static void serializeHeader(CipherBlob& ciText);
 	};
-	typedef Format<CryptHeader, 1> CryptHeaderFormat1;
+	typedef Format<CipherBlob, 1> CipherBlobFormat1;
 
-	size_t
-	Format<CryptHeader, 1>::GetHeaderSize(size_t encryptedSize)
-	{
-		if (encryptedSize <= 0xFF) {
-			return 1 + FMT_HEADER_HEADER_SIZE;
-		}
-		else if (encryptedSize <= 0xFFFF) {
-			return 2 + FMT_HEADER_HEADER_SIZE;
-		}
-		else if (encryptedSize <= 0xFFFFFFFF) {
-			return 4 + FMT_HEADER_HEADER_SIZE;
-		}
-		else {
-			throw Error(Error::CODE_BAD_PARAM, L"Data size is too large");
-		}
-
-		return 5;
-	}
-	void
-	Format<CryptHeader, 1>::marshall(const CryptHeader& header,
-									 Buf<uint8_t>& outbuf)
-	{
-		// MS Nibble represents header version.
-		uint8_t HEADER_VER = (VAL_FMT_VER << 4) & 0x10;
-		// LS Nibble represents size of the encrypted data to follow.
-		uint8_t HEADER_TRAILER_SIZE = header.m_headerSize - 1;
-		HEADER_TRAILER_SIZE &= 0x0F;
-
-		outbuf[0] = HEADER_VER || HEADER_TRAILER_SIZE;
-		outbuf.PutU32(1, header.m_encryptedSize);
-	}
 	/** 
 	* Serialization Format Version 1 for CryptInfo. Carries code that is
 	* used to marshall and unmarshall data to/from files. Hence the format
@@ -154,7 +141,7 @@ namespace crypt
 			}
 		}
 
-		static void Verify(const std::string& inbuf, const CryptCtx& ctx)
+		static void Verify(const Buf<uint8_t>& inbuf, const CryptCtx& ctx)
 		{
 			return; // TBD:
 		}
@@ -166,7 +153,7 @@ namespace crypt
 			serialize.PutBuf(tBuf, FMT_SIG_SIZE);
 		}
 
-		static void Marshall (const CryptInfo& obj, std::string& outbuf, const CryptCtx& ctx)
+		static void serialize (const CryptInfo& obj, Buf<uint8_t>& outbuf, const CryptCtx& ctx)
 		{
 			Serializer serialize(outbuf);
 			serialize.PutU8(VAL_FMT_VER);
@@ -178,18 +165,18 @@ namespace crypt
 			serialize.PutBuf(obj.m_salt, FMT_SALT_SIZE);
 			Sign(serialize, ctx);
 			//serialize.PutBuf(obj.m_signature, FMT_SIG_SIZE);
-			Error::Assert(serialize.m_buf.size() == FMT_TOTAL_SIZE);
+			Error::Assert(serialize.getPos() == FMT_TOTAL_SIZE);
 		}
 
-		static size_t GetVersion(const std::string& inbuf)
+		static size_t GetVersion(const Buf<uint8_t>& inbuf)
 		{
-			Parser parse(inbuf.data(), inbuf.size());
+			Parser parse(inbuf);
 			return parse.GetU8();
 		}
 
-		static void Unmarshall (CryptInfo& obj, const std::string& inbuf)
+		static void parse (const Buf<uint8_t>& inbuf, CryptInfo& obj)
 		{
-			Parser parse(inbuf.data(), inbuf.size());
+			Parser parse(inbuf);
 			if ((parse.GetU8() != VAL_FMT_VER) || (inbuf.size() != FMT_TOTAL_SIZE)) {
 				throw Error(Error::CODE_BAD_FMT);
 			}

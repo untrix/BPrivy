@@ -18,34 +18,34 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\scrypt\lib\crypto\sha256.c">
+    <ClInclude Include="..\libscrypt_src\libscrypt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libscrypt_src\scrypt\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libscrypt_src\scrypt\crypto_scrypt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libscrypt_src\scrypt\scrypt_platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libscrypt_src\scrypt\sha256.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libscrypt_src\scrypt\sysendian.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\libscrypt_src\scrypt\crypto_scrypt-ref.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\scrypt\lib\crypto\crypto_scrypt-ref.c">
+    <ClCompile Include="..\libscrypt_src\scrypt\sha256.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\libscrypt_src\libscrypt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\scrypt\config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\scrypt\lib\crypto\crypto_scrypt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\scrypt\scrypt_platform.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\scrypt\lib\crypto\sha256.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\scrypt\lib\util\sysendian.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\libscrypt_src\libscrypt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

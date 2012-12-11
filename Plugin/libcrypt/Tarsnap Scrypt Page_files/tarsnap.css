@@ -1,0 +1,201 @@
+/* Page header. */
+div.banner {
+	margin-bottom: 2em;
+}
+div.banner a {
+	color: #000;
+	text-decoration: none;
+}
+div.banner h1 {
+	font-size: 400%;
+	font-family: serif;
+	margin: 0em;
+}
+div.banner p.tagline {
+	margin: 0em;
+}
+
+/* The rest of the page. */
+div.nonbanner {
+	position: relative;
+	width: 100%;
+}
+
+/* Left margin. */
+div.leftmargin {
+	position: absolute;
+	top: 0em;
+	width: 10em;
+	float: left;
+	margin: 0em;
+}
+
+/* Navigation frame. */
+div.nav ul {
+	list-style-type: none;
+	margin: 0em;
+}
+div.nav ul.navtop {
+	padding-left: 0em;
+}
+div.nav ul ul {
+	padding-left: 1em;
+}
+div.nav li {
+	display: inline;
+}
+div.nav a {
+	display: block;
+	color: black;
+	text-decoration: none;
+	font-size: 80%;
+	font-family: sans-serif;
+	margin-bottom: 0.25em;
+	padding: 0.25em;
+	background: #cfe7ff;
+	border: 2px solid;
+	border-color: #cfe7ff;
+}
+div.nav a.current {
+	background: #9fcfff;
+	border-color: #9fcfff;
+}
+div.nav a:hover {
+	border-color: #000000;
+}
+
+/* Main content div. */
+div.main {
+	top: 0em;
+	margin: 0em;
+	padding: 0em;
+	margin-left: 10em;	/* From div.nav width. */
+	min-width: 36em;
+	width: auto;
+}
+
+/* Left column material. */
+div.leftcol {
+	float: left;
+	width: 50%;
+}
+
+/* Right column material. */
+div.rightcol {
+	float: right;
+	width: 50%;
+}
+
+/* One column material. */
+div.onecol {
+	float: left;
+	min-width: 100%;
+}
+
+/* Box containing information. */
+div.box {
+	margin: 1.5em;
+	margin-top: 0em;
+	padding: 0em;
+	background: #f7f7ff;
+	border: solid #555;
+	border-width: 1px;
+}
+div.leftcol div.box {
+	margin-right: 0.75em;
+}
+div.rightcol div.box {
+	margin-left: 0.75em;
+}
+
+/* Box header. */
+div.box h3 {
+	margin: 0;
+	padding: 0.5em;
+	border: solid #aaa;
+	border-width: 0 0 1px 0;
+}
+
+/* Box header styles. */
+div.box h3 {
+	background: #ffffdf;
+}
+div.box h3.doc {
+	background: #eaeaff;
+}
+div.box h3.cta {
+	background: #ffbfbf;
+}
+
+/* Box contents. */
+div.boxcontents {
+	padding-left: 1em;
+	padding-right: 1em;
+	font-family: sans-serif;
+}
+
+/* Justify blocks of text. */
+div.boxcontents p {
+	text-align: justify;
+}
+
+/* "Read more..." link. */
+div.boxcontents p.readmore {
+	text-align: right;
+}
+
+/* Within-box headers. */
+div.boxcontents h4 {
+	font-size: 125%;
+	margin-top: 1.6em;
+	margin-bottom: 0.8em;
+}
+div.boxcontents h4.boxstart {
+	margin-top: 0.8em;
+}
+
+/* Pricing table. */
+table.pricing {
+	border: none;
+	margin: auto;
+	font-size: 125%;
+}
+table.pricing th {
+	font-weight: bold;
+	vertical-align: top;
+	text-align: right;
+}
+
+/* Definition list, used in examples. */
+dl.examples dt {
+	margin-top: 0.5em;
+}
+
+/* Highlight errors in red. */
+p.error {
+	color: red;
+}
+
+/* Adjustments to make things work better on small/narrow screens. */
+@media handheld, screen and (max-width: 48em) {
+	div.main {
+		position: absolute;
+		left: 10em;
+		margin-left: 0em;
+		min-width: 100%;
+		min-width: 20em;
+	}
+	div.leftcol {
+		min-width: 100%;
+	}
+	div.rightcol {
+		float: left;
+		min-width: 100%;
+	}
+	div.leftcol div.box {
+		margin-right: 1.5em;
+	}
+	div.rightcol div.box {
+		margin-left: 1.5em;
+	}
+}

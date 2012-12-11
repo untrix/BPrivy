@@ -4,7 +4,6 @@
   <PropertyGroup Label="UserMacros">
     <LibcryptSrc>..\libcrypt_src</LibcryptSrc>
     <SrcDir>..\libscrypt_src</SrcDir>
-    <ScryptDist>..\scrypt</ScryptDist>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup />
@@ -15,10 +14,6 @@
     </BuildMacro>
     <BuildMacro Include="SrcDir">
       <Value>$(SrcDir)</Value>
-      <EnvironmentVariable>true</EnvironmentVariable>
-    </BuildMacro>
-    <BuildMacro Include="ScryptDist">
-      <Value>$(ScryptDist)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
   </ItemGroup>

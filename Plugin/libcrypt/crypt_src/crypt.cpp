@@ -37,17 +37,30 @@ int _tmain(int argc, wchar_t* argv[])
 		std::wstring fileOut(argv[4]); fileOut += L".bin";
 		
 		FILE* inFile = fopen(crypt::UnicodeToLocale(fileIn).c_str(), "r");
-		FILE* outFile;// = outStream(fileOut += L".bin");
-
-		unsigned int ctxHandle = crypt::CryptCtx::Make(passwd);
+		if (!inFile) {
+			fprintf(stderr, "Could not open input file: %s", crypt::UnicodeToLocale(fileIn).c_str()); 
+			return 1;
+		}
 
 		crypt::Array<char, 256> inBuf;
-		size_t count = fread(inBuf, inBuf.size(), inBuf.size(), inFile);
+		size_t count = fread(inBuf, sizeof(char), inBuf.size(), inFile);
 		if (!count) {
 			fprintf(stderr, "fread returned zero");
 			return 1;
 		}
+		else {
+			inBuf[count] = 0;
+		}
 
-		crypt::CryptCtx::Get(ctxHandle).Encrypt(stringIn, stringOut);
+		unsigned int ctxHandle = crypt::CryptCtx::Make(passwd);
+		crypt::CipherBlob outBuf;
+		crypt::CryptCtx::Get(ctxHandle).Encrypt((char*)inBuf, outBuf);
+
+		FILE* outFile = fopen(crypt::UnicodeToLocale(fileOut).c_str(), "w");
+		if (!outFile) {
+			fprintf(stderr, "Could not open input file: %s", crypt::UnicodeToLocale(fileIn).c_str()); 
+			return 1;
+		}
+		count = fwrite(outBuf.m_buf, sizeof(uint8_t), outBuf.getSize(), outFile);
 	}
 }

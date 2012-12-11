@@ -4,9 +4,15 @@
   <PropertyGroup Label="UserMacros">
     <LibCryptSrc>..\libcrypt_src</LibCryptSrc>
     <LibScryptSrc>..\libscrypt_src</LibScryptSrc>
+    <OpensslInclude>C:\openssl\include</OpensslInclude>
+    <OpensslLib>C:\openssl\lib\libeay32.lib</OpensslLib>
   </PropertyGroup>
   <PropertyGroup />
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <BuildMacro Include="LibCryptSrc">
       <Value>$(LibCryptSrc)</Value>
@@ -14,6 +20,14 @@
     </BuildMacro>
     <BuildMacro Include="LibScryptSrc">
       <Value>$(LibScryptSrc)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="OpensslInclude">
+      <Value>$(OpensslInclude)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="OpensslLib">
+      <Value>$(OpensslLib)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
   </ItemGroup>

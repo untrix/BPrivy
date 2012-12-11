@@ -63,18 +63,15 @@ namespace crypt
 	class Buf
 	{
 	public:
-		void		zero			() {if (m_buf) {memset(m_buf, 0, sizeof m_buf);}}
+		void		zero			() {if (m_buf) {memset(m_buf, 0, size());}}
 		/** Size of the buffer in # of bytes */
-		size_t		size			() const {return (m_buf ? (sizeof m_buf) : 0);}
+		size_t		size			() const {return (m_buf ? (m_len*sizeof(T)) : 0);}
 		/** Number of T elements in the m_buf array */
 		size_t		length			() const {return m_len;}		
 					operator T*		() {return m_buf;}
 					operator const T* () const {return m_buf;}
-		// Serialization methods
-		void				PutU8		(size_t pos, uint8_t) {}
-		void				PutU16		(size_t pos, uint16_t) {}
-		void				PutU32		(size_t pos, uint32_t);
-		void				PutBuf		(size_t pos, const Buf<uint8_t>&, size_t len) {}
+		void		PutBuf			(size_t pos, const Buf<uint8_t>&, 
+									 size_t len) {}
 	protected:
 					Buf				() : m_len(0), m_buf(NULL) {}
 		virtual		~Buf			() {zero();}
@@ -87,12 +84,6 @@ namespace crypt
 		Buf&		operator=		(const Buf&); // disabled
 		virtual	void dummy			() = 0;
 	};
-	template <typename T> void
-	Buf<T>::PutU32(size_t pos, const uint32_t n)
-	{
-		Error::Assert((pos*sizeof(T)+4) <= (size()+1));
-		be32enc(m_buf + pos, n);
-	}
 
 	//WARNING: Buf and its descendants use memory operations like memset and memcpy.
 	//Hence, T should be a basic type or a POD. It is designed for uint8_t and
@@ -110,13 +101,20 @@ namespace crypt
 		BufHeap&		operator=		(BufHeap<T>&& that);
 		virtual			~BufHeap		() {Delete();}
 	private:
-						BufHeap			(const Buf&);// not to be defined
-		BufHeap&		operator=		(const Buf&);// not to be defined
 		void			Malloc			(size_t len);
 		void			Malloc			(const T* c_str);
 		void			Delete			() 
-			{zero(); delete[] m_buf; m_buf = NULL; m_len = 0;}
+			{
+				size_t _temp = size();
+				zero();
+				_temp = size();
+				delete[] m_buf; 
+				m_buf = NULL; m_len = 0;}
 		virtual void	dummy			() {}
+
+	private: // Disabled interfaces
+						BufHeap			(const BufHeap&);// disabled
+		BufHeap&		operator=		(const BufHeap&);// disabled
 	};
 
 	template <typename T> void
@@ -137,7 +135,7 @@ namespace crypt
 	template <typename T>
 	BufHeap<T>::BufHeap(const T* c_str)
 	{
-		Error::Assert((!c_str), Error::CODE_BAD_PARAM, L"BufHeap: c_str is null");
+		Error::Assert((c_str!=NULL), Error::CODE_BAD_PARAM, L"BufHeap: c_str is null");
 
 		size_t i;
 		for (i=0; c_str[i] != 0; i++){}
@@ -185,9 +183,11 @@ namespace crypt
 	protected:
 		T				m_array[LEN];
 	private:
+		virtual void	dummy			() {}
+
+	private: // Disabled interfaces
 						Array			(const Array&); // undefined
 		Array&			operator=		(const Array&); // undefined
-		virtual void	dummy			() {}
 	};
 }
 

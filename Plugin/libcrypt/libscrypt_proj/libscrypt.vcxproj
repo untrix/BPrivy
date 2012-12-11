@@ -48,7 +48,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;HAVE_CONFIG_H;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ScryptDist)\lib\crypto;$(ScryptDist);$(ScryptDist)\lib\util;$(SrcDir);$(LibcryptSrc)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SrcDir);$(SrcDir)\scrypt;$(LibcryptSrc)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -69,7 +69,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;HAVE_CONFIG_H;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ScryptDist)\lib\crypto;$(ScryptDist);$(ScryptDist)\lib\util;$(SrcDir);$(LibcryptSrc)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SrcDir);$(SrcDir)\scrypt;$(LibcryptSrc)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <CompileAs>Default</CompileAs>
     </ClCompile>
@@ -84,17 +84,23 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\libscrypt_src\libscrypt.cpp" />
-    <ClCompile Include="..\scrypt\lib\crypto\crypto_scrypt-ref.c" />
-    <ClCompile Include="..\scrypt\lib\crypto\sha256.c" />
+    <ClInclude Include="..\libscrypt_src\libscrypt.h" />
+    <ClInclude Include="..\libscrypt_src\scrypt\config.h" />
+    <ClInclude Include="..\libscrypt_src\scrypt\crypto_scrypt.h" />
+    <ClInclude Include="..\libscrypt_src\scrypt\scrypt_platform.h" />
+    <ClInclude Include="..\libscrypt_src\scrypt\sha256.h" />
+    <ClInclude Include="..\libscrypt_src\scrypt\sysendian.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\libscrypt_src\libscrypt.h" />
-    <ClInclude Include="..\scrypt\config.h" />
-    <ClInclude Include="..\scrypt\lib\crypto\crypto_scrypt.h" />
-    <ClInclude Include="..\scrypt\lib\crypto\sha256.h" />
-    <ClInclude Include="..\scrypt\lib\util\sysendian.h" />
-    <ClInclude Include="..\scrypt\scrypt_platform.h" />
+    <ClCompile Include="..\libscrypt_src\libscrypt.cpp" />
+    <ClCompile Include="..\libscrypt_src\scrypt\crypto_scrypt-ref.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
+    </ClCompile>
+    <ClCompile Include="..\libscrypt_src\scrypt\sha256.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

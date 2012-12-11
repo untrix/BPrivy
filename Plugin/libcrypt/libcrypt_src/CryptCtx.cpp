@@ -33,6 +33,7 @@ namespace crypt
 	const wstring Error::CODE_INTERNAL_ERROR = L"InternalError";
 	const wstring Error::CODE_NO_CSP = L"NoCSP";
 	const wstring Error::CODE_BAD_FMT = L"WrongFormatVer";
+	const wstring Error::MSG_EMPTY = L"";
 
 	void
 	Error::ThrowOpensslError()
@@ -66,9 +67,9 @@ namespace crypt
 		RAND_bytes(static_cast<unsigned char*>(m_salt), m_salt.size());
 		ConstructCommon(m_cipher);
 	}
-	CryptInfo::CryptInfo(const std::string& cryptInfo)
+	CryptInfo::CryptInfo(const Buf<uint8_t>& cryptInfo)
 	{
-		FormatCryptInfo1::Unmarshall(*this, cryptInfo);
+		FormatCryptInfo1::parse(cryptInfo, *this);
 		ConstructCommon(m_cipher);
 	}
 	void
@@ -99,12 +100,27 @@ namespace crypt
 	}
 	
 	/*****************************************************************/
+	/************************** CipherBlob ***************************/
+	/*****************************************************************/
+	CipherBlob::CipherBlob(size_t tentativeDataSize)
+	: m_buf(CipherBlobFormat1::GetHeaderSize(tentativeDataSize) + tentativeDataSize),
+		m_headerSize(CipherBlobFormat1::GetHeaderSize(tentativeDataSize)) {}
+	void CipherBlob::pack()
+	{
+		// marshall the header.
+		Error::Assert((m_encryptedSize>0), Error::CODE_BAD_PARAM,
+			L"CipherBlob::pack. Encrypted size is null");
+		CipherBlobFormat1::serializeHeader(*this);
+	}
+
+
+	/*****************************************************************/
 	/*************************** CryptCtx ****************************/
 	/*****************************************************************/
 	CryptCtx::map CryptCtx::s_ctxMap;
 	unsigned int CryptCtx::s_lastHandle = 0;
 
-	CryptCtx::CryptCtx(const std::string& cryptInfo) : m_info(cryptInfo)
+	CryptCtx::CryptCtx(const Buf<uint8_t>& cryptInfo) : m_info(cryptInfo)
 	{}
 	CryptCtx::CryptCtx(CipherEnum cipher, unsigned int keyLen) : 
 		m_info(cipher, keyLen)
@@ -123,7 +139,7 @@ namespace crypt
 			else {throw Error(Error::CODE_BAD_PARAM, L"Internal Error");}
 		} catch (std::exception& e)
 		{
-			throw Error(Error::CODE_BAD_PARAM, Error::LocaleToUnicode(e.what()));
+			throw Error(Error::CODE_BAD_PARAM, LocaleToUnicode(e.what()));
 		}
 	}
 	void CryptCtx::Destroy(unsigned int handle)
@@ -134,7 +150,7 @@ namespace crypt
 			CryptCtx::s_ctxMap.erase(handle);
 		}
 		catch (std::exception& e) {
-			throw Error(Error::CODE_BAD_PARAM, Error::LocaleToUnicode(e.what()));
+			throw Error(Error::CODE_BAD_PARAM, LocaleToUnicode(e.what()));
 		}
 	}
 	unsigned int
@@ -156,7 +172,7 @@ namespace crypt
 		return handle;
 	}
 	unsigned int
-	CryptCtx::Make(Buf<wchar_t>& $, std::string& cryptInfo)
+	CryptCtx::Make(Buf<wchar_t>& $, const Buf<uint8_t>& cryptInfo)
 	{
 		unsigned int handle = 0;
 		std::string headerHex;
@@ -177,7 +193,7 @@ namespace crypt
 	}
 
 	void
-	CryptCtx::Encrypt(const std::string& in, CipherText& out) const
+	CryptCtx::Encrypt(const std::string& in, CipherBlob& out) const
 	{
 		const static size_t MAX_HEADER_SIZE = 9;
 		EVP_CIPHER_CTX ctx;
@@ -185,18 +201,18 @@ namespace crypt
 
 		try
 		{
-			EVP_CIPHER_CTX_set_key_length(&ctx, m_info.m_keyLen);
-
 			size_t ivLength = EVP_CIPHER_iv_length(m_info.m_EVP_CIPHER);
 			BufHeap<uint8_t> iv(ivLength);
-			EVP_EncryptInit_ex(&ctx, m_info.m_EVP_CIPHER, NULL, m_dk, iv);
+			EVP_EncryptInit_ex(&ctx, m_info.m_EVP_CIPHER, NULL, NULL, NULL);
+			EVP_CIPHER_CTX_set_key_length(&ctx, m_info.m_keyLen);
+			EVP_EncryptInit_ex(&ctx, NULL, NULL, m_dk, iv);
 
-			int hSize = CryptHeaderFormat1::GetHeaderSize(in.size()+m_info.m_blkSize);
-			BufHeap<uint8_t> outbuf(hSize + in.size() + m_info.m_blkSize);
+			CipherBlob cText(in.size() + m_info.m_blkSize);
+			uint8_t* dataBuf = cText.getDataBuf();
 
 			int outlen = 0;
 			if(!EVP_EncryptUpdate(&ctx,
-								  &(outbuf[hSize]), 
+								  dataBuf, 
 								  &outlen,
 								  (const unsigned char*)in.data(), 
 								  in.size()))
@@ -205,7 +221,7 @@ namespace crypt
 			}
 
 			int finlen = 0;
-			if(!EVP_EncryptFinal_ex(&ctx, &(outbuf[outlen]), &finlen))
+			if(!EVP_EncryptFinal_ex(&ctx, &(dataBuf[outlen]), &finlen))
 			{
 				Error::ThrowOpensslError();
 			}
@@ -213,9 +229,9 @@ namespace crypt
 			outlen += finlen;
 			EVP_CIPHER_CTX_cleanup(&ctx);
 
-			CryptHeaderFormat1::marshall(header, outbuf);
-			CipherText header(hSize, outlen, outbuf);
-			out.adopt(outbuf);
+			cText.putEncryptedSize(outlen);
+			cText.pack();
+			out = std::move(cText);
 		}
 		catch (...)
 		{
