@@ -71,48 +71,26 @@ namespace crypt
 	struct CipherBlob
 	{
 	public:
-					CipherBlob	(size_t tentativeDataSize=0);
+					CipherBlob	(ByteBuf&& iv, size_t tentativeDataSize);
+					CipherBlob	(char* data, size_t data_len);
+					CipherBlob	(BufHeap<uint8_t>&& data);
 					CipherBlob	(CipherBlob&& other);
 		CipherBlob&	operator=	(CipherBlob&& other);
-		void		zero ();
-		void		pack();
+		virtual void zero		();
+		void		serialize	(size_t dataSize);
 		// Getters and Setters
-		size_t		getSize				() {return m_encryptedSize+m_headerSize;}
-		size_t		getEncryptedSize	() {return m_encryptedSize;}
-		size_t		getHeaderSize		() {return m_headerSize;}
-		void		putEncryptedSize	(size_t n) {m_encryptedSize = n;}
-		uint8_t*	getDataBuf			() {return static_cast<uint8_t*>(m_buf) + m_headerSize;}
+		uint8_t*	getDataBuf	();
 		BufHeap<uint8_t> m_buf;
 
 	private:
+		ByteBuf&	m_iv;
 		size_t		m_headerSize;
-		size_t		m_encryptedSize;
+		//ByteBuf&	m_header;
+
 		// Disabled operators
 		CipherBlob(const CipherBlob&); // disabled
 		CipherBlob& operator= (const CipherBlob&); // disabled
 	};
-	inline void CipherBlob::zero ()
-	{
-		m_headerSize = m_encryptedSize = 0;
-		m_buf.zero();
-	}
-	inline
-	CipherBlob::CipherBlob(CipherBlob&& other)
-	  : m_buf(std::move(other.m_buf)),
-		m_headerSize(other.m_headerSize),
-		m_encryptedSize(other.m_encryptedSize)
-	{
-		other.m_headerSize = other.m_encryptedSize = 0;
-	}
-	inline CipherBlob&
-	CipherBlob::operator=(CipherBlob&& other)
-	{
-		if (this == &other) return *this;
-		m_headerSize = other.m_headerSize; other.m_headerSize = 0;
-		m_encryptedSize = other.m_encryptedSize; other.m_encryptedSize = 0;
-		m_buf = std::move(other.m_buf);
-		return *this;
-	}
 	/*****************************************************************/
 	/*************************** CryptCtx ****************************/
 	/*****************************************************************/
@@ -144,6 +122,7 @@ namespace crypt
 		static const CryptCtx&		Get					(unsigned int handle);
 		static void					Destroy				(unsigned int handle);
 		const CryptInfo&			GetInfo				() const {return m_info;}
+		void						serializeInfo		(BufHeap<uint8_t>& outBuf) const;
 		void						Encrypt				(const std::string& in,
 														 CipherBlob& out) const;
 		void						Decrypt				(const Buf<uint8_t>& in,

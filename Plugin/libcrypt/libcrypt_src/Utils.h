@@ -63,23 +63,51 @@ namespace crypt
 	class Buf
 	{
 	public:
-		void		zero			() {if (m_buf) {memset(m_buf, 0, size());}}
+		virtual void zero			() 
+		{
+			if (m_buf) {
+				memset(m_buf, 0, size());
+				m_usefulLength = 0;
+			}
+		}
 		/** Size of the buffer in # of bytes */
 		size_t		size			() const {return (m_buf ? (m_len*sizeof(T)) : 0);}
 		/** Number of T elements in the m_buf array */
-		size_t		length			() const {return m_len;}		
+		size_t		length			() const {return m_len;}
+		size_t		usefulLength	() const {return m_usefulLength || m_len;}
+		void		setUsefulLength	(size_t l) {m_usefulLength = l;}
 					operator T*		() {return m_buf;}
 					operator const T* () const {return m_buf;}
-		void		PutBuf			(size_t pos, const Buf<uint8_t>&, 
-									 size_t len) {}
+
 	protected:
-					Buf				() : m_len(0), m_buf(NULL) {}
+		Buf				() 
+			: m_len(0), m_buf(NULL), m_usefulLength(0) {}
+		// Move constructor
+		Buf				(Buf<T>&& other) 
+		{
+			m_usefulLength = other.m_usefulLength;
+			other.m_usefulLength = 0;
+		}
+		Buf&		operator=		(Buf<T>&& other)
+		{
+			if (this != &other)
+			{
+				m_usefulLength = other.m_usefulLength;
+				other.m_usefulLength = 0;
+			}
+			return *this;
+		}
 		virtual		~Buf			() {zero();}
 		/** Buffer memory management is done by derived concrete classes */
 		T*			m_buf;
 		// Array length. # of T elements in m_buf
 		size_t		m_len;
 	private:
+		// In cases where a larger buffer may be allocated, this is a place
+		// to record the useful data length of a buffer. This class does not
+		// set this value except for initializing it at construction, copying it at 
+		// assignment and zeroing it out at zero()
+		size_t		m_usefulLength;
 					Buf				(const Buf&); // disabled
 		Buf&		operator=		(const Buf&); // disabled
 		virtual	void dummy			() = 0;
@@ -92,30 +120,46 @@ namespace crypt
 	class BufHeap : public Buf<T>
 	{
 	public:
-		explicit		BufHeap			(size_t len) {Malloc(len);}
+		explicit		BufHeap			(size_t len, size_t uLen=0) 
+		{
+			Malloc(len);
+			setUsefulLength(uLen);
+		}
+		// WARNING: This constructor implements move semantics. The buffer
+		// p is owned by the constructed object and must not be deleted
+		// externally. Also, p must've been allocated as an array - i.e.
+		// using the new T[] operator. This object will delete it using the
+		// delete [] operator.
+		explicit		BufHeap			(T* p, size_t len)
+		{
+			m_buf=p;m_len=len;p=NULL;
+			setUsefulLength(len);
+		}
+
 		// WARNING: This constructor will only work on PODs and shallow
-		// structs.
+		// structs because it uses memcpy to copy from c_str.
 		explicit		BufHeap			(const T* c_str);
-						BufHeap			(BufHeap<T>&& that);
+						BufHeap			(BufHeap<T>&& other);
 		/** Move operator capable of accepting expiring values (xvalue) */
-		BufHeap&		operator=		(BufHeap<T>&& that);
+		BufHeap&		operator=		(BufHeap<T>&& other);
 		virtual			~BufHeap		() {Delete();}
+
 	private:
 		void			Malloc			(size_t len);
-		void			Malloc			(const T* c_str);
 		void			Delete			() 
-			{
-				size_t _temp = size();
-				zero();
-				_temp = size();
-				delete[] m_buf; 
-				m_buf = NULL; m_len = 0;}
+		{
+			zero();
+			delete[] m_buf;
+			m_buf = NULL; 
+			m_len = 0;
+		}
 		virtual void	dummy			() {}
 
 	private: // Disabled interfaces
 						BufHeap			(const BufHeap&);// disabled
 		BufHeap&		operator=		(const BufHeap&);// disabled
 	};
+	typedef BufHeap<uint8_t> ByteBuf;
 
 	template <typename T> void
 	BufHeap<T>::Malloc(size_t len)
@@ -153,18 +197,22 @@ namespace crypt
 			// WARNING: Below does a shallow copy only. Will only
 			// work on PODs and shallow structs.
 			memcpy(m_buf, c_str, m_len*sizeof(T));
+			setUsefulLength(m_len);
 		}
 	}
 
 	template <typename T>
-	BufHeap<T>::BufHeap(BufHeap&& that) {*this = that;}
+	BufHeap<T>::BufHeap(BufHeap&& other) {*this = std::forward<BufHeap<T> >(other);}
 
 	template <typename T> BufHeap<T>&
-	BufHeap<T>::operator=(BufHeap<T>&& that)
+	BufHeap<T>::operator=(BufHeap<T>&& other)
 	{
 		Delete();
-		m_buf = that.m_buf; that.m_buf = NULL;
-		m_len = that.m_len; that.m_len = 0;
+		m_buf = other.m_buf; other.m_buf = NULL;
+		m_len = other.m_len; other.m_len = 0;
+		Buf<T>::operator=(*this, std::forward<Buf<T> >(other));
+
+		other.zero(); // paranoia
 		return *this;
 	}
 
@@ -179,7 +227,12 @@ namespace crypt
 	class Array : public Buf<T>
 	{
 	public:
-						Array			() {m_buf = m_array; m_len = LEN;}
+						Array			(size_t uLen=0)
+						{
+							m_buf = m_array; 
+							m_len = LEN;
+							setUsefulLength(uLen);
+						}
 	protected:
 		T				m_array[LEN];
 	private:

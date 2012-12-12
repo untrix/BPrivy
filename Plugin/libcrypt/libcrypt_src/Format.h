@@ -16,6 +16,7 @@ namespace crypt
 								: m_buf(buf), m_pos(0) {}
 		virtual				~Parser		() {}
 		void				Rewind		() {m_pos = 0;}
+		unsigned long long	GetUInt		(unsigned datumSize);
 		uint8_t				GetU8		();
 		uint16_t			GetU16		();
 		uint32_t			GetU32		();
@@ -38,6 +39,7 @@ namespace crypt
 	public:
 		Serializer			(Buf<uint8_t>& outbuf) 
 								: m_buf(outbuf), m_pos(0) {}
+		void				PutUInt		(unsigned datumSize, unsigned long long);
 		void				PutU8		(uint8_t);
 		void				PutU16		(uint16_t);
 		void				PutU32		(uint32_t);
@@ -54,6 +56,7 @@ namespace crypt
 		/** NOTE: m_pos is #bytes, not #elements */
 		return ((uint8_t*)m_buf) + m_pos;
 	}
+
 	/** 
 	* This template is setup such that only its specializations may be constructed.
 	* This generalized code is never meant to be used. Look at specializations for
@@ -74,19 +77,34 @@ namespace crypt
 	* Value 0x0 is reserved as a NULL value and value 0xF is reserved as a hook
 	* into a larger format (e.g. one using an entire byte for the version).
 	*/
-
 	template <>
 	class Format<CipherBlob, 1>
 	{
 	public:
 		// Format Constants
 		typedef enum {
-			VAL_FMT_VER = 1,
-			FMT_HEADER_HEADER_SIZE = 1
+			VAL_FMT_VER = 1
 		} Constant;
+		/** 
+		 *  BYTE#            NIBBLE 1        NIBBLE 2
+		 *
+		 *	1           [Size Field Size][Format Version #]
+		 *	2           [            IV Size              ]
+		 *  3--N        [     Encrypted Data Size		  ]
+		 *  N--M        [               IV                ]
+		 *  M--P        [        Encrypted Bytes          ]
+		 *
+		 */
 
-		static size_t	GetHeaderSize	(size_t encryptedSize);
-		static void serializeHeader(CipherBlob& ciText);
+		static size_t	EstimateHeaderSize	(size_t ivSize, size_t encryptedSize);
+		static size_t	EstimateTotalSize	(size_t ivSize, size_t encryptedSize);
+		static void		serializeHeader		(CipherBlob& ciText, size_t headerSize);
+		static void		parseHeader			(CipherBlob& ciBlob);
+
+		size_t		m_sizeFieldSize;
+		size_t		m_dataSize;
+		size_t		m_ivSize;
+		ByteBuf&	m_iv;
 	};
 	typedef Format<CipherBlob, 1> CipherBlobFormat1;
 
@@ -177,7 +195,7 @@ namespace crypt
 		static void parse (const Buf<uint8_t>& inbuf, CryptInfo& obj)
 		{
 			Parser parse(inbuf);
-			if ((parse.GetU8() != VAL_FMT_VER) || (inbuf.size() != FMT_TOTAL_SIZE)) {
+			if ((parse.GetU8() != VAL_FMT_VER) || (inbuf.size() < FMT_TOTAL_SIZE)) {
 				throw Error(Error::CODE_BAD_FMT);
 			}
 			obj.m_logN = parse.GetU8();

@@ -33,6 +33,7 @@ namespace crypt
 	const wstring Error::CODE_INTERNAL_ERROR = L"InternalError";
 	const wstring Error::CODE_NO_CSP = L"NoCSP";
 	const wstring Error::CODE_BAD_FMT = L"WrongFormatVer";
+	const wstring Error::CODE_FEATURE_NOT_SUPPORTED = L"FeatureNotSupported";
 	const wstring Error::MSG_EMPTY = L"";
 
 	void
@@ -54,6 +55,12 @@ namespace crypt
 		if (!cond) {
 			throw Error(c, m);
 		}
+	}
+
+	wstring
+	Error::PrintMsg() const
+	{
+		return code + L":" + msg + L":" + std::to_wstring((unsigned long long)errc);
 	}
 
 	/*****************************************************************/
@@ -98,21 +105,62 @@ namespace crypt
 		m_salt.zero();
 		m_signature.zero();
 	}
-	
+
 	/*****************************************************************/
 	/************************** CipherBlob ***************************/
 	/*****************************************************************/
-	CipherBlob::CipherBlob(size_t tentativeDataSize)
-	: m_buf(CipherBlobFormat1::GetHeaderSize(tentativeDataSize) + tentativeDataSize),
-		m_headerSize(CipherBlobFormat1::GetHeaderSize(tentativeDataSize)) {}
-	void CipherBlob::pack()
+	void
+	CipherBlob::zero()
+	{
+		m_buf.zero();
+		m_iv.zero();
+		m_headerSize = 0;
+	}
+	CipherBlob::CipherBlob(CipherBlob&& other)
+	  : m_buf(std::forward<ByteBuf>(other.m_buf)),
+	    m_iv(std::forward<ByteBuf>(other.m_iv)),
+		m_headerSize(other.m_headerSize)
+	{
+		other.zero(); // paranoia
+	}
+	CipherBlob&
+	CipherBlob::operator=(CipherBlob&& other)
+	{
+		if (this == &other) return *this;
+		
+		m_buf = std::forward<ByteBuf>(other.m_buf);
+		m_iv = std::forward<ByteBuf>(other.m_iv);
+		m_headerSize = m_headerSize;
+
+		other.zero();
+		return *this;
+	}
+	CipherBlob::CipherBlob(ByteBuf&& iv, size_t tentativeDataSize)
+		: m_buf(CipherBlobFormat1::EstimateTotalSize(iv.usefulLength(), tentativeDataSize)),
+		m_headerSize(CipherBlobFormat1::EstimateHeaderSize(iv.usefulLength(), tentativeDataSize)),
+		m_iv(std::forward<ByteBuf>(iv))
+	{}
+	void CipherBlob::serialize(size_t dataSize)
 	{
 		// marshall the header.
-		Error::Assert((m_encryptedSize>0), Error::CODE_BAD_PARAM,
-			L"CipherBlob::pack. Encrypted size is null");
-		CipherBlobFormat1::serializeHeader(*this);
+		Error::Assert((dataSize>0), Error::CODE_BAD_PARAM,
+			L"CipherBlob::serialize. Encrypted size is zero");
+		m_buf.setUsefulLength(dataSize);
+		CipherBlobFormat1::serializeHeader(*this, m_headerSize);
 	}
 
+	CipherBlob::CipherBlob(BufHeap<uint8_t>&& data)
+		: m_buf(std::forward<BufHeap<uint8_t> >(data))
+	{
+		CipherBlobFormat1::parseHeader(*this);
+		m_packed = true;
+	}
+	
+	uint8_t*
+	CipherBlob::getDataBuf()
+	{
+		return static_cast<uint8_t*>(m_buf) + CipherBlobFormat1::GetHeaderSize(*this);
+	}
 
 	/*****************************************************************/
 	/*************************** CryptCtx ****************************/
@@ -191,7 +239,6 @@ namespace crypt
 
 		return handle;
 	}
-
 	void
 	CryptCtx::Encrypt(const std::string& in, CipherBlob& out) const
 	{
@@ -202,12 +249,13 @@ namespace crypt
 		try
 		{
 			size_t ivLength = EVP_CIPHER_iv_length(m_info.m_EVP_CIPHER);
-			BufHeap<uint8_t> iv(ivLength);
+			BufHeap<uint8_t> iv(ivLength, ivLength);
+			RAND_bytes(static_cast<unsigned char*>(iv), ivLength);
 			EVP_EncryptInit_ex(&ctx, m_info.m_EVP_CIPHER, NULL, NULL, NULL);
 			EVP_CIPHER_CTX_set_key_length(&ctx, m_info.m_keyLen);
 			EVP_EncryptInit_ex(&ctx, NULL, NULL, m_dk, iv);
 
-			CipherBlob cText(in.size() + m_info.m_blkSize);
+			CipherBlob cText(iv, in.size() + m_info.m_blkSize);
 			uint8_t* dataBuf = cText.getDataBuf();
 
 			int outlen = 0;
@@ -229,8 +277,8 @@ namespace crypt
 			outlen += finlen;
 			EVP_CIPHER_CTX_cleanup(&ctx);
 
-			cText.putEncryptedSize(outlen);
-			cText.pack();
+			//cText.putEncryptedSize(outlen);
+			cText.pack(outlen);
 			out = std::move(cText);
 		}
 		catch (...)
@@ -238,5 +286,12 @@ namespace crypt
 			EVP_CIPHER_CTX_cleanup(&ctx);
 			throw;
 		}
+	}
+	void
+	CryptCtx::serializeInfo(BufHeap<uint8_t>& outBuf) const
+	{
+		BufHeap<uint8_t> tempBuf(FormatCryptInfo1::FMT_TOTAL_SIZE);
+		FormatCryptInfo1::serialize(m_info, tempBuf, *this);
+		outBuf = std::move(tempBuf);
 	}
 }

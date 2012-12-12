@@ -18,6 +18,7 @@ namespace crypt
 		Error(const wstring& c, const wstring& msg) : code(c), msg(msg), errc(0) {}
 		Error(const wstring& c, const std::string& msg) 
 			: code(c), msg(LocaleToUnicode(msg)), errc(0) {}
+		wstring PrintMsg () const;
 
 		wstring code;
 		wstring msg;
@@ -36,6 +37,8 @@ namespace crypt
 		static const wstring	CODE_INTERNAL_ERROR;
 		static const wstring	CODE_NO_CSP;
 		static const wstring	CODE_BAD_FMT;
+		static const wstring	CODE_FEATURE_NOT_SUPPORTED;
+
 		static const wstring	MSG_EMPTY;
 	};
 }
