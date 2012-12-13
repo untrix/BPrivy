@@ -72,21 +72,22 @@ namespace crypt
 	{
 	public:
 					CipherBlob	(ByteBuf&& iv, size_t tentativeDataSize);
-					CipherBlob	(char* data, size_t data_len);
+					//CipherBlob	(char* data, size_t data_len);
 					CipherBlob	(BufHeap<uint8_t>&& data);
 					CipherBlob	(CipherBlob&& other);
 		CipherBlob&	operator=	(CipherBlob&& other);
+		// Function members
 		virtual void zero		();
 		void		serialize	(size_t dataSize);
-		// Getters and Setters
 		uint8_t*	getDataBuf	();
-		BufHeap<uint8_t> m_buf;
+
+		// Variable members
+		ByteBuf		m_iv;
+		ByteBuf		m_buf; // header + encrypted-data.
+		size_t		m_headerSize;
+		size_t		m_dataSize;
 
 	private:
-		ByteBuf&	m_iv;
-		size_t		m_headerSize;
-		//ByteBuf&	m_header;
-
 		// Disabled operators
 		CipherBlob(const CipherBlob&); // disabled
 		CipherBlob& operator= (const CipherBlob&); // disabled

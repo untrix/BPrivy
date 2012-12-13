@@ -83,28 +83,24 @@ namespace crypt
 	public:
 		// Format Constants
 		typedef enum {
-			VAL_FMT_VER = 1
+			VAL_FMT_VER = 1,
+			FMT_HEADER_FIXED_SIZE = 2
 		} Constant;
 		/** 
 		 *  BYTE#            NIBBLE 1        NIBBLE 2
 		 *
 		 *	1           [Size Field Size][Format Version #]
 		 *	2           [            IV Size              ]
-		 *  3--N        [     Encrypted Data Size		  ]
-		 *  N--M        [               IV                ]
+		 *  3--N        [               IV                ]
+		 *  N--M        [     Encrypted Data Size		  ]
 		 *  M--P        [        Encrypted Bytes          ]
 		 *
 		 */
 
 		static size_t	EstimateHeaderSize	(size_t ivSize, size_t encryptedSize);
 		static size_t	EstimateTotalSize	(size_t ivSize, size_t encryptedSize);
-		static void		serializeHeader		(CipherBlob& ciText, size_t headerSize);
+		static void		serializeHeader		(CipherBlob& ciBlob);
 		static void		parseHeader			(CipherBlob& ciBlob);
-
-		size_t		m_sizeFieldSize;
-		size_t		m_dataSize;
-		size_t		m_ivSize;
-		ByteBuf&	m_iv;
 	};
 	typedef Format<CipherBlob, 1> CipherBlobFormat1;
 

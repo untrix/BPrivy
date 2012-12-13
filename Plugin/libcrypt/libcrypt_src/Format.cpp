@@ -30,31 +30,43 @@ namespace crypt
 		return EstimateHeaderSize(ivSize, encryptedSize) + encryptedSize;
 	}
 	void
-	CipherBlobFormat1::serializeHeader(CipherBlob& ciText, size_t headerSize)
+	CipherBlobFormat1::serializeHeader(CipherBlob& ciBlob)
 	{
+		size_t ivSize = ciBlob.m_iv.usefulLength();
+		size_t headerSize = ciBlob.m_headerSize;
+		size_t dataSize = ciBlob.m_dataSize;
+
 		// LS Nibble represents serialization format version.
 		uint8_t ver = (VAL_FMT_VER) & 0x0F;
 		// MS Nibble represents size of the tail part of the header.
-		uint8_t size_field_size = (((ciText.getHeaderSize() - FMT_HEADER_FIXED_SIZE) << 4) & 0xF0);
+		uint8_t size_field_size = (((headerSize - FMT_HEADER_FIXED_SIZE - ivSize) << 4) & 0xF0);
 		uint8_t header_first = (size_field_size | ver);
 
-		Serializer serializer(ciText.m_buf);
-		serializer.PutUInt(FMT_HEADER_HEADER_SIZE, header_head);
-		serializer.PutUInt((ciText.getHeaderSize() - 1), ciText.getDataSize());
+		Serializer serializer(ciBlob.m_buf);
+		serializer.PutU8(header_first);
+		serializer.PutU8((uint8_t)ivSize);
+		serializer.PutBuf(ciBlob.m_iv, ivSize);
+		serializer.PutUInt(size_field_size, dataSize);
 	}
 	void
 	CipherBlobFormat1::parseHeader(CipherBlob& ciBlob)
 	{
 		Parser parse(ciBlob.m_buf);
-		uint8_t header_head = parse.GetUInt(FMT_HEADER_HEADER_SIZE);
+		uint8_t header_first = parse.GetU8();
 		// LS Nibble represents serialization format version.
-		Error::Assert((header_head&0x0F)==VAL_FMT_VER, Error::CODE_BAD_FMT, L"Error while parsing CipherBlob header");
-		// MS Nibble represents size of the tail part of the header.
-		size_t header_tail_size = ( (header_head&0xF0) >> 4 );
-		Error::Assert(header_tail_size<=4, Error::CODE_BAD_FMT, L"Error while parsing CipherBlob header");
+		Error::Assert((header_first&0x0F)==VAL_FMT_VER, Error::CODE_BAD_FMT, L"Error while parsing CipherBlob header");
+		// MS Nibble has size of the data_size field of the header.
+		unsigned int size_field_size = ( (header_first&0xF0) >> 4 );
+		Error::Assert(size_field_size<=4, Error::CODE_BAD_FMT, L"Error while parsing CipherBlob header");
 
-		ciBlob.putEncryptedSize((size_t)parse.GetUInt(header_tail_size));
-		ciBlob.putHeaderSize(FMT_HEADER_HEADER_SIZE + header_tail_size);
+		size_t ivSize = parse.GetU8();
+		ByteBuf iv(ivSize);
+		parse.GetBuf(iv, ivSize);
+		ciBlob.m_iv = std::move(iv);
+
+		size_t dataSize = parse.GetUInt(size_field_size);
+		ciBlob.m_dataSize = dataSize;
+		ciBlob.m_headerSize = (2 + ivSize + size_field_size);
 	}
 
 	/*****************************************************************/

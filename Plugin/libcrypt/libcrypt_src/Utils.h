@@ -125,6 +125,8 @@ namespace crypt
 			Malloc(len);
 			setUsefulLength(uLen);
 		}
+		// NULL POINTER !!
+		explicit		BufHeap			() {}
 		// WARNING: This constructor implements move semantics. The buffer
 		// p is owned by the constructed object and must not be deleted
 		// externally. Also, p must've been allocated as an array - i.e.
@@ -210,7 +212,7 @@ namespace crypt
 		Delete();
 		m_buf = other.m_buf; other.m_buf = NULL;
 		m_len = other.m_len; other.m_len = 0;
-		Buf<T>::operator=(*this, std::forward<Buf<T> >(other));
+		Buf<T>::operator=(std::forward<Buf<T> >(other));
 
 		other.zero(); // paranoia
 		return *this;

@@ -114,12 +114,13 @@ namespace crypt
 	{
 		m_buf.zero();
 		m_iv.zero();
-		m_headerSize = 0;
+		m_headerSize = m_dataSize = 0;
 	}
 	CipherBlob::CipherBlob(CipherBlob&& other)
 	  : m_buf(std::forward<ByteBuf>(other.m_buf)),
 	    m_iv(std::forward<ByteBuf>(other.m_iv)),
-		m_headerSize(other.m_headerSize)
+		m_headerSize(other.m_headerSize),
+		m_dataSize(other.m_dataSize)
 	{
 		other.zero(); // paranoia
 	}
@@ -131,6 +132,7 @@ namespace crypt
 		m_buf = std::forward<ByteBuf>(other.m_buf);
 		m_iv = std::forward<ByteBuf>(other.m_iv);
 		m_headerSize = m_headerSize;
+		m_dataSize = other.m_dataSize;
 
 		other.zero();
 		return *this;
@@ -138,28 +140,30 @@ namespace crypt
 	CipherBlob::CipherBlob(ByteBuf&& iv, size_t tentativeDataSize)
 		: m_buf(CipherBlobFormat1::EstimateTotalSize(iv.usefulLength(), tentativeDataSize)),
 		m_headerSize(CipherBlobFormat1::EstimateHeaderSize(iv.usefulLength(), tentativeDataSize)),
-		m_iv(std::forward<ByteBuf>(iv))
+		m_iv(std::forward<ByteBuf>(iv)),
+		m_dataSize(0)
 	{}
 	void CipherBlob::serialize(size_t dataSize)
 	{
 		// marshall the header.
 		Error::Assert((dataSize>0), Error::CODE_BAD_PARAM,
 			L"CipherBlob::serialize. Encrypted size is zero");
-		m_buf.setUsefulLength(dataSize);
-		CipherBlobFormat1::serializeHeader(*this, m_headerSize);
+		m_buf.setUsefulLength(dataSize + m_headerSize);
+		m_dataSize = dataSize;
+		CipherBlobFormat1::serializeHeader(*this);
 	}
 
 	CipherBlob::CipherBlob(BufHeap<uint8_t>&& data)
-		: m_buf(std::forward<BufHeap<uint8_t> >(data))
+		: m_buf(std::forward<BufHeap<uint8_t> >(data)),
+		m_iv()
 	{
 		CipherBlobFormat1::parseHeader(*this);
-		m_packed = true;
 	}
 	
 	uint8_t*
 	CipherBlob::getDataBuf()
 	{
-		return static_cast<uint8_t*>(m_buf) + CipherBlobFormat1::GetHeaderSize(*this);
+		return static_cast<uint8_t*>(m_buf) + m_headerSize;
 	}
 
 	/*****************************************************************/
@@ -255,7 +259,7 @@ namespace crypt
 			EVP_CIPHER_CTX_set_key_length(&ctx, m_info.m_keyLen);
 			EVP_EncryptInit_ex(&ctx, NULL, NULL, m_dk, iv);
 
-			CipherBlob cText(iv, in.size() + m_info.m_blkSize);
+			CipherBlob cText(std::move(iv), in.size() + m_info.m_blkSize);
 			uint8_t* dataBuf = cText.getDataBuf();
 
 			int outlen = 0;
@@ -278,7 +282,7 @@ namespace crypt
 			EVP_CIPHER_CTX_cleanup(&ctx);
 
 			//cText.putEncryptedSize(outlen);
-			cText.pack(outlen);
+			cText.serialize(outlen);
 			out = std::move(cText);
 		}
 		catch (...)
