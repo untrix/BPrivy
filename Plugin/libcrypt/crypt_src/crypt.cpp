@@ -16,8 +16,8 @@ const uint32_t i = 1;
 
 void printUsage(wchar_t* argv[])
 {
-	printf("Usage:\t%S \"enc\" <headerFile> <password> <fileToEncrypt> <fileToDecrypt>\n"
-		   "\t| %S \"dec\" <headerFile> <password> <fileToEncrypt> <fileToDecrypt>\n"
+	printf("Usage:\t%S \"enc\" <headerFile> <password> <ClearTextFile> <CipherTextFile>\n"
+		   "\t| %S \"dec\" <headerFile> <password> <ClearTextFile> <CipherTextFile>\n"
 		   "\t| %S \"make\" <headerFile> <password>", argv[0], argv[0], argv[0]);
 }
 
@@ -38,7 +38,7 @@ int _tmain(int argc, wchar_t* argv[])
 		std::wstring fileIn(argv[4]);
 		std::wstring fileOut(argv[5]);
 		
-		FILE* hFile = fopen(crypt::UnicodeToLocale(headerFile).c_str(), "r");
+		FILE* hFile = fopen(crypt::UnicodeToLocale(headerFile).c_str(), "rb");
 		if (!hFile) {
 			fprintf(stderr, "Could not open input file: %s", crypt::UnicodeToLocale(headerFile).c_str()); 
 			return 1;
@@ -51,7 +51,7 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 		unsigned int ctxHandle = crypt::CryptCtx::Make(passwd, inBuf);
 
-		FILE* inFile = fopen(crypt::UnicodeToLocale(fileIn).c_str(), "r");
+		FILE* inFile = fopen(crypt::UnicodeToLocale(fileIn).c_str(), "rb");
 		if (!inFile) {
 			fprintf(stderr, "Could not open input file: %s", crypt::UnicodeToLocale(fileIn).c_str()); 
 			return 1;
@@ -62,19 +62,19 @@ int _tmain(int argc, wchar_t* argv[])
 			fprintf(stderr, "fread returned zero");
 			return 1;
 		}
-		else {
-			inBuf[count] = 0;
-		}
+		//else {
+		//	inBuf[count] = 0; // null terminate the string.
+		//}
 
 		crypt::CipherBlob outBuf;
-		crypt::CryptCtx::Get(ctxHandle).Encrypt((char*)(uint8_t*)inBuf, outBuf);
+		crypt::CryptCtx::Get(ctxHandle).Encrypt(std::string((char*)(uint8_t*)inBuf,count), outBuf);
 
-		FILE* outFile = fopen(crypt::UnicodeToLocale(fileOut).c_str(), "w");
+		FILE* outFile = fopen(crypt::UnicodeToLocale(fileOut).c_str(), "wb");
 		if (!outFile) {
 			fprintf(stderr, "Could not open input file: %s", crypt::UnicodeToLocale(fileIn).c_str()); 
 			return 1;
 		}
-		count = fwrite(outBuf.m_buf, sizeof(uint8_t), outBuf.getSize(), outFile);
+		count = fwrite(outBuf.getBuf(), sizeof(uint8_t), outBuf.getBuf().usefulLength(), outFile);
 		return 0;
 	}
 	else if (std::wstring(L"make") == argv[1])
@@ -90,9 +90,9 @@ int _tmain(int argc, wchar_t* argv[])
 		const crypt::CryptCtx& ctx = crypt::CryptCtx::Get(ctxHandle);
 		ctx.serializeInfo(outBuf);
 
-		FILE* outFile = fopen(crypt::UnicodeToLocale(headerFile).c_str(), "w");
+		FILE* outFile = fopen(crypt::UnicodeToLocale(headerFile).c_str(), "wb");
 		if (!outFile) {
-			fprintf(stderr, "Could not open input file: %s", crypt::UnicodeToLocale(headerFile).c_str()); 
+			fprintf(stderr, "Could not open output file: %s", crypt::UnicodeToLocale(headerFile).c_str()); 
 			return 1;
 		}
 		size_t count = fwrite(outBuf, sizeof(uint8_t), outBuf.size(), outFile);
@@ -112,7 +112,7 @@ int _tmain(int argc, wchar_t* argv[])
 		std::wstring fileIn(argv[5]);
 		std::wstring fileOut(argv[4]);
 		
-		FILE* hFile = fopen(crypt::UnicodeToLocale(headerFile).c_str(), "r");
+		FILE* hFile = fopen(crypt::UnicodeToLocale(headerFile).c_str(), "rb");
 		if (!hFile) {
 			fprintf(stderr, "Could not open input file: %s", crypt::UnicodeToLocale(headerFile).c_str()); 
 			return 1;
@@ -125,7 +125,7 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 		unsigned int ctxHandle = crypt::CryptCtx::Make(passwd, inBuf);
 
-		FILE* inFile = fopen(crypt::UnicodeToLocale(fileIn).c_str(), "r");
+		FILE* inFile = fopen(crypt::UnicodeToLocale(fileIn).c_str(), "rb");
 		if (!inFile) {
 			fprintf(stderr, "Could not open input file: %s", crypt::UnicodeToLocale(fileIn).c_str()); 
 			return 1;
@@ -137,8 +137,17 @@ int _tmain(int argc, wchar_t* argv[])
 			fprintf(stderr, "fread returned zero");
 			return 1;
 		}
-		crypt::CipherBlob ciBlob(std::move(ciBuf));
 
+		std::string outBuf;
+		crypt::CryptCtx::Get(ctxHandle).Decrypt(std::move(ciBuf), outBuf);
+
+		FILE* outFile = fopen(crypt::UnicodeToLocale(fileOut).c_str(), "wb");
+		if (!outFile) {
+			fprintf(stderr, "Could not open output file: %s", crypt::UnicodeToLocale(fileIn).c_str()); 
+			return 1;
+		}
+		count = fwrite(outBuf.c_str(), sizeof(uint8_t), outBuf.size(), outFile);
+		return 0;
 	}
 	else {printUsage(argv); return 2;}
 	}

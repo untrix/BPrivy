@@ -62,14 +62,14 @@ namespace crypt
 	* This generalized code is never meant to be used. Look at specializations for
 	* meaningful code.
 	*/
-	template <typename T, size_t VER>
+	/*template <typename T, size_t VER>
 	class Format
 	{
 	private:
 		Format() {}
 		Format(const Format&);
 		virtual ~Format() = 0; // prevents instantiation of this generalized code.
-	};
+	};*/
 
 	/**
 	* Serialization format version 1 for Crypt Header. Since the version# is
@@ -77,8 +77,7 @@ namespace crypt
 	* Value 0x0 is reserved as a NULL value and value 0xF is reserved as a hook
 	* into a larger format (e.g. one using an entire byte for the version).
 	*/
-	template <>
-	class Format<CipherBlob, 1>
+	class CipherBlobFormat1
 	{
 	public:
 		// Format Constants
@@ -92,17 +91,17 @@ namespace crypt
 		 *	1           [Size Field Size][Format Version #]
 		 *	2           [            IV Size              ]
 		 *  3--N        [               IV                ]
-		 *  N--M        [     Encrypted Data Size		  ]
-		 *  M--P        [        Encrypted Bytes          ]
-		 *
+		 *  N--M        [           ciText Size           ]
+		 *  M--P        [          ciText  Bytes          ]
+		 * 
 		 */
 
-		static size_t	EstimateHeaderSize	(size_t ivSize, size_t encryptedSize);
-		static size_t	EstimateTotalSize	(size_t ivSize, size_t encryptedSize);
+		static size_t	EstimateHeaderSize	(size_t ivSize, size_t ciTextSize);
+		static size_t	EstimateTotalSize	(size_t ivSize, size_t ciTextSize);
 		static void		serializeHeader		(CipherBlob& ciBlob);
 		static void		parseHeader			(CipherBlob& ciBlob);
 	};
-	typedef Format<CipherBlob, 1> CipherBlobFormat1;
+	//typedef Format<CipherBlob, 1> CipherBlobFormat1;
 
 	/** 
 	* Serialization Format Version 1 for CryptInfo. Carries code that is
@@ -110,8 +109,9 @@ namespace crypt
 	* can never be changed once it is put to use. If you want to change the
 	* format, then write a new class and increment the VER template parameter.
 	*/
-	template <>
-	class Format<CryptInfo, 1>
+	//template <>
+	//class Format<CryptInfo, 1>
+	class CryptInfoFormat1
 	{
 	public:
 		/**
@@ -204,7 +204,7 @@ namespace crypt
 		}
 	};
 
-	typedef Format<CryptInfo, 1> FormatCryptInfo1;
+	//typedef Format<CryptInfo, 1> FormatCryptInfo1;
 }
 
 #endif

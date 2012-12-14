@@ -73,15 +73,19 @@ namespace crypt
 		/** Size of the buffer in # of bytes */
 		size_t		size			() const {return (m_buf ? (m_len*sizeof(T)) : 0);}
 		/** Number of T elements in the m_buf array */
-		size_t		length			() const {return m_len;}
-		size_t		usefulLength	() const {return m_usefulLength || m_len;}
+		size_t		length			() const {
+			return m_len;
+		}
+		size_t		usefulLength	() const {
+			return m_usefulLength;
+		}
 		void		setUsefulLength	(size_t l) {m_usefulLength = l;}
 					operator T*		() {return m_buf;}
 					operator const T* () const {return m_buf;}
 
 	protected:
-		Buf				() 
-			: m_len(0), m_buf(NULL), m_usefulLength(0) {}
+		Buf				(T* buf = NULL, size_t len = 0, size_t uLen = 0) 
+			: m_len(len), m_buf(buf), m_usefulLength(uLen) {}
 		// Move constructor
 		Buf				(Buf<T>&& other) 
 		{
@@ -166,16 +170,16 @@ namespace crypt
 	template <typename T> void
 	BufHeap<T>::Malloc(size_t len)
 	{
-		if (len == 0) {
-			throw Error(Error::CODE_BAD_PARAM, L"BufHeap: Zero Buf size specified");
+		if (len) {
+			std::nothrow_t x;
+			m_buf = new(x) T[len];
+			if (!m_buf) {
+				throw Error(Error::CODE_NO_MEM);
+			}
+			m_len = len;
+			zero();
 		}
-		std::nothrow_t x;
-		m_buf = new(x) T[len];
-		if (!m_buf) {
-			throw Error(Error::CODE_NO_MEM);
-		}
-		m_len = len;
-		zero();
+		//else {throw Error(Error::CODE_BAD_PARAM, L"BufHeap: Zero Buf size specified");}
 	}
 
 	template <typename T>
