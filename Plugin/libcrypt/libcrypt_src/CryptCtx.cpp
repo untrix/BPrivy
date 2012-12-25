@@ -321,7 +321,6 @@ namespace crypt
 			EVP_CIPHER_CTX_cleanup(&ctx);
 
 			textBuf.setUsefulLength(outlen+finlen);
-			//textBuf[outlen+finlen] = 0; // null terminate.
 			out.assign((const char*)(uint8_t*)textBuf, outlen+finlen);
 		}
 		catch (...)
