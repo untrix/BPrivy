@@ -63,41 +63,56 @@ namespace crypt
 	class Buf
 	{
 	public:
-		virtual void zero			() 
+					operator T*		() {return m_buf+m_seek;}
+					operator const T* () const {return m_buf+m_seek;}
+		virtual void zero			()
 		{
 			if (m_buf) {
-				memset(m_buf, 0, size());
+				memset(m_buf, 0, m_len*sizeof(T));
 				m_usefulLength = 0;
+				m_seek = 0;
 			}
 		}
 		/** Size of the buffer in # of bytes */
-		size_t		size			() const {return (m_buf ? (m_len*sizeof(T)) : 0);}
+		size_t		size			() const {return (m_buf ? ((m_len-m_seek)*sizeof(T)) : 0);}
 		/** Number of T elements in the m_buf array */
 		size_t		length			() const {
-			return m_len;
+			return m_len-m_seek;
 		}
 		size_t		usefulLength	() const {
 			return m_usefulLength;
 		}
 		void		setUsefulLength	(size_t l) {m_usefulLength = l;}
-					operator T*		() {return m_buf;}
-					operator const T* () const {return m_buf;}
+		/** Seek forward delta items */
+		void		seek			(size_t delta) {m_seek += delta; m_usefulLength = ( (m_usefulLength>delta) ? (m_usefulLength-delta) : 0);}
+		size_t		seek			() {return m_seek;}
+		/** Copies data from the supplied array to m_buf at position m_usefulLength */
+		void		append			(const T* data, size_t len)
+		{
+			if (len && ((m_usefulLength+len) <= m_len))
+			// WARNING: Below does a shallow copy only. Will only
+			// work on PODs and shallow structs.
+			memcpy(m_buf+m_usefulLength, data, len*sizeof(T));
+			m_usefulLength += len;
+		}
 
 	protected:
-		Buf				(T* buf = NULL, size_t len = 0, size_t uLen = 0) 
-			: m_len(len), m_buf(buf), m_usefulLength(uLen) {}
+					Buf				(T* buf = NULL, size_t len = 0, size_t uLen = 0, size_t seek = 0) 
+			: m_len(len), m_buf(buf), m_usefulLength(uLen), m_seek(seek) {}
 		// Move constructor
-		Buf				(Buf<T>&& other) 
+					Buf				(Buf<T>&& other)
+						: m_usefulLength(other.m_usefulLength), m_seek(other.m_seek)
 		{
-			m_usefulLength = other.m_usefulLength;
-			other.m_usefulLength = 0;
+			//m_usefulLength = other.m_usefulLength;
+			other.m_usefulLength = other.m_seek = 0;
 		}
 		Buf&		operator=		(Buf<T>&& other)
 		{
 			if (this != &other)
 			{
 				m_usefulLength = other.m_usefulLength;
-				other.m_usefulLength = 0;
+				m_seek = other.m_seek;
+				other.m_usefulLength = other.m_seek = 0;
 			}
 			return *this;
 		}
@@ -106,12 +121,15 @@ namespace crypt
 		T*			m_buf;
 		// Array length. # of T elements in m_buf
 		size_t		m_len;
+
 	private:
 		// In cases where a larger buffer may be allocated, this is a place
 		// to record the useful data length of a buffer. This class does not
 		// set this value except for initializing it at construction, copying it at 
 		// assignment and zeroing it out at zero()
 		size_t		m_usefulLength;
+		size_t		m_seek; // number of items to seek forward starting from m_buf
+		/* Disabled methods */
 					Buf				(const Buf&); // disabled
 		Buf&		operator=		(const Buf&); // disabled
 		virtual	void dummy			() = 0;
@@ -124,6 +142,7 @@ namespace crypt
 	class BufHeap : public Buf<T>
 	{
 	public:
+		typedef			T*				PtrType;
 		explicit		BufHeap			(size_t len, size_t uLen=0) 
 		{
 			Malloc(len);
@@ -136,10 +155,11 @@ namespace crypt
 		// externally. Also, p must've been allocated as an array - i.e.
 		// using the new T[] operator. This object will delete it using the
 		// delete [] operator.
-		explicit		BufHeap			(T* p, size_t len)
+		explicit		BufHeap			(PtrType&& p, size_t len)
 		{
 			m_buf=p;m_len=len;p=NULL;
 			setUsefulLength(len);
+			p = NULL;
 		}
 
 		// WARNING: This constructor will only work on PODs and shallow
@@ -151,8 +171,9 @@ namespace crypt
 		virtual			~BufHeap		() {Delete();}
 
 	private:
+		// pointer to beginning of allocated memory. May be different from m_buf.
 		void			Malloc			(size_t len);
-		void			Delete			() 
+		void			Delete			()
 		{
 			zero();
 			delete[] m_buf;

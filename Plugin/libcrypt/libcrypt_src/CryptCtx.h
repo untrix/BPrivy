@@ -81,7 +81,7 @@ namespace crypt
 			CryptCtx::Encrypt
 		*/
 					CipherBlob	(ByteBuf&& iv, size_t ciTextSize);
-		/** Call finalize after populating buffer (getCiText()) with cipher-text */
+		/** Call finalize after populating buffer (obtained via. getCiText()) with cipher-text */
 		void		finalize	(size_t ciTextSize);
 					//CipherBlob	(char* data, size_t data_len);
 		/**
@@ -89,6 +89,8 @@ namespace crypt
 		* a step before decryption. Implements move semantics.
 		*/
 		explicit	CipherBlob	(BufHeap<uint8_t>&& data);
+		/** Seeks forward count bytes and re-initializes itself */
+		void		seek		(size_t delta_count);
 		// Move constructor.
 		explicit	CipherBlob	(CipherBlob&& other);
 		// Move assignment operator
@@ -96,7 +98,8 @@ namespace crypt
 		// Function members
 		virtual void zero		();
 		uint8_t*	getCiText	();
-		size_t		getCiTextSize() {return m_ciTextSize;}
+		size_t		getCiTextSize() const {return m_ciTextSize;}
+		size_t		getTotalSize()	const {return m_ciTextSize + m_headerSize;}
 		const ByteBuf& getBuf	() {return m_buf;}
 		const ByteBuf& getIV	() {return m_iv;}
 
@@ -145,11 +148,10 @@ namespace crypt
 		static void					Destroy				(unsigned int handle);
 		const CryptInfo&			GetInfo				() const {return m_info;}
 		void						serializeInfo		(BufHeap<uint8_t>& outBuf) const;
-		void						Encrypt				(const std::string& in,
+		void						Encrypt				(const Buf<uint8_t>& in,
 														 CipherBlob& out) const;
 		void						Decrypt				(ByteBuf&& in,
-														 std::string& out) const;
-
+														 ByteBuf& out) const;
 	protected:
 									CryptCtx			(CipherEnum cipher,
 														 unsigned int keyLen);
@@ -161,6 +163,7 @@ namespace crypt
 									CryptCtx			(const CryptCtx&);// not to be defined
 		CryptCtx&					operator=			(const CryptCtx&);// not to be defined
 		static unsigned int			MakeHandle			() {return ++s_lastHandle;}
+		size_t						DecryptOne			(CipherBlob& in, ByteBuf& out) const;
 		typedef std::unordered_map<unsigned int, CryptCtx*> map;
 		static map					s_ctxMap;
 		static unsigned int			s_lastHandle;

@@ -164,6 +164,17 @@ namespace crypt
 		m_buf.setUsefulLength(m_headerSize + m_ciTextSize);
 	}
 	
+	void
+	CipherBlob::seek(size_t count)
+	{
+		if (count)
+		{
+			m_buf.seek(count);
+			CipherBlobFormat1::parseHeader(*this);
+			m_buf.setUsefulLength(m_headerSize + m_ciTextSize);
+		}
+	}
+
 	uint8_t*
 	CipherBlob::getCiText()
 	{
@@ -248,7 +259,7 @@ namespace crypt
 		return handle;
 	}
 	void
-	CryptCtx::Encrypt(const std::string& in, CipherBlob& out) const
+	CryptCtx::Encrypt(const Buf<uint8_t>& in, CipherBlob& out) const
 	{
 		EVP_CIPHER_CTX ctx;
 		EVP_CIPHER_CTX_init(&ctx);
@@ -267,7 +278,7 @@ namespace crypt
 
 			int outlen = 0;
 			if(!EVP_EncryptUpdate(&ctx, dataBuf, &outlen,
-								  (const unsigned char*)in.data(), 
+								  (const unsigned char*)(const uint8_t*)in,
 								  in.size()))
 			{
 				Error::ThrowOpensslError();
@@ -293,10 +304,19 @@ namespace crypt
 		}
 	}
 	void
-	CryptCtx::Decrypt(ByteBuf&& in, std::string& out) const
+	CryptCtx::Decrypt(ByteBuf&& in, ByteBuf& out) const
 	{
 		CipherBlob ciBlob(std::forward<ByteBuf>(in)); // in-buf is parsed here.
-
+		for ( size_t processed=0, count=0; processed < in.size(); )
+		{
+			ciBlob.seek(count); // in-buf is parsed again at position <count>
+			count = DecryptOne(ciBlob, out);
+			processed += count;
+		}
+	}
+	size_t
+	CryptCtx::DecryptOne(CipherBlob& ciBlob, ByteBuf& out) const
+	{
 		EVP_CIPHER_CTX ctx;
 		EVP_CIPHER_CTX_init(&ctx);
 
@@ -321,7 +341,8 @@ namespace crypt
 			EVP_CIPHER_CTX_cleanup(&ctx);
 
 			textBuf.setUsefulLength(outlen+finlen);
-			out.assign((const char*)(uint8_t*)textBuf, outlen+finlen);
+			out.append(textBuf, outlen+finlen);
+			return ciBlob.getTotalSize();
 		}
 		catch (...)
 		{
