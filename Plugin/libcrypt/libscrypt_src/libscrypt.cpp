@@ -24,7 +24,7 @@ deriveKey(const Buf<wchar_t>& passwd, uint8_t logN, uint32_t r, uint32_t p,
 	//uint8_t header[96];
 	//size_t headerBufLen = 512;
 	uint64_t N = (uint64_t)(1) << logN;
-	size_t passwdLen = passwd.length();
+	size_t passwdLen = passwd.capacityNum();
 	// NOTE: passwdBytes MUST be always 4 x passwdLen regardless of
 	// whether wchar_t is 2 or 4 bytes long.
 	BufHeap<uint8_t> passwdBytes(passwdLen*4);
@@ -44,7 +44,7 @@ deriveKey(const Buf<wchar_t>& passwd, uint8_t logN, uint32_t r, uint32_t p,
 	}
 
 	/* Generate the derived keys. */
-	if (crypto_scrypt(passwdBytes, passwdLen, salt, salt.size(), N, r, p, dkBuf, dkBuf.size())) {
+	if (crypto_scrypt(passwdBytes, passwdLen, salt, salt.capacityBytes(), N, r, p, dkBuf, dkBuf.capacityBytes())) {
 		printf("crypto_scrypt failed\n");
 		return false;
 	}

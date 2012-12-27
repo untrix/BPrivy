@@ -55,7 +55,7 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 
 		crypt::BufHeap<uint8_t> hBuf(fSize(hFile));
-		size_t count = fread(hBuf, sizeof(char), hBuf.size(), hFile);
+		size_t count = fread(hBuf, sizeof(char), hBuf.capacityBytes(), hFile);
 		if (!count) {
 			fprintf(stderr, "fread on file %S returned zero", headerFile.c_str());
 			return 1;
@@ -70,18 +70,16 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 
 		crypt::BufHeap<uint8_t> inBuf(fSize(inFile));
-		count = fread(inBuf, sizeof(char), inBuf.size(), inFile);
+		count = fread(inBuf, sizeof(char), inBuf.capacityBytes(), inFile);
 		if (!count) {
 			fprintf(stderr, "fread returned zero\n");
 			perror(NULL);
 			return 1;
 		}
-		//else {
-		//	inBuf[count] = 0; // null terminate the string.
-		//}
+		inBuf.setDataLen(count);
 
-		crypt::CipherBlob outBuf;
-		crypt::CryptCtx::Get(ctxHandle).Encrypt(std::string((char*)(uint8_t*)inBuf,count), outBuf);
+		crypt::ByteBuf outBuf; // Null buffer
+		crypt::CryptCtx::Get(ctxHandle).Encrypt(inBuf, outBuf);
 
 		FILE* outFile = fopen(crypt::UnicodeToLocale(fileOut).c_str(), (std::wstring(L"enc") == argv[1]) ? "wb" : "ab");
 		if (!outFile) {
@@ -89,7 +87,7 @@ int _tmain(int argc, wchar_t* argv[])
 			perror(NULL);
 			return 1;
 		}
-		count = fwrite(outBuf.getBuf(), sizeof(uint8_t), outBuf.getBuf().usefulLength(), outFile);
+		count = fwrite(outBuf, sizeof(uint8_t), outBuf.dataLen(), outFile);
 		return 0;
 	}
 	else if (std::wstring(L"make") == argv[1])
@@ -111,8 +109,8 @@ int _tmain(int argc, wchar_t* argv[])
 			perror(NULL);
 			return 1;
 		}
-		size_t count = fwrite(outBuf, sizeof(uint8_t), outBuf.size(), outFile);
-		if (count == outBuf.size()) {
+		size_t count = fwrite(outBuf, sizeof(uint8_t), outBuf.capacityBytes(), outFile);
+		if (count == outBuf.capacityBytes()) {
 			return 0;
 		}
 		else {
@@ -135,7 +133,7 @@ int _tmain(int argc, wchar_t* argv[])
 			return 1;
 		}
 		crypt::BufHeap<uint8_t> inBuf(fSize(hFile));
-		size_t count = fread(inBuf, sizeof(char), inBuf.size(), hFile);
+		size_t count = fread(inBuf, sizeof(char), inBuf.capacityBytes(), hFile);
 		if (!count) {
 			fprintf(stderr, "fread on file %S returned zero\n", headerFile.c_str());
 			perror(NULL);
@@ -151,14 +149,15 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 
 		crypt::BufHeap<uint8_t> ciBuf(fSize(inFile));
-		count = fread(ciBuf, sizeof(uint8_t), ciBuf.size(), inFile);
+		count = fread(ciBuf, sizeof(uint8_t), ciBuf.capacityBytes(), inFile);
 		if (!count) {
 			fprintf(stderr, "fread returned zero\n");
 			perror(NULL);
 			return 1;
 		}
+		ciBuf.setDataLen(count);
 
-		std::string outBuf;
+		crypt::ByteBuf outBuf;
 		crypt::CryptCtx::Get(ctxHandle).Decrypt(std::move(ciBuf), outBuf);
 
 		FILE* outFile = fopen(crypt::UnicodeToLocale(fileOut).c_str(), "wb");
@@ -167,7 +166,7 @@ int _tmain(int argc, wchar_t* argv[])
 			perror(NULL);
 			return 1;
 		}
-		count = fwrite(outBuf.c_str(), sizeof(uint8_t), outBuf.size(), outFile);
+		count = fwrite(outBuf, sizeof(uint8_t), outBuf.dataLen(), outFile);
 		return 0;
 	}
 	else {printUsage(argv); return 2;}

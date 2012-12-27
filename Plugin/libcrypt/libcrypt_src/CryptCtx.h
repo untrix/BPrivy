@@ -100,6 +100,11 @@ namespace crypt
 		uint8_t*	getCiText	();
 		size_t		getCiTextSize() const {return m_ciTextSize;}
 		size_t		getTotalSize()	const {return m_ciTextSize + m_headerSize;}
+		/**	Implements move semantics. Transfer data out of m_buf. At the end of
+		 *  this call, m_buf is a NULL buf.
+		 */
+		ByteBuf&&	removeBuf	()
+		{m_headerSize = m_ciTextSize = 0; m_iv.zero(); return std::move(m_buf);}
 		const ByteBuf& getBuf	() {return m_buf;}
 		const ByteBuf& getIV	() {return m_iv;}
 
@@ -149,7 +154,7 @@ namespace crypt
 		const CryptInfo&			GetInfo				() const {return m_info;}
 		void						serializeInfo		(BufHeap<uint8_t>& outBuf) const;
 		void						Encrypt				(const Buf<uint8_t>& in,
-														 CipherBlob& out) const;
+														 ByteBuf& out) const;
 		void						Decrypt				(ByteBuf&& in,
 														 ByteBuf& out) const;
 	protected:

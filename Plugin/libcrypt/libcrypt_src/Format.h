@@ -191,7 +191,7 @@ namespace crypt
 		static void parse (const Buf<uint8_t>& inbuf, CryptInfo& obj)
 		{
 			Parser parse(inbuf);
-			if ((parse.GetU8() != VAL_FMT_VER) || (inbuf.size() < FMT_TOTAL_SIZE)) {
+			if ((parse.GetU8() != VAL_FMT_VER) || (inbuf.capacityBytes() < FMT_TOTAL_SIZE)) {
 				throw Error(Error::CODE_BAD_FMT);
 			}
 			obj.m_logN = parse.GetU8();
