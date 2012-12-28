@@ -14,6 +14,7 @@
 #include <process.h>// For getpid
 #include <stdlib.h> // For malloc
 #include <malloc.h> // For malloc
+#include <CryptCtx.h>
 
 using namespace bp;
 using namespace std;
@@ -580,6 +581,17 @@ void BPrivyAPI::securityCheck(const bfs::path& path, const std::string allowedEx
 	//	throw BPError(ACODE_ACCESS_DENIED, BPCODE_UNAUTHORIZED_CLIENT);
 	//}
 }
+
+unsigned int _createCryptCtx(const bp::ucs& $, const bfs::path& cryptInfoFilePath, bp::JSObject* in_out)
+{
+	unsigned int ctxHandle = CryptCtx::Make($);
+	crypt::BufHeap<uint8_t> outBuf;
+	const crypt::CryptCtx& ctx = crypt::CryptCtx::Get(ctxHandle);
+	ctx.serializeInfo(outBuf);
+
+
+}
+unsigned int _loadCryptCtx(const bp::ucs& $, const bfs::path& cryptInfoFilePath, bp::JSObject* in_out);
 
 
 //bool BPrivyAPI::writeFile(const std::string& pth, const std::string& data, FB::JSObjectPtr out)

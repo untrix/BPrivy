@@ -67,7 +67,8 @@ namespace crypt
              |<----------------------------m_len-------------------------------->|
              |<------m_seek------->|<-----m_dataLen------>|<----unfilled space-->|
              |                     |<------capacityNum / capacitySize----------->|
-            m-buf               seek-pos              
+             v                     v                                             v
+            m_buf            (m_buf+m_seek)                                (m_buf+m_len)
 		 */
 					operator T*		() {return m_buf+m_seek;}
 					operator const T* () const {return m_buf+m_seek;}

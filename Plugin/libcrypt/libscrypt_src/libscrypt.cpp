@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <Utils.h>
+#include <CryptUtils.h>
 #include <Error.h>
 #include "libscrypt.h"
 
@@ -15,7 +15,7 @@ extern "C" {
 namespace crypt {
 
 bool 
-deriveKey(const Buf<wchar_t>& passwd, uint8_t logN, uint32_t r, uint32_t p,
+deriveKey(const Buf<char>& passwd, uint8_t logN, uint32_t r, uint32_t p,
 		  Buf<uint8_t>& dkBuf, const Buf<uint8_t>& salt)
 {
 	//uint8_t hbuf[32];
@@ -25,9 +25,7 @@ deriveKey(const Buf<wchar_t>& passwd, uint8_t logN, uint32_t r, uint32_t p,
 	//size_t headerBufLen = 512;
 	uint64_t N = (uint64_t)(1) << logN;
 	size_t passwdLen = passwd.capacityNum();
-	// NOTE: passwdBytes MUST be always 4 x passwdLen regardless of
-	// whether wchar_t is 2 or 4 bytes long.
-	BufHeap<uint8_t> passwdBytes(passwdLen*4);
+	BufHeap<uint8_t> passwdBytes(passwdLen);
 	//SHA256_CTX ctx;
 	//uint8_t * key_hmac = &dk[32];
 	//HMAC_SHA256_CTX hctx;
@@ -37,10 +35,10 @@ deriveKey(const Buf<wchar_t>& passwd, uint8_t logN, uint32_t r, uint32_t p,
 		throw Error(Error::CODE_BAD_PARAM, L"Password too long");
 	}
 
-	for (i=0, j=0; (i < passwdLen); i++,j+=4)
+	for (i=0, j=0; (i < passwdLen); i++,j++)
 	{
-		be32enc(&passwdBytes[j], static_cast<uint32_t>(passwd[i]));
-		//passwdBytes[i] = (uint8_t)(passwd[i]);
+		//be32enc(&passwdBytes[j], static_cast<uint32_t>(passwd[i]));
+		passwdBytes[i] = static_cast<uint8_t>(passwd[i]);
 	}
 
 	/* Generate the derived keys. */

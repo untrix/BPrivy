@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include "Error.h"
-#include "Utils.h"
+#include "CryptUtils.h"
 #include "CryptCtx.h"
 
 namespace crypt

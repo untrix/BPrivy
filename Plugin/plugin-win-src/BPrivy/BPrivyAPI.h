@@ -75,11 +75,15 @@ public:
 	// reading or writing to either. Also, no locking is performed when renaming directories.
 	bool rename(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
 	// Copies files only.
+	// TODO: If files are from different DBs, then the src file has to be decrypted and re-encrypted with key of the
+	// destination DB.
 	bool copy(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
 	bool chooseFile(FB::JSObjectPtr p);
 	bool chooseFolder(FB::JSObjectPtr p);
 	// Returns path separator based on the operating system
 	std::wstring pathSeparator();
+	unsigned int createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFilePath, FB::JSObjectPtr in_out);
+	unsigned int loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFilePath, FB::JSObjectPtr in_out);
 
 private:
 	bool _ls(bfs::path& path, bp::JSObject* out);
@@ -99,7 +103,8 @@ private:
 	bool removeFile(bfs::path&);
 	unsigned BPrivyAPI::lsDrives(bp::VariantMap&);
 	unsigned long long _lockFile(bfs::path& path, bp::JSObject* out);
-
+	unsigned int _createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, bp::JSObject* in_out);
+	unsigned int _loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, bp::JSObject* in_out);
 #ifdef DEBUG
 public:
 	bool chooseFileXP(FB::JSObjectPtr p);

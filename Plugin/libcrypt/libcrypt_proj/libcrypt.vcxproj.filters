@@ -27,13 +27,13 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\libcrypt_src\Utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\libcrypt_src\Format.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\libcrypt_src\Error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libcrypt_src\CryptUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,10 +44,10 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\libcrypt_src\Utils.cpp">
+    <ClCompile Include="..\libcrypt_src\Format.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\libcrypt_src\Format.cpp">
+    <ClCompile Include="..\libcrypt_src\CryptUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

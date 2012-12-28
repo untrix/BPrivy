@@ -19,12 +19,12 @@ The following software is required to build the BPrivy plugin:
 	2. Read $Openssl_Dist/INSTALL.W32
 	3. Download and install nasm as instructed in INSTALL.W32 (http://nasm.sourceforge.net/), or form the thirdparty CD.
 	4. Download and install ActiveState Perl as instructed in INSTALL.w32 (from 	http://www.activestate.com/ActivePerl), or from the thirdparty CD.
-	5. Open a command prompt and make sure that no Unix env. is in the path (e.g. remove cygwin, MinGW etc. from the path).
+	##5. Open a command prompt and make sure that no Unix env. is in the path (e.g. remove cygwin, MinGW etc. from the path).
 	6. Open up Visual Studio 2010 and open a command prompt (Tools->Visual Studio Command Prompt). Inside the command prompt execute the rest of the procedure:
 		You can also setup the visual studio environment (C:\Program Files (x86)\Microsoft Visual Studio 10\Common7\Tools\vsvars32.bat). But the above is preferrable.
 	7. Follow instructions from INSTALL.W32 to build the static libraries with some additional options.
 		7.a		perl Configure VC-WIN32 --prefix=c:\openssl no-idea no-mdc2 no-rc5
-		Refer to the Configure & README files for a description of these options.
+		Refer to the Configure & README files for a description of these options. In the case of Mac/Linux supply --prefix=/openssl instead of C:\openssl
 		7.b		ms\do_nasm
 		7.c		nmake -f ms\nt.mak
 				nmake -f ms\ntdll.mak

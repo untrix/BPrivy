@@ -14,11 +14,11 @@
 const uint32_t i = 1;
 #define is_bigendian() ( (*(char*)&i) == 0 )
 
-void printUsage(wchar_t* argv[])
+void printUsage(char* argv[])
 {
-	printf("Usage:\t%S \"enc|enc2\" <password> <headerFile> <ClearTextFile> <CipherTextFile>\n"
-		   "\t| %S \"dec\" <password> <headerFile> <ClearTextFile> <CipherTextFile>\n"
-		   "\t| %S \"make\" <password> <headerFile>", argv[0], argv[0], argv[0]);
+	printf("Usage:\t%s \"enc|enc2\" <password> <headerFile> <ClearTextFile> <CipherTextFile>\n"
+		   "\t| %s \"dec\" <password> <headerFile> <ClearTextFile> <CipherTextFile>\n"
+		   "\t| %s \"make\" <password> <headerFile>", argv[0], argv[0], argv[0]);
 }
 
 size_t
@@ -30,7 +30,7 @@ fSize( FILE* fPtr)
 	return siz;
 }
 
-int _tmain(int argc, wchar_t* argv[])
+int main(int argc, char* argv[])
 {
 	if (argc < 2) {
 		printUsage(argv);
@@ -38,18 +38,18 @@ int _tmain(int argc, wchar_t* argv[])
 	}
 
 	try {
-	if ((std::wstring(L"enc") == argv[1]) ||  (std::wstring(L"enc2") == argv[1]))
+	if ((std::string("enc") == argv[1]) || (std::string("enc2") == argv[1]))
 	{
 		if (argc != 6) {printUsage(argv); return 1;}
 
-		crypt::BufHeap<wchar_t> passwd(argv[2]);
-		std::wstring headerFile(argv[3]);
-		std::wstring fileIn(argv[4]);
-		std::wstring fileOut(argv[5]);
+		crypt::BufHeap<char> passwd(argv[2]);
+		std::string headerFile(argv[3]);
+		std::string fileIn(argv[4]);
+		std::string fileOut(argv[5]);
 		
-		FILE* hFile = fopen(crypt::UnicodeToLocale(headerFile).c_str(), "rb");
+		FILE* hFile = fopen(headerFile.c_str(), "rb");
 		if (!hFile) {
-			fprintf(stderr, "Could not open input file: %s\n", crypt::UnicodeToLocale(headerFile).c_str()); 
+			fprintf(stderr, "Could not open input file: %s\n", headerFile.c_str()); 
 			perror(NULL);
 			return 1;
 		}
@@ -62,9 +62,9 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 		unsigned int ctxHandle = crypt::CryptCtx::Make(passwd, hBuf);
 
-		FILE* inFile = fopen(crypt::UnicodeToLocale(fileIn).c_str(), "rb");
+		FILE* inFile = fopen(fileIn.c_str(), "rb");
 		if (!inFile) {
-			fprintf(stderr, "Could not open input file: %s\n", crypt::UnicodeToLocale(fileIn).c_str()); 
+			fprintf(stderr, "Could not open input file: %s\n", fileIn.c_str()); 
 			perror(NULL);
 			return 1;
 		}
@@ -81,31 +81,31 @@ int _tmain(int argc, wchar_t* argv[])
 		crypt::ByteBuf outBuf; // Null buffer
 		crypt::CryptCtx::Get(ctxHandle).Encrypt(inBuf, outBuf);
 
-		FILE* outFile = fopen(crypt::UnicodeToLocale(fileOut).c_str(), (std::wstring(L"enc") == argv[1]) ? "wb" : "ab");
+		FILE* outFile = fopen(fileOut.c_str(), (std::string("enc") == argv[1]) ? "wb" : "ab");
 		if (!outFile) {
-			fprintf(stderr, "Could not open output file: %s\n", crypt::UnicodeToLocale(fileIn).c_str()); 
+			fprintf(stderr, "Could not open output file: %s\n", fileIn.c_str()); 
 			perror(NULL);
 			return 1;
 		}
 		count = fwrite(outBuf, sizeof(uint8_t), outBuf.dataLen(), outFile);
 		return 0;
 	}
-	else if (std::wstring(L"make") == argv[1])
+	else if (std::string("make") == argv[1])
 	{
 		if (argc != 4) {printUsage(argv); return 1;}
 
-		crypt::BufHeap<wchar_t> passwd(argv[2]);
-		std::wstring headerFile = argv[3];
+		crypt::BufHeap<char> passwd(argv[2]);
+		std::string headerFile = argv[3];
 
 		unsigned int ctxHandle = crypt::CryptCtx::Make(passwd);
-		crypt::BufHeap<uint8_t> outBuf(1);
+		crypt::BufHeap<uint8_t> outBuf;
 		
 		const crypt::CryptCtx& ctx = crypt::CryptCtx::Get(ctxHandle);
 		ctx.serializeInfo(outBuf);
 
-		FILE* outFile = fopen(crypt::UnicodeToLocale(headerFile).c_str(), "wb");
+		FILE* outFile = fopen(headerFile.c_str(), "wb");
 		if (!outFile) {
-			fprintf(stderr, "Could not open output file: %s\n", crypt::UnicodeToLocale(headerFile).c_str()); 
+			fprintf(stderr, "Could not open output file: %s\n", headerFile.c_str()); 
 			perror(NULL);
 			return 1;
 		}
@@ -117,18 +117,18 @@ int _tmain(int argc, wchar_t* argv[])
 			return 1;
 		}
 	}
-	else if (std::wstring(L"dec") == argv[1])
+	else if (std::string("dec") == argv[1])
 	{
 		if (argc != 6) {printUsage(argv); return 1;}
 
-		crypt::BufHeap<wchar_t> passwd(argv[2]);
-		std::wstring headerFile(argv[3]);
-		std::wstring fileOut(argv[4]);
-		std::wstring fileIn(argv[5]);
+		crypt::BufHeap<char> passwd(argv[2]);
+		std::string headerFile(argv[3]);
+		std::string fileOut(argv[4]);
+		std::string fileIn(argv[5]);
 		
-		FILE* hFile = fopen(crypt::UnicodeToLocale(headerFile).c_str(), "rb");
+		FILE* hFile = fopen(headerFile.c_str(), "rb");
 		if (!hFile) {
-			fprintf(stderr, "Could not open input file: %s\n", crypt::UnicodeToLocale(headerFile).c_str()); 
+			fprintf(stderr, "Could not open input file: %s\n", headerFile.c_str()); 
 			perror(NULL);
 			return 1;
 		}
@@ -141,9 +141,9 @@ int _tmain(int argc, wchar_t* argv[])
 		}
 		unsigned int ctxHandle = crypt::CryptCtx::Make(passwd, inBuf);
 
-		FILE* inFile = fopen(crypt::UnicodeToLocale(fileIn).c_str(), "rb");
+		FILE* inFile = fopen((fileIn).c_str(), "rb");
 		if (!inFile) {
-			fprintf(stderr, "Could not open input file: %s\n", crypt::UnicodeToLocale(fileIn).c_str()); 
+			fprintf(stderr, "Could not open input file: %s\n", (fileIn).c_str()); 
 			perror(NULL);
 			return 1;
 		}
@@ -160,9 +160,9 @@ int _tmain(int argc, wchar_t* argv[])
 		crypt::ByteBuf outBuf;
 		crypt::CryptCtx::Get(ctxHandle).Decrypt(std::move(ciBuf), outBuf);
 
-		FILE* outFile = fopen(crypt::UnicodeToLocale(fileOut).c_str(), "wb");
+		FILE* outFile = fopen((fileOut).c_str(), "wb");
 		if (!outFile) {
-			fprintf(stderr, "Could not open output file: %s\n", crypt::UnicodeToLocale(fileOut).c_str());
+			fprintf(stderr, "Could not open output file: %s\n", fileOut.c_str());
 			perror(NULL);
 			return 1;
 		}

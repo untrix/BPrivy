@@ -19,6 +19,7 @@
 #include <Shlobj.h>
 #include <Shobjidl.h>
 #include <Objbase.h>
+#include <CryptCtx.h>
 
 using namespace bp;
 using namespace std;

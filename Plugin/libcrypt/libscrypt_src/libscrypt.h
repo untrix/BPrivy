@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <string>
 #include <sstream>
-#include <Utils.h>
+#include <CryptUtils.h>
 
 namespace crypt {
 
@@ -32,7 +32,7 @@ namespace crypt {
  * @param salt. SCRYPT_SALT_SIZE bytes buffer with the salt.
  * @returns true/false.
  */
-bool deriveKey(const Buf<wchar_t>& passwd, uint8_t logN, uint32_t r, uint32_t p,
+bool deriveKey(const Buf<char>& passwd, uint8_t logN, uint32_t r, uint32_t p,
 		       Buf<uint8_t>& dkBuf, const Buf<uint8_t>& salt);
 }
 

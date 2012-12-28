@@ -137,6 +137,19 @@ bool BPrivyAPI::chooseFolder(FB::JSObjectPtr out)
 	//return _chooseFolderXP(&o);
 	return _choose(&o, false);
 }
+unsigned int BPrivyAPI::createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, FB::JSObjectPtr in_out)
+{
+	bp::JSObject o(in_out);
+	bfs::path path(cryptInfoFile); path.make_preferred();
+	return _createCryptCtx($, path, &o);
+}
+unsigned int BPrivyAPI::loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, FB::JSObjectPtr in_out)
+{
+	bp::JSObject o(in_out);
+	bfs::path path(cryptInfoFile); path.make_preferred();
+	return _loadCryptCtx($, path, &o);
+}
+
 #ifdef DEBUG
 bool BPrivyAPI::chooseFileXP(FB::JSObjectPtr out)
 {

@@ -1,6 +1,6 @@
 #include <libscrypt.h>
 #include "CryptCtx.h"
-#include "Utils.h"
+#include "CryptUtils.h"
 #include "Error.h"
 #include "Format.h"
 #include <cstdio> // for sprintf
@@ -221,7 +221,7 @@ namespace crypt
 		}
 	}
 	unsigned int
-	CryptCtx::Make(Buf<wchar_t>& $, CipherEnum cipher, unsigned int key_len)
+	CryptCtx::Make(Buf<char>& $, CipherEnum cipher, unsigned int key_len)
 	{
 		unsigned int handle = 0;
 		CryptCtx* pCtx = new CryptCtx(cipher, key_len);
@@ -239,7 +239,7 @@ namespace crypt
 		return handle;
 	}
 	unsigned int
-	CryptCtx::Make(Buf<wchar_t>& $, const Buf<uint8_t>& cryptInfo)
+	CryptCtx::Make(Buf<char>& $, const Buf<uint8_t>& cryptInfo)
 	{
 		unsigned int handle = 0;
 		std::string headerHex;
