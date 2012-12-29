@@ -1,8 +1,8 @@
 #include <libscrypt.h>
 #include "CryptCtx.h"
 #include "CryptUtils.h"
-#include "Error.h"
-#include "Format.h"
+#include "CryptError.h"
+#include "CryptFormat.h"
 #include <cstdio> // for sprintf
 #include <openssl/rand.h>
 #include <openssl/err.h>
@@ -35,6 +35,7 @@ namespace crypt
 	const wstring Error::CODE_BAD_FMT = L"WrongFormatVer";
 	const wstring Error::CODE_FEATURE_NOT_SUPPORTED = L"FeatureNotSupported";
 	const wstring Error::MSG_EMPTY = L"";
+	const wstring Error::CODE_BAD_FILE = L"FileCorrupted";
 
 	void
 	Error::ThrowOpensslError()
@@ -60,7 +61,7 @@ namespace crypt
 	wstring
 	Error::PrintMsg() const
 	{
-		return code + L":" + msg + L":" + std::to_wstring((unsigned long long)errc);
+		return gcode + L":" + gmsg + L":" + std::to_wstring((unsigned long long)errc);
 	}
 
 	/*****************************************************************/

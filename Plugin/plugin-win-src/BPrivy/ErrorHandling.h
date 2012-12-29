@@ -6,6 +6,7 @@
 #include <boost/filesystem.hpp>
 #include "Utils.h"
 #include "BPi18n.h"
+#include <CryptError.h>
 
 // Error Handling Stuff
 namespace bp
@@ -82,6 +83,7 @@ namespace bp
 	// Indicates that a unsupported feature was trying to be accessed,
 	// Or a resource-limit was reached (e.g. unsupported file size).
 	extern const bp::ustring ACODE_UNSUPPORTED;
+	extern const bp::ustring ACODE_CRYPT_ERROR;
 
 	//typedef enum _ACODE
 	//{
@@ -170,6 +172,7 @@ namespace bp
 	extern const bp::ustring BPCODE_WOULD_CLOBBER;//Exception thrown to prevent clobbering
 	extern const bp::ustring BPCODE_FILE_TOO_BIG;
 	extern const bp::ustring BPCODE_INVALID_COPY_ARGS;
+	extern const bp::ustring BPCODE_BAD_FILE; // Corrupted file
 
 	// Integer constants
 	extern const msize32_t MAX_READ_BYTES;
@@ -182,6 +185,10 @@ namespace bp
 		catch (const bp::BPError& e)\
 		{\
 			HandleBPError(e, p);\
+		}\
+		catch (const crypt::Error& e)\
+		{\
+			HandleCryptError(e, p);\
 		}\
 		catch (const bs::system_error& e)\
 		{\
@@ -229,6 +236,7 @@ namespace bp
 	void HandleUnknownException (bp::VariantMap& me);
 	void HandleBPError(const BPError&, bp::JSObject*);
 	void SetInfoMsg(const bp::ustring& code, bp::JSObject*);
+	void HandleCryptError(const crypt::Error&, bp::JSObject*);
 
 #define CHECK(b) \
 	if (!b)\

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <vector>
-#include "Error.h"
+#include "CryptError.h"
 #include "CryptUtils.h"
 #include "CryptCtx.h"
 
@@ -180,6 +180,7 @@ namespace crypt
 			Sign(serialize, ctx);
 			//serialize.PutBuf(obj.m_signature, FMT_SIG_SIZE);
 			Error::Assert(serialize.getPos() == FMT_TOTAL_SIZE);
+			outbuf.setDataLen(serialize.getPos());
 		}
 
 		static size_t GetVersion(const Buf<uint8_t>& inbuf)
@@ -190,8 +191,11 @@ namespace crypt
 
 		static void parse (const Buf<uint8_t>& inbuf, CryptInfo& obj)
 		{
+			if (inbuf.capacityBytes() < FMT_TOTAL_SIZE) {
+				throw Error(Error::CODE_BAD_FILE, L"Bad CryptInfo File");
+			}
 			Parser parse(inbuf);
-			if ((parse.GetU8() != VAL_FMT_VER) || (inbuf.capacityBytes() < FMT_TOTAL_SIZE)) {
+			if ((parse.GetU8() != VAL_FMT_VER)) {
 				throw Error(Error::CODE_BAD_FMT);
 			}
 			obj.m_logN = parse.GetU8();

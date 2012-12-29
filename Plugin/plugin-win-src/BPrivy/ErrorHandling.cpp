@@ -3,6 +3,7 @@
 #include "ErrorHandling.h"
 #include "Utils.h"
 #include <boost/system/error_code.hpp>
+#include <CryptError.h>
 
 using namespace bp;
 using namespace std;
@@ -59,6 +60,7 @@ namespace bp
  	const bp::ustring ACODE_RESOURCE_LOCKED		(L"ResourceLocked");
  	const bp::ustring ACODE_ACCESS_DENIED		(L"AccessDenied");
 	const bp::ustring ACODE_UNSUPPORTED			(L"Unsupported");
+	const bp::ustring ACODE_CRYPT_ERROR			(L"CryptoError");
 
 	const bp::ustring BPCODE_UNAUTHORIZED_CLIENT (L"UnauthorizedClient");
 	const bp::ustring BPCODE_WRONG_PASS			(L"WrongPass"); // Password too short or wrong.
@@ -74,6 +76,7 @@ namespace bp
 	const bp::ustring BPCODE_PATH_NOT_EXIST	(L"PathNotExist");
 	const bp::ustring BPCODE_FILE_TOO_BIG		(L"FileTooBig");
 	const bp::ustring BPCODE_INVALID_COPY_ARGS	(L"InvalidCopyArgs");
+	const bp::ustring BPCODE_BAD_FILE			(L"FileCorrupted");
 
 	const bp::ustring EXCEPTION_NAME			(L"PluginDiags");
 	const bp::ustring& PCodeToACodeW(int ev)
@@ -266,6 +269,20 @@ namespace bp
 		}
 		if (!e.path.empty()) {
 			m.insert(PROP_PATH, e.path);
+		}
+		if (!e.gmsg.empty()) {
+			m.insert(PROP_GENERIC_MESSAGE, e.gmsg);
+		}
+		p->SetProperty(PROP_ERROR, m);
+	}
+
+	void HandleCryptError(const crypt::Error& e, bp::JSObject* p)
+	{
+		bp::VariantMap m;
+		m.insert(PROP_ERRNAME, EXCEPTION_NAME);
+		m.insert(PROP_A_CODE, e.acode.empty() ? ACODE_CRYPT_ERROR : e.acode);
+		if (!e.gcode.empty()) {
+			m.insert(PROP_GENERIC_CODE, (e.gcode));
 		}
 		if (!e.gmsg.empty()) {
 			m.insert(PROP_GENERIC_MESSAGE, e.gmsg);

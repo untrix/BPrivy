@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <CryptUtils.h>
-#include <Error.h>
+#include <CryptError.h>
 #include "libscrypt.h"
 
 extern "C" {

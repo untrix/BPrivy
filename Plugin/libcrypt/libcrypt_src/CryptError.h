@@ -13,15 +13,16 @@ namespace crypt
 	class Error
 	{
 	public:
-		Error(const wstring& c) : code(c), errc(0) {}
-		Error(unsigned int c) : code(CODE_OS_ERROR), errc(c) {}
-		Error(const wstring& c, const wstring& msg) : code(c), msg(msg), errc(0) {}
+		Error(const wstring& c) : gcode(c), errc(0) {}
+		Error(unsigned int c) : gcode(CODE_OS_ERROR), errc(c) {}
+		Error(const wstring& c, const wstring& msg) : gcode(c), gmsg(msg), errc(0) {}
 		Error(const wstring& c, const std::string& msg) 
-			: code(c), msg(LocaleToUnicode(msg)), errc(0) {}
+			: gcode(c), gmsg(LocaleToUnicode(msg)), errc(0) {}
 		wstring PrintMsg () const;
 
-		wstring code;
-		wstring msg;
+		wstring gcode;
+		wstring gmsg;
+		wstring acode;
 		unsigned int errc;
 
 		static void		ThrowOpensslError();
@@ -38,6 +39,7 @@ namespace crypt
 		static const wstring	CODE_NO_CSP;
 		static const wstring	CODE_BAD_FMT;
 		static const wstring	CODE_FEATURE_NOT_SUPPORTED;
+		static const wstring	CODE_BAD_FILE;
 
 		static const wstring	MSG_EMPTY;
 	};

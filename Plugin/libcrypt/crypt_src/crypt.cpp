@@ -9,7 +9,7 @@
 #include <fstream>
 #include <libscrypt.h>
 #include <CryptCtx.h>
-#include <Error.h>
+#include <CryptError.h>
 
 const uint32_t i = 1;
 #define is_bigendian() ( (*(char*)&i) == 0 )

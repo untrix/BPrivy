@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <string>
-#include "Error.h"
+#include "CryptError.h"
 
 namespace crypt
 {

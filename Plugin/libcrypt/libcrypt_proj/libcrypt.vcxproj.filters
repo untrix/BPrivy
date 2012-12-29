@@ -27,13 +27,13 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\libcrypt_src\Format.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\libcrypt_src\Error.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\libcrypt_src\CryptUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libcrypt_src\CryptError.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libcrypt_src\CryptFormat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
