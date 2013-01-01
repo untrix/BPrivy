@@ -60,7 +60,8 @@ int main(int argc, char* argv[])
 			fprintf(stderr, "fread on file %S returned zero", headerFile.c_str());
 			return 1;
 		}
-		unsigned int ctxHandle = crypt::CryptCtx::Make(passwd, hBuf);
+		hBuf.setDataNum(count);
+		unsigned int ctxHandle = crypt::CryptCtx::Load(passwd, hBuf);
 
 		FILE* inFile = fopen(fileIn.c_str(), "rb");
 		if (!inFile) {
@@ -76,7 +77,7 @@ int main(int argc, char* argv[])
 			perror(NULL);
 			return 1;
 		}
-		inBuf.setDataLen(count);
+		inBuf.setDataNum(count);
 
 		crypt::ByteBuf outBuf; // Null buffer
 		crypt::CryptCtx::Get(ctxHandle).Encrypt(inBuf, outBuf);
@@ -87,7 +88,7 @@ int main(int argc, char* argv[])
 			perror(NULL);
 			return 1;
 		}
-		count = fwrite(outBuf, sizeof(uint8_t), outBuf.dataLen(), outFile);
+		count = fwrite(outBuf, sizeof(uint8_t), outBuf.dataNum(), outFile);
 		return 0;
 	}
 	else if (std::string("make") == argv[1])
@@ -97,7 +98,7 @@ int main(int argc, char* argv[])
 		crypt::BufHeap<char> passwd(argv[2]);
 		std::string headerFile = argv[3];
 
-		unsigned int ctxHandle = crypt::CryptCtx::Make(passwd);
+		unsigned int ctxHandle = crypt::CryptCtx::Create(passwd);
 		crypt::BufHeap<uint8_t> outBuf;
 		
 		const crypt::CryptCtx& ctx = crypt::CryptCtx::Get(ctxHandle);
@@ -109,8 +110,8 @@ int main(int argc, char* argv[])
 			perror(NULL);
 			return 1;
 		}
-		size_t count = fwrite(outBuf, sizeof(uint8_t), outBuf.capacityBytes(), outFile);
-		if (count == outBuf.capacityBytes()) {
+		size_t count = fwrite(outBuf, sizeof(uint8_t), outBuf.dataNum(), outFile);
+		if (count == outBuf.dataNum()) {
 			return 0;
 		}
 		else {
@@ -139,7 +140,8 @@ int main(int argc, char* argv[])
 			perror(NULL);
 			return 1;
 		}
-		unsigned int ctxHandle = crypt::CryptCtx::Make(passwd, inBuf);
+		inBuf.setDataNum(count);
+		unsigned int ctxHandle = crypt::CryptCtx::Load(passwd, inBuf);
 
 		FILE* inFile = fopen((fileIn).c_str(), "rb");
 		if (!inFile) {
@@ -155,7 +157,7 @@ int main(int argc, char* argv[])
 			perror(NULL);
 			return 1;
 		}
-		ciBuf.setDataLen(count);
+		ciBuf.setDataNum(count);
 
 		crypt::ByteBuf outBuf;
 		crypt::CryptCtx::Get(ctxHandle).Decrypt(std::move(ciBuf), outBuf);
@@ -166,7 +168,7 @@ int main(int argc, char* argv[])
 			perror(NULL);
 			return 1;
 		}
-		count = fwrite(outBuf, sizeof(uint8_t), outBuf.dataLen(), outFile);
+		count = fwrite(outBuf, sizeof(uint8_t), outBuf.dataNum(), outFile);
 		return 0;
 	}
 	else {printUsage(argv); return 2;}

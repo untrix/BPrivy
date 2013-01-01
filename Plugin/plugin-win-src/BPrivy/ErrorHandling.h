@@ -48,6 +48,7 @@ namespace bp
 	extern const bp::ustring PROP_CLEAR_HISTORY;
 	extern const bp::ustring PROP_PREFIX;
 	extern const bp::ustring PROP_SUFFIX;
+	extern const bp::ustring PROP_CRYPT_CTX;
 
 	/***** Actionable Codes. GENERIC & System Error Codes are mapped to one of these *****/
  	// User Actionable. User should resolve the situation

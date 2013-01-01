@@ -36,6 +36,9 @@
     <ClInclude Include="..\libcrypt_src\CryptFormat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\libcrypt_src\CryptInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\libcrypt_src\CryptCtx.cpp">
@@ -48,6 +51,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\libcrypt_src\CryptUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libcrypt_src\CryptInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

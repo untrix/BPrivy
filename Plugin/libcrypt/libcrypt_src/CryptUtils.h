@@ -64,56 +64,57 @@ namespace crypt
 	{
 	public:
 		/*
-             |<----------------------------m_len-------------------------------->|
-             |<------m_seek------->|<-----m_dataLen------>|<----unfilled space-->|
-             |                     |<------capacityNum / capacitySize----------->|
+             |<----------------------------m_num-------------------------------->|
+             |<------m_seek------->|<-----m_dataNum------>|<----unfilled space-->|
+             |                     |<------capacityNum / capacityBytes---------->|
              v                     v                                             v
-            m_buf            (m_buf+m_seek)                                (m_buf+m_len)
+            m_buf            (m_buf+m_seek)                                (m_buf+m_num)
 		 */
 					operator T*		() {return m_buf+m_seek;}
 					operator const T* () const {return m_buf+m_seek;}
-		/**	Zero's out all allocated memory (regardless of seek-position). Resets dataLen
+		/**	Zero's out all allocated memory (regardless of seek-position). Resets dataNum
 		 *  and seek-position to zero.
 		 */
 		virtual void zero			()
 		{
 			if (m_buf) {
-				memset(m_buf, 0, m_len*sizeof(T));
-				m_dataLen = 0;
+				memset(m_buf, 0, m_num*sizeof(T));
+				m_dataNum = 0;
 				m_seek = 0;
 			}
 		}
 		/** Size of the usable buffer (i.e. after the seek-position) in # of bytes. Somewhat like
 		 *	vector::capacity() except that size before the seek-position is disregarded.
 		 */
-		size_t		capacityBytes			() const {return (m_buf ? ((m_len-m_seek)*sizeof(T)) : 0);}
+		size_t		capacityBytes			() const {return (m_buf ? ((m_num-m_seek)*sizeof(T)) : 0);}
 		/** Number of T elements in the m_buf array after the seek-position. Somewhat like
 		 *	vector::capacity() except that size before the seek-position is disregarded.
 		 */
 		size_t		capacityNum			() const {
-			return m_len-m_seek;
+			return m_num-m_seek;
 		}
 		/** Length of populated useful data starting from the seek-position and ending before 
 		 *	or at the end of the allocated memory buffer. Similar to basic_string::length().
-		 *	This value maybe less than capacityNum() (which itself maybe less than m_len).
+		 *	This value maybe less than capacityNum() (which itself maybe less than m_num).
 		 */
-		size_t		dataLen	() const {
-			return m_dataLen;
+		size_t		dataNum	() const {
+			return m_dataNum;
 		}
-		void		setDataLen	(size_t l) {m_dataLen = l;}
+		void		setDataNum	(size_t l) {m_dataNum = l;}
+		void		setFull		()	{m_dataNum = capacityNum();}
 		/** Seek forward delta items */
-		void		seek			(size_t delta) {m_seek += delta; m_dataLen = ( (m_dataLen>delta) ? (m_dataLen-delta) : 0);}
+		void		seek			(size_t delta) {m_seek += delta; m_dataNum = ( (m_dataNum>delta) ? (m_dataNum-delta) : 0);}
 		size_t		seek			() {return m_seek;}
-		/** Copies data from the supplied array to m_buf at position m_seek+m_dataLen.
+		/** Copies data from the supplied array to m_buf at position m_seek+m_dataNum.
 		 *	len should be number of elements to copy, not number of bytes.
 		 */
 		void		append			(const T* data, size_t len)
 		{
-			if (len && (len <= (capacityNum()-m_dataLen))) {
+			if (len && (len <= (capacityNum()-m_dataNum))) {
 				// WARNING: Below does a shallow copy only. Will only
 				// work on PODs and shallow structs.
-				memcpy(m_buf+m_seek+m_dataLen, data, len*sizeof(T));
-				m_dataLen += len;
+				memcpy(m_buf+m_seek+m_dataNum, data, len*sizeof(T));
+				m_dataNum += len;
 			}
 			else {
 				throw Error(Error::CODE_NO_MEM, L"Not enough space left in buffer for append.");
@@ -122,21 +123,21 @@ namespace crypt
 
 	protected:
 					Buf				(T* buf = NULL, size_t len = 0, size_t uLen = 0, size_t seek = 0) 
-			: m_len(len), m_buf(buf), m_dataLen(uLen), m_seek(seek) {}
+			: m_num(len), m_buf(buf), m_dataNum(uLen), m_seek(seek) {}
 		// Move constructor
 					Buf				(Buf<T>&& other)
-						: m_dataLen(other.m_dataLen), m_seek(other.m_seek)
+						: m_dataNum(other.m_dataNum), m_seek(other.m_seek)
 		{
-			//m_dataLen = other.m_dataLen;
-			other.m_dataLen = other.m_seek = 0;
+			//m_dataNum = other.m_dataNum;
+			other.m_dataNum = other.m_seek = 0;
 		}
 		Buf&		operator=		(Buf<T>&& other)
 		{
 			if (this != &other)
 			{
-				m_dataLen = other.m_dataLen;
+				m_dataNum = other.m_dataNum;
 				m_seek = other.m_seek;
-				other.m_dataLen = other.m_seek = 0;
+				other.m_dataNum = other.m_seek = 0;
 			}
 			return *this;
 		}
@@ -145,14 +146,15 @@ namespace crypt
 		T*			m_buf;
 		// Array length. Total # of T elements allocated from memory/stack.
 		// NOTE: This may be greater than the value returned by capacityNum()
-		size_t		m_len;
+		size_t		m_num;
 
 	private:
 		// In cases where a larger buffer may be allocated, this is a place
 		// to record the useful data length of a buffer. This class does not
-		// set this value except for initializing it at construction, copying it at 
-		// assignment and zeroing it out at zero()
-		size_t		m_dataLen;
+		// manage this value except for initializing it at construction, copying it at 
+		// assignment and zeroing it out at zero(). It is the responsibility
+		// of the user to set its correct value.
+		size_t		m_dataNum;
 		size_t		m_seek; // number of items to seek forward starting from m_buf
 		/* Disabled methods */
 					Buf				(const Buf&); // disabled
@@ -171,7 +173,7 @@ namespace crypt
 		explicit		BufHeap			(size_t len, size_t uLen=0) 
 		{
 			Malloc(len);
-			setDataLen(uLen);
+			setDataNum(uLen);
 		}
 		// NULL POINTER !!
 		explicit		BufHeap			() {}
@@ -182,8 +184,8 @@ namespace crypt
 		// delete [] operator.
 		explicit		BufHeap			(PtrType&& p, size_t len)
 		{
-			m_buf=p;m_len=len;p=NULL;
-			setDataLen(len);
+			m_buf=p;m_num=len;p=NULL;
+			setDataNum(len);
 			p = NULL;
 		}
 		// WARNING: This constructor will only work on PODs and shallow
@@ -202,7 +204,7 @@ namespace crypt
 		{
 			if (cap)
 			{
-				if (cap < m_len) { zero(); }
+				if (cap < m_num) { zero(); }
 				else {
 					Delete();
 					Malloc(cap);
@@ -219,7 +221,7 @@ namespace crypt
 			zero();
 			delete[] m_buf;
 			m_buf = NULL; 
-			m_len = 0;
+			m_num = 0;
 		}
 		virtual void	dummy			() {}
 
@@ -238,7 +240,7 @@ namespace crypt
 			if (!m_buf) {
 				throw Error(Error::CODE_NO_MEM);
 			}
-			m_len = len;
+			m_num = len;
 			zero();
 		}
 	}
@@ -253,18 +255,18 @@ namespace crypt
 
 		if (!i) {
 			m_buf = NULL;
-			m_len = 0;
+			m_num = 0;
 		}
 		else {
 			Malloc(i);
-			/*for (i=0; i<=m_len; i++)  // No null termination.
+			/*for (i=0; i<=m_num; i++)  // No null termination.
 			{
 				m_buf[i] = c_str[i];  // Invokes assignment operator.
 			}*/
 			// WARNING: Below does a shallow copy only. Will only
 			// work on PODs and shallow structs.
-			memcpy(m_buf, c_str, m_len*sizeof(T));
-			setDataLen(m_len);
+			memcpy(m_buf, c_str, m_num*sizeof(T));
+			setDataNum(m_num);
 		}
 	}
 
@@ -276,7 +278,7 @@ namespace crypt
 	{
 		Delete();
 		m_buf = other.m_buf; other.m_buf = NULL;
-		m_len = other.m_len; other.m_len = 0;
+		m_num = other.m_num; other.m_num = 0;
 		Buf<T>::operator=(std::forward<Buf<T> >(other));
 
 		other.zero(); // paranoia
@@ -297,8 +299,8 @@ namespace crypt
 						Array			(size_t uLen=0)
 						{
 							m_buf = m_array; 
-							m_len = LEN;
-							setDataLen(uLen);
+							m_num = LEN;
+							setDataNum(uLen);
 						}
 	protected:
 		T				m_array[LEN];

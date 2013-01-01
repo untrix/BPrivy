@@ -42,10 +42,11 @@ deriveKey(const Buf<char>& passwd, uint8_t logN, uint32_t r, uint32_t p,
 	}
 
 	/* Generate the derived keys. */
-	if (crypto_scrypt(passwdBytes, passwdLen, salt, salt.capacityBytes(), N, r, p, dkBuf, dkBuf.capacityBytes())) {
+	if (crypto_scrypt(passwdBytes, passwdLen, salt, salt.dataNum(), N, r, p, dkBuf, dkBuf.capacityBytes())) {
 		printf("crypto_scrypt failed\n");
 		return false;
 	}
+	dkBuf.setFull();
 	//else {
 	//	dkBuf.assign(dk, SCRYPT_DK_SIZE);
 	//}

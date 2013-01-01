@@ -610,12 +610,14 @@ unsigned int BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptI
 	try
 	{
 		unsigned int ctxHandle = 0;
+		crypt::BufHeap<uint8_t> inBuf(bfs::file_size(cryptInfoFilePath));
 		bfs::basic_ifstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::in | std::ios_base::binary);
-		crypt::BufHeap<uint8_t> inBuf(file_size(cryptInfoFilePath));
 		fStream.read(inBuf, inBuf.capacityBytes());
 		if (fStream.fail()) {
 			throw BPError(ACODE_CANT_PROCEED, BPCODE_BAD_FILE, L"Bad CryptInfo File");
 		}
+		fStream.close();
+		inBuf.setDataLen(inBuf.capacityBytes());
 		crypt::BufHeap<char> pass($.c_str());
 		ctxHandle = crypt::CryptCtx::Make(pass, inBuf);
 		

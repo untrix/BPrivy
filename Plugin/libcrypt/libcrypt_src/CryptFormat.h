@@ -124,7 +124,7 @@ namespace crypt
 			VAL_FMT_VER = 1,
 			FMT_SALT_SIZE = 32,
 			FMT_SIG_SIZE = 32,
-			FMT_TOTAL_SIZE = 76
+			FMT_TOTAL_FIXED_SIZE = 77
 		} Constant;
 
 		static uint8_t CipherEnumToVal(CipherEnum cipher)
@@ -177,10 +177,12 @@ namespace crypt
 			serialize.PutU8(CipherEnumToVal(obj.m_cipher));
 			serialize.PutU8(obj.m_keyLen);
 			serialize.PutBuf(obj.m_salt, FMT_SALT_SIZE);
+			const ByteBuf& key = obj.m_randKey;
+			serialize.PutU8(key.dataNum());
+			serialize.PutBuf(key, key.dataNum());
 			Sign(serialize, ctx);
-			//serialize.PutBuf(obj.m_signature, FMT_SIG_SIZE);
-			Error::Assert(serialize.getPos() == FMT_TOTAL_SIZE);
-			outbuf.setDataLen(serialize.getPos());
+			Error::Assert(serialize.getPos() == FMT_TOTAL_FIXED_SIZE + key.dataNum());
+			outbuf.setDataNum(serialize.getPos());
 		}
 
 		static size_t GetVersion(const Buf<uint8_t>& inbuf)
@@ -191,7 +193,7 @@ namespace crypt
 
 		static void parse (const Buf<uint8_t>& inbuf, CryptInfo& obj)
 		{
-			if (inbuf.capacityBytes() < FMT_TOTAL_SIZE) {
+			if (inbuf.dataNum() < FMT_TOTAL_FIXED_SIZE) {
 				throw Error(Error::CODE_BAD_FILE, L"Bad CryptInfo File");
 			}
 			Parser parse(inbuf);
@@ -204,6 +206,10 @@ namespace crypt
 			obj.m_cipher = CipherValToEnum(parse.GetU8());
 			obj.m_keyLen = parse.GetU8();
 			parse.GetBuf(obj.m_salt, FMT_SALT_SIZE);
+			size_t keySize = parse.GetU8();
+			ByteBuf key(keySize);
+			parse.GetBuf(key, keySize);
+			obj.m_randKey = std::move(key);
 			parse.GetBuf(obj.m_signature, FMT_SIG_SIZE);
 		}
 	};

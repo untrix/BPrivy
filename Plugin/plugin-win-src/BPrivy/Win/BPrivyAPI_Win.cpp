@@ -462,6 +462,9 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 			buf.Copy(pfx.length(), data.c_str(), siz);
 			buf.Copy(siz+pfx.length(), sfx.data(), sfx.length());
 
+			if (out->HasProperty(PROP_CRYPT_CTX))
+			{
+			}
 			// Seek Pointer and Lock File.
 			h.PrepareForAppend(bsiz);
 

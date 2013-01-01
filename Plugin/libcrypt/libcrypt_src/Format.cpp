@@ -32,7 +32,7 @@ namespace crypt
 	void
 	CipherBlobFormat1::serializeHeader(CipherBlob& ciBlob)
 	{
-		size_t ivSize = ciBlob.m_iv.dataLen();
+		size_t ivSize = ciBlob.m_iv.dataNum();
 		size_t headerSize = ciBlob.m_headerSize;
 		size_t ciTextSize = ciBlob.m_ciTextSize;
 		size_t size_field_size = (headerSize - FMT_HEADER_FIXED_SIZE - ivSize);
@@ -92,7 +92,7 @@ namespace crypt
 	uint8_t
 	Parser::GetU8()
 	{
-		Error::Assert(((m_pos+1)<=m_buf.capacityBytes()), Error::CODE_BAD_PARAM,
+		Error::Assert(((m_pos+1)<=m_buf.dataNum()), Error::CODE_BAD_PARAM,
 					  L"Parser::GetU8. End of Buffer");
 		return m_buf[m_pos++];
 	}
@@ -100,7 +100,7 @@ namespace crypt
 	uint16_t
 	Parser::GetU16()
 	{
-		Error::Assert(((m_pos+2)<=m_buf.capacityBytes()), Error::CODE_BAD_PARAM,
+		Error::Assert(((m_pos+2)<=m_buf.dataNum()), Error::CODE_BAD_PARAM,
 					  L"Parser::GetU16. End of Buffer");
 
 		uint16_t _t;
@@ -112,7 +112,7 @@ namespace crypt
 	uint32_t
 	Parser::GetU32()
 	{
-		Error::Assert(((m_pos+4)<=m_buf.capacityBytes()), Error::CODE_BAD_PARAM,
+		Error::Assert(((m_pos+4)<=m_buf.dataNum()), Error::CODE_BAD_PARAM,
 					  L"Parser::GetU32. End of Buffer");
 		uint32_t _t;
 		_t = be32dec(getP());
@@ -123,11 +123,12 @@ namespace crypt
 	void
 	Parser::GetBuf(Buf<uint8_t>& buf, size_t len)
 	{
-		Error::Assert(((m_pos+len)<=m_buf.capacityBytes()), Error::CODE_BAD_PARAM,
+		Error::Assert(((m_pos+len)<=m_buf.dataNum()), Error::CODE_BAD_PARAM,
 					  L"Parser::GetBuf. End of Buffer");
-		Error::Assert(((len)<=buf.capacityBytes()), Error::CODE_BAD_PARAM,
+		Error::Assert(((len)<=buf.dataNum()), Error::CODE_BAD_PARAM,
 					  L"Parser::GetBuf. End of Buffer");
 		memcpy(buf, getP(), len);
+		buf.setDataNum(len);
 		m_pos += len;
 	}
 		

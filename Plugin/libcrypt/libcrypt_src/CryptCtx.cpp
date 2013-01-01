@@ -3,7 +3,7 @@
 #include "CryptUtils.h"
 #include "CryptError.h"
 #include "CryptFormat.h"
-#include <cstdio> // for sprintf
+//#include <cstdio> // for sprintf
 #include <openssl/rand.h>
 #include <openssl/err.h>
 
@@ -65,124 +65,6 @@ namespace crypt
 	}
 
 	/*****************************************************************/
-	/************************** CryptInfo ****************************/
-	/*****************************************************************/
-
-	CryptInfo::CryptInfo(CipherEnum cipher, size_t keyLen) :
-		m_logN(LOGN), m_r(R), m_p(P),
-		m_cipher(cipher), m_keyLen(keyLen)
-	{
-		RAND_bytes(static_cast<unsigned char*>(m_salt), m_salt.capacityBytes());
-		ConstructCommon(m_cipher);
-	}
-	CryptInfo::CryptInfo(const Buf<uint8_t>& cryptInfo)
-	{
-		CryptInfoFormat1::parse(cryptInfo, *this);
-		ConstructCommon(m_cipher);
-	}
-	void
-	CryptInfo::ConstructCommon(CipherEnum cipher)
-	{
-		switch(cipher)
-		{
-		case CIPHER_AES_CBC:
-			m_EVP_CIPHER = EVP_aes_256_cbc();
-			break;
-		case CIPHER_BF_CBC:
-			m_EVP_CIPHER = EVP_bf_cbc();
-			break;
-		default:
-			throw Error(Error::CODE_BAD_PARAM, L"Cipher name not supplied");
-		}
-		m_ivLen = EVP_CIPHER_iv_length(m_EVP_CIPHER);
-		m_blkSize = EVP_CIPHER_block_size(m_EVP_CIPHER);
-	}
-
-	void
-	CryptInfo::zero()
-	{
-		m_logN = m_r = m_p = m_keyLen = 0;
-		m_cipher = CPHR_NULL;
-		m_salt.zero();
-		m_signature.zero();
-	}
-
-	/*****************************************************************/
-	/************************** CipherBlob ***************************/
-	/*****************************************************************/
-	void
-	CipherBlob::zero()
-	{
-		m_buf.zero();
-		m_iv.zero();
-		m_headerSize = m_ciTextSize = 0;
-	}
-	CipherBlob::CipherBlob(CipherBlob&& other)
-	  : m_buf(std::forward<ByteBuf>(other.m_buf)),
-	    m_iv(std::forward<ByteBuf>(other.m_iv)),
-		m_headerSize(other.m_headerSize),
-		m_ciTextSize(other.m_ciTextSize)
-	{
-		other.zero(); // paranoia
-	}
-	CipherBlob&
-	CipherBlob::operator=(CipherBlob&& other)
-	{
-		if (this == &other) return *this;
-		
-		m_buf = std::forward<ByteBuf>(other.m_buf);
-		m_iv = std::forward<ByteBuf>(other.m_iv);
-		m_headerSize = m_headerSize;
-		m_ciTextSize = other.m_ciTextSize;
-
-		other.zero();
-		return *this;
-	}
-	CipherBlob::CipherBlob()
-		: m_ciTextSize(0), m_headerSize(0)
-	{}
-	CipherBlob::CipherBlob(ByteBuf&& iv, size_t tentativeDataSize)
-		: m_buf(CipherBlobFormat1::EstimateTotalSize(iv.dataLen(), tentativeDataSize)),
-		m_headerSize(CipherBlobFormat1::EstimateHeaderSize(iv.dataLen(), tentativeDataSize)),
-		m_ciTextSize(0),
-		m_iv(std::forward<ByteBuf>(iv))
-	{}
-	void CipherBlob::finalize(size_t ciTextSize)
-	{
-		// marshall the header.
-		Error::Assert((ciTextSize>0), Error::CODE_BAD_PARAM,
-			L"CipherBlob::serialize. Cipher Text size is zero");
-		m_ciTextSize = ciTextSize;
-		m_buf.setDataLen(ciTextSize + m_headerSize);
-		CipherBlobFormat1::serializeHeader(*this);
-	}
-
-	CipherBlob::CipherBlob(ByteBuf&& data)
-		: m_buf(std::forward<ByteBuf>(data)),
-		m_iv()
-	{
-		CipherBlobFormat1::parseHeader(*this);
-		m_buf.setDataLen(m_headerSize + m_ciTextSize);
-	}
-	
-	void
-	CipherBlob::seek(size_t count)
-	{
-		if (count)
-		{
-			m_buf.seek(count);
-			CipherBlobFormat1::parseHeader(*this);
-			m_buf.setDataLen(m_headerSize + m_ciTextSize);
-		}
-	}
-
-	uint8_t*
-	CipherBlob::getCiText()
-	{
-		return static_cast<uint8_t*>(m_buf) + m_headerSize;
-	}
-
-	/*****************************************************************/
 	/*************************** CryptCtx ****************************/
 	/*****************************************************************/
 	CryptCtx::map CryptCtx::s_ctxMap;
@@ -222,7 +104,7 @@ namespace crypt
 		}
 	}
 	unsigned int
-	CryptCtx::Make(Buf<char>& $, CipherEnum cipher, unsigned int key_len)
+	CryptCtx::Create(Buf<char>& $, CipherEnum cipher, unsigned int key_len)
 	{
 		unsigned int handle = 0;
 		CryptCtx* pCtx = new CryptCtx(cipher, key_len);
@@ -233,6 +115,14 @@ namespace crypt
 			throw Error(Error::CODE_OS_ERROR, L"Could not derive key");
 		}
 		$.zero();
+		// Generate random key that will be used for data encryption.
+		ByteBuf key(pCtx->m_info.m_keyLen);
+		RAND_bytes(static_cast<unsigned char*>((uint8_t*)key), key.capacityBytes());
+		key.setFull();
+		pCtx->m_randKey = std::move(key);
+
+		// Now encrypt the random key and insert it into cryptInfo for saving.
+		pCtx->EncryptImpl(pCtx->m_randKey, pCtx->m_info.m_randKey, pCtx->m_dk);
 
 		handle = CryptCtx::MakeHandle();
 		s_ctxMap.insert(CryptCtx::map::value_type(handle, pCtx));
@@ -240,7 +130,7 @@ namespace crypt
 		return handle;
 	}
 	unsigned int
-	CryptCtx::Make(Buf<char>& $, const Buf<uint8_t>& cryptInfo)
+	CryptCtx::Load(Buf<char>& $, const Buf<uint8_t>& cryptInfo)
 	{
 		unsigned int handle = 0;
 		std::string headerHex;
@@ -254,13 +144,16 @@ namespace crypt
 		$.zero();
 		CryptInfoFormat1::Verify(cryptInfo, *pCtx);
 
+		// Now decrypt cryptInfo.m_randKey to get pCtx->m_randKey
+		pCtx->DecryptImpl(std::move(pCtx->m_info.m_randKey), pCtx->m_randKey, pCtx->m_dk);
+
 		handle = CryptCtx::MakeHandle();
 		s_ctxMap.insert(CryptCtx::map::value_type(handle, pCtx));
 
 		return handle;
 	}
 	void
-	CryptCtx::Encrypt(const Buf<uint8_t>& in, ByteBuf& out) const
+	CryptCtx::EncryptImpl(const Buf<uint8_t>& in, ByteBuf& out, const uint8_t* pKey) const
 	{
 		EVP_CIPHER_CTX ctx;
 		EVP_CIPHER_CTX_init(&ctx);
@@ -272,15 +165,15 @@ namespace crypt
 			RAND_bytes(static_cast<unsigned char*>(iv), ivLength);
 			EVP_EncryptInit_ex(&ctx, m_info.m_EVP_CIPHER, NULL, NULL, NULL);
 			EVP_CIPHER_CTX_set_key_length(&ctx, m_info.m_keyLen);
-			EVP_EncryptInit_ex(&ctx, NULL, NULL, m_dk, iv);
+			EVP_EncryptInit_ex(&ctx, NULL, NULL, pKey ? pKey : m_randKey, iv);
 
-			CipherBlob cText(std::move(iv), in.capacityBytes() + m_info.m_blkSize);
+			CipherBlob cText(std::move(iv), in.dataNum() + m_info.m_blkSize);
 			uint8_t* dataBuf = cText.getCiText();
 
 			int outlen = 0;
 			if(!EVP_EncryptUpdate(&ctx, dataBuf, &outlen,
 								  (const unsigned char*)(const uint8_t*)in,
-								  in.capacityBytes()))
+								  in.dataNum()))
 			{
 				Error::ThrowOpensslError();
 			}
@@ -305,20 +198,20 @@ namespace crypt
 		}
 	}
 	void
-	CryptCtx::Decrypt(ByteBuf&& in, ByteBuf& out) const
+	CryptCtx::DecryptImpl(ByteBuf&& in, ByteBuf& out, const uint8_t* pKey) const
 	{
-		size_t totalBytes = in.dataLen();
+		size_t totalBytes = in.dataNum();
 		out.reInit(totalBytes);
 		CipherBlob ciBlob(std::forward<ByteBuf>(in)); // in-buf is parsed here.
 		for ( size_t processed=0, count=0; processed < totalBytes; )
 		{
 			ciBlob.seek(count); // in-buf is parsed again at position <count>
-			count = DecryptOne(ciBlob, out);
+			count = DecryptOne(ciBlob, out, pKey);
 			processed += count;
 		}
 	}
 	size_t
-	CryptCtx::DecryptOne(CipherBlob& ciBlob, ByteBuf& out) const
+	CryptCtx::DecryptOne(CipherBlob& ciBlob, ByteBuf& out, const uint8_t* pKey) const
 	{
 		EVP_CIPHER_CTX ctx;
 		EVP_CIPHER_CTX_init(&ctx);
@@ -327,7 +220,7 @@ namespace crypt
 		{
 			EVP_DecryptInit_ex(&ctx, m_info.m_EVP_CIPHER, NULL, NULL, NULL);
 			EVP_CIPHER_CTX_set_key_length(&ctx, m_info.m_keyLen);
-			EVP_DecryptInit_ex(&ctx, NULL, NULL, m_dk, ciBlob.getIV());
+			EVP_DecryptInit_ex(&ctx, NULL, NULL, pKey ? pKey : m_randKey, ciBlob.getIV());
 
 			ByteBuf textBuf(ciBlob.getCiTextSize());
 			int outlen = 0;
@@ -343,7 +236,7 @@ namespace crypt
 			}
 			EVP_CIPHER_CTX_cleanup(&ctx);
 
-			textBuf.setDataLen(outlen+finlen);
+			textBuf.setDataNum(outlen+finlen);
 			out.append(textBuf, outlen+finlen);
 			return ciBlob.getTotalSize();
 		}
@@ -356,7 +249,7 @@ namespace crypt
 	void
 	CryptCtx::serializeInfo(BufHeap<uint8_t>& outBuf) const
 	{
-		BufHeap<uint8_t> tempBuf(CryptInfoFormat1::FMT_TOTAL_SIZE);
+		BufHeap<uint8_t> tempBuf(CryptInfoFormat1::FMT_TOTAL_FIXED_SIZE + m_info.m_randKey.dataNum());
 		CryptInfoFormat1::serialize(m_info, tempBuf, *this);
 		outBuf = std::move(tempBuf);
 	}
