@@ -113,6 +113,21 @@ namespace crypt
 	//class Format<CryptInfo, 1>
 	class CryptInfoFormat1
 	{
+		/**
+		 *  BYTE#                    CONTENTS
+         *
+         *  1          [ serialization format version number ]
+         *  2          [          log N (for scrypt)         ]
+         *  3          [           r (for scrypt)            ]
+         *  4          [           p (for scrypt)            ]
+         *  5          [             cipher - ID             ]
+         *  6          [  key length (both rand and derived  ]
+         *  7-38       [         salt - 32 bytes             ]
+         *  39         [        encrypted key size           ]
+         *  40-N       [  encrypted rand key (cipher Blob)   ]
+         *  40-N       [ length embedded within cipher Blob  ]
+         *  N+1-N+32   [            signature                ]
+		*/
 	public:
 		/**
 		* VALues are fixed for posterity. They are never to be changed since 
@@ -124,7 +139,7 @@ namespace crypt
 			VAL_FMT_VER = 1,
 			FMT_SALT_SIZE = 32,
 			FMT_SIG_SIZE = 32,
-			FMT_TOTAL_FIXED_SIZE = 77
+			FMT_TOTAL_FIXED_SIZE = 71
 		} Constant;
 
 		static uint8_t CipherEnumToVal(CipherEnum cipher)
@@ -163,7 +178,8 @@ namespace crypt
 		static void Sign (Serializer& serialize, const CryptCtx& ctx)
 		{
 			Array<uint8_t, FMT_SIG_SIZE> tBuf;
-			tBuf.zero(); // right now just writing zeroes.
+			tBuf.setDataNum(FMT_SIG_SIZE);
+			//tBuf.zero(); // right now just writing zeroes.
 			serialize.PutBuf(tBuf, FMT_SIG_SIZE);
 		}
 
@@ -172,8 +188,8 @@ namespace crypt
 			Serializer serialize(outbuf);
 			serialize.PutU8(VAL_FMT_VER);
 			serialize.PutU8(obj.m_logN);
-			serialize.PutU32(obj.m_r);
-			serialize.PutU32(obj.m_p);
+			serialize.PutU8(obj.m_r);
+			serialize.PutU8(obj.m_p);
 			serialize.PutU8(CipherEnumToVal(obj.m_cipher));
 			serialize.PutU8(obj.m_keyLen);
 			serialize.PutBuf(obj.m_salt, FMT_SALT_SIZE);
@@ -193,24 +209,35 @@ namespace crypt
 
 		static void parse (const Buf<uint8_t>& inbuf, CryptInfo& obj)
 		{
-			if (inbuf.dataNum() < FMT_TOTAL_FIXED_SIZE) {
-				throw Error(Error::CODE_BAD_FILE, L"Bad CryptInfo File");
+			try
+			{
+				Parser parse(inbuf);
+				if ((parse.GetU8() != VAL_FMT_VER)) {
+					throw Error(Error::CODE_BAD_FMT);
+				}
+				obj.m_logN = parse.GetU8();
+				obj.m_r = parse.GetU8();
+				obj.m_p = parse.GetU8();
+				obj.m_cipher = CipherValToEnum(parse.GetU8());
+				obj.m_keyLen = parse.GetU8();
+				parse.GetBuf(obj.m_salt, FMT_SALT_SIZE);
+				size_t keySize = parse.GetU8();
+				ByteBuf key(keySize);
+				parse.GetBuf(key, keySize);
+				obj.m_randKey = std::move(key); // parsing of cipher-blob happens here.
+				parse.GetBuf(obj.m_signature, FMT_SIG_SIZE);
 			}
-			Parser parse(inbuf);
-			if ((parse.GetU8() != VAL_FMT_VER)) {
-				throw Error(Error::CODE_BAD_FMT);
+			catch (Error& e)
+			{
+				if (e.gcode == Error::CODE_BAD_DATA) {
+					e.gcode = Error::CODE_BAD_FILE;
+					e.gmsg = L"Bad CryptInfo File/Data";
+				}
+				if (e.gcode == Error::CODE_FEATURE_NOT_SUPPORTED) {
+					e.gcode = Error::CODE_INTERNAL_ERROR;
+				}
+				throw;
 			}
-			obj.m_logN = parse.GetU8();
-			obj.m_r = parse.GetU32();
-			obj.m_p = parse.GetU32();
-			obj.m_cipher = CipherValToEnum(parse.GetU8());
-			obj.m_keyLen = parse.GetU8();
-			parse.GetBuf(obj.m_salt, FMT_SALT_SIZE);
-			size_t keySize = parse.GetU8();
-			ByteBuf key(keySize);
-			parse.GetBuf(key, keySize);
-			obj.m_randKey = std::move(key);
-			parse.GetBuf(obj.m_signature, FMT_SIG_SIZE);
 		}
 	};
 

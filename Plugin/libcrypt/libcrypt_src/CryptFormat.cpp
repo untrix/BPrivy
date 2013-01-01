@@ -86,13 +86,13 @@ namespace crypt
 		case 4:
 			return GetU32();
 		default:
-			throw Error(Error::CODE_BAD_FMT, L"Error while parsing CipherBlob header");
+			throw Error(Error::CODE_FEATURE_NOT_SUPPORTED, L"CryptoParser: Data lengths greater than 4GB are not supported");
 		}
 	}
 	uint8_t
 	Parser::GetU8()
 	{
-		Error::Assert(((m_pos+1)<=m_buf.dataNum()), Error::CODE_BAD_PARAM,
+		Error::Assert(((m_pos+1)<=m_buf.dataNum()), Error::CODE_BAD_DATA,
 					  L"Parser::GetU8. End of Buffer");
 		return m_buf[m_pos++];
 	}
@@ -100,7 +100,7 @@ namespace crypt
 	uint16_t
 	Parser::GetU16()
 	{
-		Error::Assert(((m_pos+2)<=m_buf.dataNum()), Error::CODE_BAD_PARAM,
+		Error::Assert(((m_pos+2)<=m_buf.dataNum()), Error::CODE_BAD_DATA,
 					  L"Parser::GetU16. End of Buffer");
 
 		uint16_t _t;
@@ -112,7 +112,7 @@ namespace crypt
 	uint32_t
 	Parser::GetU32()
 	{
-		Error::Assert(((m_pos+4)<=m_buf.dataNum()), Error::CODE_BAD_PARAM,
+		Error::Assert(((m_pos+4)<=m_buf.dataNum()), Error::CODE_BAD_DATA,
 					  L"Parser::GetU32. End of Buffer");
 		uint32_t _t;
 		_t = be32dec(getP());
@@ -123,10 +123,10 @@ namespace crypt
 	void
 	Parser::GetBuf(Buf<uint8_t>& buf, size_t len)
 	{
-		Error::Assert(((m_pos+len)<=m_buf.dataNum()), Error::CODE_BAD_PARAM,
-					  L"Parser::GetBuf. End of Buffer");
-		Error::Assert(((len)<=buf.dataNum()), Error::CODE_BAD_PARAM,
-					  L"Parser::GetBuf. End of Buffer");
+		Error::Assert(((m_pos+len)<=m_buf.dataNum()), Error::CODE_BAD_DATA,
+					  L"Parser::GetBuf. End of InStream");
+		Error::Assert(((len)<=buf.capacityBytes()), Error::CODE_BAD_PARAM,
+					  L"Parser::GetBuf. OutBuf too small");
 		memcpy(buf, getP(), len);
 		buf.setDataNum(len);
 		m_pos += len;
@@ -147,7 +147,7 @@ namespace crypt
 		case 4:
 			PutU32((uint32_t)i); break;
 		default:
-			throw Error(Error::CODE_FEATURE_NOT_SUPPORTED, L"Data lengths greater than 4GB are not supported");
+			throw Error(Error::CODE_FEATURE_NOT_SUPPORTED, L"CryptoSerializer: Data lengths greater than 4GB are not supported");
 		}
 	}
 	void
@@ -157,6 +157,7 @@ namespace crypt
 				L"Serializer::PutU32. Attempt to write beyond end of buffer");
 		be32enc(getP(), n);
 		m_pos += 4;
+		//m_buf.incrDataNum(4);
 	}
 	void
 	Serializer::PutU16(uint16_t n)
@@ -165,6 +166,7 @@ namespace crypt
 				L"Serializer::PutU16. Attempt to write beyond end of buffer");
 		be16enc(getP(), n);
 		m_pos += 2;
+		//m_buf.incrDataNum(2);
 	}
 	void
 	Serializer::PutU8(uint8_t v)
@@ -175,15 +177,17 @@ namespace crypt
 		uint8_t* p = getP();
 		*p = v;
 		m_pos++;
+		//m_buf.incrDataNum(1);
 	}
 	void
 	Serializer::PutBuf(const Buf<uint8_t>& buf, size_t len)
 	{
 		Error::Assert(((m_pos+len) <= m_buf.capacityBytes()), Error::CODE_BAD_PARAM,
 				L"Serializer::PutBuf. Attempt to write beyond end of buffer");
-		Error::Assert(((len) <= buf.capacityBytes()), Error::CODE_BAD_PARAM,
+		Error::Assert(((len) <= buf.dataNum()), Error::CODE_BAD_PARAM,
 				L"Serializer::PutBuf. Attempt to read beyond end of buffer");
 		memcpy(getP(), buf, len);
 		m_pos += len;
+		//m_buf.incrDataNum(len);
 	}
 }

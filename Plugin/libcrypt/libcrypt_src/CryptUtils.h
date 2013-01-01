@@ -101,6 +101,7 @@ namespace crypt
 			return m_dataNum;
 		}
 		void		setDataNum	(size_t l) {m_dataNum = l;}
+		//void		incrDataNum	(size_t l) {m_dataNum += l;}
 		void		setFull		()	{m_dataNum = capacityNum();}
 		/** Seek forward delta items */
 		void		seek			(size_t delta) {m_seek += delta; m_dataNum = ( (m_dataNum>delta) ? (m_dataNum-delta) : 0);}

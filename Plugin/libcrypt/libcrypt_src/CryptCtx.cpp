@@ -36,6 +36,7 @@ namespace crypt
 	const wstring Error::CODE_FEATURE_NOT_SUPPORTED = L"FeatureNotSupported";
 	const wstring Error::MSG_EMPTY = L"";
 	const wstring Error::CODE_BAD_FILE = L"FileCorrupted";
+	const wstring Error::CODE_BAD_DATA = L"DataCorrupted";
 
 	void
 	Error::ThrowOpensslError()

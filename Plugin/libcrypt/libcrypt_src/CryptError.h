@@ -40,6 +40,7 @@ namespace crypt
 		static const wstring	CODE_BAD_FMT;
 		static const wstring	CODE_FEATURE_NOT_SUPPORTED;
 		static const wstring	CODE_BAD_FILE;
+		static const wstring	CODE_BAD_DATA;
 
 		static const wstring	MSG_EMPTY;
 	};

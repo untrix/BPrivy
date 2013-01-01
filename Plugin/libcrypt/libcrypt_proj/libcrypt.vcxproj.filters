@@ -47,13 +47,13 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\libcrypt_src\Format.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\libcrypt_src\CryptUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\libcrypt_src\CryptInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libcrypt_src\CryptFormat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
