@@ -126,7 +126,6 @@ namespace crypt
          *  39         [        encrypted key size           ]
          *  40-N       [  encrypted rand key (cipher Blob)   ]
          *  40-N       [ length embedded within cipher Blob  ]
-         *  N+1-N+32   [            signature                ]
 		*/
 	public:
 		/**
@@ -138,8 +137,8 @@ namespace crypt
 			VAL_CIPHER_AES_CBC = 2, // AES (Rijndael) in CBC mode
 			VAL_FMT_VER = 1,
 			FMT_SALT_SIZE = 32,
-			FMT_SIG_SIZE = 32,
-			FMT_TOTAL_FIXED_SIZE = 71
+			//FMT_SIG_SIZE = 32,
+			FMT_TOTAL_FIXED_SIZE = 39
 		} Constant;
 
 		static uint8_t CipherEnumToVal(CipherEnum cipher)
@@ -170,18 +169,18 @@ namespace crypt
 			}
 		}
 
-		static void Verify(const Buf<uint8_t>& inbuf, const CryptCtx& ctx)
+		/*static void Verify(const Buf<uint8_t>& inbuf, const CryptCtx& ctx)
 		{
 			return; // TBD:
-		}
+		}*/
 
-		static void Sign (Serializer& serialize, const CryptCtx& ctx)
+		/*static void Sign (Serializer& serialize, const CryptCtx& ctx)
 		{
 			Array<uint8_t, FMT_SIG_SIZE> tBuf;
 			tBuf.setDataNum(FMT_SIG_SIZE);
 			//tBuf.zero(); // right now just writing zeroes.
 			serialize.PutBuf(tBuf, FMT_SIG_SIZE);
-		}
+		}*/
 
 		static void serialize (const CryptInfo& obj, Buf<uint8_t>& outbuf, const CryptCtx& ctx)
 		{
@@ -196,7 +195,7 @@ namespace crypt
 			const ByteBuf& key = obj.m_randKey;
 			serialize.PutU8(key.dataNum());
 			serialize.PutBuf(key, key.dataNum());
-			Sign(serialize, ctx);
+			//Sign(serialize, ctx);
 			Error::Assert(serialize.getPos() == FMT_TOTAL_FIXED_SIZE + key.dataNum());
 			outbuf.setDataNum(serialize.getPos());
 		}
@@ -225,7 +224,7 @@ namespace crypt
 				ByteBuf key(keySize);
 				parse.GetBuf(key, keySize);
 				obj.m_randKey = std::move(key); // parsing of cipher-blob happens here.
-				parse.GetBuf(obj.m_signature, FMT_SIG_SIZE);
+				//parse.GetBuf(obj.m_signature, FMT_SIG_SIZE);
 			}
 			catch (Error& e)
 			{

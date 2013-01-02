@@ -143,7 +143,7 @@ namespace crypt
 		deriveKey($, info.m_logN, info.m_r, info.m_p, pCtx->m_dk, info.m_salt);
 		// zero out passwd
 		$.zero();
-		CryptInfoFormat1::Verify(cryptInfo, *pCtx);
+		//CryptInfoFormat1::Verify(cryptInfo, *pCtx);
 
 		// Now decrypt cryptInfo.m_randKey to get pCtx->m_randKey
 		pCtx->DecryptImpl(std::move(pCtx->m_info.m_randKey), pCtx->m_randKey, pCtx->m_dk);

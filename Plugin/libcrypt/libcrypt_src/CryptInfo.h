@@ -85,8 +85,9 @@ namespace crypt
 			LOGN = 14,
 			R = 8,
 			P = 1,
-			SALT_SIZE = SCRYPT_SALT_SIZE,
-			SIG_SIZE = 32
+			SALT_SIZE = SCRYPT_SALT_SIZE
+			// signature removed on purpose for more security.
+			//SIG_SIZE = 32
 		} Constant;
 
 		/** Following are persisted to disk */
@@ -101,7 +102,18 @@ namespace crypt
 		// Random generated key used for encrypting data. This key is
 		// itself encrypted using password-derived key and stored here.
 		ByteBuf		m_randKey;
-		Array<uint8_t, SIG_SIZE>  m_signature;
+		// NOTE: Signature was removed on purpose, in order to make it
+		// impossible for an attacker to know for certain whether they had
+		// sucessfully guessed the user's password (using rainbow attack).
+		// They would only be able to know if they also had a data file
+		// available which they would then try to decrypt using the randKey
+		// derived from cryptInfo. If the user keeps cryptInfo and data in
+		// separate locations, then the thief/attacker would need to get hold
+		// of both of them in order to do this. Just getting hold of the user's
+		// cryptinfo file would be a useless to the attacker (unless we put
+		// in a signature into cryptinfo thus enabling the attacker to find out
+		// when had guessed the right password)
+		//Array<uint8_t, SIG_SIZE>  m_signature;
 		/** Following are ephemeral */
 		const EVP_CIPHER*	m_EVP_CIPHER;
 		/*size_t		m_ivLen;  // IV size in #bytes*/

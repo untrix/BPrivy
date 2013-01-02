@@ -591,13 +591,13 @@ unsigned int BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryp
 	{
 		unsigned int ctxHandle = 0;
 		crypt::BufHeap<char> pass($.c_str());
-		ctxHandle = crypt::CryptCtx::Make(pass);
+		ctxHandle = crypt::CryptCtx::Create(pass);
 		crypt::ByteBuf outBuf;
 		const crypt::CryptCtx& ctx = crypt::CryptCtx::Get(ctxHandle);
 		ctx.serializeInfo(outBuf);
 
 		bfs::basic_ofstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-		fStream.write(outBuf, outBuf.dataLen());
+		fStream.write(outBuf, outBuf.dataNum());
 		fStream.flush();
 		fStream.close();
 		return ctxHandle;
@@ -617,9 +617,9 @@ unsigned int BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptI
 			throw BPError(ACODE_CANT_PROCEED, BPCODE_BAD_FILE, L"Bad CryptInfo File");
 		}
 		fStream.close();
-		inBuf.setDataLen(inBuf.capacityBytes());
+		inBuf.setDataNum(inBuf.capacityBytes());
 		crypt::BufHeap<char> pass($.c_str());
-		ctxHandle = crypt::CryptCtx::Make(pass, inBuf);
+		ctxHandle = crypt::CryptCtx::Load(pass, inBuf);
 		
 		return ctxHandle;
 	}

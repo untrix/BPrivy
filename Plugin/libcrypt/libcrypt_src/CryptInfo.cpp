@@ -47,7 +47,7 @@ namespace crypt
 		m_logN = m_r = m_p = m_keyLen = 0;
 		m_cipher = CPHR_NULL;
 		m_salt.zero();
-		m_signature.zero();
+		//m_signature.zero();
 	}
 
 	/*****************************************************************/
