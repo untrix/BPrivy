@@ -18,7 +18,7 @@ namespace bp
 		try 
 		{
 			if (type == ENT_FILE) {
-				v.insert(PROP_FILESIZE, file_size(path));
+				v.insert(PROP_DATASIZE, file_size(path));
 				v.insert(PROP_MTIME, last_write_time(path));
 			}
 			if (path.has_extension()) {

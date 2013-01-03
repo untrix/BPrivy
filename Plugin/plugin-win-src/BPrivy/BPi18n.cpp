@@ -84,17 +84,17 @@ bool BPrivyAPI::exists(const bp::ucs& path_s, FB::JSObjectPtr out)
 	return _exists(path, &bp::JSObject(out));
 }
 
-bool BPrivyAPI::appendFile(const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr out)
+bool BPrivyAPI::appendFile(const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr inOut)
 {
 	bfs::path path(path_s); path.make_preferred();
-	bp::JSObject o(out);
+	bp::JSObject o(inOut);
 	return _appendFile(path, data, &o);
 }
 
-bool BPrivyAPI::readFile(const bp::ucs& path_s, FB::JSObjectPtr out, const boost::optional<unsigned long long> pos)
+bool BPrivyAPI::readFile(const bp::ucs& path_s, FB::JSObjectPtr inOut /*, const boost::optional<unsigned long long> pos*/)
 {
 	bfs::path path(path_s); path.make_preferred();
-	return _readFile(path, &bp::JSObject(out), pos);
+	return _readFile(path, &bp::JSObject(inOut)/*, pos*/);
 }
 
 bool BPrivyAPI::createDir(const bp::ucs& path_s, FB::JSObjectPtr out)
@@ -123,7 +123,14 @@ bool BPrivyAPI::copy(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr
 	bfs::path o_path(old_p); o_path.make_preferred();
 	bfs::path n_path(new_p); n_path.make_preferred();
 	bp::JSObject o(out);
-	return _copy(o_path, n_path, &o, clobber);
+
+	bp::ucs dbPath1, dbPath2;
+	o.GetProperty(PROP_DB_PATH, dbPath1);
+	o.GetProperty(PROP_DB_PATH2, dbPath2);
+	bfs::path db1(dbPath1); path1.make_preferred();
+	bfs::path db2(dbPath2); path2.make_preferred();
+
+	return _copy(o_path, n_path, &o, clobber, db1, db2);
 }
 bool BPrivyAPI::chooseFile(FB::JSObjectPtr out)
 {
@@ -137,17 +144,19 @@ bool BPrivyAPI::chooseFolder(FB::JSObjectPtr out)
 	//return _chooseFolderXP(&o);
 	return _choose(&o, false);
 }
-unsigned int BPrivyAPI::createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, FB::JSObjectPtr in_out)
+bool BPrivyAPI::createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, const bp::ucs& dbDir, FB::JSObjectPtr in_out)
 {
 	bp::JSObject o(in_out);
 	bfs::path path(cryptInfoFile); path.make_preferred();
-	return _createCryptCtx($, path, &o);
+	bfs::path dbPath(dbDir); dbPath.make_preferred();
+	return _createCryptCtx($, path, dbPath, &o);
 }
-unsigned int BPrivyAPI::loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, FB::JSObjectPtr in_out)
+bool BPrivyAPI::loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, const bp::ucs& dbDir, FB::JSObjectPtr in_out)
 {
 	bp::JSObject o(in_out);
 	bfs::path path(cryptInfoFile); path.make_preferred();
-	return _loadCryptCtx($, path, &o);
+	bfs::path dbPath(dbDir); dbPath.make_preferred();
+	return _loadCryptCtx($, path, dbPath, &o);
 }
 
 #ifdef DEBUG

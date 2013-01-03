@@ -61,7 +61,8 @@ int main(int argc, char* argv[])
 			return 1;
 		}
 		hBuf.setDataNum(count);
-		unsigned int ctxHandle = crypt::CryptCtx::Load(passwd, hBuf);
+		std::wstring ctxHandle(L"handle");
+		crypt::CryptCtx::Load(ctxHandle, passwd, hBuf);
 
 		FILE* inFile = fopen(fileIn.c_str(), "rb");
 		if (!inFile) {
@@ -97,8 +98,8 @@ int main(int argc, char* argv[])
 
 		crypt::BufHeap<char> passwd(argv[2]);
 		std::string headerFile = argv[3];
-
-		unsigned int ctxHandle = crypt::CryptCtx::Create(passwd);
+		std::wstring ctxHandle(L"handle");
+		crypt::CryptCtx::Create(ctxHandle, passwd);
 		crypt::BufHeap<uint8_t> outBuf;
 		
 		const crypt::CryptCtx& ctx = crypt::CryptCtx::Get(ctxHandle);
@@ -141,7 +142,8 @@ int main(int argc, char* argv[])
 			return 1;
 		}
 		inBuf.setDataNum(count);
-		unsigned int ctxHandle = crypt::CryptCtx::Load(passwd, inBuf);
+		std::wstring ctxHandle(L"handle");
+		crypt::CryptCtx::Load(ctxHandle, passwd, inBuf);
 
 		FILE* inFile = fopen((fileIn).c_str(), "rb");
 		if (!inFile) {

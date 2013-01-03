@@ -493,7 +493,8 @@ BPrivyAPI::_rename(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const 
 }
 
 bool
-BPrivyAPI::_copy(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const boost::optional<bool> o_clob)
+BPrivyAPI::_copy(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const boost::optional<bool> o_clob,
+				 const bfs::path& dbPath1, const bfs::path& dbPath2)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3at", ""};
 
@@ -528,7 +529,34 @@ BPrivyAPI::_copy(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const bo
 			if ((nexists) && (!bfs::is_regular_file(n_stat))) {
 				throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_BAD_FILETYPE);
 			}
-			return copyFile(o_path, n_path, nexists);
+
+			bool bStraightCopy = true;
+
+			if (dbPath1 != dbPath2)
+			{
+				crypt::CryptCtx *p1, *p2;
+				p1 = crypt::CryptCtx::GetP(dbPath1);
+				p2 = crypt::CryptCtx::GetP(dbPath2);
+				if (p1 || p2)
+				{
+					if (p1 && p2)
+					{
+						bStraightCopy = (*p1 == *p2);
+					}
+					else {bStraightCopy = false;}
+				}
+				//else bStraightCopy = true;
+			}
+			// else bStraightCopy = true;
+
+			if (bStraightCopy)
+			{
+				return copyFile(o_path, n_path, nexists);
+			}
+			else
+			{
+				return copyData(o_path, n_path, nexists, dbPath1, dbPath2);
+			}
 		}
 		else
 		{
@@ -585,13 +613,13 @@ void BPrivyAPI::securityCheck(const bfs::path& path, const std::string allowedEx
 	//}
 }
 
-unsigned int BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, bp::JSObject* in_out)
+bool BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
 {
 	try
 	{
-		unsigned int ctxHandle = 0;
+		bp::ucs ctxHandle(dbPath.wstring());
 		crypt::BufHeap<char> pass($.c_str());
-		ctxHandle = crypt::CryptCtx::Create(pass);
+		crypt::CryptCtx::Create(ctxHandle, pass);
 		crypt::ByteBuf outBuf;
 		const crypt::CryptCtx& ctx = crypt::CryptCtx::Get(ctxHandle);
 		ctx.serializeInfo(outBuf);
@@ -600,16 +628,17 @@ unsigned int BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryp
 		fStream.write(outBuf, outBuf.dataNum());
 		fStream.flush();
 		fStream.close();
-		return ctxHandle;
+		in_out->SetProperty(PROP_DB_PATH, ctxHandle);
+		return true;
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
-	return 0;
+	return false;
 }
-unsigned int BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, bp::JSObject* in_out)
+bool BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
 {
 	try
 	{
-		unsigned int ctxHandle = 0;
+		ucs ctxHandle(dbPath.wstring());
 		crypt::BufHeap<uint8_t> inBuf(bfs::file_size(cryptInfoFilePath));
 		bfs::basic_ifstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::in | std::ios_base::binary);
 		fStream.read(inBuf, inBuf.capacityBytes());
@@ -619,12 +648,13 @@ unsigned int BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptI
 		fStream.close();
 		inBuf.setDataNum(inBuf.capacityBytes());
 		crypt::BufHeap<char> pass($.c_str());
-		ctxHandle = crypt::CryptCtx::Load(pass, inBuf);
+		crypt::CryptCtx::Load(ctxHandle, pass, inBuf);
 		
-		return ctxHandle;
+		in_out->SetProperty(PROP_DB_PATH, ctxHandle);
+		return true;
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
-	return 0;
+	return false;
 }
 
 

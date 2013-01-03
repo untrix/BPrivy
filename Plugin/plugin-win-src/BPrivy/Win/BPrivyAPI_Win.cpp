@@ -385,7 +385,7 @@ bool GetDataProperty(bp::JSObject* p, const bp::ustring& name, bp::utf8& val)
 	return false;
 }
 
-bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObject* out)
+bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObject* inOut)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
 
@@ -439,7 +439,7 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 		// If the specified file does not exist and is a valid path to a writable location, the function creates a file and
 		// the last-error code is set to zero.
 		if (0 == GetLastError()) { // Implies new file created.
-			SetInfoMsg(BPCODE_NEW_FILE_CREATED, out);
+			SetInfoMsg(BPCODE_NEW_FILE_CREATED, inOut);
 		}
 
 		msize32_t siz = data.size();
@@ -451,20 +451,40 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 		// Prepare the buffer if needed.
 		msize32_t bsiz = 0;
 		bp::utf8 pfx, sfx;
-		GetDataProperty(out, PROP_PREFIX, pfx);
-		GetDataProperty(out, PROP_SUFFIX, sfx);
+		GetDataProperty(inOut, PROP_PREFIX, pfx);
+		GetDataProperty(inOut, PROP_SUFFIX, sfx);
 		bsiz = siz + pfx.length() + sfx.length();
+		bp::ucs dbPath;
 
-		if (bsiz > siz)
+		crypt::CryptCtx* pCtx = NULL;
+		if (inOut->GetProperty<ucs>(PROP_DB_PATH, dbPath))
 		{
-			MemGuard<char> buf((bsiz));// Allocates memory for bsiz UTF8 bytes
-			buf.Copy(0, pfx.data(), pfx.length());
-			buf.Copy(pfx.length(), data.c_str(), siz);
-			buf.Copy(siz+pfx.length(), sfx.data(), sfx.length());
+			// Normalize the DB-Path.
+			bfs::path db(dbPath); 
+			db.make_preferred();
+			dbPath = db.wstring();
+			pCtx = crypt::CryptCtx::GetP(dbPath);
+		}
 
-			if (out->HasProperty(PROP_CRYPT_CTX))
+		if (pCtx  || (bsiz > siz))
+		{
+			//MemGuard<char> buf((bsiz));// Allocates memory for bsiz UTF8 bytes
+			//buf.Copy(0, pfx.data(), pfx.length());
+			//buf.Copy(pfx.length(), data.c_str(), siz);
+			//buf.Copy(siz+pfx.length(), sfx.data(), sfx.length());
+			crypt::ByteBuf buf((bsiz));// Allocates memory for bsiz UTF8 bytes
+			buf.append((const uint8_t*)pfx.data(), pfx.length());
+			buf.append((const uint8_t*)data.c_str(), siz);
+			buf.append((const uint8_t*)sfx.data(), sfx.length());
+
+			if (pCtx)
 			{
+				crypt::ByteBuf bufOut;
+				pCtx->Encrypt(buf, bufOut);
+				buf = std::move(bufOut);
+				bsiz = buf.dataBytes();
 			}
+
 			// Seek Pointer and Lock File.
 			h.PrepareForAppend(bsiz);
 
@@ -484,12 +504,12 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 			
 		return true;
 	}
-	CATCH_FILESYSTEM_EXCEPTIONS(out)
+	CATCH_FILESYSTEM_EXCEPTIONS(inOut)
 	
 	return false;
 }
 
-bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* out, const boost::optional<unsigned long long>& o_pos)
+bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* inOut/*, const boost::optional<unsigned long long>& o_pos*/)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ".csv", ""};
 
@@ -497,11 +517,11 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* out, const boost::optio
 	{
 		CONSOLE_LOG("In readFile");
 
-		const fsize64_t pos = o_pos.get_value_or(0);
+		const fsize64_t pos = 0; //o_pos.get_value_or(0);
 
 		securityCheck(path, allowedExt);
 
-		HANDLEGuard h( CreateFileW(path.c_str(), 
+		HANDLEGuard h(  CreateFileW(path.c_str(), 
 						FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
 						FILE_SHARE_READ, // EXP: Removing FILE_SHARE_WRITE access because Sky-Drives may attempt
 										 // to write to the file.
@@ -519,7 +539,7 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* out, const boost::optio
 		THROW_IF (rval == 0);
 
 		bp::utf8 pfx, sfx;
-		msize32_t bsiz = 0, siz = 0;
+		msize32_t bsiz = 0, siz = 0, dsiz = 0;
 
 		if ((fsiz.QuadPart-pos) > bp::MAX_READ_BYTES)
 		{
@@ -529,32 +549,76 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* out, const boost::optio
 		else 
 		{
 			siz = static_cast<msize32_t>(fsiz.QuadPart);
-			GetDataProperty(out, PROP_PREFIX, pfx);
-			GetDataProperty(out, PROP_SUFFIX, sfx);
+			GetDataProperty(inOut, PROP_PREFIX, pfx);
+			GetDataProperty(inOut, PROP_SUFFIX, sfx);
 			bsiz = siz + (pfx.length() + sfx.length());
 		}
 
 		h.PrepareForRead(pos, siz); // throws
 
 		// Allocates memory for UTF8 bytes plus null-terminator.
-		MemGuard<char> buf((bsiz+1));
-		DWORD nread=0;
-		rval = ReadFile(h.m_Handle, ((char*)buf)+pfx.length(), siz, &nread, NULL);
-		THROW_IF (rval==0); // throws
-		CHECK((siz==nread)); // throws
+		//MemGuard<char> buf((bsiz+1));
+		crypt::ByteBuf buf;
 
-		buf.Copy(0, pfx.data(), pfx.length());
-		buf.Copy(siz+pfx.length(), sfx.data(), sfx.length());
-		buf.NullTerm(bsiz);
+		ucs dbPath;
+		crypt::CryptCtx* pCtx = NULL;
+
+		if (inOut->GetProperty<ucs>(PROP_DB_PATH, dbPath))
+		{
+			// Normalize the DB-Path.
+			bfs::path db(dbPath); db.make_preferred();
+			dbPath = db.wstring();
+			pCtx = crypt::CryptCtx::GetP(dbPath);
+		}
+
+		if (pCtx)
+		{
+			crypt::ByteBuf inBuf(siz);
+			DWORD nread=0;
+			rval = ReadFile(h.m_Handle, inBuf, siz, &nread, NULL);
+			inBuf.setDataNum(nread);
+			THROW_IF (rval==0); // throws
+			CHECK((siz==nread)); // throws
+
+			crypt::ByteBuf outBuf(bsiz + 1);
+			outBuf.append((const uint8_t*)pfx.data(), pfx.length());
+			outBuf.seek(pfx.length());
+
+			pCtx->Decrypt(std::move(inBuf), outBuf);
+
+			buf = std::move(outBuf);
+			buf.rewind();
+		}
+		else
+		{
+			crypt::ByteBuf inBuf(bsiz+1);
+			DWORD nread=0;
+			inBuf.append((const uint8_t*)pfx.data(), pfx.length());
+			inBuf.seek(pfx.length());
+			rval = ReadFile(h.m_Handle, inBuf, siz, &nread, NULL);
+			inBuf.setDataNum(nread);
+			THROW_IF (rval==0); // throws
+			CHECK((siz==nread)); // throws
+
+			buf = std::move(inBuf);
+			buf.rewind();
+		}
+
+		//buf.Copy(0, pfx.data(), pfx.length());
+		//buf.Copy(siz+pfx.length(), sfx.data(), sfx.length());
+		buf.append((const uint8_t*)sfx.data(), sfx.length());
+		//buf.NullTerm(bsiz);
+		dsiz = buf.dataNum();
+		buf.append(0); // null terminate
 		//FB::VariantMap m;
 		//m.insert(VT(PROP_DATA, static_cast<char*>(buf.m_P)));
-		//m.insert(VT(PROP_FILESIZE, siz));
+		//m.insert(VT(PROP_DATASIZE, siz));
 		//out->SetProperty(PROP_READFILE, m);
-		out->SetProperty(PROP_DATA, buf);
-		out->SetProperty(PROP_FILESIZE, bsiz);
+		inOut->SetProperty(PROP_DATA, buf);
+		inOut->SetProperty(PROP_DATASIZE, dsiz);
 		return true;
 	}
-	CATCH_FILESYSTEM_EXCEPTIONS(out)
+	CATCH_FILESYSTEM_EXCEPTIONS(inOut)
 	
 	return false;
 }
@@ -595,9 +659,11 @@ bool BPrivyAPI::renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists)
 HANDLE OpenFileForCopyOutLocking(bfs::path& pth)
 {
 	return CreateFileW(pth.c_str(),
-				GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
+				GENERIC_READ, // GENERIC_READ or GENERIC_WRITE required by LockFile
 				// READ sharing is needed for allowing copy-out later.
-				FILE_SHARE_PROMISCUOUS,
+				//FILE_SHARE_PROMISCUOUS,
+				FILE_SHARE_READ, // removing promiscuous mode to protect against sky-drives?
+								 // probably unnecessary since we lock the file anyway.
 				NULL, 
 				OPEN_EXISTING, 
 				FILE_ATTRIBUTE_NORMAL, 
@@ -607,12 +673,19 @@ HANDLE OpenFileForCopyOutLocking(bfs::path& pth)
 HANDLE OpenFileForCopyInLocking(bfs::path& pth)
 {
 	return CreateFileW(pth.c_str(),
-				GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
-				FILE_SHARE_PROMISCUOUS,
+				GENERIC_READ, // GENERIC_READ or GENERIC_WRITE required by LockFile
+				//FILE_SHARE_PROMISCUOUS,
+				FILE_SHARE_READ, // removing promiscuous mode to protect against sky-drives?
+								 // probably unnecessary since we lock the file anyway.
 				NULL, 
 				OPEN_EXISTING, 
 				FILE_ATTRIBUTE_NORMAL, 
 				NULL);
+}
+
+bool BPrivyAPI::copyData(bfs::path& o_path, bfs::path& n_path, bool nexists, const bfs::path& db1, const bfs::path& db2)
+{
+	CONSOLE_LOG("In copyData");
 }
 
 bool BPrivyAPI::copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists)

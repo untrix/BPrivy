@@ -10,6 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/system/error_code.hpp>
 #include "BPTypes.h"
+#include <CryptUtils.h>
 
 // NOTE: ALL INTERACTIONS WITH FIREBREATH/JSON MUST BE IN UNICODE WIDESTRING OR
 // UTF8. ONLY UNICODE-WSTRINGS MUST BE INPUT FROM FIREBREATH AND ONLY
@@ -181,32 +182,66 @@ namespace bp
 	{
 	public:
 		inline			JSObject			(FB::JSObjectPtr p) : m_p(p) {}
-		inline void		SetProperty			(const ustring& name, const bp::VariantMap& val) {
+		void			SetProperty			(const ustring& name, const ucs& val) {
+			m_p->SetProperty(name, val);
+		}
+		void			SetProperty			(const ustring& name, const bp::VariantMap& val) {
 			m_p->SetProperty(name, val.m_map);
 		}
-		inline void		SetProperty			(const ustring& name, const wchar_t* value)	{
+		void			SetProperty			(const ustring& name, const wchar_t* value)	{
 			m_p->SetProperty(name, value);
 		}
-		inline void	SetProperty			(const ustring& name, const bp::constPathPtr& path) {
+		void			SetProperty			(const ustring& name, const bp::constPathPtr& path) {
 			m_p->SetProperty(name, path->wstring());
 		}
-		inline void SetProperty				(const ustring& name, MemGuard<char>& buf) {
+		void			SetProperty				(const ustring& name, MemGuard<char>& buf) {
 			m_p->SetProperty(name, static_cast<char*>(buf));
 		}
-		inline void SetProperty				(const ustring& name, uintmax_t n) {
+		void			SetProperty				(const ustring& name, const crypt::ByteBuf& buf) {
+			m_p->SetProperty(name, (const char*)static_cast<const uint8_t*>(buf));
+		}
+		void			SetProperty				(const ustring& name, uintmax_t n) {
 			m_p->SetProperty(name, n);
 		}
-		inline bool		HasProperty			(const ustring& name) {
+		bool			HasProperty			(const ustring& name) {
 			return m_p->HasProperty(name);
 		}
-		inline FB::variant GetProperty		(const ustring& name) {
+		FB::variant		GetProperty		(const ustring& name) {
 			return m_p->GetProperty(name);
 		}
+		template<typename T>
+		bool			GetProperty			(const ustring& name, T& outVal);
+		/*{
+			if (this->HasProperty(name))
+			{ try 
+				{
+					FB::variant t_var = this->GetProperty(name);
+					outVal = t_var.convert_cast<T>();
+					return true;
+				} catch (...) {}
+			}
+			return false;
+		}*/
 
 	private:
 		void		SetProperty	(const ustring& name, const std::string& val);//disabled
 		void		SetProperty	(const ucs& name, const std::string& val);//disabled
 		FB::JSObjectPtr	m_p;
 	};
+
+	template<typename T> bool
+	JSObject::GetProperty(const ustring& name, T& outVal)
+	{
+		if (this->HasProperty(name))
+		{ try 
+			{
+				FB::variant t_var = this->GetProperty(name);
+				outVal = t_var.convert_cast<T>();
+				return true;
+			} catch (...) {}
+		}
+		return false;
+	}
+
 }// end namespace bp
 #endif // H_BP_i18n

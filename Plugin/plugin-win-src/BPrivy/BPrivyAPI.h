@@ -66,8 +66,8 @@ public:
 	 */
 	bool ls(const bp::ucs& path_s, FB::JSObjectPtr out);
 	bool exists(const bp::ucs& path_s, FB::JSObjectPtr out);
-	bool appendFile(const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr out);
-	bool readFile(const bp::ucs& path, FB::JSObjectPtr out, const boost::optional<unsigned long long> pos);
+	bool appendFile(const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr inOut);
+	bool readFile(const bp::ucs& path, FB::JSObjectPtr inOut/*, const boost::optional<unsigned long long> pos*/);
 	bool createDir(const bp::ucs& path, FB::JSObjectPtr);
 	bool rm(const bp::ucs& path, FB::JSObjectPtr out);
 	// Note: rename will not clobber directories. For files, it will iff 'fclobber' was true.
@@ -82,18 +82,18 @@ public:
 	bool chooseFolder(FB::JSObjectPtr p);
 	// Returns path separator based on the operating system
 	std::wstring pathSeparator();
-	unsigned int createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFilePath, FB::JSObjectPtr in_out);
-	unsigned int loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFilePath, FB::JSObjectPtr in_out);
+	bool createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFilePath, const bp::ucs& dbPath, FB::JSObjectPtr in_out);
+	bool loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFilePath, const bp::ucs& dbPath, FB::JSObjectPtr in_out);
 
 private:
 	bool _ls(bfs::path& path, bp::JSObject* out);
 	bool _exists(bfs::path& path, bp::JSObject* out);
-	bool _appendFile(bfs::path&, const std::string& data, bp::JSObject* out);
-	bool _readFile(bfs::path& path, bp::JSObject* out, const boost::optional<unsigned long long>& pos);
+	bool _appendFile(bfs::path&, const std::string& data, bp::JSObject* inOut);
+	bool _readFile(bfs::path& path, bp::JSObject* inOut /*, const boost::optional<unsigned long long>& pos*/);
 	bool _createDir(bfs::path& path, bp::JSObject*);
 	bool _rm(bfs::path& path, bp::JSObject* out);
 	bool _rename(bfs::path& old_p, bfs::path& new_p, bp::JSObject* out, const boost::optional<bool> clobber);
-	bool _copy(bfs::path& old_p, bfs::path& new_p, bp::JSObject* out, const boost::optional<bool> clobber);
+	bool _copy(bfs::path& old_p, bfs::path& new_p, bp::JSObject* out, const boost::optional<bool> clobber, const bfs::path& db1, const bfs::path& db2);
 	bool _chooseFileXP(bp::JSObject* p);
 	bool _chooseFolderXP(bp::JSObject* p);
 	bool _choose(bp::JSObject* p, bool chooseFile = false);
@@ -103,8 +103,8 @@ private:
 	bool removeFile(bfs::path&);
 	unsigned BPrivyAPI::lsDrives(bp::VariantMap&);
 	unsigned long long _lockFile(bfs::path& path, bp::JSObject* out);
-	unsigned int _createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, bp::JSObject* in_out);
-	unsigned int _loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, bp::JSObject* in_out);
+	bool _createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
+	bool _loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
 #ifdef DEBUG
 public:
 	bool chooseFileXP(FB::JSObjectPtr p);

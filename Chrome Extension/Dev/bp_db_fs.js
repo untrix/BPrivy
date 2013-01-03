@@ -5,7 +5,7 @@
  * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
-/*global $, IMPORT */
+/*global $, IMPORT, BP_PLUGIN */
  
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -106,9 +106,11 @@ function BP_GET_DBFS(g)
                 ext_Dict: ".3ad",
                 ext_Open: ".3ao",
                 ext_Closed:".3ac",
-                ext_MMap: ".3am",
+                ext_MMap: ".3am", // unused as yet: dump of in-memory dictionary
                 ext_Temp: ".3at",
                 ext_Bad : ".3aq", // q => Quarantine
+                ext_CryptInfo : ".3ak", // Encrypted key and Cryptinfo
+                //ext_Key : ".3ak", // Same as cryptinfo
                 ext_Csv : ".csv"
             },
             cat_Load = {
@@ -131,6 +133,8 @@ function BP_GET_DBFS(g)
             ext_MMap: ext.ext_MMap,
             ext_Temp: ext.ext_Temp,
             ext_Bad : ext.ext_Bad, // q => Quarantine
+            ext_CryptInfo: ext.ext_CryptInfo,
+            //ext_Key: ext.ext_Key,
             ext_Csv : ext.ext_Csv,
             cat_Open : cat_Load.cat_Open,
             cat_Closed:cat_Load.cat_Closed,

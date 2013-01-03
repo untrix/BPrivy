@@ -34,10 +34,12 @@ namespace bp
 	extern const bp::ustring PROP_ERRORS;
 	extern const bp::ustring PROP_PATH;
 	extern const bp::ustring PROP_PATH2;
+	extern const bp::ustring PROP_DB_PATH;
+	extern const bp::ustring PROP_DB_PATH2;
 	extern const bp::ustring PROP_FILENAME;
 	extern const bp::ustring PROP_FILEEXT;
 	extern const bp::ustring PROP_FILESTEM;
-	extern const bp::ustring PROP_FILESIZE;
+	extern const bp::ustring PROP_DATASIZE;
 	extern const bp::ustring PROP_MTIME;
 	extern const bp::ustring PROP_DATA;
 	extern const bp::ustring PROP_READFILE;
@@ -48,7 +50,7 @@ namespace bp
 	extern const bp::ustring PROP_CLEAR_HISTORY;
 	extern const bp::ustring PROP_PREFIX;
 	extern const bp::ustring PROP_SUFFIX;
-	extern const bp::ustring PROP_CRYPT_CTX;
+	//extern const bp::ustring PROP_CRYPT_CTX;
 
 	/***** Actionable Codes. GENERIC & System Error Codes are mapped to one of these *****/
  	// User Actionable. User should resolve the situation

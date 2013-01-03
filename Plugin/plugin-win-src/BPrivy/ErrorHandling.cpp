@@ -25,6 +25,8 @@ namespace bp
 	const bp::ustring PROP_A_CODE				(L"acode");
 	const bp::ustring PROP_PATH					(L"path");
 	const bp::ustring PROP_PATH2				(L"path2");
+	const bp::ustring PROP_DB_PATH				(L"dbPath");
+	const bp::ustring PROP_DB_PATH2				(L"dbPath2");
 
 	const bp::ustring PROP_HIDE					(L"hide");
 	const bp::ustring PROP_FILE_FILTER			(L"filter");
@@ -33,7 +35,7 @@ namespace bp
 	const bp::ustring PROP_CLEAR_HISTORY		(L"clrHist");
 	const bp::ustring PROP_PREFIX				(L"prefix");
 	const bp::ustring PROP_SUFFIX				(L"suffix");
-	const bp::ustring PROP_CRYPT_CTX			(L"cryptCtx");
+	//const bp::ustring PROP_CRYPT_CTX			(L"cryptCtx");
 
 	const bp::ustring PROP_INFO					(L"inf");
 	const bp::ustring PROP_LSDIR				(L"lsd");
@@ -46,7 +48,7 @@ namespace bp
 	const bp::ustring PROP_FILENAME				(L"fnm");
 	const bp::ustring PROP_FILEEXT				(L"ext");
 	const bp::ustring PROP_FILESTEM				(L"stm");
-	const bp::ustring PROP_FILESIZE				(L"siz");
+	const bp::ustring PROP_DATASIZE				(L"siz");
 	const bp::ustring PROP_MTIME				(L"mtm");
 	const bp::ustring PROP_DATA					(L"dat");
 	const bp::ustring PROP_PASS					(L"pass");
