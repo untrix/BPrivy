@@ -441,7 +441,9 @@ bool BPrivyAPI::_rm(bfs::path& path, bp::JSObject* p)
 }
 
 bool
-BPrivyAPI::_rename(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const boost::optional<bool> o_clob)
+BPrivyAPI::_rename(const bfs::path& dbPath1, bfs::path& o_path, 
+				   const bfs::path& dbPath2, bfs::path& n_path,
+				   bp::JSObject* p, const boost::optional<bool> o_clob)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3at", ""};
 
@@ -459,7 +461,6 @@ BPrivyAPI::_rename(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const 
 		{
 			throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_WOULD_CLOBBER);
 		}
-
 
 		bfs::file_status o_stat = bfs::symlink_status(o_path);
 		if (!bfs::exists(o_stat))
@@ -493,8 +494,9 @@ BPrivyAPI::_rename(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const 
 }
 
 bool
-BPrivyAPI::_copy(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const boost::optional<bool> o_clob,
-				 const bfs::path& dbPath1, const bfs::path& dbPath2)
+BPrivyAPI::_copy(const bfs::path& dbPath1, bfs::path& o_path, 
+				 const bfs::path& dbPath2, bfs::path& n_path, bp::JSObject* p, 
+				 const boost::optional<bool> o_clob)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3at", ""};
 
@@ -535,8 +537,8 @@ BPrivyAPI::_copy(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const bo
 			if (dbPath1 != dbPath2)
 			{
 				crypt::CryptCtx *p1, *p2;
-				p1 = crypt::CryptCtx::GetP(dbPath1);
-				p2 = crypt::CryptCtx::GetP(dbPath2);
+				p1 = crypt::CryptCtx::GetP(dbPath1.wstring());
+				p2 = crypt::CryptCtx::GetP(dbPath2.wstring());
 				if (p1 || p2)
 				{
 					if (p1 && p2)
@@ -555,7 +557,7 @@ BPrivyAPI::_copy(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const bo
 			}
 			else
 			{
-				return copyData(o_path, n_path, nexists, dbPath1, dbPath2);
+				return copyData(dbPath1, o_path, dbPath2, n_path, nexists, p);
 			}
 		}
 		else
@@ -565,6 +567,18 @@ BPrivyAPI::_copy(bfs::path& o_path, bfs::path& n_path, bp::JSObject* p, const bo
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(p)
 	return false;	
+}
+
+bool BPrivyAPI::copyData(const bfs::path& db1, bfs::path& o_path, 
+						 const bfs::path& db2, bfs::path& n_path, bool nexists,
+						 bp::JSObject* inOut)
+{
+	CONSOLE_LOG("In copyData");
+	crypt::ByteBuf text;
+	// inOut is deliberately NULL here, required to force _readFile to return
+	// data into the ByteBuf instead of inOut.
+	return _readFile(db1, o_path, NULL, &text) &&
+		   overwriteFile(db2, n_path, text, nexists, inOut);
 }
 
 std::wstring BPrivyAPI::pathSeparator()

@@ -51,8 +51,6 @@ namespace crypt
 		static const CryptCtx*		GetP				(const ucs& handle) { return s_ctxMap.at(handle); }
 		static bool					Exists				(const ucs& handle);
 		static void					Destroy				(const ucs& handle);
-		//static const CryptCtx&		Get					(unsigned int handle);
-		//static void					Destroy				(unsigned int handle);
 
 		const CryptInfo&			GetInfo				() const {return m_info;}
 		void						serializeInfo		(BufHeap<uint8_t>& outBuf) const;

@@ -211,17 +211,6 @@ namespace bp
 		}
 		template<typename T>
 		bool			GetProperty			(const ustring& name, T& outVal);
-		/*{
-			if (this->HasProperty(name))
-			{ try 
-				{
-					FB::variant t_var = this->GetProperty(name);
-					outVal = t_var.convert_cast<T>();
-					return true;
-				} catch (...) {}
-			}
-			return false;
-		}*/
 
 	private:
 		void		SetProperty	(const ustring& name, const std::string& val);//disabled

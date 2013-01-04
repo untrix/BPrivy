@@ -66,18 +66,20 @@ public:
 	 */
 	bool ls(const bp::ucs& path_s, FB::JSObjectPtr out);
 	bool exists(const bp::ucs& path_s, FB::JSObjectPtr out);
-	bool appendFile(const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr inOut);
-	bool readFile(const bp::ucs& path, FB::JSObjectPtr inOut/*, const boost::optional<unsigned long long> pos*/);
+	bool appendFile(const bp::ucs& dbPath, const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr inOut);
+	bool readFile(const bp::ucs& dbPath, const bp::ucs& path, FB::JSObjectPtr inOut/*, const boost::optional<unsigned long long> pos*/);
 	bool createDir(const bp::ucs& path, FB::JSObjectPtr);
 	bool rm(const bp::ucs& path, FB::JSObjectPtr out);
-	// Note: rename will not clobber directories. For files, it will iff 'fclobber' was true.
+	// Note: rename will not clobber directories. For files, it will do so iff 'fclobber' was true.
 	// If the renaming is for files, then it will obtain write locks on both files and ensure that no one is
-	// reading or writing to either. Also, no locking is performed when renaming directories.
-	bool rename(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
+	// reading or writing to either. However, no locking is performed when renaming directories.
+	bool rename(const bp::ucs& dbPath, const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out,
+				const boost::optional<bool> clobber);
 	// Copies files only.
-	// TODO: If files are from different DBs, then the src file has to be decrypted and re-encrypted with key of the
-	// destination DB.
-	bool copy(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber);
+	// If files are from different DBs having different encryption keys, then the src file has to be 
+	// decrypted and re-encrypted with key of the destination DB.
+	bool copy(const bp::ucs& dbPath_src, const bp::ucs& src_p, const bp::ucs& dbPath_dest, const bp::ucs& dest_p, 
+			  FB::JSObjectPtr out, const boost::optional<bool> clobber);
 	bool chooseFile(FB::JSObjectPtr p);
 	bool chooseFolder(FB::JSObjectPtr p);
 	// Returns path separator based on the operating system
@@ -88,15 +90,28 @@ public:
 private:
 	bool _ls(bfs::path& path, bp::JSObject* out);
 	bool _exists(bfs::path& path, bp::JSObject* out);
-	bool _appendFile(bfs::path&, const std::string& data, bp::JSObject* inOut);
-	bool _readFile(bfs::path& path, bp::JSObject* inOut /*, const boost::optional<unsigned long long>& pos*/);
+	bool _appendFile(const bfs::path& db_path, bfs::path&, const std::string& data, bp::JSObject* inOut);
+	/** Supply either inOut or pOutBuf */
+	bool _readFile(const bfs::path& db_path, bfs::path& path,
+				   bp::JSObject* inOut, crypt::ByteBuf* pOutBuf = NULL
+				   /*, const boost::optional<unsigned long long>& pos*/);
 	bool _createDir(bfs::path& path, bp::JSObject*);
 	bool _rm(bfs::path& path, bp::JSObject* out);
-	bool _rename(bfs::path& old_p, bfs::path& new_p, bp::JSObject* out, const boost::optional<bool> clobber);
-	bool _copy(bfs::path& old_p, bfs::path& new_p, bp::JSObject* out, const boost::optional<bool> clobber, const bfs::path& db1, const bfs::path& db2);
+	bool _rename(const bfs::path& dbPath1, bfs::path& old_p, const bfs::path& dbPath2, bfs::path& new_p,
+				 bp::JSObject* out, const boost::optional<bool> clobber);
+	bool _copy(const bfs::path& dbPath1, bfs::path& old_p, const bfs::path& dbPath2, 
+			   bfs::path& new_p, bp::JSObject* out, const boost::optional<bool> clobber);
 	bool _chooseFileXP(bp::JSObject* p);
 	bool _chooseFolderXP(bp::JSObject* p);
 	bool _choose(bp::JSObject* p, bool chooseFile = false);
+	/** Helper to copy */
+	bool copyData(const bfs::path& db1, bfs::path& o_path, 
+				  const bfs::path& db2, bfs::path& n_path, 
+				  bool nexists, bp::JSObject* inOut);
+	/** Helper to copy */
+	bool overwriteFile(const bfs::path& db_path, const bfs::path& path, 
+					   crypt::ByteBuf& text, bool exists,
+					   bp::JSObject* inOut);
 	// Platform specific rename operation.
 	bool renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
 	bool copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists);

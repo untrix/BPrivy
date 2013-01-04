@@ -74,32 +74,41 @@ namespace bp
 
 bool BPrivyAPI::ls(const bp::ucs& path_s, FB::JSObjectPtr out)
 {
-	bfs::path path(path_s); path.make_preferred();
+	bfs::path path(path_s); 
+	path.make_preferred();
 	return _ls(path, &bp::JSObject(out));
 }
 
 bool BPrivyAPI::exists(const bp::ucs& path_s, FB::JSObjectPtr out)
 {
-	bfs::path path(path_s); path.make_preferred();
+	bfs::path path(path_s); 
+	path.make_preferred();
 	return _exists(path, &bp::JSObject(out));
 }
 
-bool BPrivyAPI::appendFile(const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr inOut)
+bool BPrivyAPI::appendFile(const bp::ucs& dbPath, const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr inOut)
 {
-	bfs::path path(path_s); path.make_preferred();
+	bfs::path path(path_s); 
+	path.make_preferred();
+	bfs::path db_path(dbPath); 
+	db_path.make_preferred();
 	bp::JSObject o(inOut);
-	return _appendFile(path, data, &o);
+	return _appendFile(db_path, path, data, &o);
 }
 
-bool BPrivyAPI::readFile(const bp::ucs& path_s, FB::JSObjectPtr inOut /*, const boost::optional<unsigned long long> pos*/)
+bool BPrivyAPI::readFile(const bp::ucs& dbPath, const bp::ucs& path_s, FB::JSObjectPtr inOut /*, const boost::optional<unsigned long long> pos*/)
 {
-	bfs::path path(path_s); path.make_preferred();
-	return _readFile(path, &bp::JSObject(inOut)/*, pos*/);
+	bfs::path path(path_s); 
+	path.make_preferred();
+	bfs::path db_path(dbPath); 
+	db_path.make_preferred();
+	return _readFile(db_path, path, &bp::JSObject(inOut)/*, pos*/);
 }
 
 bool BPrivyAPI::createDir(const bp::ucs& path_s, FB::JSObjectPtr out)
 {
-	bfs::path path(path_s); path.make_preferred();
+	bfs::path path(path_s);
+	path.make_preferred();
 	bp::JSObject o(out);
 	return _createDir(path, &o);
 }
@@ -110,27 +119,30 @@ bool BPrivyAPI::rm(const bp::ucs& path_s, FB::JSObjectPtr out)
 	bp::JSObject o(out);
 	return _rm(path, &o);
 }
-bool BPrivyAPI::rename(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber)
+bool BPrivyAPI::rename(const bp::ucs& dbPath1, const bp::ucs& old_p, 
+					   const bp::ucs& dbPath2, const bp::ucs& new_p, 
+					   FB::JSObjectPtr out, const boost::optional<bool> clobber)
 {
 	bfs::path o_path(old_p); o_path.make_preferred();
 	bfs::path n_path(new_p); n_path.make_preferred();
+	bfs::path db_path1(dbPath1); db_path1.make_preferred();
+	bfs::path db_path2(dbPath2); db_path2.make_preferred();
 	bp::JSObject o(out);
-	return _rename(o_path, n_path, &o, clobber);
+
+	return _rename(db_path1, o_path, db_path2, n_path, &o, clobber);
 }
 
-bool BPrivyAPI::copy(const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out, const boost::optional<bool> clobber)
+bool BPrivyAPI::copy(const bp::ucs& dbPath1, const bp::ucs& old_p, 
+					 const bp::ucs& dbPath2, const bp::ucs& new_p, 
+					 FB::JSObjectPtr out, const boost::optional<bool> clobber)
 {
 	bfs::path o_path(old_p); o_path.make_preferred();
 	bfs::path n_path(new_p); n_path.make_preferred();
+	bfs::path db_path1(dbPath1); db_path1.make_preferred();
+	bfs::path db_path2(dbPath2); db_path2.make_preferred();
 	bp::JSObject o(out);
 
-	bp::ucs dbPath1, dbPath2;
-	o.GetProperty(PROP_DB_PATH, dbPath1);
-	o.GetProperty(PROP_DB_PATH2, dbPath2);
-	bfs::path db1(dbPath1); path1.make_preferred();
-	bfs::path db2(dbPath2); path2.make_preferred();
-
-	return _copy(o_path, n_path, &o, clobber, db1, db2);
+	return _copy(db_path1, o_path, db_path2, n_path, &o, clobber);
 }
 bool BPrivyAPI::chooseFile(FB::JSObjectPtr out)
 {

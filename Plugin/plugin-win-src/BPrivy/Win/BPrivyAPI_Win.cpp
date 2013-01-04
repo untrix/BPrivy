@@ -272,18 +272,23 @@ class HANDLEGuard
 {
 public:
 	// throws if handle is invalid
-	HANDLEGuard(HANDLE h) : m_Handle(h), m_Locked(false)
+	/*HANDLEGuard(HANDLE h) : m_Handle(h), m_Locked(false)
+				{if (h==INVALID_HANDLE_VALUE) ThrowLastSystemError();}*/
+	HANDLEGuard(HANDLE h, const bfs::path& pth) : m_Handle(h), m_Locked(false), m_Path(pth)
 				{if (h==INVALID_HANDLE_VALUE) ThrowLastSystemError();}
-	HANDLEGuard(HANDLE h, bfs::path& pth) : m_Handle(h), m_Locked(false), m_Path(pth)
-				{if (h==INVALID_HANDLE_VALUE) ThrowLastSystemError();}
-	virtual ~HANDLEGuard()
+
+	virtual ~HANDLEGuard() {close();}
+	virtual void close()
 	{
 		if (m_Locked) 
 		{ 
 			UnlockFile(m_Handle, m_LkPos1, m_LkPos2, m_LkSiz, 0);
 		}
 
-		CloseHandle(m_Handle);
+		if (m_Handle != INVALID_HANDLE_VALUE) {
+			CloseHandle(m_Handle);
+			m_Handle = INVALID_HANDLE_VALUE;
+		}
 	}
 
 	void PrepareForAppend(const msize32_t siz) // throws
@@ -332,7 +337,7 @@ public:
 		m_Locked = true;
 	}
 
-	void LockForDeleteOrRename()
+	void CompleteLockDown()
 	{
 		CHECK((!m_Locked));
 
@@ -353,13 +358,28 @@ public:
 		BOOL rval = GetFileSizeEx(m_Handle, &fsiz);
 		THROW_IF (rval == 0);
 
-		// Lock 10 bytes beyond the file's end to ensure that noone's writing into it.
+		// Lock 10 bytes after the file's end to ensure that noone's writing into it.
+		// Assumption is that files only get appended. However, is this true in Sky Drives'
+		// case?
+		// TODO: Find out how Sky Drives propagate file appends.
 		rval = LockFile(m_Handle, fsiz.LowPart, fsiz.HighPart, 10, 0);
 		THROW_IF2 ((rval==0), m_Path);
 	}
 
-	const	HANDLE	m_Handle;
-	const bfs::path m_Path;
+	void LockForDeleteOrRename()
+	{
+		CompleteLockDown();
+	}
+
+	void LockForOverwrite()
+	{
+		// The file has been truncated if it existed, or newly created if it didn't. Make
+		// sure no-one is attempting to write into it or read from it.
+		CompleteLockDown();
+	}
+
+	HANDLE	m_Handle;
+	const bfs::path& m_Path;
 
 private:
 	// Prevent compiler from generating constructors
@@ -385,7 +405,8 @@ bool GetDataProperty(bp::JSObject* p, const bp::ustring& name, bp::utf8& val)
 	return false;
 }
 
-bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObject* inOut)
+bool BPrivyAPI::_appendFile(const bfs::path& db_path, bfs::path& path, 
+							const std::string& data, bp::JSObject* inOut)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
 
@@ -407,41 +428,6 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 		securityCheck(path, allowedExt);
 		path.make_preferred();
 
-		// Open file in exclusive mode for appending.
-		// If file doesn't exist then create it as a normal file. We'll create
-		// it as a HIDDEN file. That may not work for Mac or
-		// Linux, but at least will work on Windows.
-		// In Windows, the file is opened in shared mode because we do not
-		// gain anything by exclusively locking it. Especially since this feature
-		// won't work across all NFS shares. The only thing that will probably work
-		// across different file systems is advisory file-locking. In Windows
-		// we'll use LockFile, while in POSIX we'll use fcntl. Both provide
-		// ability to lock regions of the file including regions beyond the file's
-		// current size. We'll use that technique to exclusive lock the region beyond
-		// the file's current size where we intend to write <data> to. This will
-		// ensure that concurrent processes will be able to read all existing bytes
-		// but not the bytes that we will be appending to the file. Read the
-		// example 'Appending One File to Another File' in MSDN-help.
-		HANDLEGuard h( CreateFileW(path.c_str(), 
-						FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile
-						0, // EXP: Changed from FILE_SHARE_READ to 0 in order to prevent Sky-Drives from reading when we want to write.
-						// Allow other readers but no appenders (we never write inside a file), deleters or renamers
-						//FILE_SHARE_READ,
-						//FILE_SHARE_PROMISCUOUS, // // Disabling ShareMode in order to test efficacy of locking
-						NULL, 
-						OPEN_ALWAYS, 
-						FILE_ATTRIBUTE_HIDDEN | FILE_FLAG_WRITE_THROUGH, 
-						NULL) );
-		
-		// OPEN_ALWAYS
-		// 4 Opens a file, always.
-		// If the specified file exists, the function succeeds and the last-error code is set to ERROR_ALREADY_EXISTS (183).
-		// If the specified file does not exist and is a valid path to a writable location, the function creates a file and
-		// the last-error code is set to zero.
-		if (0 == GetLastError()) { // Implies new file created.
-			SetInfoMsg(BPCODE_NEW_FILE_CREATED, inOut);
-		}
-
 		msize32_t siz = data.size();
 		// No need to proceed if there is no data to append. Prefix and suffix are applied only
 		// if there was non-zero data. In that case the end-affect of this call would be
@@ -454,17 +440,8 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 		GetDataProperty(inOut, PROP_PREFIX, pfx);
 		GetDataProperty(inOut, PROP_SUFFIX, sfx);
 		bsiz = siz + pfx.length() + sfx.length();
-		bp::ucs dbPath;
 
-		crypt::CryptCtx* pCtx = NULL;
-		if (inOut->GetProperty<ucs>(PROP_DB_PATH, dbPath))
-		{
-			// Normalize the DB-Path.
-			bfs::path db(dbPath); 
-			db.make_preferred();
-			dbPath = db.wstring();
-			pCtx = crypt::CryptCtx::GetP(dbPath);
-		}
+		crypt::CryptCtx* pCtx = crypt::CryptCtx::GetP(db_path.wstring());
 
 		if (pCtx  || (bsiz > siz))
 		{
@@ -485,6 +462,7 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 				bsiz = buf.dataBytes();
 			}
 
+			HANDLEGuard h (OpenFileForAppend(path, inOut), path);
 			// Seek Pointer and Lock File.
 			h.PrepareForAppend(bsiz);
 
@@ -494,6 +472,7 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 		}
 		else // No need to create buffer. Write directly from data.c_str()
 		{
+			HANDLEGuard h (OpenFileForAppend(path, inOut), path);
 			// Seek Pointer and Lock File.
 			h.PrepareForAppend(siz);
 
@@ -509,7 +488,9 @@ bool BPrivyAPI::_appendFile(bfs::path& path, const std::string& data, bp::JSObje
 	return false;
 }
 
-bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* inOut/*, const boost::optional<unsigned long long>& o_pos*/)
+bool BPrivyAPI::_readFile(const bfs::path& db_path, bfs::path& path, 
+						  bp::JSObject* inOut, crypt::ByteBuf* pOutBuf
+						  /*, const boost::optional<unsigned long long>& o_pos*/)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ".csv", ""};
 
@@ -522,17 +503,18 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* inOut/*, const boost::o
 		securityCheck(path, allowedExt);
 
 		HANDLEGuard h(  CreateFileW(path.c_str(), 
-						FILE_GENERIC_READ, // GENERIC_READ | WRITE required by LockFile
-						FILE_SHARE_READ, // EXP: Removing FILE_SHARE_WRITE access because Sky-Drives may attempt
-										 // to write to the file.
-						// Allow other readers as well as appenders (we never write inside a file), but no deleters or renamers
-						//FILE_SHARE_WRITE | FILE_SHARE_READ,
-						//FILE_SHARE_PROMISCUOUS, // Disabling ShareMode in order to test efficacy of locking
-						NULL, 
-						OPEN_EXISTING, 
-						FILE_FLAG_SEQUENTIAL_SCAN, 
-						NULL) );
-		
+			FILE_GENERIC_READ, // GENERIC_READ or GENERIC_WRITE required by LockFile
+			//FILE_SHARE_READ, // EXP: Removing FILE_SHARE_WRITE access because Sky-Drives may attempt
+								// to write to the file. This restriction is not really needed since we're going to
+								// acquire a shared lock on the file's bytes anyway and will specifically not lock the
+								// bytes after the end of the file.
+			// Allow other readers as well as appenders (we never write inside a file), but no deleters or renamers
+			FILE_SHARE_WRITE | FILE_SHARE_READ,
+			//FILE_SHARE_PROMISCUOUS, // Disabling ShareMode in order to test efficacy of locking
+			NULL, 
+			OPEN_EXISTING, 
+			FILE_FLAG_SEQUENTIAL_SCAN, 
+			NULL), path );
 		
 		LARGE_INTEGER fsiz;
 		BOOL rval = GetFileSizeEx(h.m_Handle, &fsiz);
@@ -560,16 +542,8 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* inOut/*, const boost::o
 		//MemGuard<char> buf((bsiz+1));
 		crypt::ByteBuf buf;
 
-		ucs dbPath;
-		crypt::CryptCtx* pCtx = NULL;
-
-		if (inOut->GetProperty<ucs>(PROP_DB_PATH, dbPath))
-		{
-			// Normalize the DB-Path.
-			bfs::path db(dbPath); db.make_preferred();
-			dbPath = db.wstring();
-			pCtx = crypt::CryptCtx::GetP(dbPath);
-		}
+		//ucs dbPath;
+		const crypt::CryptCtx* pCtx = crypt::CryptCtx::GetP(db_path.wstring());
 
 		if (pCtx)
 		{
@@ -579,6 +553,8 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* inOut/*, const boost::o
 			inBuf.setDataNum(nread);
 			THROW_IF (rval==0); // throws
 			CHECK((siz==nread)); // throws
+
+			h.close();
 
 			crypt::ByteBuf outBuf(bsiz + 1);
 			outBuf.append((const uint8_t*)pfx.data(), pfx.length());
@@ -600,6 +576,8 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* inOut/*, const boost::o
 			THROW_IF (rval==0); // throws
 			CHECK((siz==nread)); // throws
 
+			h.close();
+
 			buf = std::move(inBuf);
 			buf.rewind();
 		}
@@ -608,14 +586,23 @@ bool BPrivyAPI::_readFile(bfs::path& path, bp::JSObject* inOut/*, const boost::o
 		//buf.Copy(siz+pfx.length(), sfx.data(), sfx.length());
 		buf.append((const uint8_t*)sfx.data(), sfx.length());
 		//buf.NullTerm(bsiz);
-		dsiz = buf.dataNum();
-		buf.append(0); // null terminate
 		//FB::VariantMap m;
 		//m.insert(VT(PROP_DATA, static_cast<char*>(buf.m_P)));
 		//m.insert(VT(PROP_DATASIZE, siz));
 		//out->SetProperty(PROP_READFILE, m);
-		inOut->SetProperty(PROP_DATA, buf);
-		inOut->SetProperty(PROP_DATASIZE, dsiz);
+		dsiz = buf.dataNum();
+		if (inOut)
+		{
+			buf.append(0); // null terminate because data is transported to the browser
+						   // as a string.
+			inOut->SetProperty(PROP_DATA, buf);
+			inOut->SetProperty(PROP_DATASIZE, dsiz);
+		}
+		else if (pOut)
+		{
+			// No null termination because this is a byte buffer.
+			*pOut = buf;
+		}
 		return true;
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(inOut)
@@ -636,7 +623,8 @@ HANDLE OpenFileForDeleteOrRenameLocking(bfs::path& pth)
 }
 
 
-bool BPrivyAPI::renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists)
+bool BPrivyAPI::renameFile(const bfs::path& db_path1, bfs::path& o_path, 
+						   const bfs::path& db_path2, bfs::path& n_path, bool nexists)
 {
 	CONSOLE_LOG("In renameFile");
 
@@ -660,9 +648,9 @@ HANDLE OpenFileForCopyOutLocking(bfs::path& pth)
 {
 	return CreateFileW(pth.c_str(),
 				GENERIC_READ, // GENERIC_READ or GENERIC_WRITE required by LockFile
-				// READ sharing is needed for allowing copy-out later.
-				//FILE_SHARE_PROMISCUOUS,
-				FILE_SHARE_READ, // removing promiscuous mode to protect against sky-drives?
+				// READ sharing is needed later by CopyFileW.
+				FILE_SHARE_PROMISCUOUS,
+				//FILE_SHARE_READ, // removing promiscuous mode to protect against sky-drives?
 								 // probably unnecessary since we lock the file anyway.
 				NULL, 
 				OPEN_EXISTING, 
@@ -674,18 +662,121 @@ HANDLE OpenFileForCopyInLocking(bfs::path& pth)
 {
 	return CreateFileW(pth.c_str(),
 				GENERIC_READ, // GENERIC_READ or GENERIC_WRITE required by LockFile
-				//FILE_SHARE_PROMISCUOUS,
-				FILE_SHARE_READ, // removing promiscuous mode to protect against sky-drives?
+				FILE_SHARE_PROMISCUOUS, // WRITE sharing is probably needed later by CopyFileW
+				//FILE_SHARE_READ, // removing promiscuous mode to protect against sky-drives?
 								 // probably unnecessary since we lock the file anyway.
 				NULL, 
-				OPEN_EXISTING, 
+				OPEN_EXISTING, // fails if the file does not exist.
 				FILE_ATTRIBUTE_NORMAL, 
 				NULL);
 }
 
-bool BPrivyAPI::copyData(bfs::path& o_path, bfs::path& n_path, bool nexists, const bfs::path& db1, const bfs::path& db2)
+HANDLE OpenFileForOverwrite(bfs::path& pth, bool exists, bp::JSObject* inOut)
 {
-	CONSOLE_LOG("In copyData");
+	HANDLE h= CreateFileW(pth.c_str(),
+		// Windows documentation advises using GENERIC_READ | GENERIC_WRITE over just
+		// GENERIC_WRITE. They say it works better and faster for remote (SMB) file-systems.
+		// Hence we'll use GENERIC_READ | GENERIC_WRITE instead of just GENERIC_WRITE.
+		GENERIC_READ | GENERIC_WRITE, // GENERIC_READ or GENERIC_WRITE required by LockFile
+		0, // This file will be overwritten. We don't want anyone reading or writing it.
+		NULL, 
+		// We maybe creating a file here and we prefer to keep it hidden. However,
+		// as per Windows documentation, (on XP and Win 2003) if you specify CREATE_ALWAYS 
+		// on an already existing file (even if only for reading) you'll need to supply
+		// FILE_ATTRIBUTE_HIDDEN along with that, otherwise the call will fail with
+		// ERROR_ACCESS_DENIED. This maybe a problem (not sure) if the file is created on - say
+		// Linux or MacOS and won't have the hidden attribute. Hence we'll go with
+		// FILE_ATTRIBUTE_NORMAL always.
+		(exists ? TRUNCATE_EXISTING // file must exist and will be truncated.
+				: CREATE_NEW),	   // file must not already exist. new one will be created.
+		FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
+		NULL);
+
+	if ((h != INVALID_HANDLE_VALUE) && exists && (0 == GetLastError())) {
+		// Implies new file created.
+		SetInfoMsg(BPCODE_NEW_FILE_CREATED, inOut);
+	}
+
+	return h;
+}
+
+HANDLE OpenFileForAppend(bfs::path& pth, bp::JSObject* inOut)
+{
+	// Open file in exclusive mode for appending.
+	// If file doesn't exist then create it as a normal file. Creating a
+	// a HIDDEN file may not work for Mac and certainly not for Linux.
+	// In addition, there is an issue on Windows XP while supplying CREATE_ALWAYS
+	// on an existing hidden file, but with FILE_ATTRIBUTE_NORMAL (it will fail).
+	// Hence to prevent any future errors, we just create normal (non-hidden) files.
+	// In Windows, the file is opened in shared mode because we do not
+	// gain anything by exclusively locking it. Especially since this feature
+	// won't work across all NFS shares. The only thing that will probably work
+	// across different file systems is advisory file-locking. In Windows
+	// we'll use LockFile, while in POSIX we'll use fcntl. Both provide
+	// ability to lock regions of the file including regions beyond the file's
+	// current size. We'll use that technique to exclusive lock the region beyond
+	// the file's current size where we intend to write <data> to. This will
+	// ensure that concurrent processes will be able to read all existing bytes
+	// but not the bytes that we will be appending to the file. Read the
+	// example 'Appending One File to Another File' in MSDN-help.
+	HANDLE h= CreateFileW(path.c_str(),
+		// GENERIC_READ or WRITE are required by LockFile otherwise FILE_APPEND_DATA 
+		// would have sufficed
+		GENERIC_READ | GENERIC_WRITE,
+		0, // EXP: Changed from FILE_SHARE_READ to 0 in order to prevent Sky-Drives from reading when we want to write.
+		// Allow other readers but no appenders (we never write inside a file), deleters or renamers
+		//FILE_SHARE_READ,
+		//FILE_SHARE_PROMISCUOUS, // // Disabling ShareMode in order to test efficacy of locking
+		NULL, 
+		OPEN_ALWAYS,
+		// We maybe creating a file here and we prefer to keep it hidden. However,
+		// as per Windows documentation, (on XP and Win 2003) if you specify CREATE_ALWAYS
+		// on an already existing file (even if only for reading) you'll need to supply
+		// FILE_ATTRIBUTE_HIDDEN along with that, otherwise the call will fail with
+		// ERROR_ACCESS_DENIED. This maybe a problem (not sure) if the file is created on - say
+		// Linux or MacOS and won't have the hidden attribute. Hence we'll go with
+		// FILE_ATTRIBUTE_NORMAL always.
+		FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
+		NULL);
+		
+	// OPEN_ALWAYS
+	// Opens a file, always.
+	// If the specified file exists, the function succeeds and the last-error code is set to ERROR_ALREADY_EXISTS (183).
+	// If the specified file does not exist and is a valid path to a writable location, the function creates a file and
+	// the last-error code is set to zero.
+	if ((h != INVALID_HANDLE_VALUE) && (0 == GetLastError())) {
+		// Implies new file created.
+		SetInfoMsg(BPCODE_NEW_FILE_CREATED, inOut);
+	}
+
+	return h;
+}
+
+bool BPrivyAPI::overwriteFile(const bfs::path& db_path, const bfs::path& path, 
+							  crypt::ByteBuf& text, bool exists, bp::JSObject* inOut)
+{
+	CONSOLE_LOG("In overwriteFile");
+
+	crypt::CryptCtx* pCtx = crypt::CryptCtx::GetP(db_path.wstring());
+
+	crypt::ByteBuf buf;
+	if (pCtx)
+	{
+		crypt::ByteBuf bufOut;
+		pCtx->Encrypt(text, bufOut);
+		buf = std::move(bufOut);
+	}
+	else {
+		buf = std::move(text);
+	}
+	
+	HANDLEGuard h1( OpenFileForOverwrite(path, exists), path );
+	h1.LockForOverwrite();
+	DWORD n;
+	BOOL st = WriteFile(h.m_Handle, static_cast<const uint8_t*>(buf), buf.dataBytes(), &n, NULL);
+	THROW_IF ((!st) || (n!= buf.dataBytes()));
+
+	return true;
 }
 
 bool BPrivyAPI::copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists)
@@ -1003,12 +1094,15 @@ unsigned long long BPrivyAPI::_appendLock(bfs::path& path, bp::JSObject* out)
 		securityCheck(path, allowedExt);
 
 		HANDLE h= CreateFileW(path.c_str(),
-									FILE_GENERIC_WRITE, // GENERIC_READ | WRITE required by LockFile
-									FILE_SHARE_PROMISCUOUS, 
-									NULL, 
-									OPEN_EXISTING, 
-									FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 
-									NULL);
+							// Windows documentation advises using GENERIC_READ | GENERIC_WRITE over just
+							// GENERIC_WRITE. They say it works better and faster for remote (SMB) file-systems.
+							// Hence we'll use GENERIC_READ | GENERIC_WRITE instead of just GENERIC_WRITE.
+							GENERIC_READ | GENERIC_WRITE, // GENERIC_READ or GENERIC_WRITE required by LockFile
+							FILE_SHARE_PROMISCUOUS, 
+							NULL, 
+							OPEN_EXISTING, 
+							FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 
+							NULL);
 		THROW_IF(h==INVALID_HANDLE_VALUE);
 
 		// Copied from PrepareForAppend
