@@ -118,6 +118,17 @@ namespace crypt
 		}
 	}
 
+	const CryptCtx*	CryptCtx::GetP(const ucs& handle) 
+	{ 
+		try {
+			return s_ctxMap.at(handle); 
+		}
+		catch (const std::out_of_range&)
+		{
+			return NULL;
+		}
+	}
+
 	const CryptCtx& CryptCtx::Get(const ucs& handle)
 	{
 		try

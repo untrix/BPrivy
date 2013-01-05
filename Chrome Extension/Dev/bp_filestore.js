@@ -124,6 +124,7 @@ function BP_GET_FILESTORE(g)
             
         if (!BP_PLUGIN.readFile(dbPath, filePath, o))
         {
+            BP_ERROR.logwarn(o.err);
             return false;
         }
         

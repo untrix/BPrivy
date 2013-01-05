@@ -48,7 +48,7 @@ namespace crypt
 														 Buf<char>& $,
 														 const Buf<uint8_t>& cryptInfo);
 		static const CryptCtx&		Get					(const ucs& handle);
-		static const CryptCtx*		GetP				(const ucs& handle) { return s_ctxMap.at(handle); }
+		static const CryptCtx*		GetP				(const ucs& handle);
 		static bool					Exists				(const ucs& handle);
 		static void					Destroy				(const ucs& handle);
 
