@@ -122,7 +122,7 @@ function BP_GET_FILESTORE(g)
             recs,
             filePath = dtDirPath+fname;
             
-        if (!BP_PLUGIN.readFile(filePath, o))
+        if (!BP_PLUGIN.readFile(dbPath, filePath, o))
         {
             return false;
         }
@@ -708,10 +708,11 @@ function BP_GET_FILESTORE(g)
     /**
      * @begin-class-def TextFileStream
     */
-    function TextFileStream(pth)
+    function TextFileStream(dbPath, pth)
     {
         Object.defineProperties(this,
         {
+            dbPath: {value: dbPath, writable:false, configurable:false, enumerable:true},
             path: {value: pth, writable:false, configurable:false, enumerable:true},
             buf: {writable:true, configurable:false, enumerable:false},
             siz: {writable: true, configurable:false, enumerable:true},
@@ -726,7 +727,7 @@ function BP_GET_FILESTORE(g)
     {
         var o={};
         if (!this.buf) {
-            if (!BP_PLUGIN.readFile(this.path, o)) {throw new BPError(o.err);}
+            if (!BP_PLUGIN.readFile(this.dbPath, this.path, o)) {throw new BPError(o.err);}
             this.buf = o.dat;
             this.siz = o.siz;
         }
@@ -757,7 +758,7 @@ function BP_GET_FILESTORE(g)
 
         Object.defineProperties(this,
         {
-            fstrm: {value: new TextFileStream(path), writable:false, enumerable:false, configurable:false},
+            fstrm: {value: new TextFileStream(null, path), writable:false, enumerable:false, configurable:false},
             csvex: {value: /\s*,\s*/, writable:false, configurable:false, enumerable:false},
             props: {writable:true, enumerable:false, configurable:false},
             regex: {writable:true, enumerable:false, configurable:false},

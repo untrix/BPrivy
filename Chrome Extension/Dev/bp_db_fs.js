@@ -101,8 +101,8 @@ function BP_GET_DBFS(g)
             dtl = [dt_settings, dt_eRecord, dt_pRecord],
             DOT = '.',
             ext = {
-                //ext_Root: ".3ab",
-                ext_Root: ".uwallet",
+                //ext_Root: ".3ab", // .3db is taken :(
+                ext_Root: ".uwallet", // TODO: Change this back to .3ab
                 ext_Dict: ".3ad",
                 ext_Open: ".3ao",
                 ext_Closed:".3ac",

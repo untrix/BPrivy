@@ -141,7 +141,7 @@ namespace crypt
 	};
 
 	template <typename T> inline bool
-	Buf<T>::operator==(const Buf<T>& other)
+	Buf<T>::operator==(const Buf<T>& other) const
 	{
 		return (m_num==other.m_num) && ((m_num==0) || (memcmp(m_buf, other.m_buf, m_num) == 0));
 	}

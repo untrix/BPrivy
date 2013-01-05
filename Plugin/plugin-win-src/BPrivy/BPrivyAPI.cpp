@@ -482,7 +482,7 @@ BPrivyAPI::_rename(const bfs::path& dbPath1, bfs::path& o_path,
 			if ((nexists) && (!bfs::is_regular_file(n_stat))) {
 				throw BPError(ACODE_BAD_PATH_ARGUMENT, BPCODE_BAD_FILETYPE);
 			}
-			return renameFile(o_path, n_path, nexists);
+			return renameFile(dbPath1, o_path, dbPath2, n_path, nexists);
 		}
 		else
 		{
@@ -536,7 +536,7 @@ BPrivyAPI::_copy(const bfs::path& dbPath1, bfs::path& o_path,
 
 			if (dbPath1 != dbPath2)
 			{
-				crypt::CryptCtx *p1, *p2;
+				const crypt::CryptCtx *p1, *p2;
 				p1 = crypt::CryptCtx::GetP(dbPath1.wstring());
 				p2 = crypt::CryptCtx::GetP(dbPath2.wstring());
 				if (p1 || p2)
@@ -557,7 +557,10 @@ BPrivyAPI::_copy(const bfs::path& dbPath1, bfs::path& o_path,
 			}
 			else
 			{
-				return copyData(dbPath1, o_path, dbPath2, n_path, nexists, p);
+				//return copyData(dbPath1, o_path, dbPath2, n_path, nexists, p);
+				crypt::ByteBuf text;
+				return _readFile(dbPath1, o_path, p, &text) &&
+						overwriteFile(dbPath2, n_path, text, nexists, p);
 			}
 		}
 		else
@@ -567,18 +570,6 @@ BPrivyAPI::_copy(const bfs::path& dbPath1, bfs::path& o_path,
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(p)
 	return false;	
-}
-
-bool BPrivyAPI::copyData(const bfs::path& db1, bfs::path& o_path, 
-						 const bfs::path& db2, bfs::path& n_path, bool nexists,
-						 bp::JSObject* inOut)
-{
-	CONSOLE_LOG("In copyData");
-	crypt::ByteBuf text;
-	// inOut is deliberately NULL here, required to force _readFile to return
-	// data into the ByteBuf instead of inOut.
-	return _readFile(db1, o_path, NULL, &text) &&
-		   overwriteFile(db2, n_path, text, nexists, inOut);
 }
 
 std::wstring BPrivyAPI::pathSeparator()

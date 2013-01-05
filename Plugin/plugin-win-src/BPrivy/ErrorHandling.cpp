@@ -69,7 +69,7 @@ namespace bp
 	const bp::ustring BPCODE_WRONG_PASS			(L"WrongPass"); // Password too short or wrong.
 	const bp::ustring BPCODE_NEW_FILE_CREATED	(L"NewFileCreated");
 	const bp::ustring BPCODE_NO_MEM				(L"NoMem");
-	const bp::ustring BPCODE_ASSERT_FAILED		(L"AssertFailed");
+	const bp::ustring BPCODE_INTERNAL_ERROR		(L"InternalError");
 	const bp::ustring BPCODE_PATH_EXISTS		(L"PathAlreadyExists");
 	const bp::ustring BPCODE_BAD_FILETYPE		(L"BadFileType");
 	const bp::ustring BPCODE_REPARSE_POINT		(L"PathIsReparsePoint");
@@ -80,6 +80,8 @@ namespace bp
 	const bp::ustring BPCODE_FILE_TOO_BIG		(L"FileTooBig");
 	const bp::ustring BPCODE_INVALID_COPY_ARGS	(L"InvalidCopyArgs");
 	const bp::ustring BPCODE_BAD_FILE			(L"FileCorrupted");
+
+	const bp::ustring MSG_EMPTY					(L"");
 
 	const bp::ustring EXCEPTION_NAME			(L"PluginDiags");
 	const bp::ustring& PCodeToACodeW(int ev)
@@ -166,6 +168,16 @@ namespace bp
 		case EPROTOTYPE:
 		default:
 			return ACODE_UNMAPPED;
+		}
+	}
+
+	void BPError::Assert(bool cond,
+						 const ustring& ac,
+						 const ustring& gc,
+						 const ustring& msg)
+	{
+		if (!cond) {
+			throw BPError(ac, gc, msg);
 		}
 	}
 

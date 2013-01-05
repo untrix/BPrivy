@@ -146,7 +146,7 @@ namespace bp
 	//	BPCODE_WRONG_PASS,
 	//	BPCODE_NEW_FILE_CREATED,
 	//	BPCODE_NO_MEM,
-	//	BPCODE_ASSERT_FAILED,
+	//	BPCODE_INTERNAL_ERROR,
 	//	BPCODE_PATH_EXISTS,
 	//	BPCODE_PATH_NOT_EXIST,
 	//	BPCODE_BAD_FILETYPE,
@@ -166,7 +166,7 @@ namespace bp
 	extern const bp::ustring BPCODE_WRONG_PASS; // Password too short or wrong.
 	extern const bp::ustring BPCODE_NEW_FILE_CREATED;// Informational. New File was created.
 	extern const bp::ustring BPCODE_NO_MEM;//Could not allocate memory
-	extern const bp::ustring BPCODE_ASSERT_FAILED;//Logic Error
+	extern const bp::ustring BPCODE_INTERNAL_ERROR;//Same semantic as ACODE_CANT_PROCEED.
 	extern const bp::ustring BPCODE_PATH_EXISTS;
 	extern const bp::ustring BPCODE_PATH_NOT_EXIST;
 	extern const bp::ustring BPCODE_BAD_FILETYPE;
@@ -176,6 +176,8 @@ namespace bp
 	extern const bp::ustring BPCODE_FILE_TOO_BIG;
 	extern const bp::ustring BPCODE_INVALID_COPY_ARGS;
 	extern const bp::ustring BPCODE_BAD_FILE; // Corrupted file
+
+	extern const bp::ustring MSG_EMPTY;
 
 	// Integer constants
 	extern const msize32_t MAX_READ_BYTES;
@@ -224,6 +226,12 @@ namespace bp
 			: acode(ac), gcode(gc), gmsg(gmsg) {}
 		BPError(const wstring& ac, const wstring& gc, const bp::constPathPtr pth)
 			: acode(ac), gcode(gc), path(pth->wstring()) {}
+
+		static void		Assert(bool cond,
+							   const ustring& ac = ACODE_CANT_PROCEED,
+							   const ustring& gc = BPCODE_INTERNAL_ERROR,
+							   const ustring& msg = MSG_EMPTY);
+
 		wstring acode;
 		wstring gcode;
 		bfs::path path;
@@ -244,7 +252,7 @@ namespace bp
 #define CHECK(b) \
 	if (!b)\
 	{\
-		throw BPError(ACODE_CANT_PROCEED, bp::BPCODE_ASSERT_FAILED);\
+		throw BPError(ACODE_CANT_PROCEED, bp::BPCODE_INTERNAL_ERROR);\
 	}
 
 #define ASSERT(b) CHECK(b)

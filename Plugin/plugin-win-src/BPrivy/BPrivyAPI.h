@@ -5,6 +5,7 @@
 #include "BrowserHost.h"
 #include "BPrivy.h"
 #include "BPi18n.h"
+#include <CryptCtx.h>
 
 #include <boost/filesystem.hpp>
 
@@ -67,19 +68,23 @@ public:
 	bool ls(const bp::ucs& path_s, FB::JSObjectPtr out);
 	bool exists(const bp::ucs& path_s, FB::JSObjectPtr out);
 	bool appendFile(const bp::ucs& dbPath, const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr inOut);
-	bool readFile(const bp::ucs& dbPath, const bp::ucs& path, FB::JSObjectPtr inOut/*, const boost::optional<unsigned long long> pos*/);
+	bool readFile(const bp::ucs& dbPath, const bp::ucs& path, FB::JSObjectPtr inOut);
 	bool createDir(const bp::ucs& path, FB::JSObjectPtr);
 	bool rm(const bp::ucs& path, FB::JSObjectPtr out);
 	// Note: rename will not clobber directories. For files, it will do so iff 'fclobber' was true.
 	// If the renaming is for files, then it will obtain write locks on both files and ensure that no one is
 	// reading or writing to either. However, no locking is performed when renaming directories.
-	bool rename(const bp::ucs& dbPath, const bp::ucs& old_p, const bp::ucs& new_p, FB::JSObjectPtr out,
+	bool rename(const bp::ucs& dbPath1, const bp::ucs& old_p, 
+				const bp::ucs& dbPath2, const bp::ucs& new_p, 
+				FB::JSObjectPtr out,
 				const boost::optional<bool> clobber);
 	// Copies files only.
 	// If files are from different DBs having different encryption keys, then the src file has to be 
 	// decrypted and re-encrypted with key of the destination DB.
-	bool copy(const bp::ucs& dbPath_src, const bp::ucs& src_p, const bp::ucs& dbPath_dest, const bp::ucs& dest_p, 
-			  FB::JSObjectPtr out, const boost::optional<bool> clobber);
+	bool copy(const bp::ucs& dbPath_src, const bp::ucs& src_p, 
+			  const bp::ucs& dbPath_dest, const bp::ucs& dest_p, 
+			  FB::JSObjectPtr out,
+			  const boost::optional<bool> clobber);
 	bool chooseFile(FB::JSObjectPtr p);
 	bool chooseFolder(FB::JSObjectPtr p);
 	// Returns path separator based on the operating system
@@ -105,15 +110,13 @@ private:
 	bool _chooseFolderXP(bp::JSObject* p);
 	bool _choose(bp::JSObject* p, bool chooseFile = false);
 	/** Helper to copy */
-	bool copyData(const bfs::path& db1, bfs::path& o_path, 
-				  const bfs::path& db2, bfs::path& n_path, 
-				  bool nexists, bp::JSObject* inOut);
-	/** Helper to copy */
 	bool overwriteFile(const bfs::path& db_path, const bfs::path& path, 
 					   crypt::ByteBuf& text, bool exists,
 					   bp::JSObject* inOut);
 	// Platform specific rename operation.
-	bool renameFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
+	bool renameFile(const bfs::path& db_path1, bfs::path& o_path, 
+					const bfs::path& db_path2, bfs::path& n_path, 
+					bool nexists);
 	bool copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists);
 	bool removeFile(bfs::path&);
 	unsigned BPrivyAPI::lsDrives(bp::VariantMap&);
