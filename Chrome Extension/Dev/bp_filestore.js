@@ -284,17 +284,17 @@ function BP_GET_FILESTORE(g)
         });
     }
     RecsBuf.prototype = Object.create(Array.prototype);
-    RecsBuf.prototype.flush = function (fpath, count, bRev)
+    RecsBuf.prototype.flush = function (dbPath, fpath, count, bRev)
     {
         var o, array;
         
         if (!this.length) {
             return;
         }
-        else if ((count) && (count>0) && (count < this.length)) 
+        else if ((count) && (count>0) && (count < this.length))
         {
             if (bRev) {
-                array = this.splice(this.length-count, count);   
+                array = this.splice(this.length-count, count);
             }
             else {
                 array = this.splice(0, count);
@@ -309,7 +309,7 @@ function BP_GET_FILESTORE(g)
         // to appendFile. AppendFile will write both prefix+payload in one shot.
         o={prefix:this.sep};
         if (bRev) {array.reverse();}
-        if (!BP_PLUGIN.appendFile(fpath, array.join(this.sep), o))
+        if (!BP_PLUGIN.appendFile(dbPath, fpath, array.join(this.sep), o))
         {
             throw new BPError(o.err);
         }
@@ -321,7 +321,7 @@ function BP_GET_FILESTORE(g)
     RecsBuf.prototype.flushDT = function (dt, dbPath, count, bRev)
     {
         var o={};
-        this.flush(DB_FS.getDTFilePath(dt, dbPath), count, bRev);
+        this.flush(dbPath, DB_FS.getDTFilePath(dt, dbPath), count, bRev);
     };
     RecsBuf.prototype.pushRec = function (actn)
     {
@@ -332,11 +332,12 @@ function BP_GET_FILESTORE(g)
     {
         var result = false,
             dtPath = DB_FS.getDTFilePath(dt),
+            dbPath = DB_FS.getDBPath(),
             o={};
 
         if (dtPath)
         {
-            result = BP_PLUGIN.appendFile(dtPath, rec_sep+JSON.stringify(rec), o);
+            result = BP_PLUGIN.appendFile(dbPath, dtPath, rec_sep+JSON.stringify(rec), o);
             if (!result) {
                 throw new BPError(o.err);
             }
@@ -368,7 +369,7 @@ function BP_GET_FILESTORE(g)
             if (buf.length>=DB_FS.fileCap)
             {
                 fname = DB_FS.makeFileName(DB_FS.cat_Closed, dt);
-                buf.flush(DB_FS.makeDTDirPath(dt, dbStats.dbPath) + fname);
+                buf.flush(dbStats.dbPath, DB_FS.makeDTDirPath(dt, dbStats.dbPath) + fname);
                 dbStats.put(dt, DB_FS.cat_Closed, fname);
             }
         }
@@ -405,7 +406,7 @@ function BP_GET_FILESTORE(g)
             
             if (buf.length)
             {
-                buf.flush(DB_FS.getDTFilePath(dt));
+                buf.flush(dbPath, DB_FS.getDTFilePath(dt));
             }
         }
         
@@ -607,7 +608,7 @@ function BP_GET_FILESTORE(g)
         
         buf.push(ctx.traits.toCSV(actn));
         if (buf.length>=1000) {
-            buf.flush(ctx.fpath);
+            buf.flush(null, ctx.fpath);
         }
     }
     
@@ -626,7 +627,7 @@ function BP_GET_FILESTORE(g)
         buf = new RecsBuf("\n");
         buf.push(traits.csvHeader());
         MEMSTORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits});
-        buf.flush(fpath);
+        buf.flush(null, fpath);
     }
     
     function exportCSV(dirPath, obfuscated)

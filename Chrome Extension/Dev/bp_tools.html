@@ -153,7 +153,7 @@
           BP_PLUGIN.rm(path, o);
           o={};
           // if (BP_PLUGIN.appendFile(path, "var ETLDDict=JSON.parse('", o) &&          // BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o) &&          // BP_PLUGIN.appendFile(path, "');", o)) {
-          if (BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o))
+          if (BP_PLUGIN.appendFile(null, path, JSON.stringify(ETLDDict), o))
           {
               window.alert("Done");
           }

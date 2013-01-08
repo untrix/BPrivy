@@ -335,7 +335,11 @@ function BP_GET_DBFS(g)
             },
             quarantineFile: function (fname, fpath)
             {
-                BP_PLUGIN.rename(fpath, fpath+mod.ext_Bad, {}); //  no clobber by default
+                // dbPath1 and dbPath2 are being passed as NULL because the only reason
+                // BP_PLUGIN.rename needs them is for decryption/encryption. Since we're
+                // renaming within the same DB, there is no need o decrypt/encrypt the
+                // data. Hence it is okay to pass null for both DBs.
+                BP_PLUGIN.rename(null, fpath, null, fpath+mod.ext_Bad, {}); //  no clobber by default
             },
             renameBad: function (name)
             {
@@ -467,7 +471,7 @@ function BP_GET_DBFS(g)
                     }
                     
                     o={};
-                    done = BP_PLUGIN.rename(frmPath, dtDirPath + toName, o); // no clobber by default
+                    done = BP_PLUGIN.rename(dbPath, frmPath, dbPath, dtDirPath + toName, o); // no clobber by default
                     if (!done)
                     {
                         if (o.err && o.err.gcode==='WouldClobber')
@@ -515,7 +519,8 @@ function BP_GET_DBFS(g)
                         toPath = DB_FS.makeDTDirPath(dt, db2Path) + fname,
                         o = {};
                                 
-                    if (!BP_PLUGIN.copy(frmPath, toPath, o, bClobber))
+                    if (!BP_PLUGIN.copy(dbMap.dbPath, frmPath, 
+                                        db2Path, toPath, o, bClobber))
                     {
                         throw new BPError (o.err);
                     }
