@@ -126,7 +126,6 @@ namespace crypt
 		// NOTE: This may be greater than the value returned by capacityNum()
 		size_t		m_num;
 
-	private:
 		// In cases where a larger buffer may be allocated, this is a place
 		// to record the useful data length of a buffer. This class does not
 		// manage this value except for initializing it at construction, copying it at 
@@ -134,6 +133,8 @@ namespace crypt
 		// of the user to set its correct value.
 		size_t		m_dataNum;
 		size_t		m_seek; // number of items to seek forward starting from m_buf
+
+	private:
 		/* Disabled methods */
 					Buf				(const Buf&); // disabled
 		Buf&		operator=		(const Buf&); // disabled
@@ -238,11 +239,12 @@ namespace crypt
 		BufHeap&		operator=		(BufHeap<T>&& other);
 		virtual			~BufHeap		() {Delete();}
 		/**	
-		 * Ensures that the capacity of the buffer is at least <capacity>,
-		 *	allocating memory if necesary. Then it zeroes and reinitializes
-		 *  the object as if by invoking BufHeap(<cap>) in place.
+		 * Ensures that the buffer has at least an additional delta_num
+		 * slots for appending. That is m_num >= (m_seek+m_dataNum+delta_num).
+		 * If the buffer is short, then it allocates new memory and copies
+		 * over old contents (m_seek+m_dataNum) into it.
 		 */
-		void			reInit			(size_t cap);
+		void			ensureCap			(size_t delta_num);
 
 	private:
 		// pointer to beginning of allocated memory. May be different from m_buf.
@@ -266,17 +268,29 @@ namespace crypt
 	}
 
 	template <typename T> void
-	BufHeap<T>::reInit(size_t cap)
+	BufHeap<T>::ensureCap(size_t delta_num)
 	{
-		if (cap)
+		if (delta_num)
 		{
-			if (cap < m_num) { zero(); }
-			else {
-				Delete();
-				Malloc(cap);
+			if (delta_num > (m_num - m_seek - m_dataNum))
+			{
+				T* oldBuf = m_buf;
+				size_t oldDataNum = m_dataNum;
+				size_t oldSeek = m_seek;
+				size_t oldNum = m_num;
+
+				Malloc(oldSeek + oldDataNum + delta_num);
+				if ((oldSeek>0) || (oldDataNum>0)) {
+					memcpy(m_buf, oldBuf, (oldSeek+oldDataNum)*sizeof(T));
+				}
+				m_dataNum = oldDataNum;
+				m_seek = oldSeek;
+
+				// zero-out and then delete the oldBuf
+				memset(oldBuf, 0, oldNum*sizeof(T));
+				delete [] oldBuf;
 			}
 		}
-		else if (m_buf) { Delete(); }
 	}
 
 	template <typename T> void

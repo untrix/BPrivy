@@ -35,7 +35,7 @@ namespace bp
 	extern const bp::ustring PROP_PATH;
 	extern const bp::ustring PROP_PATH2;
 	extern const bp::ustring PROP_DB_PATH;
-	extern const bp::ustring PROP_DB_PATH2;
+	//extern const bp::ustring PROP_DB_PATH2;
 	extern const bp::ustring PROP_FILENAME;
 	extern const bp::ustring PROP_FILEEXT;
 	extern const bp::ustring PROP_FILESTEM;
@@ -50,7 +50,8 @@ namespace bp
 	extern const bp::ustring PROP_CLEAR_HISTORY;
 	extern const bp::ustring PROP_PREFIX;
 	extern const bp::ustring PROP_SUFFIX;
-	//extern const bp::ustring PROP_CRYPT_CTX;
+	extern const bp::ustring PROP_CRYPT_CTX;
+	extern const bp::ustring PROP_NULL_CRYPT;
 
 	/***** Actionable Codes. GENERIC & System Error Codes are mapped to one of these *****/
  	// User Actionable. User should resolve the situation
@@ -85,7 +86,11 @@ namespace bp
 	extern const bp::ustring ACODE_UNKNOWN;
 	// Indicates that a unsupported feature was trying to be accessed,
 	// Or a resource-limit was reached (e.g. unsupported file size).
+	// This is not a user actionable scenario. To the user, this is
+	// as bad as CANT_PROCEED, but depending on the situation, the DB
+	// may still be readable, but not editable.
 	extern const bp::ustring ACODE_UNSUPPORTED;
+	// Same category as ACODE_CANT_PROCEED.
 	extern const bp::ustring ACODE_CRYPT_ERROR;
 
 	//typedef enum _ACODE

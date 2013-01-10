@@ -43,14 +43,18 @@ namespace crypt
 		*/
 		explicit	CipherBlob	(BufHeap<uint8_t>&& data);
 		CipherBlob& operator=	(ByteBuf&& data);
-		/** Seeks forward count bytes and re-initializes itself */
-		void		seek		(size_t delta_count);
+		/**
+		* Seeks forward count bytes and re-initializes itself.
+		* @param dataNum The new value of m_buf.dataNum after the seek.
+		*/
+		void		seek		(size_t delta_count, size_t dataNum);
 		// Move constructor.
 		explicit	CipherBlob	(CipherBlob&& other);
 		// Move assignment operator
 		CipherBlob&	operator=	(CipherBlob&& other);
 		// Function members
 		virtual void zero		();
+
 		uint8_t*	getCiText	();
 		size_t		getCiTextSize() const {return m_ciTextSize;}
 		size_t		getTotalSize()	const {return m_ciTextSize + m_headerSize;}
@@ -79,6 +83,7 @@ namespace crypt
 	/*****************************************************************/
 	/************************** CryptInfo ****************************/
 	/*****************************************************************/
+	class CryptInfoFormatBase;
 	struct CryptInfo
 	{
 		typedef enum {
@@ -118,16 +123,23 @@ namespace crypt
 		const EVP_CIPHER*	m_EVP_CIPHER;
 		/*size_t		m_ivLen;  // IV size in #bytes*/
 		size_t		m_blkSize;// cipher's block size in #bytes
+		uint8_t		getVersion		() const {return m_version;}
 
-					CryptInfo		(CipherEnum cipher, size_t keyLen);
+					CryptInfo		(CipherEnum cipher, size_t keyLen, uint8_t version=1);
 					CryptInfo		(const Buf<uint8_t>& cryptInfo);
 					~CryptInfo		() {zero();}
 		void		zero			();
+		virtual void serialize		(ByteBuf& outbuf);
+
+		friend class CryptInfoFormatBase;
 
 	private:
 					CryptInfo		(const CryptInfo&);// not to be defined
 		CryptInfo&	operator=		(const CryptInfo&);// not to be defined
 		void		ConstructCommon	(CipherEnum);
+
+		uint8_t		m_version; //serialization format version.
 	};
+
 } // end namespace crypt
 #endif //  _H_CRYPT_INFO_

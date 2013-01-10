@@ -91,6 +91,9 @@ public:
 	std::wstring pathSeparator();
 	bool createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFilePath, const bp::ucs& dbPath, FB::JSObjectPtr in_out);
 	bool loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFilePath, const bp::ucs& dbPath, FB::JSObjectPtr in_out);
+	bool destroyCryptCtx(const bp::ucs& dbPath, FB::JSObjectPtr in_out);
+	bool cryptCtxLoaded(const bp::ucs& dbPath, FB::JSObjectPtr in_out);
+	//bool isNullCrypt(const bp::ucs& cryptInfoFilePath, FB::JSObjectPtr in_out);
 
 private:
 	bool _ls(bfs::path& path, bp::JSObject* out);
@@ -121,6 +124,9 @@ private:
 	bool removeFile(bfs::path&);
 	unsigned BPrivyAPI::lsDrives(bp::VariantMap&);
 	unsigned long long _lockFile(bfs::path& path, bp::JSObject* out);
+	bool _destroyCryptCtx(const bfs::path& dbPath, bp::JSObject* out);
+	bool _cryptCtxLoaded(const bfs::path& dbPath, bp::JSObject* out);
+	//bool _isNullCrypt(const bfs::path& cryptInfoFilePath, bp::JSObject* out);
 	bool _createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
 	bool _loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
 #ifdef DEBUG

@@ -91,6 +91,8 @@ function BP_GET_ERROR(g)
     const std::string ACODE_BAD_PATH_ARGUMENT   ("BadPathArgument");
     const std::string ACODE_RESOURCE_LOCKED     ("ResourceLocked");
     const std::string ACODE_ACCESS_DENIED       ("AccessDenied");
+    const bp::ustring ACODE_UNSUPPORTED         (L"Unsupported");
+    const bp::ustring ACODE_CRYPT_ERROR         (L"CryptoError");
 
     // NOTE: BPCODE maps to generic-code (gcd)
     const std::string BPCODE_NEW_FILE_CREATED   ("NewFileCreated");
@@ -103,6 +105,10 @@ function BP_GET_ERROR(g)
     // Action would've resulted in clobbering
     const std::string BPCODE_WOULD_CLOBBER      ("WouldClobber");
     const std::string BPCODE_PATH_NOT_EXIST     ("PathNotExist");
+    const bp::ustring BPCODE_FILE_TOO_BIG       (L"FileTooBig");
+    const bp::ustring BPCODE_INVALID_COPY_ARGS  (L"InvalidCopyArgs");
+    const bp::ustring BPCODE_BAD_FILE           (L"FileCorrupted");
+
     */
 
     var dt_Activity= 'Activity';// Represents an Activity object. Needed because message
@@ -114,14 +120,14 @@ function BP_GET_ERROR(g)
     */
     var msg = Object.freeze(
     {
-        /***********Action Codes****************/
+        /***********Action Codes and Corresponding Messages ****************/
         BadPathArgument:"Bad Path Argument.",
         BadDBPath:"The selected folder is not a Wallet folder",
         Unsupported:'Unsupported Feature.', //Unsupported URL etc.
         Diag:'', // Diagnostic Message
         BadWDL: 'Bad WDL argument.',
         UserError: '',
-        /*********** 'G-Codes' **************/
+        /*********** 'G-Codes and Corresponding Messages' **************/
         ETLDLoadFailed: 'ETLD Load Failed',
         ExistingStore: "The selected folder seems to already be part of an existing DB.",
         NotJSObject: "Argument is not a javascript object.",
@@ -165,7 +171,7 @@ function BP_GET_ERROR(g)
        return str;
    };
    
-   // err is either o.err returned from the plugin or a message string. BPError.atvt is
+   // _err is either o.err returned from the plugin or a message string. BPError.atvt is
    // always used to derive the activity when created from a throw statement.
     function BPError(_err, acode, gcode)
     {
@@ -260,6 +266,11 @@ function BP_GET_ERROR(g)
         return g_win.confirm(str);
     }
     
+    function prompt (msg)
+    {
+        return g_win.prompt(msg);
+    }
+    
     function log (arg)
     {
         var be = new BPError(arg);
@@ -284,6 +295,7 @@ function BP_GET_ERROR(g)
         warn: alert,
         success: alert,
         confirm: confirm,
+        prompt: prompt,
         log: log,
         loginfo: log,
         logdebug: log,

@@ -73,6 +73,8 @@ BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host) :
 	registerMethod("pathSeparator", make_method(this, &BPrivyAPI::pathSeparator));
 	registerMethod("createCryptCtx", make_method(this, &BPrivyAPI::createCryptCtx));
 	registerMethod("loadCryptCtx", make_method(this, &BPrivyAPI::loadCryptCtx));
+	registerMethod("destroyCryptCtx", make_method(this, &BPrivyAPI::destroyCryptCtx));
+	registerMethod("cryptCtxLoaded", make_method(this, &BPrivyAPI::cryptCtxLoaded));
 #ifdef DEBUG
 	registerMethod("chooseFileXP", make_method(this, &BPrivyAPI::chooseFileXP));
 	registerMethod("chooseFolderXP", make_method(this, &BPrivyAPI::chooseFolderXP));
@@ -618,7 +620,60 @@ void BPrivyAPI::securityCheck(const bfs::path& path, const std::string allowedEx
 	//}
 }
 
-bool BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
+bool BPrivyAPI::_destroyCryptCtx(const bfs::path& dbPath, bp::JSObject* out)
+{
+	try {
+		crypt::CryptCtx::Destroy(dbPath.wstring());
+		return true;
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(out);
+	return false;
+}
+
+bool BPrivyAPI::_cryptCtxLoaded(const bfs::path& dbPath, bp::JSObject* out)
+{
+	try {
+		if (crypt::CryptCtx::Exists(dbPath.wstring())) {
+			out->SetProperty(PROP_CRYPT_CTX, dbPath.wstring()); //signals context exists
+		}
+		else {
+			out->RemoveProperty(PROP_CRYPT_CTX); // signals context does not exist
+		}
+		return true;
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(out);
+	return false;
+}
+
+/*bool BPrivyAPI::_isNullCrypt(const bfs::path& cryptInfoFilePath, bp::JSObject* out)
+{
+	try {
+			crypt::BufHeap<uint8_t> inBuf(bfs::file_size(cryptInfoFilePath));
+			bfs::basic_ifstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::in | std::ios_base::binary);
+			fStream.read(inBuf, inBuf.capacityBytes());
+			if (fStream.fail()) {
+				throw BPError(ACODE_CANT_PROCEED, BPCODE_BAD_FILE, L"Bad CryptInfo File");
+			}
+			fStream.close();
+			inBuf.setDataNum(inBuf.capacityBytes());
+
+			crypt::CryptInfo* pInfo = new crypt::CryptInfo(inBuf);
+
+			if (pInfo && (pInfo->getVersion()==0)) {
+				out->SetProperty(PROP_NULL_CRYPT, true);
+			}
+			else {
+				out->RemoveProperty(PROP_NULL_CRYPT);
+			}
+
+			return true;
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(out);
+	return false;
+}*/
+
+bool
+BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
 {
 	try
 	{
@@ -626,8 +681,9 @@ bool BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFil
 		crypt::BufHeap<char> pass($.c_str());
 		crypt::CryptCtx::Create(ctxHandle, pass);
 		crypt::ByteBuf outBuf;
-		const crypt::CryptCtx& ctx = crypt::CryptCtx::Get(ctxHandle);
-		ctx.serializeInfo(outBuf);
+		const crypt::CryptCtx* pCtx = crypt::CryptCtx::GetP(ctxHandle);
+		BPError::Assert((pCtx!=NULL), ACODE_CRYPT_ERROR, BPCODE_INTERNAL_ERROR, L"Could not create CryptCtx");
+		pCtx->serializeInfo(outBuf);
 
 		bfs::basic_ofstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
 		fStream.write(outBuf, outBuf.dataNum());
@@ -639,6 +695,7 @@ bool BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFil
 	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
 	return false;
 }
+
 bool BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
 {
 	try
@@ -661,7 +718,6 @@ bool BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFileP
 	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
 	return false;
 }
-
 
 //bool BPrivyAPI::writeFile(const std::string& pth, const std::string& data, FB::JSObjectPtr out)
 //{

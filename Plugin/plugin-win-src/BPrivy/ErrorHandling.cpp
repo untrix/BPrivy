@@ -26,7 +26,7 @@ namespace bp
 	const bp::ustring PROP_PATH					(L"path");
 	const bp::ustring PROP_PATH2				(L"path2");
 	const bp::ustring PROP_DB_PATH				(L"dbPath");
-	const bp::ustring PROP_DB_PATH2				(L"dbPath2");
+	//const bp::ustring PROP_DB_PATH2				(L"dbPath2");
 
 	const bp::ustring PROP_HIDE					(L"hide");
 	const bp::ustring PROP_FILE_FILTER			(L"filter");
@@ -35,7 +35,6 @@ namespace bp
 	const bp::ustring PROP_CLEAR_HISTORY		(L"clrHist");
 	const bp::ustring PROP_PREFIX				(L"prefix");
 	const bp::ustring PROP_SUFFIX				(L"suffix");
-	//const bp::ustring PROP_CRYPT_CTX			(L"cryptCtx");
 
 	const bp::ustring PROP_INFO					(L"inf");
 	const bp::ustring PROP_LSDIR				(L"lsd");
@@ -51,7 +50,8 @@ namespace bp
 	const bp::ustring PROP_DATASIZE				(L"siz");
 	const bp::ustring PROP_MTIME				(L"mtm");
 	const bp::ustring PROP_DATA					(L"dat");
-	const bp::ustring PROP_PASS					(L"pass");
+	const bp::ustring PROP_CRYPT_CTX			(L"cryptCtx");
+	const bp::ustring PROP_NULL_CRYPT			(L"nullCrypt");
 
 	const bp::ustring ACODE_UNKNOWN				(L"Unknown");
  	const bp::ustring ACODE_UNMAPPED			(L"Unmapped");
@@ -65,7 +65,7 @@ namespace bp
 	const bp::ustring ACODE_UNSUPPORTED			(L"Unsupported");
 	const bp::ustring ACODE_CRYPT_ERROR			(L"CryptoError");
 
-	const bp::ustring BPCODE_UNAUTHORIZED_CLIENT (L"UnauthorizedClient");
+	const bp::ustring BPCODE_UNAUTHORIZED_CLIENT(L"UnauthorizedClient");
 	const bp::ustring BPCODE_WRONG_PASS			(L"WrongPass"); // Password too short or wrong.
 	const bp::ustring BPCODE_NEW_FILE_CREATED	(L"NewFileCreated");
 	const bp::ustring BPCODE_NO_MEM				(L"NoMem");
@@ -76,7 +76,7 @@ namespace bp
 	const bp::ustring BPCODE_IS_SYMLINK			(L"PathIsSymlink");
 	// Action would've resulted in clobbering
 	const bp::ustring BPCODE_WOULD_CLOBBER		(L"WouldClobber");
-	const bp::ustring BPCODE_PATH_NOT_EXIST	(L"PathNotExist");
+	const bp::ustring BPCODE_PATH_NOT_EXIST		(L"PathNotExist");
 	const bp::ustring BPCODE_FILE_TOO_BIG		(L"FileTooBig");
 	const bp::ustring BPCODE_INVALID_COPY_ARGS	(L"InvalidCopyArgs");
 	const bp::ustring BPCODE_BAD_FILE			(L"FileCorrupted");

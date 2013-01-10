@@ -101,8 +101,8 @@ function BP_GET_DBFS(g)
             dtl = [dt_settings, dt_eRecord, dt_pRecord],
             DOT = '.',
             ext = {
-                //ext_Root: ".3ab", // .3db is taken :(
-                ext_Root: ".uwallet", // TODO: Change this back to .3ab
+                ext_Root: ".3ab", // .3db is taken :(
+                //ext_Root: ".uwallet", // TODO: Change this back to .3ab
                 ext_Dict: ".3ad",
                 ext_Open: ".3ao",
                 ext_Closed:".3ac",
@@ -110,7 +110,7 @@ function BP_GET_DBFS(g)
                 ext_Temp: ".3at",
                 ext_Bad : ".3aq", // q => Quarantine
                 ext_CryptInfo : ".3ak", // Encrypted key and Cryptinfo
-                //ext_Key : ".3ak", // Same as cryptinfo
+                ext_Key : ".3ak", // Same as cryptinfo
                 ext_Csv : ".csv"
             },
             cat_Load = {
@@ -134,7 +134,7 @@ function BP_GET_DBFS(g)
             ext_Temp: ext.ext_Temp,
             ext_Bad : ext.ext_Bad, // q => Quarantine
             ext_CryptInfo: ext.ext_CryptInfo,
-            //ext_Key: ext.ext_Key,
+            ext_Key: ext.ext_Key,
             ext_Csv : ext.ext_Csv,
             cat_Open : cat_Load.cat_Open,
             cat_Closed:cat_Load.cat_Closed,
@@ -297,6 +297,57 @@ function BP_GET_DBFS(g)
                     'dupes': dupes
                 };
             },
+            makeCryptInfoPath: function(dbPath, dbName)
+            {
+                var path, o;
+                if (BP_ERROR.confirm("Click OK if you would like to store the encryption "+
+                                     "key file separate from the passwords (recommended)"))
+                {
+                    o = {dtitle: "UWallet: Select folder for storing key file ",
+                        dbutton: "Select"};
+                   if (!BP_PLUGIN.chooseFolder(o)) {throw new BPError(o.err);}
+                   
+                   path = o.path + path_sep + dbName + mod.ext_Key;
+                   BP_ERROR.alert("Key will be stored in: " + path + 
+                                  ". You may move/copy it as you like.");
+                }
+                else {
+                    path = dbPath + path_sep + dbName + mod.ext_Key;
+                    BP_ERROR.alert("Encryption key will be stored along with the passwords");
+                }
+                
+                return path;
+            },
+            findCryptInfoPath: function(dbPath)
+            {
+                var o={}, path;
+                
+                if (!BP_PLUGIN.ls(dbPath, o)) {throw new BPError(o.err);}
+                
+                if (o.lsd && o.lsd.f) {
+                    iterObj(o.lsd.f, o, function(fname, ent, dbPath)
+                    {
+                        if (ent.ext === mod.ext_Key) {
+                            path = dbPath + path_sep + fname;
+                            return true; // exits the iterObj loop
+                        }
+                    }, dbPath);
+                }
+                if (!path) {
+                    // We didn't find the file inside the DB. Following two possibilities:
+                    // 1. This is a debug/dev DB with data stored in cleartext.
+                    // 2. The user stored the key outside the DB, for extra security.
+                   o = {filter:['Key File','*.3ak'],
+                        dtitle: "UWallet: Select Key File for " + dbPath,
+                        dbutton: "Select",
+                        clrHist: true};
+                   if (!BP_PLUGIN.chooseFile(o)) {throw new BPError(o.err);}
+                   
+                   path = o.path;
+                }
+                
+                return path;
+            },
             makeDTFilePath: function (dt, dbPath)
             {
                 var fname = file_dt[dt];
@@ -339,7 +390,7 @@ function BP_GET_DBFS(g)
                 // BP_PLUGIN.rename needs them is for decryption/encryption. Since we're
                 // renaming within the same DB, there is no need o decrypt/encrypt the
                 // data. Hence it is okay to pass null for both DBs.
-                BP_PLUGIN.rename(null, fpath, null, fpath+mod.ext_Bad, {}); //  no clobber by default
+                BP_PLUGIN.rename("null", fpath, "null", fpath+mod.ext_Bad, {}); //  no clobber by default
             },
             renameBad: function (name)
             {

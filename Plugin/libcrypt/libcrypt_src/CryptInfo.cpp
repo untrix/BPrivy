@@ -10,17 +10,22 @@ namespace crypt
 	/************************** CryptInfo ****************************/
 	/*****************************************************************/
 
-	CryptInfo::CryptInfo(CipherEnum cipher, size_t keyLen) :
+	CryptInfo::CryptInfo(CipherEnum cipher, size_t keyLen, uint8_t version) :
 		m_logN(LOGN), m_r(R), m_p(P),
-		m_cipher(cipher), m_keyLen(keyLen)
+		m_cipher(cipher), m_keyLen(keyLen), m_version(version)
 	{
-		RAND_bytes(static_cast<unsigned char*>((uint8_t*)m_salt), m_salt.capacityBytes());
-		m_salt.setFull();
-		ConstructCommon(m_cipher);
+		if (version) {
+			RAND_bytes(static_cast<unsigned char*>((uint8_t*)m_salt), m_salt.capacityBytes());
+			m_salt.setFull();
+			ConstructCommon(m_cipher);
+		}
+		// else construct a null-cryptinfo object. All we care about here is
+		// that m_version=0. This object should not be used for anything other
+		// than serialization.
 	}
 	CryptInfo::CryptInfo(const Buf<uint8_t>& cryptInfo)
 	{
-		CryptInfoFormat1::parse(cryptInfo, *this);
+		CryptInfoFormat::parse(cryptInfo, *this);
 		ConstructCommon(m_cipher);
 	}
 	void
@@ -48,6 +53,12 @@ namespace crypt
 		m_cipher = CPHR_NULL;
 		m_salt.zero();
 		//m_signature.zero();
+	}
+
+	void 
+	CryptInfo::serialize(ByteBuf& outbuf)
+	{
+		CryptInfoFormatBase::serialize(*this, outbuf);
 	}
 
 	/*****************************************************************/
@@ -118,11 +129,12 @@ namespace crypt
 	}
 	
 	void
-	CipherBlob::seek(size_t count)
+	CipherBlob::seek(size_t count, size_t dataNum)
 	{
 		if (count)
 		{
 			m_buf.seek(count);
+			m_buf.setDataNum(dataNum);
 			CipherBlobFormat1::parseHeader(*this);
 			m_buf.setDataNum(m_headerSize + m_ciTextSize);
 		}

@@ -294,12 +294,12 @@ var BP_MANAGE = (function ()
         
         addEventListeners('#csvImport', 'click', function (e)
         {
-            var o={filter:['CSV','*.csv'],
+            var o={filter:['CSV File','*.csv'],
                    dtitle: "BPrivy: Import CSV File",
                    dbutton: "Import"};
             $('#csvImportSpinner').show();
             if (BP_PLUGIN.chooseFile(o)) {
-                console.log("ChooseFile returned:" + o.path);
+                console.loginfo("ChooseFile returned:" + o.path);
                 var obfuscated = false; //$('#csvImportObfuscated')[0].checked;
                 //var overrides = $('#csvImportOverrides')[0].checked;
                 importCSV(o.path, obfuscated, function (resp)

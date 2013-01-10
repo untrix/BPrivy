@@ -93,6 +93,11 @@ function BP_GET_FILESTORE(g)
     
     function unloadDB()
     {
+        var dbPath = DB_FS.getDBPath(),
+            o = {};
+        if (dbPath) {
+            BP_PLUGIN.destroyCryptCtx(dbPath, o);
+        }
         MEMSTORE.clear(); // unload the previous DB.
         DB_FS.setDBPath(null);
     }
@@ -135,7 +140,7 @@ function BP_GET_FILESTORE(g)
         catch (e)
         { 
             BP_ERROR.logwarn("loadFile@filestore: Corrupted file: " + filePath);
-            DB_FS.quarantineFile(fname, filePath);
+            //DB_FS.quarantineFile(fname, filePath);
             dbStats.putBad(dt, fname, dirEnt);
             return false;
         }
@@ -180,6 +185,37 @@ function BP_GET_FILESTORE(g)
         else 
         {
             BP_ERROR.log("loadFile@filestore: Empty file?: " + filePath);
+        }
+    }
+    
+    function requestKey(dbPath)
+    {
+        if (!dbPath) {return;}
+        
+        return BP_ERROR.prompt("Please enter password for wallet at: " + dbPath);
+    }
+    
+    function loadCryptCtx(dbPath)
+    {
+        var cryptInfoPath, k, o; 
+
+        o ={};
+        if (!BP_PLUGIN.cryptCtxLoaded(dbPath, o)) {throw new BPError(o.err);}
+        if (!o.cryptCtx) {
+            cryptInfoPath = DB_FS.findCryptInfoPath(dbPath);
+            if (cryptInfoPath) {
+                o = {};
+                //BP_PLUGIN.isNullCrypt(cryptInfoPath, o);
+                //if (!o.nullCrypt) {
+                    k = requestKey(dbPath);
+                //}
+                
+                if (!BP_PLUGIN.loadCryptCtx(k, cryptInfoPath, dbPath, o)) {
+                    throw new BPError(o.err);
+                }
+            }
+            //else this wallet is in cleartext - only use this mode for 
+            // debugging/development purposes.   
         }
     }
     
@@ -253,7 +289,8 @@ function BP_GET_FILESTORE(g)
             return dbStats;
         }
 
-        var memStats;
+        var memStats,
+            cryptInfoPath, k, o = {};
         dbStats = dbStats || newDBMap(dbPath);
         // First determine if this DB exists and is good.
         dbPath = DB_FS.verifyDBForLoad(dbPath);
@@ -261,6 +298,8 @@ function BP_GET_FILESTORE(g)
         BP_ERROR.log("loadingDB " + dbPath);
         MEMSTORE.clear(); // unload the previous DB.
         
+        loadCryptCtx(dbPath);
+
         loadDBFiles(dbPath, dbStats, exclude);
         memStats = MEMSTORE.getStats();
         DB_FS.setDBPath(dbPath, dbStats);
@@ -270,6 +309,23 @@ function BP_GET_FILESTORE(g)
                       ", recs loaded: "+memStats.loaded + ", recs bad: " +memStats.bad +
                       ", recs fluff: " +memStats.fluff);
         return dbPath;
+    }
+    
+    /**
+     *  Wrapper around loadDB. Unloads the previous DB which causes removal of the crypt
+     *  ctx of the currently loaded DB from within the plugin (even if it was same as 
+     *  dbPath). The internal loadDB function won't unload the crypt-ctx and hence the
+     *  same DB maybe loaded multiple times - for operations such as mergeDB - without
+     *  asking the user for password everytime.
+     *  When this function is invoked, the user will be prompted for password to dbPath
+     *  unless its crypt-ctx was already loaded - but in all use-cases so far, the 
+     *  crypt-ctx of dbPath should've been unloaded before loadDB is invoked hence as of
+     *  now the user will always be prompted for password.
+     */
+    function loadDBExt(dbPath, dbStats, exclude)
+    {
+        unloadDB();
+        return loadDB(dbPath, dbStats, exclude);
     }
     
     /**
@@ -574,8 +630,10 @@ function BP_GET_FILESTORE(g)
             throw new BPError ("", "UserError", "DBAlreadyLoaded");
         }
         
+        loadCryptCtx(db2);
+        
         if (bIn === true ) {
-            merge(db1, db2, true);    
+            merge(db1, db2, true);
         }
         else if (bIn === false) {
             merge(db2, db1, true);
@@ -584,6 +642,8 @@ function BP_GET_FILESTORE(g)
         else if (bIn === undefined) {
             merge(db1, db2, false);
         }        
+        BP_PLUGIN.destroyCryptCtx(db2, {});
+        
         return true;
     }
    
@@ -647,7 +707,7 @@ function BP_GET_FILESTORE(g)
     
     function createDB(name, dir) // throws
     {
-        var dbPath, i, 
+        var dbPath, i, k,
             o = {};
             
         if (DB_FS.insideDB(dir)) {
@@ -656,8 +716,17 @@ function BP_GET_FILESTORE(g)
         
         dbPath = DB_FS.makeDBPath(name, dir);
 
+        // Create the directories.
+        o={};
         if (BP_PLUGIN.createDir(dbPath,o))
         {
+            // Create the cryptInfo file and context
+            o={};
+            k = requestKey(dbPath) || 'KhuljaSimSim';
+            if (!BP_PLUGIN.createCryptCtx(k, DB_FS.makeCryptInfoPath(dbPath, name), dbPath, o)) {
+                throw new BPError(o.err);
+            }
+
             DB_FS.dtl.forEach(function (dt, j)
             {
                 var p = DB_FS.makeDTDirPath(dt, dbPath);
@@ -919,14 +988,14 @@ function BP_GET_FILESTORE(g)
         exportCSV: {value: exportCSV},
         CSVFile: {value: CSVFile},
         createDB: {value: createDB},
-        loadDB: {value: loadDB},
+        loadDB: {value: loadDBExt}, // TODO: Change name of property to loadDB2
         unloadDB:   {value: unloadDB},
+        cleanLoadDB:{value: cleanLoadDB},
         compactDB:  {value: compactDB},
         mergeDB:    {value: mergeDB},
         mergeInDB:  {value: mergeInDB},        
         mergeOutDB: {value: mergeOutDB},
-        insertRec: {value: insertRec},
-        cleanLoadDB:   {value: cleanLoadDB},
+        insertRec:  {value: insertRec},
         UC_TRAITS: {value: UC_TRAITS}
     });
     Object.freeze(iface);

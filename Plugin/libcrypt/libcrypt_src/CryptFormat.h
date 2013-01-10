@@ -9,6 +9,9 @@
 
 namespace crypt
 {
+	/*****************************************************************/
+	/**************************** Parser *****************************/
+	/*****************************************************************/
 	class Parser
 	{
 	public:
@@ -34,6 +37,9 @@ namespace crypt
 		return ((const uint8_t*)m_buf) + m_pos;
 	}
 
+	/*****************************************************************/
+	/************************** Serializer ***************************/
+	/*****************************************************************/
 	class Serializer
 	{
 	public:
@@ -57,20 +63,9 @@ namespace crypt
 		return ((uint8_t*)m_buf) + m_pos;
 	}
 
-	/** 
-	* This template is setup such that only its specializations may be constructed.
-	* This generalized code is never meant to be used. Look at specializations for
-	* meaningful code.
-	*/
-	/*template <typename T, size_t VER>
-	class Format
-	{
-	private:
-		Format() {}
-		Format(const Format&);
-		virtual ~Format() = 0; // prevents instantiation of this generalized code.
-	};*/
-
+	/*********************************************************************/
+	/************************ CipherBlobFormat1 **************************/
+	/*********************************************************************/
 	/**
 	* Serialization format version 1 for Crypt Header. Since the version# is
 	* serialized into a nibble, we have room for 14 versions - 0x1 through 0xE.
@@ -101,146 +96,33 @@ namespace crypt
 		static void		serializeHeader		(CipherBlob& ciBlob);
 		static void		parseHeader			(CipherBlob& ciBlob);
 	};
-	//typedef Format<CipherBlob, 1> CipherBlobFormat1;
 
-	/** 
-	* Serialization Format Version 1 for CryptInfo. Carries code that is
-	* used to marshall and unmarshall data to/from files. Hence the format
-	* can never be changed once it is put to use. If you want to change the
-	* format, then write a new class and increment the VER template parameter.
-	*/
-	//template <>
-	//class Format<CryptInfo, 1>
-	class CryptInfoFormat1
+	/*********************************************************************/
+	/*********************** CryptInfoFormatBase *************************/
+	/*********************************************************************/
+	class CryptInfoFormatBase
 	{
+	public:
 		/**
 		 *  BYTE#                    CONTENTS
          *
          *  1          [ serialization format version number ]
-         *  2          [          log N (for scrypt)         ]
-         *  3          [           r (for scrypt)            ]
-         *  4          [           p (for scrypt)            ]
-         *  5          [             cipher - ID             ]
-         *  6          [  key length (both rand and derived  ]
-         *  7-38       [         salt - 32 bytes             ]
-         *  39         [        encrypted key size           ]
-         *  40-N       [  encrypted rand key (cipher Blob)   ]
-         *  40-N       [ length embedded within cipher Blob  ]
-		*/
-	public:
-		/**
-		* VALues are fixed for posterity. They are never to be changed since 
-		* they are persisted to disk 
-		*/
-		typedef enum {
-			VAL_CIPHER_BF_CBC = 1,  // Blowfish in CBC mode
-			VAL_CIPHER_AES_CBC = 2, // AES (Rijndael) in CBC mode
-			VAL_FMT_VER = 1,
-			FMT_SALT_SIZE = 32,
-			//FMT_SIG_SIZE = 32,
-			FMT_TOTAL_FIXED_SIZE = 39
-		} Constant;
-
-		static uint8_t CipherEnumToVal(CipherEnum cipher)
-		{
-			switch (cipher)
-			{
-			case CIPHER_BF_CBC:
-				return VAL_CIPHER_BF_CBC;
-				break;
-			case CIPHER_AES_CBC:
-				return VAL_CIPHER_AES_CBC;
-				break;
-			default:
-				throw Error(Error::CODE_BAD_PARAM, L"Bad cipher-enum");
-			}
-		}
-
-		static CipherEnum CipherValToEnum(uint8_t cipher)
-		{
-			switch (cipher)
-			{
-				case VAL_CIPHER_BF_CBC:
-					return CIPHER_BF_CBC;
-				case VAL_CIPHER_AES_CBC:
-					return CIPHER_AES_CBC;
-				default:
-					throw Error(Error::CODE_BAD_PARAM, L"Bad cipher-val");
-			}
-		}
-
-		/*static void Verify(const Buf<uint8_t>& inbuf, const CryptCtx& ctx)
-		{
-			return; // TBD:
-		}*/
-
-		/*static void Sign (Serializer& serialize, const CryptCtx& ctx)
-		{
-			Array<uint8_t, FMT_SIG_SIZE> tBuf;
-			tBuf.setDataNum(FMT_SIG_SIZE);
-			//tBuf.zero(); // right now just writing zeroes.
-			serialize.PutBuf(tBuf, FMT_SIG_SIZE);
-		}*/
-
-		static void serialize (const CryptInfo& obj, Buf<uint8_t>& outbuf, const CryptCtx& ctx)
-		{
-			Serializer serialize(outbuf);
-			serialize.PutU8(VAL_FMT_VER);
-			serialize.PutU8(obj.m_logN);
-			serialize.PutU8(obj.m_r);
-			serialize.PutU8(obj.m_p);
-			serialize.PutU8(CipherEnumToVal(obj.m_cipher));
-			serialize.PutU8(obj.m_keyLen);
-			serialize.PutBuf(obj.m_salt, FMT_SALT_SIZE);
-			const ByteBuf& key = obj.m_randKey;
-			serialize.PutU8(key.dataNum());
-			serialize.PutBuf(key, key.dataNum());
-			//Sign(serialize, ctx);
-			Error::Assert(serialize.getPos() == FMT_TOTAL_FIXED_SIZE + key.dataNum());
-			outbuf.setDataNum(serialize.getPos());
-		}
-
-		static size_t GetVersion(const Buf<uint8_t>& inbuf)
-		{
-			Parser parse(inbuf);
-			return parse.GetU8();
-		}
-
-		static void parse (const Buf<uint8_t>& inbuf, CryptInfo& obj)
-		{
-			try
-			{
-				Parser parse(inbuf);
-				if ((parse.GetU8() != VAL_FMT_VER)) {
-					throw Error(Error::CODE_BAD_FMT);
-				}
-				obj.m_logN = parse.GetU8();
-				obj.m_r = parse.GetU8();
-				obj.m_p = parse.GetU8();
-				obj.m_cipher = CipherValToEnum(parse.GetU8());
-				obj.m_keyLen = parse.GetU8();
-				parse.GetBuf(obj.m_salt, FMT_SALT_SIZE);
-				size_t keySize = parse.GetU8();
-				ByteBuf key(keySize);
-				parse.GetBuf(key, keySize);
-				obj.m_randKey = std::move(key); // parsing of cipher-blob happens here.
-				//parse.GetBuf(obj.m_signature, FMT_SIG_SIZE);
-			}
-			catch (Error& e)
-			{
-				if (e.gcode == Error::CODE_BAD_DATA) {
-					e.gcode = Error::CODE_BAD_FILE;
-					e.gmsg = L"Bad CryptInfo File/Data";
-				}
-				if (e.gcode == Error::CODE_FEATURE_NOT_SUPPORTED) {
-					e.gcode = Error::CODE_INTERNAL_ERROR;
-				}
-				throw;
-			}
-		}
+		 */
+		static uint8_t			GetVersion		(const Buf<uint8_t>& inbuf);
+		static void				serialize		(const CryptInfo& obj,
+												 ByteBuf& outbuf);
+		static void				parse			(const Buf<uint8_t>& inbuf, CryptInfo& obj);
 	};
 
-	//typedef Format<CryptInfo, 1> FormatCryptInfo1;
+	typedef CryptInfoFormatBase CryptInfoFormat;
+
+	inline uint8_t
+	CryptInfoFormatBase::GetVersion(const Buf<uint8_t>& inbuf)
+	{
+		Parser parse(inbuf);
+		return parse.GetU8();
+	}
 }
+
 
 #endif

@@ -171,6 +171,27 @@ bool BPrivyAPI::loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, co
 	return _loadCryptCtx($, path, dbPath, &o);
 }
 
+bool BPrivyAPI::destroyCryptCtx(const bp::ucs& dbPath, FB::JSObjectPtr in_out)
+{
+	bp::JSObject o(in_out);
+	bfs::path db_path(dbPath);
+	return _destroyCryptCtx(db_path, &o);
+}
+
+bool BPrivyAPI::cryptCtxLoaded(const bp::ucs& dbPath, FB::JSObjectPtr in_out)
+{
+	bp::JSObject o(in_out);
+	bfs::path db_path(dbPath);
+	return _cryptCtxLoaded(db_path, &o);
+}
+
+/*bool BPrivyAPI::isNullCrypt(const bp::ucs& cryptInfoFilePath, FB::JSObjectPtr in_out)
+{
+	bp::JSObject o(in_out);
+	bfs::path key_path(cryptInfoFilePath);
+	return _isNullCrypt(key_path, &o);
+}*/
+
 #ifdef DEBUG
 bool BPrivyAPI::chooseFileXP(FB::JSObjectPtr out)
 {

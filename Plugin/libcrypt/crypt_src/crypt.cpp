@@ -18,7 +18,9 @@ void printUsage(char* argv[])
 {
 	printf("Usage:\t%s \"enc|enc2\" <password> <headerFile> <ClearTextFile> <CipherTextFile>\n"
 		   "\t| %s \"dec\" <password> <headerFile> <ClearTextFile> <CipherTextFile>\n"
-		   "\t| %s \"make\" <password> <headerFile>", argv[0], argv[0], argv[0]);
+		   "\t| %s \"make\" <password> <headerFile>\n"
+		   "\t| %s \"make0\" <headerFile>",
+		   argv[0], argv[0], argv[0], argv[0]);
 }
 
 size_t
@@ -81,7 +83,7 @@ int main(int argc, char* argv[])
 		inBuf.setDataNum(count);
 
 		crypt::ByteBuf outBuf; // Null buffer
-		crypt::CryptCtx::Get(ctxHandle).Encrypt(inBuf, outBuf);
+		crypt::CryptCtx::GetP(ctxHandle)->Encrypt(inBuf, outBuf);
 
 		FILE* outFile = fopen(fileOut.c_str(), (std::string("enc") == argv[1]) ? "wb" : "ab");
 		if (!outFile) {
@@ -102,8 +104,30 @@ int main(int argc, char* argv[])
 		crypt::CryptCtx::Create(ctxHandle, passwd);
 		crypt::BufHeap<uint8_t> outBuf;
 		
-		const crypt::CryptCtx& ctx = crypt::CryptCtx::Get(ctxHandle);
-		ctx.serializeInfo(outBuf);
+		const crypt::CryptCtx* pCtx = crypt::CryptCtx::GetP(ctxHandle);
+		pCtx->serializeInfo(outBuf);
+
+		FILE* outFile = fopen(headerFile.c_str(), "wb");
+		if (!outFile) {
+			fprintf(stderr, "Could not open output file: %s\n", headerFile.c_str()); 
+			perror(NULL);
+			return 1;
+		}
+		size_t count = fwrite(outBuf, sizeof(uint8_t), outBuf.dataNum(), outFile);
+		if (count == outBuf.dataNum()) {
+			return 0;
+		}
+		else {
+			return 1;
+		}
+	}
+	else if (std::string("make0") == argv[1])
+	{
+		if (argc != 3) {printUsage(argv); return 1;}
+		std::string headerFile = argv[2];
+		crypt::CryptInfo* pInfo = new crypt::CryptInfo(crypt::CPHR_NULL,0,0); // creates a null crypt ctx.
+		crypt::ByteBuf outBuf;
+		pInfo->serialize(outBuf);
 
 		FILE* outFile = fopen(headerFile.c_str(), "wb");
 		if (!outFile) {
@@ -162,7 +186,7 @@ int main(int argc, char* argv[])
 		ciBuf.setDataNum(count);
 
 		crypt::ByteBuf outBuf;
-		crypt::CryptCtx::Get(ctxHandle).Decrypt(std::move(ciBuf), outBuf);
+		crypt::CryptCtx::GetP(ctxHandle)->Decrypt(std::move(ciBuf), outBuf);
 
 		FILE* outFile = fopen((fileOut).c_str(), "wb");
 		if (!outFile) {

@@ -62,7 +62,7 @@ namespace crypt
 	wstring
 	Error::PrintMsg() const
 	{
-		return gcode + L":" + gmsg + L":" + std::to_wstring((unsigned long long)errc);
+		return L"gcode=" + gcode + L", " + L"gmsg=" + gmsg + L", " + std::to_wstring((unsigned long long)errc);
 	}
 
 	/*****************************************************************/
@@ -81,38 +81,23 @@ namespace crypt
 	{
 		m_dk.zero();
 	}
-	/*const CryptCtx& CryptCtx::Get(unsigned int handle)
-	{
-		if (handle==0) {throw Error(Error::CODE_BAD_PARAM);}
-		else try {
-			CryptCtx* p = s_ctxMap.at(handle);
-			if (p) {return *p;}
-			else {throw Error(Error::CODE_BAD_PARAM, L"Internal Error");}
-		} catch (std::exception& e)
-		{
-			throw Error(Error::CODE_BAD_PARAM, LocaleToUnicode(e.what()));
-		}
-	}
-	void CryptCtx::Destroy(unsigned int handle)
-	{
-		try {
-			CryptCtx* p = s_ctxMap.at(handle);
-			if (p) {delete p;}
-			CryptCtx::s_ctxMap.erase(handle);
-		}
-		catch (std::exception& e) {
-			throw Error(Error::CODE_BAD_PARAM, LocaleToUnicode(e.what()));
-		}
-	}*/
 
 	bool CryptCtx::Exists(const ucs& handle)
 	{
 		try
 		{
-			CryptCtx* p = s_ctxMap.at(handle);
-			if (p) {return true;}
-			else {return false;}
-		} catch (std::exception& e)
+			s_ctxMap.at(handle);
+			// We got here indicates that the key exists. We can't depend
+			// on the return value since it will be NULL for nullCrytpInfo
+			// but we still want to return true in that case.
+			return true;
+		} 
+		catch (const std::out_of_range&)
+		{
+			// The key wasn't found (even a NULL value'd entry wasn't found)
+			return false;
+		}
+		catch (std::exception& e)
 		{
 			throw Error(Error::CODE_BAD_PARAM, LocaleToUnicode(e.what()));
 		}
@@ -121,7 +106,9 @@ namespace crypt
 	const CryptCtx*	CryptCtx::GetP(const ucs& handle) 
 	{ 
 		try {
-			return s_ctxMap.at(handle); 
+			// NOTE: Return value maybe NULL even in case of a valid map
+			// entry.
+			return s_ctxMap.at(handle);
 		}
 		catch (const std::out_of_range&)
 		{
@@ -129,44 +116,35 @@ namespace crypt
 		}
 	}
 
-	const CryptCtx& CryptCtx::Get(const ucs& handle)
-	{
-		try
-		{
-			const CryptCtx* p = GetP(handle);
-			if (p) {return *p;}
-			else {throw Error(Error::CODE_BAD_PARAM, L"Internal Error");}
-		} catch (std::exception& e)
-		{
-			throw Error(Error::CODE_BAD_PARAM, LocaleToUnicode(e.what()));
-		}
-	}
-
 	void CryptCtx::Destroy(const ucs& handle)
 	{
 		try {
-			CryptCtx* p = s_ctxMap.at(handle);
+			const CryptCtx* p = GetP(handle);
 			if (p) {delete p;}
+			// NOTE: p==NULL does not imply that the map didn't have the key.
+			// It may have had the key, but the value could've been NULL. Hence
+			// we need to call erase regardless of the return value of GetP
 			CryptCtx::s_ctxMap.erase(handle);
 		}
 		catch (std::exception& e) {
 			throw Error(Error::CODE_BAD_PARAM, LocaleToUnicode(e.what()));
 		}
 	}
-	void
-	CryptCtx::Create(const ucs& handle, Buf<char>& $, CipherEnum cipher, unsigned int key_len)
+
+	const CryptCtx*
+	CryptCtx::Create(const ucs& handle, Buf<char>& k, CipherEnum cipher, unsigned int key_len)
 	{
 		//unsigned int handle = 0;
-		Error::Assert(Exists(handle), Error::CODE_BAD_PARAM, L"CryptCtx::Create. Handle already exists");
+		Error::Assert((!Exists(handle)), Error::CODE_BAD_PARAM, L"CryptCtx::Create. Handle already exists");
 
 		CryptCtx* pCtx = new CryptCtx(cipher, key_len);
 		if (!pCtx) {throw Error(Error::CODE_NO_MEM);}
 
 		const CryptInfo& info = pCtx->m_info;
-		if (!deriveKey($, info.m_logN, info.m_r, info.m_p, pCtx->m_dk, info.m_salt)) {
+		if (!deriveKey(k, info.m_logN, info.m_r, info.m_p, pCtx->m_dk, info.m_salt)) {
 			throw Error(Error::CODE_OS_ERROR, L"Could not derive key");
 		}
-		$.zero();
+		k.zero();
 		// Generate random key that will be used for data encryption.
 		ByteBuf key(pCtx->m_info.m_keyLen);
 		RAND_bytes(static_cast<unsigned char*>((uint8_t*)key), key.capacityBytes());
@@ -179,30 +157,40 @@ namespace crypt
 		//handle = CryptCtx::MakeHandle();
 		s_ctxMap.insert(CryptCtx::map::value_type(handle, pCtx));
 
-		//return handle;
+		return pCtx;
 	}
+
 	void
-	CryptCtx::Load(const ucs& handle, Buf<char>& $, const Buf<uint8_t>& cryptInfo)
+	CryptCtx::Load(const ucs& handle, Buf<char>& k, const Buf<uint8_t>& cryptInfo)
 	{
 		//unsigned int handle = 0;
-		Error::Assert(Exists(handle), Error::CODE_BAD_PARAM, L"CryptCtx::Load. Handle already exists");
+		Error::Assert((!Exists(handle)), Error::CODE_BAD_PARAM, L"CryptCtx::Load. Handle already exists");
 
-		CryptCtx* pCtx = new CryptCtx(cryptInfo);
-		if (!pCtx) {throw Error(Error::CODE_NO_MEM);}
+		CryptCtx* pCtx = NULL;
 
-		const CryptInfo& info = pCtx->m_info;
-		deriveKey($, info.m_logN, info.m_r, info.m_p, pCtx->m_dk, info.m_salt);
-		// zero out passwd
-		$.zero();
-		//CryptInfoFormat1::Verify(cryptInfo, *pCtx);
+		if (CryptInfoFormat::GetVersion(cryptInfo)) 
+		{
+			pCtx = new CryptCtx(cryptInfo);
 
-		// Now decrypt cryptInfo.m_randKey to get pCtx->m_randKey
-		pCtx->DecryptImpl(std::move(pCtx->m_info.m_randKey), pCtx->m_randKey, pCtx->m_dk);
+			if (!pCtx) {throw Error(Error::CODE_NO_MEM);}
 
-		//handle = CryptCtx::MakeHandle();
+			const CryptInfo& info = pCtx->m_info;
+			deriveKey(k, info.m_logN, info.m_r, info.m_p, pCtx->m_dk, info.m_salt);
+			// zero out passwd
+			k.zero();
+			//CryptInfoFormat::Verify(cryptInfo, *pCtx);
+
+			// Now decrypt cryptInfo.m_randKey to get pCtx->m_randKey
+			pCtx->DecryptImpl(std::move(pCtx->m_info.m_randKey), pCtx->m_randKey, pCtx->m_dk);
+		}
+		else {
+			// This is a null cryptinfo. Indicates that a cryptCtx should not
+			// be created. We still need to create an entry inside s_ctxMap so that
+			// Exists will return true.
+			pCtx = NULL;
+		}
+
 		s_ctxMap.insert(CryptCtx::map::value_type(handle, pCtx));
-
-		//return handle;
 	}
 	void
 	CryptCtx::EncryptImpl(const Buf<uint8_t>& in, ByteBuf& out, const uint8_t* pKey) const
@@ -253,11 +241,11 @@ namespace crypt
 	CryptCtx::DecryptImpl(ByteBuf&& in, ByteBuf& out, const uint8_t* pKey) const
 	{
 		size_t totalBytes = in.dataNum();
-		out.reInit(totalBytes);
+		out.ensureCap(totalBytes);
 		CipherBlob ciBlob(std::forward<ByteBuf>(in)); // in-buf is parsed here.
 		for ( size_t processed=0, count=0; processed < totalBytes; )
 		{
-			ciBlob.seek(count); // in-buf is parsed again at position <count>
+			ciBlob.seek(count, (totalBytes-processed)); // in-buf is parsed again at position <count>
 			count = DecryptOne(ciBlob, out, pKey);
 			processed += count;
 		}
@@ -301,8 +289,8 @@ namespace crypt
 	void
 	CryptCtx::serializeInfo(BufHeap<uint8_t>& outBuf) const
 	{
-		BufHeap<uint8_t> tempBuf(CryptInfoFormat1::FMT_TOTAL_FIXED_SIZE + m_info.m_randKey.dataNum());
-		CryptInfoFormat1::serialize(m_info, tempBuf, *this);
+		BufHeap<uint8_t> tempBuf;
+		CryptInfoFormat::serialize(m_info, tempBuf);
 		outBuf = std::move(tempBuf);
 	}
 }
