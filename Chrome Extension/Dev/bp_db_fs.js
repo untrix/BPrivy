@@ -297,17 +297,18 @@ function BP_GET_DBFS(g)
                     'dupes': dupes
                 };
             },
-            makeCryptInfoPath: function(dbPath, dbName)
+            makeCryptInfoPath: function(dbPath, dbName, keyDir)
             {
                 var path, o;
-                if (BP_ERROR.confirm("Click OK if you would like to store the encryption "+
-                                     "key file separate from the passwords (recommended)"))
+                // if (BP_ERROR.confirm("Click OK if you would like to store the encryption "+
+                                     // "key file separate from the passwords (recommended)"))
+                if (keyDir)
                 {
-                    o = {dtitle: "UWallet: Select folder for storing key file ",
-                        dbutton: "Select"};
-                   if (!BP_PLUGIN.chooseFolder(o)) {throw new BPError(o.err);}
+                    // o = {dtitle: "UWallet: Select folder for storing key file ",
+                        // dbutton: "Select"};
+                   // if (!BP_PLUGIN.chooseFolder(o)) {throw new BPError(o.err);}
                    
-                   path = o.path + path_sep + dbName + mod.ext_Key;
+                   path = keyDir + path_sep + dbName + mod.ext_Key;
                    BP_ERROR.alert("Key will be stored in: " + path + 
                                   ". You may move/copy it as you like.");
                 }
@@ -318,7 +319,7 @@ function BP_GET_DBFS(g)
                 
                 return path;
             },
-            findCryptInfoPath: function(dbPath)
+            findCryptInfoFile: function(dbPath)
             {
                 var o={}, path;
                 
@@ -333,18 +334,20 @@ function BP_GET_DBFS(g)
                         }
                     }, dbPath);
                 }
+                
                 if (!path) {
-                    // We didn't find the file inside the DB. Following two possibilities:
-                    // 1. This is a debug/dev DB with data stored in cleartext.
-                    // 2. The user stored the key outside the DB, for extra security.
-                   o = {filter:['Key File','*.3ak'],
-                        dtitle: "UWallet: Select Key File for " + dbPath,
-                        dbutton: "Select",
-                        clrHist: true};
-                   if (!BP_PLUGIN.chooseFile(o)) {throw new BPError(o.err);}
-                   
-                   path = o.path;
+                    throw new BPError("Key File not found inside the Wallet. Is it stored outside?");
                 }
+                // if (!path) {
+                    // // The user stored the key outside the DB, for extra security.
+                   // o = {filter:['Key File','*.3ak'],
+                        // dtitle: "UWallet: Select Key File for " + dbPath,
+                        // dbutton: "Select",
+                        // clrHist: true};
+                   // if (!BP_PLUGIN.chooseFile(o)) {throw new BPError(o.err);}
+//                    
+                   // path = o.path;
+                // }
                 
                 return path;
             },

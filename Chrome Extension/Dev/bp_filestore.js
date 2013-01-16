@@ -195,22 +195,30 @@ function BP_GET_FILESTORE(g)
         return BP_ERROR.prompt("Please enter password for wallet at: " + dbPath);
     }
     
-    function loadCryptCtx(dbPath)
+    function loadCryptCtx(dbPath, cryptInfoPath, k)
     {
-        var cryptInfoPath, k, o; 
+        var o; 
 
         o ={};
         if (!BP_PLUGIN.cryptCtxLoaded(dbPath, o)) {throw new BPError(o.err);}
         if (!o.cryptCtx) {
-            cryptInfoPath = DB_FS.findCryptInfoPath(dbPath);
+
+            if (!cryptInfoPath) {
+                cryptInfoPath = DB_FS.findCryptInfoFile(dbPath);
+            }
+
             if (cryptInfoPath) {
                 o = {};
-                //BP_PLUGIN.isNullCrypt(cryptInfoPath, o);
-                //if (!o.nullCrypt) {
-                    k = requestKey(dbPath);
-                //}
+
+                if (!k) {
+                    //k = requestKey(dbPath);
+                    throw new BPError("Please supply master password for " + dbPath);
+                }
                 
                 if (!BP_PLUGIN.loadCryptCtx(k, cryptInfoPath, dbPath, o)) {
+                    // var bp_err = new BPError(o.err);
+                    // BP_ERROR.logwarn(bp_err);
+                    // o.err.gmsg = BP_ERROR.msg[o.err.acode || o.err.gcode];
                     throw new BPError(o.err);
                 }
             }
@@ -230,7 +238,7 @@ function BP_GET_FILESTORE(g)
      *                  then the impact of calling loadDB is additive - i.e. the existing values
      *                  in the collection will stay and existing counts will simply be incremented.
      */
-    function loadDB(dbPath, dbStats, exclude)
+    function loadDB(dbPath, dbStats, exclude, keyPath, k)
     {
         /**
          * Helper function to loadDB. Loads files of given DB.
@@ -298,7 +306,7 @@ function BP_GET_FILESTORE(g)
         BP_ERROR.log("loadingDB " + dbPath);
         MEMSTORE.clear(); // unload the previous DB.
         
-        loadCryptCtx(dbPath);
+        loadCryptCtx(dbPath, keyPath, k);
 
         loadDBFiles(dbPath, dbStats, exclude);
         memStats = MEMSTORE.getStats();
@@ -322,10 +330,10 @@ function BP_GET_FILESTORE(g)
      *  crypt-ctx of dbPath should've been unloaded before loadDB is invoked hence as of
      *  now the user will always be prompted for password.
      */
-    function loadDBExt(dbPath, dbStats, exclude)
+    function loadDBExt(dbPath, keyPath, k)
     {
         unloadDB();
-        return loadDB(dbPath, dbStats, exclude);
+        return loadDB(dbPath, undefined, undefined, keyPath, k);
     }
     
     /**
@@ -612,7 +620,7 @@ function BP_GET_FILESTORE(g)
         }
     }
 
-    function mergeMain(db2, bIn)
+    function mergeMain(db2, bIn, keyPath, k)
     {
         var db1 = DB_FS.getDBPath();
         
@@ -630,7 +638,7 @@ function BP_GET_FILESTORE(g)
             throw new BPError ("", "UserError", "DBAlreadyLoaded");
         }
         
-        loadCryptCtx(db2);
+        loadCryptCtx(db2, keyPath, k);
         
         if (bIn === true ) {
             merge(db1, db2, true);
@@ -647,19 +655,19 @@ function BP_GET_FILESTORE(g)
         return true;
     }
    
-    function mergeInDB(db2)
+    function mergeInDB(db2, keyPath, k)
     {
-        return mergeMain(db2, true);
+        return mergeMain(db2, true, keyPath, k);
     }
     
-    function mergeOutDB(db2)
+    function mergeOutDB(db2, keyPath, k)
     {
-        return mergeMain(db2, false);
+        return mergeMain(db2, false, keyPath, k);
     }
     
-    function mergeDB(db2)
+    function mergeDB(db2, keyPath, k)
     {
-        return mergeMain(db2);
+        return mergeMain(db2, undefined, keyPath, k);
     }
     
     function writeCSV(actn, ctx)
@@ -705,7 +713,7 @@ function BP_GET_FILESTORE(g)
         return fnames;
     }
     
-    function createDB(name, dir) // throws
+    function createDB(name, dir, keyDir, k) // throws
     {
         var dbPath, i, k,
             o = {};
@@ -716,36 +724,50 @@ function BP_GET_FILESTORE(g)
         
         dbPath = DB_FS.makeDBPath(name, dir);
 
-        // Create the directories.
-        o={};
-        if (BP_PLUGIN.createDir(dbPath,o))
-        {
-            // Create the cryptInfo file and context
-            o={};
-            k = requestKey(dbPath) || 'KhuljaSimSim';
-            if (!BP_PLUGIN.createCryptCtx(k, DB_FS.makeCryptInfoPath(dbPath, name), dbPath, o)) {
-                throw new BPError(o.err);
-            }
-
-            DB_FS.dtl.forEach(function (dt, j)
-            {
-                var p = DB_FS.makeDTDirPath(dt, dbPath);
-                if (!BP_PLUGIN.createDir(p,o)) 
-                {
-                    var err = o.err;
-                    o={}; 
-                    BP_PLUGIN.rm(dbPath, o);
-                    throw new BPError(err);
-                }
-            });
-        }
-        else
-        {
+        if (!BP_PLUGIN.createCryptCtx(k,
+            DB_FS.makeCryptInfoPath(dbPath, name, keyDir), 
+            dbPath, o)) {
             throw new BPError(o.err);
         }
+
+        try
+        {
+            // Create the directories.
+            o={};
+            if (BP_PLUGIN.createDir(dbPath,o))
+            {
+                // Create the cryptInfo file and context
+                o={};
+                if (!k) {
+                    //k = requestKey(dbPath);
+                    throw new BPError("Please supply master password for " + dbPath);
+                }
+    
+                DB_FS.dtl.forEach(function (dt, j)
+                {
+                    var p = DB_FS.makeDTDirPath(dt, dbPath);
+                    if (!BP_PLUGIN.createDir(p,o)) 
+                    {
+                        var err = o.err;
+                        o={}; 
+                        BP_PLUGIN.rm(dbPath, o);
+                        throw new BPError(err);
+                    }
+                });
+            }
+            else {
+                throw new BPError(o.err);
+            }
+            
+            MEMSTORE.clear(); // unload the previous DB.
+            DB_FS.setDBPath(dbPath); // The DB is deemed loaded (though it is empty)
+        }
+        catch (exp) {
+            o = {};
+            BP_PLUGIN.destroyCryptCtx(dbPath, o);
+            throw exp;
+        }
         
-        MEMSTORE.clear(); // unload the previous DB.
-        DB_FS.setDBPath(dbPath); // The DB is deemed loaded (though it is empty)
         return dbPath; // same as return DB_FS.getDBPath();
     }
 

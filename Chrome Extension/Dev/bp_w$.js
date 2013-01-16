@@ -300,7 +300,7 @@ function BP_GET_W$(g)
             el = g_doc.createElement(wdl.tag);
             $el = $(el);
         }
-        else { // html
+        else { // wdl.html
             $el = $(wdl.html); 
             el = $el[0];
         }
@@ -319,11 +319,17 @@ function BP_GET_W$(g)
         
         var txt1 = wdl.text || "";
         
-        $el.attr(wdl.attr || {})
-            .text(wdl.text || "")
-            .prop(wdl.prop || {})
-            .css(wdl.css || {})
-            .addClass(wdl.addClass || "");
+        if (wdl.attr) {$el.attr(wdl.attr);}
+        if (wdl.text) {$el.text(wdl.text);}
+        if (wdl.prop) {$el.prop(wdl.prop);}
+        if (wdl.css)  {$el.css(wdl.css);}
+        if (wdl.addClass){$el.addClass(wdl.addClass);}
+        
+        // $el.attr(wdl.attr || {})
+            // .text(wdl.text || "")
+            // .prop(wdl.prop || {})
+            // .css(wdl.css || {})
+            // .addClass(wdl.addClass || "");
 
         w$on(w$el, wdl.on, w$eventProxy); // will bind this to e.currentTarget
         w$on(w$el, wdl.onTarget, w$eTargetProxy); // will bind this to e.target

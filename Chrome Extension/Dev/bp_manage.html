@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>U-Wallet&trade;:Passwords </title>
+    <title>Privy Wallet&trade;</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="U-Wallet&trade;:Passwords">
+    <meta name="description" content="Untrix Password Wallet&trade;">
     <meta name="author" content="sumeet@untrix.com">
     <!-- Stylesheets -->
     <link href="tp/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -20,7 +20,7 @@
       <div class="row-fluid">
         <div class="span3">
           <!--Sidebar content-->
-          <h3> <i>U-Wallet</i>: Passwords </h3>
+          <h3> <i>Privy Wallet&trade;</i></h3>
           <ul class="nav nav-list" id="nav-list">
             <li>
               <a data-nav id="nav-settings" href="#settings-pane"><i class="icon-cog"></i> Manage</a>
@@ -33,7 +33,7 @@
             <li><a data-nav href="#help-pane"><i class="icon-flag"></i> Help</a></li>
             <li class="divider"></li>
             <li>
-              <a href="mailto:uwallet@untrix.com"><i class="icon-envelope"></i> Contact</a>
+              <a href="mailto:Wallet@untrix.com"><i class="icon-envelope"></i> Contact</a>
             </li>
           </ul>
         </div>
@@ -42,73 +42,71 @@
           <div class="tab-content">
             <!--Body content-->
             <div class="tab-pane" id="settings-pane">
-              <!-- <h3>Manage U-Wallets</h3> -->
+              <!-- <h3>Manage Wallets</h3> -->
+              <legend>
+                Currently Open Wallet : 
+                <span disabled id="dbPath" data-dbName style="text-align:center"></span>
+              </legend>
+              
               <div class="well form-horizontal">
-                <legend> <em>U-Wallet</em>
-                  <span disabled id="dbPath" data-dbName style="text-align:center"  class="input-large uneditable-input dash-text"></span>
-                </legend>
-                <fieldset id="formStoreLoad"  class="control-group">
-                  <label class="control-label">Open</label>
-                  <div class="controls form-inline">
-                    <button id="dbChooseLoad" type="button" class="btn btn-primary" data-loading-text="Opening..." title="Browse for <i style='display:inline-block'>U-Wallet</i> folder">
-                      <!-- <img style="display:none" id="dbLoadSpinner" src="icons/ajax-loader-white.gif" /> -->
-                      <!-- <i class="icon-folder-open icon-white"></i>  -->                    
-                       Open
-                    </button>
-                    <label class="checkbox" title="If checked, the <i style='display:inline-block'>Password Wallet</i> location will be saved on this computer and automatically selected the next time. For privacy and safety, uncheck it if this is not your computer.">
-                      <input id="dbSaveLocation" type="checkbox" name="savelocation" checked>
-                      Remember
-                    </label>
-                    <!-- <button id="dbClose" type="button" class="btn btn-small" title="Close the password Wallet">Close</button> -->
+              <legend>Manage Wallets</legend>                
+                <fieldset class='control-group'>
+                  <!-- <label class="control-label">Wallet</label> -->
+                  <div class='controls'>
+                    <!-- <button id="dbChooseLoad" type="button" class="btn btn-primary" title="Open/Reopen a Wallet">Open</button>
+                    <button id="dbClose" type="button" class="btn" title="Close the open Wallet">Close</button>
+                    <button id="dbChooseCreate" type="button" class="btn btn-success" title="Create a new Wallet">Create</button>
+                    <button id="dbDupe" type="button" class="btn btn-info" title="Make a copy of the open Wallet">Duplicate</button> -->
+                    <button id="btnWalletOpen" type="button" class="btn btn-primary" title="Open/Reopen a Wallet">Open</button>
+                    <button id="btnWalletClose" type="button" class="btn" title="Close the open Wallet">Close</button>
+                    <button id="btnWalletCreate" type="button" class="btn btn-success" title="Create a new Wallet">Create</button>
+                    <button id="btnWalletDupe" disabled type="button" class="btn btn-info" title="Make a copy of the open Wallet">Duplicate</button>
                   </div>
                 </fieldset>
 
-                <fieldset id="formStoreClose"  class="control-group">
-                  <label class="control-label">Close</label>
-                  <div class="controls form-inline">
-                    <button id="dbClose" type="button" class="btn btn-small" title="Close the password Wallet">Close</button>
-                  </div>
-                </fieldset>
-
-                <fieldset id="formStoreCreate" class="control-group">
-                  <label class="control-label" title="Allows you to create a new<i style='display:inline-block'>U-Wallet</i> for storing passwords">New</label>
-                  <div class="controls form-inline">
-                    <input id="dbName"  type="text" placeholder="Type Wallet Name Here" class="input-medium" title="Please enter a name for the new Wallet that you would like to create. Example: <i>Tony's Wallet</i>">
-                    <button id="dbChooseCreate" type="button" class="btn btn-inverse" title="Browse and select a location for your new <i style='display:inline-block'>U-Wallet</i>">Create</button>
-                  </div>
-                </fieldset>
+                <!-- Do not remove. Anchor for dynamically inserting walletForm -->
+                <div id="walletFormContainer"></div>
 
               </div>
 
               <div class="form-horizontal well">
                 <legend>
-                    <span title="Keep all your U-Wallet copies up-to-date">
-                      Sync / Update <em>UWallet&trade;</em> Copies
+                    <span title="Keep all your Wallet copies up-to-date">
+                      Sync Wallets
                     </span>
                 </legend>
 
                 <fieldset class="control-group">
-                  <label class="control-label" title="Update wallets using our patent-pending <em>LocalSync&trade;</em> technology."><em>LocalSync&trade;</em></label>
+                  <label class="control-label" 
+                    title="Merge two wallets without connecting to internet using our patent-pending SmartMerge&trade; technology.">
+                    <em>SmartMerge&trade;</em> (Without Internet)</label>
                   <div class="controls">
-                    <button data-path-choose id="dbMerge" type="button" class="btn btn-primary" title="Both (Open and Other) wallets' data will get updated.">Update Both</button>                    
-                    <button data-path-choose id="dbMergeIn" type="button" class="btn btn-info" title="Only the open Wallet will be updated.">Update Current</button>                    
-                    <button data-path-choose id="dbMergeOut" type="button" class="btn btn-inverse" title="Only the other Wallet will be updated.">Update Other</button>
+                    <button data-path-choose id="btnMerge" type="button" class="btn btn-primary" 
+                    title="Merges password updates from the opened wallet and another wallet using our patent-pending SmartMerge&trade; technology.">
+                      Sync</button>
                   </div>
+
+                <!-- Do not remove. Anchor for dynamically inserting walletForm -->
+                <div id="mergeFormContainer"></div>
+
                 </fieldset>
                 
                 <fieldset class="control-group">
-                  <label class="control-label">Internet / Cloud Sync</label>
+                  <label class="control-label">Cloud/Sky Drive</label>
                   <div class="controls" style="text-align:justify">
-                    <p><strong>IT IS NOT SAFE TO SYNC YOUR PASSWORDS VIA THE INTERNET CLOUD. </strong>
-                      Therefore we recommend you only store wallet copies on local or
-                      thumb-drives and update them with <em>LocalSync&trade;. </em>
-                      If you still wish to cloud-sync your Wallets, then just create/move
-                      your <em>U-Wallet</em> folder into a 
+                    <p>
+                      To enable internet-based sync, just create or move
+                      your <em>Wallet</em> folder into a 
                       <a href="http://www.dropbox.com">Dropbox</a>, 
                       <a href="http://drive.google.com">Google Drive</a>, 
                       <a href="http://windows.microsoft.com/en-US/skydrive/home">
                         Microsoft Skydrive
-                      </a> or any other such cloud-drive. That's all you need to do.
+                      </a> or any other such cloud-drive. However, for added security be sure to 
+                      remove the Key-file from the Wallet and store it on a
+                      local drive or a thumb drive or memory card.
+                      <small><strong>IT IS NOT SAFE TO SYNC YOUR PASSWORDS VIA THE INTERNET. </strong>
+                      However, if you must resort to cloud-based sync, we recommend that you store
+                      the Key-file on a local drive or a thumb drive / memory card but *not* on the internet. </small>
                     </p>
                   </div>
                 </fieldset>
@@ -118,26 +116,37 @@
               <div class="form-horizontal well">
                 <legend>
                     <span title="Import/Export a comma separated (CSV) password file exported from another password manager">
-                      Import / Export External Passwords
+                      Import / Export Passwords
                     </span>
                 </legend>
                 <div class="control-group">
-                  <label class="control-label">Import from CSV File</label>
+                  <label class="control-label">CSV File</label>
                   <div class="controls form-inline">
                     <button id="csvImport" type="button" class="btn btn-primary" title="Click to choose the file">
                       <img style="display:none" id="csvImportSpinner" src="icons/ajax-loader-white.gif" />
                       Import
                     </button>
                     <!-- <label class="checkbox" title="Check this if import file is obfuscated">                      <input type="checkbox" name="obfuscated" id="csvImportObfuscated" disabled>                      Obfuscated                    </label> -->
+                    <button id="csvExport" type="button" class="btn btn-inverse" title="Click to choose the file">Export</button>
+                    <!-- <label class="checkbox" title="Check this to obfuscate export file">
+                      <input type="checkbox" name="obfuscate" disabled>
+                      Obfuscate
+                    </label> -->
                   </div>
                 </div>
                 <div class="control-group">
-                  <label class="control-label">Export to CSV File</label>
+                  <label class="control-label">Another Wallet (<em>SmartMerge&trade;</em>)</label>
                   <div class="controls form-inline">
-                    <button id="csvExport" type="button" class="btn btn-inverse" title="Click to choose the file">Export</button>
-                    <!-- <label class="checkbox" title="Check this to obfuscate export file">                      <input type="checkbox" name="obfuscate" disabled>                      Obfuscate                    </label> -->
+                    <button data-path-choose id="btnMergeIn" type="button" class="btn btn-primary" title="Import password updates from another wallet using our patent-pending SmartMerge&trade; technology.">
+                      Import</button>
+                    <button data-path-choose id="btnMergeOut" type="button" class="btn btn-inverse" title="Export password updates to another wallet using our patent-pending SmartMerge&trade; technology.">
+                      Export</button>
                   </div>
                 </div>
+
+                <!-- Do not remove. Anchor for dynamically inserting walletForm -->
+                <div id="mergeInOutContainer"></div>
+
               </div>
             </div>
             <div class="tab-pane" id="editor-pane">
@@ -145,10 +154,11 @@
               <div id="editorPane">
                 <div class="form-inline">
                   <div class="control-group">
-                    <!-- <label class="control-label">UWallet</label> -->
+                    <!-- <label class="control-label">Wallet</label> -->
                     <div class="controls">
-                      <input type="text" data-db-path placeholder="No Wallet Opened" disabled title="The open U-Wallet">
-                      <button id="dbChooseLoad2" type="button" class="btn btn-primary" data-loading-text="Opening..." title="Open/Re-open <i style='display:inline-block'>U-Wallet</i> folder">
+                      <input type="text" data-db-path placeholder="No Wallet Opened" disabled title="The open Wallet">
+                      <button id="dbChooseLoad2" type="button" class="btn btn-primary" data-loading-text="Opening..." 
+                        title="Open/Re-open <i style='display:inline-block'>Wallet</i> folder">
                          Open
                       </button>
                       <button id="dbClose2" type="button" class="btn" title="Close the password Wallet">Close</button>
@@ -188,9 +198,7 @@
                     <input disabled id="stats" style="cursor: default" class="uneditable-input input-medium dash-text">
                   </div>
                 </fieldset>
-
               </div>
-
             </div>
             <div class="tab-pane" id="help-pane">
               <!-- Help Content Goes Here -->
@@ -205,15 +213,21 @@
       </div>
       <hr>
       <footer>
-        <p><strong>
-          Note: Your passwords <em>do not</em> leave your computer. UWallet <em>will not</em>
-          transfer them to our or any other website.
-        </strong></p>
+        <p><small>
+          Note: Privy Wallet&trade; <em>never</em> transfers your passwords to anywhere
+          other than the file-system folder - of your choosing - and - temporarily -
+          the memory of the computer/device on which it is running. It certainly does not
+          transfer them to any internet web-site or server.
+          
+          A network/internet/cloud/sky drive however, *will* transfer your passwords to
+          locations outside of your control from where they could be lost, stolen, damaged
+          or otherwise compromised.
+        </small></p>
         <p>
           &copy; Copyright 2012 Untrix Soft LLC (http://www.untrix.com)
         </p>
         <p>
-          Privy&trade;, Privy Wallet&trade;, U-Wallet&trade;, U-Wallet:Passwords&trade;, LocalSync&trade; and UTeach&trade; are trademarks of Untrix Soft LLC (http://www.untrix.com)
+          Privy&trade;, Privy Wallet&trade;, SmartMerge&trade; and UTeach&trade; are trademarks of Untrix Soft LLC (http://www.untrix.com)
         </p>
       </footer>
     </div>

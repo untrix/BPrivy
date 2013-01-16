@@ -12,6 +12,7 @@
 #include "BPrivy.h"
 #include <DOM/Window.h>
 #include "Utils.h"
+#include <libcrypt.h>
 #ifdef WIN32
 #include <ObjBase.h>
 #include <Ole2.h>
@@ -28,8 +29,11 @@ void BPrivy::StaticInitialize()
 {
     // Place one-time initialization stuff here; As of FireBreath 1.4 this should only
     // be called once per process
+
+	crypt::initLibcrypt();
+
 #ifdef WIN32
-	// Initialize COM. COINIT_MULTITHREADED implies that it is our responsibility to
+	// Note from Sumeet: Initialize COM. COINIT_MULTITHREADED implies that it is our responsibility to
 	// synchronize calls to a given COM object. This is not a problem for us since the
 	// incoming calls to the plugin are all handled by one thread anyway, even if multiple
 	// plugin instances may be initialized per plugin-process (i.e. per browser). Per FB
@@ -55,6 +59,9 @@ void BPrivy::StaticDeinitialize()
 {
     // Place one-time deinitialization stuff here. As of FireBreath 1.4 this should
     // always be called just before the plugin library is unloaded
+
+	crypt::unloadLibcrypt(); // unload openssl strings
+
 #ifdef WIN32
 	//CoUninitialize(); // Uninitialize COM. Requires Ole32.lib
 	OleUninitialize();

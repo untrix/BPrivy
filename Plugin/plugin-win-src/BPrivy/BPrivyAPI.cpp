@@ -682,7 +682,8 @@ BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath
 		crypt::CryptCtx::Create(ctxHandle, pass);
 		crypt::ByteBuf outBuf;
 		const crypt::CryptCtx* pCtx = crypt::CryptCtx::GetP(ctxHandle);
-		BPError::Assert((pCtx!=NULL), ACODE_CRYPT_ERROR, BPCODE_INTERNAL_ERROR, L"Could not create CryptCtx");
+		BPError::Assert((pCtx!=NULL), ACODE_CANT_PROCEED, BPCODE_CRYPT_ERROR, 
+			L"Could not create CryptCtx");
 		pCtx->serializeInfo(outBuf);
 
 		bfs::basic_ofstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
@@ -705,7 +706,8 @@ bool BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFileP
 		bfs::basic_ifstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::in | std::ios_base::binary);
 		fStream.read(inBuf, inBuf.capacityBytes());
 		if (fStream.fail()) {
-			throw BPError(ACODE_CANT_PROCEED, BPCODE_BAD_FILE, L"Bad CryptInfo File");
+			throw BPError(ACODE_BAD_CRYPTINFO, BPCODE_BAD_FILE, 
+				L"Bad CryptInfo File");
 		}
 		fStream.close();
 		inBuf.setDataNum(inBuf.capacityBytes());

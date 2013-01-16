@@ -799,11 +799,12 @@ function BP_GET_EDITOR(g)
         cons:EditorWdl,
         tag:"div",
         onTarget:{ dragstart:EditorWdl.prototype.handleDragStart,
-        drag:EditorWdl.prototype.handleDrag, 
-        dragend:EditorWdl.prototype.handleDragEnd },
-        attr:{ id:MOD_TRAITS.eid_pfx+'panel'},
+                   drag:EditorWdl.prototype.handleDrag, 
+                   dragend:EditorWdl.prototype.handleDragEnd },
+        attr:{ id:MOD_TRAITS.eid_pfx+'panel' },
         ctx:{ w$:{ editor:'w$el' } },
-            iterate:{ it:dnIt, wdi:DNodeWdl.wdi }
+        
+              iterate:{ it:dnIt, wdi:DNodeWdl.wdi }
         };
     };
     EditorWdl.prototype = w$defineProto(EditorWdl,

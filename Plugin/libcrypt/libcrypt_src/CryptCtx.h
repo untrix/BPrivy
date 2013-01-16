@@ -12,10 +12,6 @@ namespace crypt
 {
 	using std::wstring;
 
-	/** Call this to initialize the library once. Initializes openssl. */
-	void	initLibcrypt	();
-	void	unloadLibcrypt	();
-
 	/*****************************************************************/
 	/*************************** CryptCtx ****************************/
 	/*****************************************************************/

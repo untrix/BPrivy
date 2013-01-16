@@ -8,6 +8,7 @@
 #include <string.h>
 #include <fstream>
 #include <libscrypt.h>
+#include <libcrypt.h>
 #include <CryptCtx.h>
 #include <CryptError.h>
 
@@ -38,6 +39,8 @@ int main(int argc, char* argv[])
 		printUsage(argv);
 		return 1;
 	}
+
+	crypt::initLibcrypt();
 
 	try {
 	if ((std::string("enc") == argv[1]) || (std::string("enc2") == argv[1]))

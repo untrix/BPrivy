@@ -63,10 +63,11 @@ namespace bp
  	const bp::ustring ACODE_RESOURCE_LOCKED		(L"ResourceLocked");
  	const bp::ustring ACODE_ACCESS_DENIED		(L"AccessDenied");
 	const bp::ustring ACODE_UNSUPPORTED			(L"Unsupported");
-	const bp::ustring ACODE_CRYPT_ERROR			(L"CryptoError");
+	const bp::ustring ACODE_BAD_PASSWD_OR_CRYPTINFO(L"BadPasswordOrCryptInfo");
+	const bp::ustring ACODE_BAD_CRYPTINFO		(L"BadCryptInfo");
+
 
 	const bp::ustring BPCODE_UNAUTHORIZED_CLIENT(L"UnauthorizedClient");
-	const bp::ustring BPCODE_WRONG_PASS			(L"WrongPass"); // Password too short or wrong.
 	const bp::ustring BPCODE_NEW_FILE_CREATED	(L"NewFileCreated");
 	const bp::ustring BPCODE_NO_MEM				(L"NoMem");
 	const bp::ustring BPCODE_INTERNAL_ERROR		(L"InternalError");
@@ -80,6 +81,7 @@ namespace bp
 	const bp::ustring BPCODE_FILE_TOO_BIG		(L"FileTooBig");
 	const bp::ustring BPCODE_INVALID_COPY_ARGS	(L"InvalidCopyArgs");
 	const bp::ustring BPCODE_BAD_FILE			(L"FileCorrupted");
+	const bp::ustring BPCODE_CRYPT_ERROR		(L"CryptError");
 
 	const bp::ustring MSG_EMPTY					(L"");
 
@@ -291,17 +293,44 @@ namespace bp
 		p->SetProperty(PROP_ERROR, m);
 	}
 
-	void HandleCryptError(const crypt::Error& e, bp::JSObject* p)
+	void HandleCryptError(crypt::Error& e, bp::JSObject* p)
 	{
 		bp::VariantMap m;
 		m.insert(PROP_ERRNAME, EXCEPTION_NAME);
-		m.insert(PROP_A_CODE, e.acode.empty() ? ACODE_CRYPT_ERROR : e.acode);
+		if (e.acode.empty())
+		{
+			if ((e.gcode==crypt::Error::CODE_BAD_PARAM) ||
+				(e.gcode==crypt::Error::CODE_OS_ERROR) ||
+				(e.gcode==crypt::Error::CODE_INTERNAL_ERROR) ||
+				(e.gcode == crypt::Error::CODE_FEATURE_NOT_SUPPORTED))
+			{
+				e.acode = ACODE_CANT_PROCEED;
+			}
+			else if (e.gcode == crypt::Error::CODE_NO_MEM)
+			{
+				e.acode = ACODE_RESOURCE_UNAVAILABLE;
+			}
+			else if (e.gcode == crypt::Error::CODE_CRYPTO_ERROR)
+			{
+				// Implies encrypt/decrypt failure on some FS operation. Most likely
+				// the password is bad or the key-file is wrong.
+				e.acode = ACODE_BAD_PASSWD_OR_CRYPTINFO;
+			}
+		}
+
+		if (!e.acode.empty()) {
+			m.insert(PROP_A_CODE, e.acode);
+		}
 		if (!e.gcode.empty()) {
 			m.insert(PROP_GENERIC_CODE, (e.gcode));
 		}
 		if (!e.gmsg.empty()) {
 			m.insert(PROP_GENERIC_MESSAGE, e.gmsg);
 		}
+		if (!e.smsg.empty()) {
+			m.insert(PROP_SYSTEM_MESSAGE, e.smsg);
+		}
+
 		p->SetProperty(PROP_ERROR, m);
 	}
 

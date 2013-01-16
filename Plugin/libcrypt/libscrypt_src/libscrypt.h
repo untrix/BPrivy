@@ -1,5 +1,5 @@
-#ifndef _H_LIBCRYPT_
-#define _H_LIBCRYPT_
+#ifndef _H_LIBSCRYPT_
+#define _H_LIBSCRYPT_
 
 #ifndef HAVE_CONFIG_H
 #define	HAVE_CONFIG_H 1

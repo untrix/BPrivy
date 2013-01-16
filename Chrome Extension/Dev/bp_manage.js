@@ -7,7 +7,8 @@
 
 /* JSLint directives */ 
 /*global $, console, window, BP_GET_CONNECT, BP_GET_CS_PLAT, IMPORT, BP_GET_COMMON, BP_GET_ERROR,
-  ls, BP_PLUGIN, BP_GET_EDITOR, BP_GET_W$, BP_GET_TRAITS, chrome, BP_GET_DBFS */
+  ls, BP_PLUGIN, BP_GET_EDITOR, BP_GET_W$, BP_GET_TRAITS, chrome, BP_GET_DBFS,
+  BP_GET_WALLET_FORM */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -27,6 +28,7 @@ var BP_MANAGE = (function ()
     g.BP_W$ = BP_GET_W$(g);
     g.BP_DBFS = BP_CS_PLAT.getBackgroundPage().BP_GET_DBFS(g);
     g.BP_EDITOR = BP_GET_EDITOR(g);
+    g.BP_WALLET_FORM = BP_GET_WALLET_FORM(g);
     /** @globals-end */
 
     /** @import-module-begin */
@@ -54,7 +56,7 @@ var BP_MANAGE = (function ()
     /** @import-module-end **/ m = null;
     
     /** @globals-begin */
-    var g_editor, g_dbName, g_dbPath;
+    var g_editor, g_dbName, g_dbPath, g_walletForm;
     /** @globals-end **/ 
     
     function createDB (dbName, dbDir, callbackFunc)
@@ -62,9 +64,22 @@ var BP_MANAGE = (function ()
         rpcToMothership({cm: BP_CONNECT.cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
     }
 
+    function createDB2 (dbName, dbDir, keyDir, k, callbackFunc)
+    {
+        rpcToMothership({cm: BP_CONNECT.cm_createDB, dbName:dbName, dbDir:dbDir,
+                         keyDir:keyDir, k:k},
+                        callbackFunc);
+    }
+
     function loadDB (dbPath, callbackFunc)
     {
         rpcToMothership({cm: BP_CONNECT.cm_loadDB, dbPath:dbPath}, callbackFunc);
+    }
+
+    function loadDB2 (dbPath, keyPath, k, callbackFunc)
+    {
+        rpcToMothership({cm: BP_CONNECT.cm_loadDB, dbPath:dbPath,  keyPath:keyPath, k:k},
+            callbackFunc);
     }
 
     function mergeInDB (dbPath, callbackFunc)
@@ -80,6 +95,24 @@ var BP_MANAGE = (function ()
     function mergeOutDB (dbPath, callbackFunc)
     {
         rpcToMothership({cm: BP_CONNECT.cm_mergeOutDB, dbPath:dbPath}, callbackFunc);
+    }
+
+    function mergeInDB2 (dbPath, keyPath, k, callbackFunc)
+    {
+        rpcToMothership({cm: BP_CONNECT.cm_mergeInDB, dbPath:dbPath, keyPath:keyPath, k:k},
+            callbackFunc);
+    }
+
+    function mergeDB2 (dbPath, keyPath, k, callbackFunc)
+    {
+        rpcToMothership({cm: BP_CONNECT.cm_mergeDB, dbPath:dbPath, keyPath:keyPath, k:k},
+            callbackFunc);
+    }
+
+    function mergeOutDB2 (dbPath, keyPath, k, callbackFunc)
+    {
+        rpcToMothership({cm: BP_CONNECT.cm_mergeOutDB, dbPath:dbPath, keyPath:keyPath, k:k},
+            callbackFunc);
     }
 
     function compactDB (callbackFunc)
@@ -251,10 +284,64 @@ var BP_MANAGE = (function ()
             }
             
             $('#refreshEditor').button('reset');
-            //$('#editorPane *').tooltip(); // leaks DOM nodes :(. I wonder what else in bootstrap leaks.
+            $('#editorPane *').tooltip(); // leaks DOM nodes :(. I wonder what else in bootstrap leaks.
         //});
     }
     
+    function destroyWalletForm()
+    {
+        if (g_walletForm) { 
+            g_walletForm.destroy();
+        }
+        else {
+            var w$form = g.BP_W$.w$get('#formWallet');
+            if (w$form) {
+                w$form.el.reset();
+                w$form.destroy();
+                g_walletForm = null;
+            }          
+        }
+
+        g_walletForm = null;
+    }    
+
+    function createWalletForm(options)
+    {
+        var ctx,
+            walletForm,
+            temp;
+            
+        if (!(options && options.containerID)) { return; }
+
+        // Create the Widget.
+        ctx = {
+            BP_PLUGIN: BP_PLUGIN,
+            loadDB2: loadDB2,
+            createDB2: createDB2,
+            mergeDB2: mergeDB2,
+            mergeInDB2: mergeInDB2,
+            mergeOutDB2: mergeOutDB2,
+            updateDash: updateDash,
+            callbackHandleError: callbackHandleError,
+            destroyWalletForm: destroyWalletForm
+        };
+        walletForm = g.BP_W$.w$exec(g.BP_WALLET_FORM.WalletFormWdl_wdt, ctx);
+        
+        BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
+        
+        if (g_walletForm) {
+            g_walletForm.destroy();
+            g_walletForm = null;
+        }
+        
+        g_walletForm = walletForm;
+        $(g_walletForm.el).appendTo('#'+options.containerID);
+        
+        $('#'+options.containerID).tooltip(); // used to leak DOM nodes in version 2.0.4.
+        
+        return g_walletForm;
+    }
+
     function onload()
     {              
         BP_CONNECT.getDBPath(function(resp)
@@ -262,12 +349,6 @@ var BP_MANAGE = (function ()
             updateDash(resp);
         });
 
-        if (localStorage.dbDontSaveLocation) {
-            $('#dbSaveLocation')[0].checked = false;
-        }
-        else {
-            $('#dbSaveLocation')[0].checked = true;
-        }
         // Enable button toggling effects
         $('.nav-tabs').button();
         //$("#nav-list a[data-nav]").click(function (e)
@@ -518,22 +599,10 @@ var BP_MANAGE = (function ()
             // //$(this).trigger('click');
             // this.focus();
         // });
-        addEventListeners('#dbSaveLocation', 'change', function (e)
-        {
-            if (this.checked) {
-                localStorage["db.path"] = $('#dbPath').attr('data-path');
-                localStorage['dbDontSaveLocation'] = '';
-            }
-            else {
-                localStorage["db.path"] = '';
-                localStorage['dbDontSaveLocation'] = 'true';
-            }
-        });
-
-        addEventListeners('#dbClose, #dbClose2', 'click', function (e)
+        function closeDB(e)
         {
             //capture the id in the closure for using from callback
-            var id = e.currentTarget.getAttribute('id');
+            var id = e ? e.currentTarget.getAttribute('id') : undefined;
             
             unloadDB(function (resp)
             {
@@ -550,7 +619,8 @@ var BP_MANAGE = (function ()
                     callbackHandleError(resp);
                 }
             });
-        });
+        }
+        addEventListeners('#dbClose, #dbClose2', 'click', closeDB);
 
         addEventListeners('#editB', 'click',
         function initEditor(e)
@@ -596,7 +666,61 @@ var BP_MANAGE = (function ()
             e.stopPropagation();
             e.preventDefault();
         });
-        //$('#content *').tooltip();
+        
+        
+        addEventListeners('#btnWalletOpen', 'click', function(e)
+        {
+            var w$form = createWalletForm({containerID:'walletFormContainer'});
+            if (w$form) {
+                w$form.initOpen();
+                w$form.show();
+            }
+        });
+        
+        addEventListeners('#btnWalletCreate', 'click', function(e)
+        {
+            var w$form = createWalletForm({containerID:'walletFormContainer'});
+            if (w$form) {
+                w$form.initCreate();
+                w$form.show();
+            }
+        });
+        
+        addEventListeners('#btnWalletClose', 'click', function(e)
+        {
+            destroyWalletForm();
+            closeDB();
+        });
+
+        addEventListeners('#btnMerge', 'click', function(e)
+        {
+            var w$form = createWalletForm({containerID:'mergeFormContainer'});
+            if (w$form) {
+                w$form.initMerge();
+                w$form.show();
+            }
+        });
+        
+        addEventListeners('#btnMergeIn', 'click', function(e)
+        {
+            var w$form = createWalletForm({containerID:'mergeInOutContainer'});
+            if (w$form) {
+                w$form.initMergeIn();
+                w$form.show();
+            }
+        });
+        
+        addEventListeners('#btnMergeOut', 'click', function(e)
+        {
+            var w$form = createWalletForm({containerID:'mergeInOutContainer'});
+            if (w$form) {
+                w$form.initMergeOut();
+                w$form.show();
+            }
+        });
+        
+
+        $('#content *').tooltip();
     }
    
     // Assemble the interface

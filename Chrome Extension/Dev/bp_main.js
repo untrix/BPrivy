@@ -352,7 +352,7 @@ var BP_MAIN = (function()
                     break;
                 case cm_loadDB:
                     BPError.push("LoadDB");
-                    dbPath = FILE_STORE.loadDB(rq.dbPath);
+                    dbPath = FILE_STORE.loadDB(rq.dbPath, rq.keyPath, rq.k);
                     funcSendResponse(makeDashResp(Boolean(dbPath)));
                     break;
                 case BP_CONNECT.cm_unloadDB:
@@ -362,17 +362,17 @@ var BP_MAIN = (function()
                     break;
                 case BP_CONNECT.cm_mergeInDB:
                     BPError.push("MergeInDB");
-                    result = FILE_STORE.mergeInDB(rq.dbPath);
+                    result = FILE_STORE.mergeInDB(rq.dbPath, rq.keyPath, rq.k);
                     funcSendResponse(makeDashResp(result));
                     break;
                 case BP_CONNECT.cm_mergeOutDB:
                     BPError.push("MergeOutDB");
-                    result = FILE_STORE.mergeOutDB(rq.dbPath);
+                    result = FILE_STORE.mergeOutDB(rq.dbPath, rq.keyPath, rq.k);
                     funcSendResponse(makeDashResp(result));
                     break;
                 case BP_CONNECT.cm_mergeDB:
                     BPError.push("MergeDB");
-                    result = FILE_STORE.mergeDB(rq.dbPath);
+                    result = FILE_STORE.mergeDB(rq.dbPath, rq.keyPath, rq.k);
                     funcSendResponse(makeDashResp(result));
                     break;
                 case BP_CONNECT.cm_compactDB:
@@ -387,7 +387,7 @@ var BP_MAIN = (function()
                     break;
                 case cm_createDB:
                     BPError.push("CreateDB");
-                    dbPath = FILE_STORE.createDB(rq.dbName, rq.dbDir);
+                    dbPath = FILE_STORE.createDB(rq.dbName, rq.dbDir, rq.keyDir, rq.k);
                     funcSendResponse(makeDashResp(true));
                     break;
                 case cm_getDBPath:
@@ -598,12 +598,13 @@ var BP_MAIN = (function()
           BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');
           if (!BP_PLUGIN.getpid) {
               BP_ERROR.warn(
-                  "UWallet: Sorry, you either haven't installed the BPrivy plugin or your"+
-                  " operating system is not supported. Please install the plugin from "+
+                  "Untrix Wallet: Sorry, you haven't yet installed a necessary plugin. "+
+                  "Please install the plugin from "+
                   "http://www.untrix.com/downloads, then restart your browser'");
               throw new BPError("Plugin Not Loaded");
           }
           BP_ERROR.logdebug("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+          //BP_PLUGIN.clearCryptCtx();
         }
         
         try

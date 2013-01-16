@@ -22,6 +22,7 @@ namespace crypt
 
 		wstring gcode;
 		wstring gmsg;
+		wstring smsg;
 		wstring acode;
 		unsigned int errc;
 
@@ -31,16 +32,13 @@ namespace crypt
 							   const wstring& msg = MSG_EMPTY);
 
 		// Error Codes
-		static const wstring	CODE_BAD_PARAM;
-		static const wstring	CODE_NO_MEM;
-		static const wstring	CODE_OS_ERROR;
-		static const wstring	CODE_CRYPTO_ERROR;
-		static const wstring	CODE_INTERNAL_ERROR;
-		static const wstring	CODE_NO_CSP;
-		static const wstring	CODE_BAD_FMT;
-		static const wstring	CODE_FEATURE_NOT_SUPPORTED;
-		static const wstring	CODE_BAD_FILE;
-		static const wstring	CODE_BAD_DATA;
+		static const wstring	CODE_BAD_PARAM; // acode_cant_proceed / internal-error
+		static const wstring	CODE_OS_ERROR; // acode_cant_proceed / internal-error
+		static const wstring	CODE_INTERNAL_ERROR; // acode_cant_proceed
+		static const wstring	CODE_FEATURE_NOT_SUPPORTED; // acode_cant_proceed
+		static const wstring	CODE_NO_MEM; // possibly user retriable error
+		static const wstring	CODE_CRYPTO_ERROR; // user-retriable situation
+		static const wstring	CODE_BAD_DATA; // possibly user-retriable (corrupted file/data).
 
 		static const wstring	MSG_EMPTY;
 	};

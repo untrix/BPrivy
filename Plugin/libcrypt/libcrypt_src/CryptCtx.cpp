@@ -31,11 +31,8 @@ namespace crypt
 	const wstring Error::CODE_OS_ERROR = L"OSError";
 	const wstring Error::CODE_CRYPTO_ERROR = L"CryptoError";
 	const wstring Error::CODE_INTERNAL_ERROR = L"InternalError";
-	const wstring Error::CODE_NO_CSP = L"NoCSP";
-	const wstring Error::CODE_BAD_FMT = L"WrongFormatVer";
 	const wstring Error::CODE_FEATURE_NOT_SUPPORTED = L"FeatureNotSupported";
 	const wstring Error::MSG_EMPTY = L"";
-	const wstring Error::CODE_BAD_FILE = L"FileCorrupted";
 	const wstring Error::CODE_BAD_DATA = L"DataCorrupted";
 
 	void
@@ -44,7 +41,9 @@ namespace crypt
 		unsigned long err = ERR_peek_last_error();
 		ERR_clear_error();
 		if (err) {
-			throw Error(Error::CODE_CRYPTO_ERROR, ERR_error_string(err, NULL));
+			Error ex(Error::CODE_CRYPTO_ERROR);
+			ex.smsg = LocaleToUnicode(ERR_error_string(err, NULL));
+			throw ex;
 		}
 		else {
 			throw Error(Error::CODE_INTERNAL_ERROR);
@@ -142,7 +141,7 @@ namespace crypt
 
 		const CryptInfo& info = pCtx->m_info;
 		if (!deriveKey(k, info.m_logN, info.m_r, info.m_p, pCtx->m_dk, info.m_salt)) {
-			throw Error(Error::CODE_OS_ERROR, L"Could not derive key");
+			throw Error(Error::CODE_CRYPTO_ERROR, L"Could not derive key");
 		}
 		k.zero();
 		// Generate random key that will be used for data encryption.

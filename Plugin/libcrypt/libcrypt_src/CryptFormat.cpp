@@ -21,7 +21,7 @@ namespace crypt
 		}
 		else {
 			// Max of 4GB data is supported.
-			throw Error(Error::CODE_BAD_PARAM, L"Data size is too large");
+			throw Error(Error::CODE_FEATURE_NOT_SUPPORTED, L"Data size is too large");
 		}
 	}
 	size_t
@@ -66,10 +66,10 @@ namespace crypt
 		Parser parse(ciBlob.m_buf);
 		uint8_t header_first = parse.GetU8();
 		// LS Nibble represents serialization format version.
-		Error::Assert((header_first&0x0F)==VAL_FMT_VER, Error::CODE_BAD_FMT, L"Error while parsing CipherBlob header");
+		Error::Assert((header_first&0x0F)==VAL_FMT_VER, Error::CODE_BAD_DATA, L"Error while parsing CipherBlob header");
 		// MS Nibble has size of the data_size field of the header.
 		unsigned int size_field_size = ( (header_first&0xF0) >> 4 );
-		Error::Assert(size_field_size<=4, Error::CODE_BAD_FMT, L"Error while parsing CipherBlob header");
+		Error::Assert(size_field_size<=4, Error::CODE_BAD_DATA, L"Error while parsing CipherBlob header");
 
 		size_t ivSize = parse.GetU8();
 		ByteBuf iv(ivSize);
@@ -273,13 +273,12 @@ namespace crypt
 		{
 			Parser parse(inbuf);
 			if ((parse.GetU8() != VAL_FMT_VER)) {
-				throw Error(Error::CODE_BAD_FILE, L"Bad CryptInfo File/Data");
+				throw Error(Error::CODE_BAD_DATA, L"Bad CryptInfo File/Data");
 			}
 		}
 		catch (Error& e)
 		{
 			if (e.gcode == Error::CODE_BAD_DATA) {
-				e.gcode = Error::CODE_BAD_FILE;
 				e.gmsg = L"Bad CryptInfo File/Data. " + e.gmsg;
 			}
 			if (e.gcode == Error::CODE_FEATURE_NOT_SUPPORTED) {
@@ -406,7 +405,7 @@ namespace crypt
 		{
 			Parser parse(inbuf);
 			if ((parse.GetU8() != VAL_FMT_VER)) {
-				throw Error(Error::CODE_BAD_FMT);
+				throw Error(Error::CODE_BAD_DATA);
 			}
 			obj.m_logN = parse.GetU8();
 			obj.m_r = parse.GetU8();
@@ -423,7 +422,6 @@ namespace crypt
 		catch (Error& e)
 		{
 			if (e.gcode == Error::CODE_BAD_DATA) {
-				e.gcode = Error::CODE_BAD_FILE;
 				e.gmsg = L"Bad CryptInfo File/Data. " + e.gmsg;
 			}
 			if (e.gcode == Error::CODE_FEATURE_NOT_SUPPORTED) {
