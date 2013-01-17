@@ -52,6 +52,7 @@ namespace bp
 	const bp::ustring PROP_DATA					(L"dat");
 	const bp::ustring PROP_CRYPT_CTX			(L"cryptCtx");
 	const bp::ustring PROP_NULL_CRYPT			(L"nullCrypt");
+	const bp::ustring PROP_SECURE_DELETE		(L"secureDelete");
 
 	const bp::ustring ACODE_UNKNOWN				(L"Unknown");
  	const bp::ustring ACODE_UNMAPPED			(L"Unmapped");

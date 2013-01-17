@@ -103,10 +103,10 @@ namespace crypt
 	}
 
 	const CryptCtx*	CryptCtx::GetP(const ucs& handle) 
-	{ 
+	{
 		try {
 			// NOTE: Return value maybe NULL even in case of a valid map
-			// entry.
+			// entry - i.e. in the cryptInfoNull case.
 			return s_ctxMap.at(handle);
 		}
 		catch (const std::out_of_range&)
@@ -133,8 +133,10 @@ namespace crypt
 	const CryptCtx*
 	CryptCtx::Create(const ucs& handle, Buf<char>& k, CipherEnum cipher, unsigned int key_len)
 	{
-		//unsigned int handle = 0;
-		Error::Assert((!Exists(handle)), Error::CODE_BAD_PARAM, L"CryptCtx::Create. Handle already exists");
+		// NOTE: We're ensuring that a null-string will never be a valid handle. This makes
+		// it possible to supply a null-string handle as a dummy handle in the file-system routines
+		// resting assured that no encrypt/decrypt operations will take place.
+		Error::Assert( (!handle.empty()) && (!Exists(handle)), Error::CODE_BAD_PARAM, L"CryptCtx::Create. Handle already exists");
 
 		CryptCtx* pCtx = new CryptCtx(cipher, key_len);
 		if (!pCtx) {throw Error(Error::CODE_NO_MEM);}

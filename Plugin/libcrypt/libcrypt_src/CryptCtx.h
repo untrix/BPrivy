@@ -21,9 +21,19 @@ namespace crypt
 		typedef std::wstring ucs;
 		static CipherEnum			CipherStrToEnum		(const wstring& cipher);
 		/**
-		*	Creates and stores a crypt-ctx and returns its handle. This handle should
-		*	be returned to Javascript for use later with the API. The k parameter is
+		*	Creates and stores a crypt-ctx against the supplied handle. The k parameter is
 		*   zeroed out if the call is successful. Throws exceptions in case of errors.
+		* @param handle. A Unicode string (UCS16 for Windows and UCS32 for Mac/Unix/Linux).
+		*		 A empty string is not allowed while creating a handle hence no context
+		*        can exist against a empty string handle. However, a empty-string can be
+		*	     passed into the GetP/Exists routines with the result that no crypt-context
+		*        will be found. This technique is used to pass a empty-handle to routines that
+		*        optionally require a valid crypt-handle. This will affect a bypass of the
+		*        encryption/decryption layer in various BPrivyAPI routines that have been written
+		*        to bypass the encryption layer of CryptCtx::GetP returned NULL. For e.g.
+		*        BPrivyAPI::zeroFile uses this technique
+		*        to indicate to BPrivyAPI::overwriteFile that the data in the zero-buffer
+		*        should not be encrypted before writing to file.
 		* @param k. passwd. Gets zeroe'd out if the call is successful.
 		* @param cipher. The cipher to use for en/decryption.
 		* @param key_len. The length of the key to be generated for en/decryption.
@@ -43,7 +53,9 @@ namespace crypt
 		static void					Load				(const ucs& handle,
 														 Buf<char>& k,
 														 const Buf<uint8_t>& cryptInfo);
+		/** If handle is an empty string, a NULL value is returned. See documentation for Create. */
 		static const CryptCtx*		GetP				(const ucs& handle);
+		/** If handle is an empty string, a false value is returned. See documentation for Create. */
 		static bool					Exists				(const ucs& handle);
 		static void					Destroy				(const ucs& handle);
 

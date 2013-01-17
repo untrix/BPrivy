@@ -70,6 +70,11 @@ public:
 	bool appendFile(const bp::ucs& dbPath, const bp::ucs& path_s, const std::string& data, FB::JSObjectPtr inOut);
 	bool readFile(const bp::ucs& dbPath, const bp::ucs& path, FB::JSObjectPtr inOut);
 	bool createDir(const bp::ucs& path, FB::JSObjectPtr);
+	/** 
+	 *  rm works on both directories and file paths. For file delete you may specify a property called
+	 *	'secureDelete' in the <out> param with value true or false. If its value is true, then the file
+	 *   will be zeroe'd out before deletion. Right now the zeroing is performed 3 times.
+	 */
 	bool rm(const bp::ucs& path, FB::JSObjectPtr out);
 	// Note: rename will not clobber directories. For files, it will do so iff 'fclobber' was true.
 	// If the renaming is for files, then it will obtain write locks on both files and ensure that no one is
@@ -112,6 +117,7 @@ private:
 	bool _chooseFileXP(bp::JSObject* p);
 	bool _chooseFolderXP(bp::JSObject* p);
 	bool _choose(bp::JSObject* p, bool chooseFile = false);
+	void zeroFile(const bfs::path& path, bp::JSObject* p, size_t num=1);
 	/** Helper to copy */
 	bool overwriteFile(const bfs::path& db_path, const bfs::path& path, 
 					   crypt::ByteBuf& text, bool exists,

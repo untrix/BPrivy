@@ -309,12 +309,12 @@ function BP_GET_DBFS(g)
                    // if (!BP_PLUGIN.chooseFolder(o)) {throw new BPError(o.err);}
                    
                    path = keyDir + path_sep + dbName + mod.ext_Key;
-                   BP_ERROR.alert("Key will be stored in: " + path + 
-                                  ". You may move/copy it as you like.");
+                   // BP_ERROR.alert("Key will be stored in: " + path + 
+                                  // ". You may move/copy it as you like.");
                 }
                 else {
                     path = dbPath + path_sep + dbName + mod.ext_Key;
-                    BP_ERROR.alert("Encryption key will be stored along with the passwords");
+                    // BP_ERROR.alert("Encryption key will be stored along with the passwords");
                 }
                 
                 return path;
@@ -554,7 +554,7 @@ function BP_GET_DBFS(g)
                 dbStats.iterEnt(this_null, dtl_null, cats_null,
                 function anonRmDirEnt(dt, cat, fname, dirEnt)
                 {
-                    var o = {},
+                    var o = {secureDelete:true},
                         fpath = DB_FS.makeDTDirPath(dt, dbStats.dbPath) + fname;
         
                     if ( (!keepDTFiles) || (fname !== DB_FS.getDTFileName(dt)) )

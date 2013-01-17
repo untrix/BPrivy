@@ -400,6 +400,25 @@ bool BPrivyAPI::_createDir(bfs::path& path, bp::JSObject* p)
 	return false;
 }
 
+void BPrivyAPI::zeroFile(const bfs::path& path, bp::JSObject* p, size_t num)
+{
+	try
+	{
+		size_t fSize = bfs::file_size(path);
+		if (fSize>0) 
+		{
+			crypt::ByteBuf zeroBuf(fSize); // constructor zeroes it out.
+			bfs::path nullPath;
+
+			for (; num>0; num--)
+			{
+				overwriteFile(nullPath, path, zeroBuf, true, p);
+			}
+		}
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(p)
+}
+
 bool BPrivyAPI::_rm(bfs::path& path, bp::JSObject* p)
 {
 	static const std::string allowedExt[] = {".3ao", ".3ac", ".3am", ".3at", ""};
@@ -418,11 +437,23 @@ bool BPrivyAPI::_rm(bfs::path& path, bp::JSObject* p)
 		}
 		else if (bfs::is_directory(stat))
 		{
+			// TODO: Add secureDelete option here.
 			bfs::remove_all(path);
 			return true;
 		}
 		else if (bfs::is_regular_file(stat))
 		{
+			bool sDelete = false;
+			if (p->HasProperty(PROP_SECURE_DELETE)) 
+			{
+				FB::variant t_var = p->GetProperty(PROP_SECURE_DELETE);
+				sDelete = t_var.convert_cast<bool>();
+			}
+			if (sDelete) 
+			{ 
+				// zero the file for secure delete.
+				zeroFile(path, p);
+			}
 			return removeFile(path);
 		}
 		else if (stat.type() == bfs::reparse_file)
@@ -685,12 +716,12 @@ BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath
 		BPError::Assert((pCtx!=NULL), ACODE_CANT_PROCEED, BPCODE_CRYPT_ERROR, 
 			L"Could not create CryptCtx");
 		pCtx->serializeInfo(outBuf);
-
-		bfs::basic_ofstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-		fStream.write(outBuf, outBuf.dataNum());
-		fStream.flush();
-		fStream.close();
-		in_out->SetProperty(PROP_DB_PATH, ctxHandle);
+		overwriteFile(bfs::path(), cryptInfoFilePath, outBuf, false, in_out);
+		//bfs::basic_ofstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+		//fStream.write(outBuf, outBuf.dataNum());
+		//fStream.flush();
+		//fStream.close();
+		in_out->SetProperty(PROP_CRYPT_CTX, ctxHandle);
 		return true;
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(in_out)

@@ -52,6 +52,7 @@ namespace bp
 	extern const bp::ustring PROP_SUFFIX;
 	extern const bp::ustring PROP_CRYPT_CTX;
 	extern const bp::ustring PROP_NULL_CRYPT;
+	extern const bp::ustring PROP_SECURE_DELETE;
 
 	///////////// USER RECOVERABLE ERRORS ///////////
 	/***** Actionable Codes. GENERIC & System Error Codes are mapped to one of these *****/

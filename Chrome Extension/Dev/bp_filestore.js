@@ -130,6 +130,13 @@ function BP_GET_FILESTORE(g)
         if (!BP_PLUGIN.readFile(dbPath, filePath, o))
         {
             BP_ERROR.logwarn(o.err);
+            if (o.err) {
+                if ((o.err.acode === 'BadPasswordOrCryptInfo') || (o.err.acode === 'BadCryptInfo'))
+                {
+                    throw new BPError(o.err);
+                }
+            }
+
             return false;
         }
         
@@ -280,8 +287,10 @@ function BP_GET_FILESTORE(g)
                             }
                             catch (e) 
                             {
-                                var bpe = new BPError(e),
-                                    oldPath = dtDirPath + name,
+                                if (e.err.acode && ((e.err.acode === 'BadPasswordOrCryptInfo') || (e.err.acode === 'BadCryptInfo'))) {
+                                    throw new BPError(e);
+                                }
+                                var oldPath = dtDirPath + name,
                                     newPath = dtDirPath + DB_FS.renameBad(name);
                                 dbStats.putBad(dt, name, f[name]);
                             }
@@ -715,7 +724,7 @@ function BP_GET_FILESTORE(g)
     
     function createDB(name, dir, keyDir, k) // throws
     {
-        var dbPath, i, k,
+        var dbPath, i, k, keyPath,
             o = {};
             
         if (DB_FS.insideDB(dir)) {
@@ -723,13 +732,8 @@ function BP_GET_FILESTORE(g)
         }
         
         dbPath = DB_FS.makeDBPath(name, dir);
-
-        if (!BP_PLUGIN.createCryptCtx(k,
-            DB_FS.makeCryptInfoPath(dbPath, name, keyDir), 
-            dbPath, o)) {
-            throw new BPError(o.err);
-        }
-
+        keyPath = DB_FS.makeCryptInfoPath(dbPath, name, keyDir);
+        
         try
         {
             // Create the directories.
@@ -737,6 +741,11 @@ function BP_GET_FILESTORE(g)
             if (BP_PLUGIN.createDir(dbPath,o))
             {
                 // Create the cryptInfo file and context
+                o={};
+                if (!BP_PLUGIN.createCryptCtx(k,keyPath,dbPath,o)) {
+                    throw new BPError(o.err);
+                }
+
                 o={};
                 if (!k) {
                     //k = requestKey(dbPath);
@@ -748,10 +757,7 @@ function BP_GET_FILESTORE(g)
                     var p = DB_FS.makeDTDirPath(dt, dbPath);
                     if (!BP_PLUGIN.createDir(p,o)) 
                     {
-                        var err = o.err;
-                        o={}; 
-                        BP_PLUGIN.rm(dbPath, o);
-                        throw new BPError(err);
+                        throw new BPError(o.err);
                     }
                 });
             }
@@ -765,6 +771,8 @@ function BP_GET_FILESTORE(g)
         catch (exp) {
             o = {};
             BP_PLUGIN.destroyCryptCtx(dbPath, o);
+            BP_PLUGIN.rm(keyPath, {secureDelete:true});
+            BP_PLUGIN.rm(dbPath);
             throw exp;
         }
         
