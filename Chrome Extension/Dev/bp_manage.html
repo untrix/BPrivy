@@ -61,6 +61,7 @@
                     <button id="btnWalletClose" type="button" class="btn" title="Close the open Wallet">Close</button>
                     <button id="btnWalletCreate" type="button" class="btn btn-success" title="Create a new Wallet">Create</button>
                     <button id="btnWalletDupe" disabled type="button" class="btn btn-info" title="Make a copy of the open Wallet">Duplicate</button>
+                    <button id="btnWalletReload" disabled type="button" class="btn btn-info" title="Reload the open Wallet">Reload</button>
                   </div>
                 </fieldset>
 
@@ -198,6 +199,15 @@
                     <input disabled id="stats" style="cursor: default" class="uneditable-input input-medium dash-text">
                   </div>
                 </fieldset>
+
+                <fieldset class="control-group">
+                  <label class="control-label">Secure Delete Wallet</label>
+                  <div class="controls">
+                    <button disabled id="dbDelete" type="button" class="btn btn-primary" data-loading-text="Deleting...">
+                      Secure Delete</button>
+                  </div>
+                </fieldset>
+
               </div>
             </div>
             <div class="tab-pane" id="help-pane">

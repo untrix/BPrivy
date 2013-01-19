@@ -685,7 +685,7 @@ function BP_GET_FILESTORE(g)
         
         buf.push(ctx.traits.toCSV(actn));
         if (buf.length>=1000) {
-            buf.flush(null, ctx.fpath);
+            buf.flush("", ctx.fpath);
         }
     }
     
@@ -704,7 +704,7 @@ function BP_GET_FILESTORE(g)
         buf = new RecsBuf("\n");
         buf.push(traits.csvHeader());
         MEMSTORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits});
-        buf.flush(null, fpath);
+        buf.flush("", fpath);
     }
     
     function exportCSV(dirPath, obfuscated)

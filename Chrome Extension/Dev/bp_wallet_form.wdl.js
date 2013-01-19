@@ -1,0 +1,613 @@
+/**
+ * @preserve
+ * @author Sumeet Singh
+ * @mail sumeet@untrix.com
+ * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
+ */
+
+/* JSLint directives */
+
+/*global $, IMPORT */
+
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
+  undef:false, vars:true, white:true, continue: true, nomen:true */
+
+/**
+ * @ModuleBegin WALLET_FORM
+ */
+function BP_GET_WALLET_FORM(g)
+{
+    "use strict";
+    var window = null, document = null, console = null,
+        g_doc = g.g_win.document;
+
+    var m;
+    /** @import-module-begin Common */
+    m = g.BP_COMMON;
+    var BP_COMMON = IMPORT(m);
+    /** @import-module-begin CSPlatform */
+        m = IMPORT(g.BP_CS_PLAT);
+    var CS_PLAT = IMPORT(g.BP_CS_PLAT),
+        rpcToMothership = IMPORT(CS_PLAT.rpcToMothership),
+        addEventListeners = IMPORT(m.addEventListeners), // Compatibility function
+        addEventListener = IMPORT(m.addEventListener); // Compatibility function
+    /** @import-module-begin W$ */
+    m = IMPORT(g.BP_W$);
+    var BP_W$ = m,
+        w$exec = IMPORT(m.w$exec),
+        w$defineProto = IMPORT(m.w$defineProto),
+        Widget = IMPORT(m.Widget),
+        w$undefined = IMPORT(m.w$undefined);
+    /** @import-module-begin Error */
+    m = g.BP_ERROR;
+    var BP_ERROR = IMPORT(m),
+        BPError = IMPORT(m.BPError);
+    /** @import-module-end **/    m = null;
+
+    /** @globals-begin */
+    var g_dialog;
+    /** @globals-end **/
+
+    //////////////// Widget: fieldsetDBName //////////////////
+    function fieldsetDBName() {}
+    fieldsetDBName.wdt = function (ctx)
+    {        
+        return {
+        tag:'fieldset',
+        cons:fieldsetDBName,
+        ref:'fieldsetDBName',
+        //ctx:{ w$:{ fieldsetDBName:'w$el' } },
+        addClass:'control-group',
+            children:[
+            {html:'<label class="control-label">Name</label>'},
+            {tag:'div', addClass:'controls',
+                children:[
+                {tag:'input',
+                 ref:'dbName',//ctx:{ w$:{ dbName:'w$el' } }
+                 attr:{ type:'text', placeholder:"Type Wallet Name Here", pattern:".{4,}",
+                 title:"Please enter a name for the new Wallet that you would like to create. "+
+                       "Example: <i>Tony's Wallet</i>"
+                 },
+                 prop:{ required:true },
+                 addClass:"input-medium"
+                }]
+            }
+            ]
+        };
+    };
+    fieldsetDBName.prototype = w$defineProto(fieldsetDBName,{});
+        
+    //////////////// Widget: fieldsetChooseDB //////////////////
+    function fieldsetChooseDB() {}
+    fieldsetChooseDB.wdt = function (ctx)
+    {
+        //////////////// Widget: checkSaveDBLocation //////////////////
+        function checkSaveDBLocation() {}
+        checkSaveDBLocation.wdt = function(ctx)
+        {
+            return {
+            tag:'label',
+            addClass:'checkbox',
+            attr:{ title:'If checked, the Wallet location will be saved on this computer and '+
+            'automatically selected the next time. For privacy and security, uncheck it if this is not your computer.'
+            },
+                children:[
+                {tag:'input',
+                 attr:{ type:'checkbox' },
+                 prop:{ checked:true },
+                 ref:'checkSaveDBLocation'// ctx:{ w$:{ checkSaveDBLocation:'w$el' } }
+                }
+                ],
+            _text:'Remember Me'
+            };
+        };
+        checkSaveDBLocation.prototype = w$defineProto(checkSaveDBLocation, {});
+        
+        //////////////// Widget: btnChooseDB //////////////////
+        function btnChooseDB() {}
+        btnChooseDB.wdt = function (ctx)
+        {
+            return {
+            tag:'button',
+            attr:{ type:'button' },
+            addClass:'btn btn-small btn-primary',
+            text:'Browse',
+            ref:'btnChooseDB'//ctx:{ w$:{ btnChooseDB:'w$el' } },
+            };
+        };
+        btnChooseDB.prototype = w$defineProto(btnChooseDB, {});
+
+        return {
+        tag:'fieldset',
+        cons:fieldsetChooseDB,
+        ref:'fieldsetChooseDB', //ctx:{ w$:{ fieldsetChooseDB:'w$el' } },
+        addClass:'control-group',
+            children:[
+            {html:'<label class="control-label">Wallet Location</label>'},
+            {tag:'div', addClass:'controls form-inline',
+                children:[
+                btnChooseDB.wdt,
+                {tag:'input',
+                 attr:{ type:'text', placeholder:"Wallet Folder Location" },
+                 prop:{ required:true },
+                 addClass:"input-xlarge",
+                 ref:'inputDBPath' //ctx:{ w$:{ inputDBPath:'w$el' } }
+                },
+                checkSaveDBLocation.wdt
+                ]
+            }
+            ],
+        _cull:['inputDBPath', 'btnChooseDB', 'checkSaveDBLocation']
+        // _iface:{ ctx:{ inputDBPath:'inputDBPath',
+                 // btnChooseDB:'btnChooseDB',
+                 // checkSaveDBLocation:'checkSaveDBLocation'
+                 // } }
+        };
+    };
+    fieldsetChooseDB.prototype = w$defineProto(fieldsetChooseDB,{});
+    
+
+    //////////////// Widget: fieldsetChooseKey //////////////////
+    function fieldsetChooseKey() {}
+    fieldsetChooseKey.wdt = function (ctx)
+    {
+        //////////////// Widget: checkInternalKey //////////////////
+        function checkInternalKey() {}
+        checkInternalKey.wdt = function(ctx)
+        {
+            return {
+            tag:'label',
+            addClass:'checkbox',
+                children:[
+                {tag:'input',
+                 attr:{ type:'checkbox' },
+                 prop:{ checked:false },
+                 ref:'checkInternalKey', //ctx:{ w$:{ checkInternalKey:'w$el' } }
+                }
+                ],
+            _text:'Key is saved within the Wallet.'
+            };
+        };
+        checkInternalKey.prototype = w$defineProto(checkInternalKey, {});
+        
+        //////////////// Widget: btnChooseKey //////////////////
+        function btnChooseKey() {}
+        btnChooseKey.wdt = function (ctx)
+        {
+            return {
+            tag:'button',
+            attr:{ type:'button' },
+            addClass:'btn btn-small btn-primary',
+            text:'Browse',
+            ref:'btnChooseKey', //ctx:{ w$:{ btnChooseKey:'w$el' } },
+            };
+        };
+        btnChooseKey.prototype = w$defineProto(btnChooseKey, {});
+
+        return {
+        tag:'fieldset',
+        cons:fieldsetChooseKey,
+        ref:'fieldsetChooseKey', //ctx:{ w$:{ fieldsetChooseKey:'w$el' } },
+        addClass:'control-group',
+            children:[
+            {html:'<label class="control-label">Key File</label>'},
+            {tag:'div', addClass:'controls form-inline',
+                children:[
+                btnChooseKey.wdt,
+                {tag:'input',
+                 attr:{ type:'text', placeholder:"Key File Path" },
+                 prop:{ required:true },
+                 addClass:"input-xlarge",
+                 ref:'inputKeyPath', //ctx:{ w$:{ inputKeyPath:'w$el' } }
+                },
+                checkInternalKey.wdt
+                ]
+            }
+            ],
+        _cull:['inputKeyPath', 'btnChooseKey', 'checkInternalKey']
+        // _iface:{ ctx:{ inputKeyPath:'inputKeyPath',
+                 // btnChooseKey:'btnChooseKey',
+                 // checkInternalKey:'checkInternalKey'
+                 // } }
+        };
+    };
+    fieldsetChooseKey.prototype = w$defineProto(fieldsetChooseKey,{});
+
+
+    //////////////// Widget: fieldsetChooseKeyFolder //////////////////
+    function fieldsetChooseKeyFolder() {}
+    fieldsetChooseKeyFolder.wdt = function (ctx)
+    {
+        //////////////// Widget: checkInternalKey //////////////////
+        function checkInternalKey() {}
+        checkInternalKey.wdt = function(ctx)
+        {
+            return {
+            tag:'label',
+            addClass:'checkbox',
+                children:[
+                {tag:'input',
+                 attr:{ type:'checkbox' },
+                 prop:{ checked:false },
+                 ref:'checkInternalKey', //ctx:{ w$:{ checkInternalKey:'w$el' } }
+                }
+                ],
+            _text:'Key is saved within the Wallet.'
+            };
+        };
+        checkInternalKey.prototype = w$defineProto(checkInternalKey, {});
+        
+        //////////////// Widget: btnChooseKeyFolder //////////////////
+        function btnChooseKeyFolder() {}
+        btnChooseKeyFolder.wdt = function (ctx)
+        {
+            return {
+            tag:'button',
+            attr:{ type:'button' },
+            addClass:'btn btn-small btn-primary',
+            text:'Browse',
+            ref:'btnChooseKeyFolder', //ctx:{ w$:{ btnChooseKeyFolder:'w$el' } },
+            };
+        };
+        btnChooseKeyFolder.prototype = w$defineProto(btnChooseKeyFolder, {});
+
+        return {
+        tag:'fieldset',
+        cons:fieldsetChooseKeyFolder,
+        ref:'fieldsetChooseKeyFolder', //ctx:{ w$:{ fieldsetChooseKeyFolder:'w$el' } },
+        addClass:'control-group',
+            children:[
+            {html:'<label class="control-label">Key Folder</label>'},
+            {tag:'div', addClass:'controls form-inline',
+                children:[
+                btnChooseKeyFolder.wdt,
+                {tag:'input',
+                 attr:{ type:'text', placeholder:"Key Folder Path" },
+                 prop:{ required:true },
+                 addClass:"input-xlarge",
+                 ref:'inputKeyFolder', //ctx:{ w$:{ inputKeyFolder:'w$el' } }
+                },
+                checkInternalKey.wdt
+                ]
+            }
+            ],
+        _cull:['inputKeyFolder','btnChooseKeyFolder','btnChooseKeyFolder','checkInternalKey']
+        // _iface:{ ctx:{ inputKeyFolder:'inputKeyFolder',
+                 // btnChooseKeyFolder:'btnChooseKeyFolder',
+                 // checkInternalKey:'checkInternalKey'
+                 // } }
+        };
+    };
+    fieldsetChooseKeyFolder.prototype = w$defineProto(fieldsetChooseKeyFolder,{});
+
+    //////////////// Widget: fieldsetPassword //////////////////
+    function fieldsetPassword() {}
+    fieldsetPassword.wdt = function(ctx)
+    {
+        var bConfirm = ctx.bConfirm;
+        
+        function inputPassword() {}
+        inputPassword.wdt = function(ctx)
+        {
+            return {
+            tag:'input',
+            attr:{ type:'password', placeholder:bConfirm?"Re-Enter Master Password":"Enter Master Password",
+                   title:'10 or more characters required', pattern:'.{10,}' },
+            ref:'inputPassword', //ctx:{ w$:{ inputPassword:'w$el' } }
+            };
+        };
+        inputPassword.prototype = w$defineProto(inputPassword, {});
+        
+        return {
+        tag:'fieldset',
+        ref: (bConfirm ? 'fieldsetPassword2' : 'fieldsetPassword'),
+        //ctx:(bConfirm?{ w$:{ fieldsetPassword2:'w$el' } }:{ w$:{ fieldsetPassword:'w$el' } }),
+        addClass:'control-group',
+            children:[
+            {tag:'label', addClass:'control-label',
+             text:bConfirm?'Re-Enter Master Password':'Master Password'
+            },
+            {tag:'div', addClass:'controls',
+                children:[inputPassword.wdt]
+            }
+            ],
+        _cull:['inputPassword']
+        //_iface:{ ctx:{ inputPassword:'inputPassword' } }
+        };
+    };
+    fieldsetPassword.prototype = w$defineProto(fieldsetPassword,{});
+
+    function fieldsetPassword2_wdt(ctx)
+    {
+        var wdl,
+            ctx2 = {bConfirm:true};
+        BP_COMMON.copy2(ctx, ctx2);
+        wdl = fieldsetPassword.wdt(ctx2);
+        BP_COMMON.clear(ctx2);
+        return wdl;
+    }
+    
+    //////////////// Widget: fieldsetSubmit //////////////////
+    function fieldsetSubmit() {}
+    fieldsetSubmit.wdt = function(ctx)
+    {
+        return {
+        tag:'fieldset', addClass:'control-group',
+            children:[
+            {tag:'div', addClass:'controls',
+                children:[
+                {tag:'button', ref:'btnWalletSubmit', attr:{type:'button'},
+                 addClass:'btn btn-small btn-primary', text:'Submit'
+                },
+                {tag:'button', ref:'btnWalletCancel', attr:{type:'button'},
+                 addClass:'btn btn-small', text:'Cancel'
+                }
+                ]
+            }
+            ],
+        _cull:['btnWalletSubmit', 'btnWalletCancel']
+        };
+    };
+    fieldsetSubmit.prototype = w$defineProto(fieldsetSubmit, {});
+    
+    //////////////// Widget: WalletFormWdl //////////////////
+    function WalletFormWdl() {}
+    WalletFormWdl.wdt = function (ctx)
+    {      
+        return {
+        tag:'form',
+        cons: WalletFormWdl,
+        ref:'walletForm',
+        addClass:'form-horizontal',
+        iface:{
+            BP_PLUGIN: ctx.BP_PLUGIN,
+            loadDB2: ctx.loadDB2,
+            createDB2: ctx.createDB2,
+            mergeDB2: ctx.mergeDB2,
+            mergeInDB2: ctx.mergeInDB2,
+            mergeOutDB2: ctx.mergeOutDB2,
+            updateDash: ctx.updateDash,
+            callbackHandleError: ctx.callbackHandleError,
+            destroyWalletForm: ctx.destroyWalletForm
+        },
+            children:[
+            // {tag:'legend',
+                // children:[
+                // {tag:'strong',
+                 // ref:'formWalletLegend',
+                // }]
+            // },
+            fieldsetDBName.wdt,
+            fieldsetChooseDB.wdt,
+            fieldsetChooseKey.wdt,
+            fieldsetChooseKeyFolder.wdt,
+            fieldsetPassword.wdt,
+            fieldsetPassword2_wdt
+            //fieldsetSubmit.wdt
+            ],
+        _cull:['formWalletLegend',
+               'fieldsetDBName',
+               'fieldsetChooseDB',
+               'fieldsetChooseKey',
+               'fieldsetChooseKeyFolder',
+               'fieldsetPassword',
+               'fieldsetPassword2',
+               'fieldsetSubmit']
+        };
+    };
+    WalletFormWdl.prototype = w$defineProto(WalletFormWdl,
+    {
+        configureOpen: {value: function(mode, text)
+        {
+            // var $form = this.$(),
+                // form = this.el;
+            // form.reset();
+            // form.dataset.action = mode || "open";
+            // $('#formWalletLegend').text(text || 'Open A Wallet');
+            // $('#fieldsetDBName').prop('disabled',true).removeClass('error').hide();
+            // $('#fieldsetChooseDB').prop('disabled', false).removeClass('error').show();
+            // $('#fieldsetPassword').prop('disabled', false).removeClass('error').show();
+            // $('#fieldsetPassword2').prop('disabled', true).removeClass('error').hide();
+            // initFieldsetChooseKey(true);
+            // initFieldsetChooseKeyFolder(false);
+            // $form.show();
+            // initCheckDBSaveLocation();
+            // onInsert();
+        }},
+        
+        configureMerge: {value: function()
+        {
+           this.configureOpen('merge', 'Details of Wallet to Merge');
+        }},
+        
+        configureMergeIn: {value: function()
+        {
+           this.configureOpen('mergeIn', 'Details of Wallet to Import from'); 
+        }},
+
+        configureMergeOut: {value: function()
+        {
+           this.configureOpen('mergeOut', 'Details of Wallet to Export to'); 
+        }},
+
+        configureCreate: {value: function(e)
+        {
+            // var $form = this.$(),
+                // form = this.el;
+            // form.reset();
+            // form.dataset.action = "create";
+            // $('#formWalletLegend').text('Create A New Wallet');
+            // $('#fieldsetDBName').prop('disabled',false).removeClass('error').show();
+            // $('#fieldsetChooseDB').prop('disabled', false).removeClass('error').show();
+            // $('#fieldsetPassword').prop('disabled', false).removeClass('error').show();
+            // $('#fieldsetPassword2').prop('disabled', false).removeClass('error').show();
+            // initFieldsetChooseKey(false);
+            // initFieldsetChooseKeyFolder(true);
+            // $form.show();
+            // initCheckDBSaveLocation();
+            // onInsert();
+        }}
+    });
+    
+    function modalDialog() {}
+    modalDialog.wdt = function(ctx)
+    {
+        return {
+        tag:'div', ref: 'dialog',
+        cons:modalDialog,
+        addClass:'modal',
+        attr:{ id:'modalDialog', role:'dialog', 'aria-hidden':true },
+        iface:{ mode:ctx.mode },
+        _final:{ appendTo:ctx.appendTo, exec:modalDialog.prototype.configure },
+        _cull:['walletForm', 'modalHeader'],
+            children:[
+            {tag:'div', addClass:'modal-header',
+                children:[
+                {tag:'button', addClass:'close',
+                 attr:{ "data-dismiss":'modal', 'aria-hidden':true },
+                 text:'x',
+                 copy:['dialog'],
+                 on:{ 'click': function(e){destroyDialog();} }
+                },
+                {tag:'h3', ref:'modalHeader'}
+                ]
+            },
+            {tag:'div', addClass:'modal-body',
+                children:[WalletFormWdl.wdt]
+            },
+            {tag:'div', addClass:'modal-footer',
+                children:[
+                {tag:'button', 
+                addClass:'btn', 
+                attr:{'data-dismiss':'modal', 'aria-hidden':true}, 
+                text:'Cancel',
+                on:{ 'click': function(e){destroyDialog();} },
+                copy:['dialog']
+                },
+                {tag:'button', addClass:'btn btn-primary', text:'Submit'}
+                ]
+            }
+            ]
+        };
+    };
+    modalDialog.prototype = w$defineProto(modalDialog,
+    {
+        configure: {value: function()
+        {
+            switch (this.mode)
+            {
+                case 'merge':
+                    return this.configureMerge();
+                case 'mergeIn':
+                    return this.configureMergeIn();
+                case 'mergeOut':
+                    return this.configureMergeOut();
+                case 'create':
+                    return this.configureCreate(); 
+                case 'open':
+                default:
+                    return this.configureOpen();
+            }
+        }},
+        
+        configureOpen: {value: function(mode, text)
+        {
+            this.modalHeader.$().text('Open Wallet');
+            this.$().modal();
+            return this;
+        }},
+        
+        configureMerge: {value: function()
+        {
+            this.configureOpen();
+            return this;
+        }},
+        
+        configureMergeIn: {value: function()
+        {
+            this.configureOpen();
+        }},
+
+        configureMergeOut: {value: function()
+        {
+            this.configureOpen();
+            return this;
+        }},
+
+        configureCreate: {value: function(e)
+        {
+            this.configureOpen();
+            return this;
+        }},
+        
+        show: {value: function()
+        {
+            this.$().modal('show');
+            return this;
+        }},
+        
+        hide: {value: function()
+        {
+            this.$().modal('hide');
+            this.walletForm.el.reset();
+            return this;
+        }}
+    });
+    
+    function createDialog(ops)
+    {
+        var ctx, dialog, temp;
+
+        if (!(ops && ops.BP_PLUGIN)) { return undefined; }
+
+        if (g_dialog) {
+            g_dialog.hide().destroy();
+            g_dialog = null;
+        }
+
+        // Create the Widget.
+        ctx = {
+            BP_PLUGIN: ops.BP_PLUGIN,
+            loadDB2: ops.loadDB2,
+            createDB2: ops.createDB2,
+            mergeDB2: ops.mergeDB2,
+            mergeInDB2: ops.mergeInDB2,
+            mergeOutDB2: ops.mergeOutDB2,
+            updateDash: ops.updateDash,
+            callbackHandleError: ops.callbackHandleError,
+            appendTo: 'body'
+        };
+        var wdl = modalDialog.wdt(ctx);
+        //dialog = BP_W$.w$exec(modalDialog.wdt, ctx);
+        dialog = BP_W$.w$exec(wdl, ctx);
+        
+        BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
+        
+        g_dialog = dialog;
+        //$(g_dialog.el).appendTo('body');
+        
+        $(g_dialog.el).tooltip(); // used to leak DOM nodes in version 2.0.4.
+        
+        return g_dialog;
+    }
+    
+    function destroyDialog()
+    {
+        var w$dialog;
+        if (g_dialog) {
+            w$dialog = g_dialog;
+        }
+        else {
+            w$dialog = BP_W$.w$get('#modalDialog');
+        }
+
+        w$dialog.hide().destroy();
+        g_dialog = null;
+    }    
+
+    BP_ERROR.loginfo("constructed mod_wallet_form");
+    return Object.freeze(
+    {
+        launch: createDialog
+    });
+}

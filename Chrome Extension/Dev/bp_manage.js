@@ -56,7 +56,7 @@ var BP_MANAGE = (function ()
     /** @import-module-end **/ m = null;
     
     /** @globals-begin */
-    var g_editor, g_dbName, g_dbPath, g_walletForm;
+    var g_editor, g_dbName, g_dbPath;
     /** @globals-end **/ 
     
     function createDB (dbName, dbDir, callbackFunc)
@@ -288,34 +288,10 @@ var BP_MANAGE = (function ()
         //});
     }
     
-    function destroyWalletForm()
+    function getCallbacks()
     {
-        if (g_walletForm) { 
-            g_walletForm.destroy();
-        }
-        else {
-            var w$form = g.BP_W$.w$get('#formWallet');
-            if (w$form) {
-                w$form.el.reset();
-                w$form.destroy();
-                g_walletForm = null;
-            }          
-        }
-
-        g_walletForm = null;
-    }    
-
-    function createWalletForm(options)
-    {
-        var ctx,
-            walletForm,
-            temp;
-            
-        if (!(options && options.containerID)) { return; }
-
-        // Create the Widget.
-        ctx = {
-            BP_PLUGIN: BP_PLUGIN,
+        return {
+            'BP_PLUGIN': BP_PLUGIN,
             loadDB2: loadDB2,
             createDB2: createDB2,
             mergeDB2: mergeDB2,
@@ -323,27 +299,11 @@ var BP_MANAGE = (function ()
             mergeOutDB2: mergeOutDB2,
             updateDash: updateDash,
             callbackHandleError: callbackHandleError,
-            destroyWalletForm: destroyWalletForm
         };
-        walletForm = g.BP_W$.w$exec(g.BP_WALLET_FORM.WalletFormWdl_wdt, ctx);
-        
-        BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
-        
-        if (g_walletForm) {
-            g_walletForm.destroy();
-            g_walletForm = null;
-        }
-        
-        g_walletForm = walletForm;
-        $(g_walletForm.el).appendTo('#'+options.containerID);
-        
-        $('#'+options.containerID).tooltip(); // used to leak DOM nodes in version 2.0.4.
-        
-        return g_walletForm;
     }
-
+    
     function onload()
-    {              
+    {
         BP_CONNECT.getDBPath(function(resp)
         {
             updateDash(resp);
@@ -670,53 +630,42 @@ var BP_MANAGE = (function ()
         
         addEventListeners('#btnWalletOpen', 'click', function(e)
         {
-            var w$form = createWalletForm({containerID:'walletFormContainer'});
-            if (w$form) {
-                w$form.initOpen();
-                w$form.show();
-            }
+            var ops = getCallbacks();
+            ops.mode = 'open'; 
+            g.BP_WALLET_FORM.launch(ops);
         });
         
         addEventListeners('#btnWalletCreate', 'click', function(e)
         {
-            var w$form = createWalletForm({containerID:'walletFormContainer'});
-            if (w$form) {
-                w$form.initCreate();
-                w$form.show();
-            }
+            var ops = getCallbacks();
+            ops.mode = 'create'; 
+            g.BP_WALLET_FORM.launch(ops);
         });
         
         addEventListeners('#btnWalletClose', 'click', function(e)
         {
-            destroyWalletForm();
             closeDB();
         });
 
         addEventListeners('#btnMerge', 'click', function(e)
         {
-            var w$form = createWalletForm({containerID:'mergeFormContainer'});
-            if (w$form) {
-                w$form.initMerge();
-                w$form.show();
-            }
+            var ops = getCallbacks();
+            ops.mode = 'merge'; 
+            g.BP_WALLET_FORM.launch(ops);
         });
         
         addEventListeners('#btnMergeIn', 'click', function(e)
         {
-            var w$form = createWalletForm({containerID:'mergeInOutContainer'});
-            if (w$form) {
-                w$form.initMergeIn();
-                w$form.show();
-            }
+            var ops = getCallbacks();
+            ops.mode = 'mergeIn'; 
+            g.BP_WALLET_FORM.launch(ops);
         });
         
         addEventListeners('#btnMergeOut', 'click', function(e)
         {
-            var w$form = createWalletForm({containerID:'mergeInOutContainer'});
-            if (w$form) {
-                w$form.initMergeOut();
-                w$form.show();
-            }
+            var ops = getCallbacks();
+            ops.mode = 'mergeOut'; 
+            g.BP_WALLET_FORM.launch(ops);
         });
         
 

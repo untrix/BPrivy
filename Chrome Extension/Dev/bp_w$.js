@@ -30,6 +30,10 @@
      *     proto== Prototype object. If this is specified, then it should be a descendant of
      *             WidgetElement.proto. w$exec will construct an object inherited from proto.
      *             If neither of cons or proto are present, then a simple WidgetElement will be constructed.
+     *     ref  == Causes creation of a property in ctx whose value is a JavaScript reference/pointer
+     *             to the WidgetElement object. This property will then be collected by
+     *             another WidgetElement downstream (usually an ancestor) using the '_cull'
+     *             directive.
      *     attr == same as in jquery
      *     text == same as in jquery - run before child nodes are inserted
      *     prop == same as in jquery
@@ -66,6 +70,12 @@
                   3. Props listed under w$ctx are copied over from the context object - ctx - only makes
                      sense when you're copying into something other than the context itself, like iface
                      or _iface.
+     *     copy ==  copy:['name'] is short for iface:{ ctx:{ name:'name' } }.
+     *              Similar to _cull, except that properties won't get deleted from ctx.
+     *              i.e. properties are copied rather than moved, from ctx to the w$el.
+     *              Used by child elements to save a pointer to an ancestor element.
+     *              This directive is processed before creating children.
+     *  
      *     children == children wdls, inserted in order of appearence.
      *              As a special case, a w$undefined value of a child-wdl is an indication to skip that
      *              child element instead of throwing an exception (exception will be thrown if (!child))
@@ -78,6 +88,11 @@
      *              is populated into w$ctx.w$i.
      *     _iface: Same as iface, except that this directive is processed after children are created. Meant
      *              to catch values thrown by children.
+     *     _cull:  Value should be an array of property name strings. Properties with these
+     *             names will be moved from context to the WidgetElement (w$el) object. In
+     *             other words, it transfers named properties from ctx to w$el (interface).
+     *             Used to gather children element references created by children using the
+     *             'ref' directive. 
      *     _final: Can have three properties {show:true/false/other, exec:func, appendTo:DOM-element}
      *     _final.show: true=>show the element, false=>hide the element, other value or absent=> do nothing 
      *     _final.exec: a function to execute
@@ -182,6 +197,18 @@ function BP_GET_W$(g)
         //this.el.classList.remove(className);
     };
     WidgetElement.prototype.$ = function () {return $(this.el); };
+    
+    //////////// WDL Interpretor's LEXICAL ENVIRONMENT OBJECT ///////////
+    /////////////////// Documents all possible properties ///////////////
+    function W$LexicalEnv ()
+    {
+        Object.defineProperties(this,
+        {   
+            w$el: {enumerable:true, configurable:false, writable:true}
+        });
+        Object.preventExtensions(this);
+    }
+    
     // Returns an object to be used as a prototype for a widget element.
     function w$defineProto (cons, props, ancestorProto) // props has same syntax as Object.defineProperties
     {
@@ -191,6 +218,30 @@ function BP_GET_W$(g)
         cons.prototype = Object.create((ancestorProto || WidgetElement.prototype), props);
         cons.prototype.constructor = cons;
         return cons.prototype;
+    }
+    
+    // Copy properties from src object to destination.
+    function copyProps(keys, src, dst)
+    {
+        var i, n, k;
+        for (i=0,n=keys.length; i<n; i++)
+        {
+            k = keys[i];
+            dst[k] = src[k];
+        }
+    }
+    
+    // Transfer properties from src object to destination.
+    // Props get deleted from src.
+    function moveProps(keys, src, dst)
+    {
+        var i, n, k;
+        for (i=0,n=keys.length; i<n; i++)
+        {
+            k = keys[i];
+            dst[k] = src[k];
+            delete src[k];
+        }
     }
     
     function copyIndirect (sk, sv, dst) 
@@ -292,7 +343,8 @@ function BP_GET_W$(g)
             throw new BPError("Bad WDL: " + JSON.stringify(wdl), 'BadWDL');
         }
         
-        var el, $el, i=0, w$el, _final, wcld, keys, key, val, w$ ={},
+        var el, $el, i=0, w$el, _final, wcld, keys, key, val, 
+            w$ = new W$LexicalEnv(),
             n=0, cwdl, temp_ctx;
 
         // Create the DOM element
@@ -339,12 +391,17 @@ function BP_GET_W$(g)
         
         // Update the context now that the element is created
         if (!ctx) {temp_ctx = ctx={};} // setup a new context if one is not provided
+        // insert w$el into context if requested.
+        if (wdl.ref) {
+            ctx[wdl.ref] = w$el;
+        }
         if (wdl.ctx)  {
             w$evalProps(wdl.ctx, w$, ctx, ctx);
         }
 
         // Populate element's interface pre-children
         if (wdl.iface) { w$evalProps(wdl.iface, w$, ctx, w$el); }
+        if (wdl.copy) { copyProps(wdl.copy, ctx, w$el); }
 
         // Process and insert child widgets
         for (i=0, n=wdl.children? wdl.children.length:0; i<n; i++) {
@@ -428,6 +485,7 @@ function BP_GET_W$(g)
 
         // Populate w$el's interface post-children
         if (wdl._iface) { w$evalProps(wdl._iface, w$, ctx, w$el); }
+        if (wdl._cull) { moveProps(wdl._cull, ctx, w$el);}
         // Insert text nodes after children
         if (wdl._text) { $el.append(g_doc.createTextNode(wdl._text)); }
         // Finally, post Creation steps
