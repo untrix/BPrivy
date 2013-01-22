@@ -291,7 +291,6 @@ var BP_MANAGE = (function ()
     function getCallbacks()
     {
         return {
-            'BP_PLUGIN': BP_PLUGIN,
             loadDB2: loadDB2,
             createDB2: createDB2,
             mergeDB2: mergeDB2,
