@@ -209,17 +209,6 @@ function BP_GET_COMMON(g)
         return dst;
     }
 
-    // function curry (func, ctx)
-    // {
-        // // convert arguments into an array. Omit 'thisArg' and 'func' arguments though.
-        // //var ctx = Array.prototype.slice.apply(arguments, [2]);
-// 
-        // return function ()
-        // {
-            // func.apply(null, Array.prototype.slice.apply(arguments).concat(ctx));
-        // };
-    // }
-    
     /**
      * DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED DEPRICATED
      *                      Use IterObj instead
@@ -289,6 +278,20 @@ function BP_GET_COMMON(g)
         } 
     }
     
+    function ArrayIterator (a)
+    {
+        Object.defineProperties(this,
+        {
+            _a: {value: a},
+            _n: {value: a.length},
+            _i: {value: 0, writable: true}
+        });
+    }
+    ArrayIterator.prototype.next = function ()
+    {
+        if (this._i < this._n) { return this._a[this._i++]; }
+    };
+    
     function indexOf (a, item)
     {
         if (!a) {return -1;}
@@ -327,6 +330,7 @@ function BP_GET_COMMON(g)
         delProps: {value: delProps},
         iterKeys: {value: iterKeys},
         iterArray2: {value: iterArray2},
+        ArrayIterator: {value: ArrayIterator},
         indexOf: {value: indexOf},
         iterObj: {value:iterObj},
         bindProto:{value:bindProto},

@@ -69,106 +69,109 @@ function BP_GET_WALLET_FORM(g)
         }
     }
     
+    //////////////// Widget: checkSaveDBLocation //////////////////
+    function checkDontSaveLocation() {}
+    checkDontSaveLocation.wdt = function(ctx)
+    {
+        return {
+        tag:'label',
+        addClass:'checkbox',
+        attr:{ title:'If checked, saved wallet locations will be forgotten, otherwise '+
+        'all opened/created wallet locations will be remembered. For privacy and security, '+
+        'select it if this is not your computer.'
+        },
+            children:[
+            {tag:'input',
+             attr:{ type:'checkbox' },
+             prop:{ checked:localStorage.dbDontSaveLocation },
+             ref:'checkDontSaveLocation',
+             on:{'change': function(e){localStorage.dbDontSaveLocation=this.checked;}}
+            }
+            ],
+        _text:'Forget Wallets'
+        };
+    };
+    checkDontSaveLocation.prototype = w$defineProto(checkDontSaveLocation,
+    {});
+
+    //////////////// Widget: itemDBName //////////////////
+    function itemDBName() {}
+    itemDBName.wdi = function(w$ctx)
+    {
+        var db_name = w$ctx.w$rec;
+        
+        return {
+        tag:'li', cons:itemDBName,
+        iface:{ dbName:db_name },
+        copy:['fieldsetDBName'],
+            children:[
+            {tag:'a', attr:{href:'#'}, text:'ctx.dbName',
+             on:{ 'click':itemDBName.prototype.onClick }
+            }
+            ]
+        };
+    };
+    itemDBName.prototype.onClick = function(e)
+    {
+        this.fieldsetDBName.inputDBName.el.value = this.dbName;
+        CS_PLAT.trigger(this.el, 'dbNameChosen', 'CustomEvent');
+    };
+
+    //////////////// Widget: menuDBSelect //////////////////
+    function menuDBSelect() {}
+    menuDBSelect.wdt = function(ctx)
+    {
+        var names = localStorage.dbNames,
+            menuID, nIt;
+        // return undefined if there are no options to select.
+        if (!names) {return w$undefined; }        
+        
+        menuID = 'dbNameMenu' + g_counter++;
+        nIt = BP_COMMON.ArrayIterator(Object.keys(names));
+        
+        return {
+        tag:'div', ref:'menuDBSelect', cons:menuDBSelect, addClass:'dropdown',
+        css:{display:'inline-block'},
+            children:[
+            {tag:'button', text:'Select ', attr:{type:'button'}, 
+             addClass:'dropdown-toggle btn', ref:'button',
+                children:[{tag:'span', addClass:'caret'}]
+            },
+            {tag:'ul', attr:{role:'menu', id:menuID}, addClass:'dropdown-menu',
+             ref:'menuItems'
+            }
+            ],
+        copy:['fieldsetDBName'],
+            iterate:{ it:nIt, wdi:itemDBName.wdi },
+        _cull:['button', 'menuItems'],
+        _final:{ exec:menuDBSelect.prototype.init }
+        };    
+    };
+    menuDBSelect.prototype = w$defineProto(menuDBSelect,
+    {
+        init: {value: function()
+        {
+            this.button.$().dropdown();
+            return this;
+        }},
+        disable: {value: function()
+        {
+            this.el.disabled = true;
+            this.hide();
+        }},
+        enable: {value: function()
+        {
+            this.el.disabled = false;
+            this.show();
+        }}
+    });
+
     //////////////// Widget: fieldsetDBName //////////////////
     function fieldsetDBName() {}
     fieldsetDBName.wdt = function (ctx)
     {
-        //////////////// Widget: itemDBName //////////////////
-        function itemDBName() {}
-        itemDBName.wdt = function(ctx)
-        {
-            return {
-            tag:'li', cons:itemDBName,
-            iface:{ dbName:ctx.dbName, dbPath:ctx.dbPath, 
-             fieldsetDBName:ctx.fieldsetDBName
-            },
-                children:[
-                {tag:'a', attr:{href:'#'}, text:'ctx.dbName',
-                 on:{ 'click':itemDBName.prototype.onClick }
-                }
-                ]
-            };
-        };
-        itemDBName.prototype.onClick = function(e)
-        {
-            this.fieldsetDBName.inputDBName.el.value = this.dbName;
-            CS_PLAT.trigger(this.el, 'dbNameChosen', 'CustomEvent');
-        };
+        if (ctx.mode !== 'create') { return w$undefined; }
         
-        //////////////// Widget: menuDBName //////////////////
-        function menuDBName() {}
-        menuDBName.wdt = function(ctx)
-        {
-            var menuID = 'dbNameMenu' + g_counter++;
-            
-            return {
-            tag:'div', ref:'menuDBName', cons:menuDBName, addClass:'dropdown',
-            css:{display:'inline-block'},
-                children:[
-                {tag:'button', text:'Select ', attr:{type:'button'}, 
-                 addClass:'dropdown-toggle btn', ref:'button',
-                    children:[{tag:'span', addClass:'caret'}]
-                },
-                {tag:'ul', attr:{role:'menu', id:menuID}, addClass:'dropdown-menu',
-                 ref:'container',
-                    children:[
-                    // {tag:'li', 
-                        // children:[{tag:'a', attr:{href:'#'}, text:'Name1'}]
-                    // },
-                    // {tag:'li', 
-                        // children:[{tag:'a', attr:{href:'#'}, text:'Name2'}]
-                    // }
-                    ]
-                }
-                ],
-            copy:['fieldsetDBName'],
-            _cull:['button', 'container']
-            };    
-        };
-        menuDBName.prototype = w$defineProto(menuDBName,
-        {
-            init: {value: function(names)
-            {
-                this.container.empty();
-                BP_COMMON.iterObj(names, this, function(name, path)
-                {
-                    var ctx = {
-                                dbName:name, 
-                                dbPath:path, 
-                                fieldsetDBName:this.fieldsetDBName
-                              },
-                        wel = w$exec(itemDBName.wdt, ctx);
-                    this.container.append(wel);
-                });
-                this.button.$().dropdown();
-                return this;
-            }}
-        });
-
-        //////////////// Widget: checkSaveDBLocation //////////////////
-        function checkSaveDBLocation() {}
-        checkSaveDBLocation.wdt = function(ctx)
-        {
-            return {
-            tag:'label',
-            addClass:'checkbox',
-            attr:{ title:'If checked, the Wallet location will be saved on this computer and '+
-            'automatically selected the next time. For privacy and security, uncheck it if this is not your computer.'
-            },
-                children:[
-                {tag:'input',
-                 attr:{ type:'checkbox' },
-                 prop:{ checked:true },
-                 ref:'checkSaveDBLocation',
-                 on:{'change': function(e){localStorage.dbDontSaveLocation=(!this.checked);}}
-                }
-                ],
-            _text:'Remember'
-            };
-        };
-        checkSaveDBLocation.prototype = w$defineProto(checkSaveDBLocation,
-        {});
-
         return {
         tag:'fieldset',
         cons:fieldsetDBName,
@@ -182,7 +185,7 @@ function BP_GET_WALLET_FORM(g)
                     children:[
                     {tag:'input',
                      ref:'inputDBName', addClass:"input-medium",
-                     attr:{ type:'text', placeholder:"Type Wallet Name Here", pattern:".{1,}",
+                     attr:{ type:'text', placeholder:"Enter Wallet Name", pattern:".{1,}",
                      title:"Please enter a name for the new Wallet that you would like to create. "+
                            "Example: <i>Tony's Wallet</i>"
                      },
@@ -190,15 +193,13 @@ function BP_GET_WALLET_FORM(g)
                      on:{ 'change': function(e) {
                                     CS_PLAT.trigger(this.el, 'dbNameChosen', 'CustomEvent');
                                     }}
-                    },
-                    menuDBName.wdt
+                    }
                     ]
-                },
-                checkSaveDBLocation.wdt
+                }
                 ]
             }
             ],
-        _cull:['inputDBName', 'menuDBName', 'checkSaveDBLocation']
+        _cull:['inputDBName']
         };
     };
     fieldsetDBName.prototype = w$defineProto(fieldsetDBName,
@@ -217,26 +218,7 @@ function BP_GET_WALLET_FORM(g)
 
         init: {value: function()
         {
-            var names;
-            
-            if (localStorage.dbDontSaveLocation) {
-                this.checkSaveDBLocation.el.checked = false;
-                this.inputDBName.el.value = null;
-            }
-            else {
-                this.checkSaveDBLocation.el.checked = true;
-                names = localStorage.dbNames;
-                if (names && (this.walletForm.mode !== 'create')) {
-                    this.menuDBName.init(names).show();
-                    this.inputDBName.el.placeholder = 'Select or Enter Wallet Name';
-                }
-                else {
-                    this.menuDBName.hide();
-                    this.inputDBName.el.placeholder = 'Enter Wallet Name';
-                }
-            }
-
-            this.inputDBName.$().val();
+            this.inputDBName.el.value = null;
 
             this.el.disabled = false;
             return this;
@@ -288,6 +270,7 @@ function BP_GET_WALLET_FORM(g)
                 children:[
                 {tag:'div', addClass:'input-prepend',
                     children:[
+                    menuDBSelect.wdt,
                     btnChooseDB.wdt,
                     {tag:'input',
                      attr:{ type:'text', placeholder:"Wallet Folder Location" },
@@ -307,7 +290,7 @@ function BP_GET_WALLET_FORM(g)
                 ]
             }
             ],
-        _cull:['inputDBPath', 'btnChooseDB']
+        _cull:['inputDBPath', 'btnChooseDB', 'menuDBSelect']
         };
     };
     fieldsetChooseDB.prototype = w$defineProto(fieldsetChooseDB,
@@ -325,6 +308,14 @@ function BP_GET_WALLET_FORM(g)
         onDBNameChosen: {value: function(e) 
         {
             var names = localStorage.dbNames;
+
+            if (names && (this.walletForm.mode !== 'create')) {
+                this.inputDBName.el.placeholder = 'Select or Enter Wallet Name';
+            }
+            else {
+                this.inputDBName.el.placeholder = 'Enter Wallet Name';
+            }
+
             if (names) {
                 this.inputDBPath.el.value = names[this.walletForm.inputDBName];
             }
@@ -767,6 +758,7 @@ function BP_GET_WALLET_FORM(g)
             },
             {tag:'div', addClass:'modal-footer',
                 children:[
+                checkDontSaveLocation.wdt,
                 {tag:'button', 
                 addClass:'btn', 
                 attr:{'data-dismiss':'modal', 'aria-hidden':true}, 

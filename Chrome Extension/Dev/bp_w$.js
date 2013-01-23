@@ -95,7 +95,7 @@
      *             'ref' directive. 
      *     _final: Can have three properties {show:true/false/other, exec:func, appendTo:DOM-element}
      *     _final.show: true=>show the element, false=>hide the element, other value or absent=> do nothing 
-     *     _final.exec: a function to execute
+     *     _final.exec: a function to execute. Invoked as _final.exec.apply(w$el, [ctx, w$]);
      *     _final.appendTo: instructs w$exec to append the created element to a DOM element.
      *     _text:   Text (node) to append to the element after all children. Appends a
      *              text node created by document.createTextNode() method.
