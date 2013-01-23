@@ -43,7 +43,8 @@ function BP_GET_WALLET_FORM(g)
     var BP_ERROR = IMPORT(m),
         BPError = IMPORT(m.BPError);
     /** @import-module-begin */
-    var DB_FS = IMPORT(g.BP_DBFS);
+    var BP_DBFS = IMPORT(g.BP_DBFS);
+    var DB_FS = IMPORT(BP_DBFS.DB_FS);
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
@@ -72,6 +73,28 @@ function BP_GET_WALLET_FORM(g)
     function fieldsetDBName() {}
     fieldsetDBName.wdt = function (ctx)
     {
+        //////////////// Widget: itemDBName //////////////////
+        function itemDBName() {}
+        itemDBName.wdt = function(ctx)
+        {
+            return {
+            tag:'li', cons:itemDBName,
+            iface:{ dbName:ctx.dbName, dbPath:ctx.dbPath, 
+             fieldsetDBName:ctx.fieldsetDBName
+            },
+                children:[
+                {tag:'a', attr:{href:'#'}, text:'ctx.dbName',
+                 on:{ 'click':itemDBName.prototype.onClick }
+                }
+                ]
+            };
+        };
+        itemDBName.prototype.onClick = function(e)
+        {
+            this.fieldsetDBName.inputDBName.el.value = this.dbName;
+            CS_PLAT.trigger(this.el, 'dbNameChosen', 'CustomEvent');
+        };
+        
         //////////////// Widget: menuDBName //////////////////
         function menuDBName() {}
         menuDBName.wdt = function(ctx)
@@ -86,73 +109,42 @@ function BP_GET_WALLET_FORM(g)
                  addClass:'dropdown-toggle btn', ref:'button',
                     children:[{tag:'span', addClass:'caret'}]
                 },
-                {tag:'ul', attr:{role:'menu', id:menuID}, addClass:'dropdown-menu', ref:'container',
+                {tag:'ul', attr:{role:'menu', id:menuID}, addClass:'dropdown-menu',
+                 ref:'container',
                     children:[
-                    {tag:'li', 
-                        children:[{tag:'a', attr:{href:'#'}, text:'Name1'}]
-                    },
-                    {tag:'li', 
-                        children:[{tag:'a', attr:{href:'#'}, text:'Name2'}]
-                    }
+                    // {tag:'li', 
+                        // children:[{tag:'a', attr:{href:'#'}, text:'Name1'}]
+                    // },
+                    // {tag:'li', 
+                        // children:[{tag:'a', attr:{href:'#'}, text:'Name2'}]
+                    // }
                     ]
                 }
                 ],
+            copy:['fieldsetDBName'],
             _cull:['button', 'container']
             };    
         };
-        menuDBName.prototype = w$defineProto(menuDBName,{});
-        
-        return {
-        tag:'fieldset',
-        cons:fieldsetDBName,
-        ref:'fieldsetDBName',
-        //ctx:{ w$:{ fieldsetDBName:'w$el' } },
-        addClass:'control-group',
-            children:[
-            {html:'<label class="control-label">Name</label>'},
-            {tag:'div', addClass:'controls form-inline',
-                children:[
-                {tag:'div', addClass:'input-append',
-                    children:[
-                    {tag:'input',
-                     ref:'inputDBName', addClass:"input-medium",
-                     attr:{ type:'text', placeholder:"Type Wallet Name Here", pattern:".{4,}",
-                     title:"Please enter a name for the new Wallet that you would like to create. "+
-                           "Example: <i>Tony's Wallet</i>"
-                     },
-                     prop:{ required:true }
-                    },
-                    menuDBName.wdt
-                    ]
-                }
-                ]
-            }
-            ],
-        _cull:['inputDBName', 'menuDBName']
-        };
-    };
-    fieldsetDBName.prototype = w$defineProto(fieldsetDBName,
-    {
-        disable: {value: function()
+        menuDBName.prototype = w$defineProto(menuDBName,
         {
-            this.inputDBName.$().val();
-            this.el.disabled = true;
-            return this;
-        }},
-        
-        init: {value: function()
-        {
-            this.inputDBName.$().val();
-            this.menuDBName.button.$().dropdown();
-            this.el.disabled = false;
-            return this;
-        }}
-    });
-        
-    //////////////// Widget: fieldsetChooseDB //////////////////
-    function fieldsetChooseDB() {}
-    fieldsetChooseDB.wdt = function (ctx)
-    {
+            init: {value: function(names)
+            {
+                this.container.empty();
+                BP_COMMON.iterObj(names, this, function(name, path)
+                {
+                    var ctx = {
+                                dbName:name, 
+                                dbPath:path, 
+                                fieldsetDBName:this.fieldsetDBName
+                              },
+                        wel = w$exec(itemDBName.wdt, ctx);
+                    this.container.append(wel);
+                });
+                this.button.$().dropdown();
+                return this;
+            }}
+        });
+
         //////////////// Widget: checkSaveDBLocation //////////////////
         function checkSaveDBLocation() {}
         checkSaveDBLocation.wdt = function(ctx)
@@ -174,8 +166,87 @@ function BP_GET_WALLET_FORM(g)
             _text:'Remember'
             };
         };
-        checkSaveDBLocation.prototype = w$defineProto(checkSaveDBLocation, {});
+        checkSaveDBLocation.prototype = w$defineProto(checkSaveDBLocation,
+        {});
+
+        return {
+        tag:'fieldset',
+        cons:fieldsetDBName,
+        ref:'fieldsetDBName',
+        addClass:'control-group',
+            children:[
+            {html:'<label class="control-label">Name</label>'},
+            {tag:'div', addClass:'controls form-inline',
+                children:[
+                {tag:'div', addClass:'input-append',
+                    children:[
+                    {tag:'input',
+                     ref:'inputDBName', addClass:"input-medium",
+                     attr:{ type:'text', placeholder:"Type Wallet Name Here", pattern:".{1,}",
+                     title:"Please enter a name for the new Wallet that you would like to create. "+
+                           "Example: <i>Tony's Wallet</i>"
+                     },
+                     prop:{ required: (ctx.mode==='create') },
+                     on:{ 'change': function(e) {
+                                    CS_PLAT.trigger(this.el, 'dbNameChosen', 'CustomEvent');
+                                    }}
+                    },
+                    menuDBName.wdt
+                    ]
+                },
+                checkSaveDBLocation.wdt
+                ]
+            }
+            ],
+        _cull:['inputDBName', 'menuDBName', 'checkSaveDBLocation']
+        };
+    };
+    fieldsetDBName.prototype = w$defineProto(fieldsetDBName,
+    {
+        val: {value: function()
+        {
+            return this.inputDBName.el.value;
+        }},
         
+        disable: {value: function()
+        {
+            this.inputDBName.$().val();
+            this.el.disabled = true;
+            return this;
+        }},
+
+        init: {value: function()
+        {
+            var names;
+            
+            if (localStorage.dbDontSaveLocation) {
+                this.checkSaveDBLocation.el.checked = false;
+                this.inputDBName.el.value = null;
+            }
+            else {
+                this.checkSaveDBLocation.el.checked = true;
+                names = localStorage.dbNames;
+                if (names && (this.walletForm.mode !== 'create')) {
+                    this.menuDBName.init(names).show();
+                    this.inputDBName.el.placeholder = 'Select or Enter Wallet Name';
+                }
+                else {
+                    this.menuDBName.hide();
+                    this.inputDBName.el.placeholder = 'Enter Wallet Name';
+                }
+            }
+
+            this.inputDBName.$().val();
+
+            this.el.disabled = false;
+            return this;
+        }}
+    });
+        
+    //////////////// Widget: fieldsetChooseDB //////////////////
+    function fieldsetChooseDB() {}
+    fieldsetChooseDB.wdt = function (ctx)
+    {
         //////////////// Widget: btnChooseDB //////////////////
         function btnChooseDB() {}
         btnChooseDB.wdt = function (ctx)
@@ -200,7 +271,8 @@ function BP_GET_WALLET_FORM(g)
                     
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
-                    this.fieldsetChooseDB.inputPath.el.value = path;
+                    this.fieldsetChooseDB.inputDBPath.el.value = path;
+                    CS_PLAT.trigger(this.fieldsetChooseDB.inputDBPath.el, 'dbChosen', 'CustomEvent');
                 }
             }}
         });
@@ -231,28 +303,36 @@ function BP_GET_WALLET_FORM(g)
                      }
                     },
                     ]
-                },
-                checkSaveDBLocation.wdt
+                }
                 ]
             }
             ],
-        _cull:['inputDBPath', 'btnChooseDB', 'checkSaveDBLocation']
+        _cull:['inputDBPath', 'btnChooseDB']
         };
     };
     fieldsetChooseDB.prototype = w$defineProto(fieldsetChooseDB,
     {
         init: {value: function()
         {
-            if (localStorage.dbDontSaveLocation) {
-                this.checkSaveDBLocation.el.checked = false;
-                this.inputDBPath.el.value = null;
+            this.enable();
+        }},
+        
+        val: {value: function()
+        {
+            return this.inputDBPath.el.value;
+        }},
+        
+        onDBNameChosen: {value: function(e) 
+        {
+            var names = localStorage.dbNames;
+            if (names) {
+                this.inputDBPath.el.value = names[this.walletForm.inputDBName];
             }
-            else {
-                this.checkSaveDBLocation.el.checked = true;
-                this.inputDBPath.el.value = localStorage['db.path'];
-            }
-            this.el.disabled = false;
-        }}
+            this.enable();
+        }},
+        
+        enable: {value: function() { this.el.disabled = false; this.show(); return this; }},
+        disable: {value: function() { this.el.disabled = true; this.hide(); return this; }}
     });
     
 
@@ -321,6 +401,7 @@ function BP_GET_WALLET_FORM(g)
                 ]
             }
             ],
+        copy:['walletForm'],
         _cull:['inputKeyPath', 'btnChooseKey', 'checkInternalKey']
         };
     };
@@ -328,28 +409,33 @@ function BP_GET_WALLET_FORM(g)
     {
         onDBChosen: {value: function(dbPath)
         {
-            var keyPath = dbPath ? DB_FS.findCryptInfoFile2(dbPath) : undefined;
+            var keyPath;
+            
+            if (this.walletForm.mode === 'create') { 
+                this.disable();
+                return this;
+            }
+            
+            keyPath = dbPath ? DB_FS.findCryptInfoFile2(dbPath) : undefined;
 
             if (keyPath) {
                 this.disable();
+                CS_PLAT.trigger(this.el, 'keyPathChosen', 'CustomEvent');
             }
             else
             {
                 this.enable();
-                this.checkInternalKey.checked = true;
-                this.onCheck();
+                this.checkInternalKey.checked = false;
+                this.onUncheck();
             }
-        }},
-        
-        init: {value: function()
-        {
-            this.onDBChosen();
+            
             return this;
         }},
-        
+       
         enable: {value: function()
         {
             this.el.disabled = false;
+            this.show();
             return this;
         }},
         
@@ -357,23 +443,26 @@ function BP_GET_WALLET_FORM(g)
         {
             this.inputKeyPath.$().val();
             this.el.disabled = true;
+            this.hide();
             return this;
         }},
         
         onCheck: {value: function()
         {
-            this.inputKeyPath.value = null;
-            this.inputKeyPath.disabled = true;
-            this.btnChooseKey.disabled = true;
-            //this.el.disabled = false;
+            if (!this.el.disabled) {
+                this.inputKeyPath.value = null;
+                this.inputKeyPath.disabled = true;
+                this.btnChooseKey.disabled = true;
+            }
         }},
 
         onUncheck: {value: function()
         {
-            this.inputKeyPath.value = null;
-            this.inputKeyPath.disabled = false;
-            this.btnChooseKey.disabled = false;
-            //this.el.disabled = false;            
+            if (!this.el.disabled) {
+                this.inputKeyPath.value = null;
+                this.inputKeyPath.disabled = false;
+                this.btnChooseKey.disabled = false;
+            }
         }}
     });
 
@@ -422,8 +511,9 @@ function BP_GET_WALLET_FORM(g)
         return {
         tag:'fieldset',
         cons:fieldsetChooseKeyFolder,
-        ref:'fieldsetChooseKeyFolder', //ctx:{ w$:{ fieldsetChooseKeyFolder:'w$el' } },
+        ref:'fieldsetChooseKeyFolder',
         addClass:'control-group',
+        copy:['walletForm'],
             children:[
             {html:'<label class="control-label">Key Folder</label>'},
             {tag:'div', addClass:'controls form-inline',
@@ -439,17 +529,29 @@ function BP_GET_WALLET_FORM(g)
                 ]
             }
             ],
-        _cull:['inputKeyFolder','btnChooseKeyFolder','btnChooseKeyFolder','checkInternalKey']
-        // _iface:{ ctx:{ inputKeyFolder:'inputKeyFolder',
-                 // btnChooseKeyFolder:'btnChooseKeyFolder',
-                 // checkInternalKey:'checkInternalKey'
-                 // } }
+        _cull:['inputKeyFolder','btnChooseKeyFolder','checkInternalKey']
         };
     };
     fieldsetChooseKeyFolder.prototype = w$defineProto(fieldsetChooseKeyFolder,
     {
-        disable: {value: function(){return this;}},
-        init: {value: function(){return this;}}
+        disable: {value: function(){this.el.disabled = true; this.hide(); return this;}},
+        init: {value: function(){this.el.disabled = false; this.show(); return this;}},
+        onDBChosen: {value: function(dbPath)
+        {
+            var keyPath;
+            
+            if (this.walletForm.mode !== 'create') {
+                this.disable();
+            }
+            else
+            {
+                this.enable();
+                this.checkInternalKey.checked = true; // Default position
+                this.onCheck();
+            }
+            
+            return this;
+        }},
     });
 
     //////////////// Widget: fieldsetPassword //////////////////
@@ -536,6 +638,7 @@ function BP_GET_WALLET_FORM(g)
         ref:'walletForm',
         addClass:'form-horizontal',
         iface:{
+            mode: ctx.mode,
             loadDB2: ctx.loadDB2,
             createDB2: ctx.createDB2,
             mergeDB2: ctx.mergeDB2,
@@ -545,13 +648,10 @@ function BP_GET_WALLET_FORM(g)
             callbackHandleError: ctx.callbackHandleError,
             destroyWalletForm: ctx.destroyWalletForm
         },
+        on:{ 'dbNameChosen':WalletFormWdl.prototype.onDBNameChosen,
+             'dbChosen':WalletFormWdl.prototype.onDBChosen
+        },
             children:[
-            // {tag:'legend',
-                // children:[
-                // {tag:'strong',
-                 // ref:'formWalletLegend',
-                // }]
-            // },
             fieldsetDBName.wdt,
             fieldsetChooseDB.wdt,
             fieldsetChooseKey.wdt,
@@ -572,6 +672,24 @@ function BP_GET_WALLET_FORM(g)
     };
     WalletFormWdl.prototype = w$defineProto(WalletFormWdl,
     {
+        onDBNameChosen: {value: function(e)
+        {
+            this.fieldsetChooseDB.onDBNameChosen();
+            e.preventDefault();
+            e.stopPropagation();
+        }},
+        onDBChosen: {value: function(e)
+        {
+            this.fieldsetChooseKey.onDBChosen(this.fieldsetChooseDB.val());
+            this.fieldsetChooseKeyFolder.onDBChosen(this.fieldsetChooseDB.val());
+            e.preventDefault();
+            e.stopPropagation();            
+        }},
+        onKeyPathChosen: {value: function(e)
+        {
+            this.fieldsetPassword.onKeyPathChosen();
+            this.fieldsetPassword.onKeyPathChosen();
+        }},
         configureOpen: {value: function()
         {
             var $form = this.$(),

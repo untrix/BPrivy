@@ -138,13 +138,18 @@ function BP_GET_W$(g)
             // destructor. This is necessary in order to remove circular references.
             el: {value: $el[0], configurable:true}, // pointer to DOM element object
             //$el: {value: $el, writable:false, configurable:true}, // pointer to jquery wrapped DOM element object
-            w$: {value: {}, configurable:true}, //Meant for saving event handlers
+            w$: {value: {}, configurable:true}, //Meant for saving WDL private data,
+                                                //e.g. event handlers, origDisplay value
             // Other properties and functions will be inserted here through wdl.
             // That will serve as the JS-interface of the WidgetElement
         });
         // point $el back to w$el. Hopefully this won't be a cyclic reference between w$el
         // jQuery. We'll try to remove this everywhere before destruction.
         $el.data('w$el', this);
+    };
+    WidgetElement.prototype.empty = function()
+    {
+        $(this.el).empty();
     };
     WidgetElement.prototype.append = function(w)
     {
@@ -164,8 +169,22 @@ function BP_GET_W$(g)
         $(this.el).replaceWith(w.el);
         //this.el.replace(w.el);
     };
-    WidgetElement.prototype.show = function() {this.el.style.removeProperty('display');};
-    WidgetElement.prototype.hide = function() {this.el.style.display = 'none';};
+    WidgetElement.prototype.show = function() {
+        if (this.el.style.display === 'none') {
+            if (this.w$.origDisplay) {
+               this.el.style.display = this.w$.origDisplay;
+            }
+            else {
+                this.el.style.removeProperty('display');
+            }    
+        }
+    };
+    WidgetElement.prototype.hide = function() {
+        if (this.el.style.display !== 'none') {
+            this.w$.origDisplay = this.el.style.display; 
+            this.el.style.display = 'none';
+        }
+    };
     WidgetElement.prototype.toggle = function()
     {
         if (this.el.style.display) {this.show(); return true;} 
@@ -244,7 +263,7 @@ function BP_GET_W$(g)
         }
     }
     
-    function copyIndirect (sk, sv, dst) 
+    function copyIndirect (sk, sv, dst)
     {
         // sk = source object of keys for the destination as well as provides keys for the 'sv' object
         // dst = destination object, obtains key p from sk and value = sv[sk[p]]
@@ -322,9 +341,9 @@ function BP_GET_W$(g)
             wel.w$.on = on;
             var _on = {}, keys = Object.keys(on), i;
             for (i=keys.length-1; i>=0; i--) {
-                _on[keys[i]] = proxy; //w$eventProxy;
+                _on[keys[i]] = proxy; //w$eventProxy or w$eTargetProxy
             }
-            addHandlers(wel.el, _on);    
+            addHandlers(wel.el, _on);
         }
     }
     
