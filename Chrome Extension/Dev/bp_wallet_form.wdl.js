@@ -761,11 +761,9 @@ function BP_GET_WALLET_FORM(g)
         return {
         tag:'div', ref: 'dialog',
         cons:modalDialog,
-        addClass:'modal',
+        addClass:'modal hide fade',
         attr:{ id:'modalDialog', role:'dialog' },
         iface:{ mode:ctx.mode },
-        on:{ 'shown':modalDialog.prototype.onShown,
-             'hidden':modalDialog.prototype.onHidden },
         _final:{ appendTo:ctx.appendTo, show:false },
         _cull:['walletForm', 'modalHeader'],
             children:[
@@ -775,7 +773,7 @@ function BP_GET_WALLET_FORM(g)
                  attr:{ "data-dismiss":'modal', 'aria-hidden':true },
                  text:'x',
                  copy:['dialog'],
-                 on:{ 'click': function(e){destroyDialog();} }
+                 on:{ 'click': function(e){modalDialog.destroy();} }
                 },
                 {tag:'h3', ref:'modalHeader'}
                 ]
@@ -790,7 +788,7 @@ function BP_GET_WALLET_FORM(g)
                 addClass:'btn', 
                 attr:{'data-dismiss':'modal', 'aria-hidden':true, tabindex:-1}, 
                 text:'Cancel',
-                on:{ 'click': function(e){destroyDialog();}},
+                on:{ 'click': function(e){modalDialog.destroy();}},
                 copy:['dialog']
                 },
                 {tag:'button', addClass:'btn btn-primary', text:'Submit'}
@@ -803,7 +801,9 @@ function BP_GET_WALLET_FORM(g)
     {
         onInsert: {value: function()
         {
-            this.$().modal();
+            this.$().modal({show:false});
+            this.$().on('shown', modalDialog.onShown);
+            this.$().on('hidden', modalDialog.onHidden);
             
             switch (this.mode)
             {
@@ -826,23 +826,6 @@ function BP_GET_WALLET_FORM(g)
             
             return this;
         }},
-
-        onShown: {value: function(e) 
-        {
-            switch (this.mode)
-            {
-                case 'create':
-                    this.walletForm.fieldsetDBName.focus();
-                    break;
-                default:
-                    this.walletForm.fieldsetChooseDB.focus();
-            }   
-        }},
-        
-        onHidden: {value: function(e)
-        {
-            this.destroy();
-        }},
         
         showModal: {value: function()
         {
@@ -857,8 +840,27 @@ function BP_GET_WALLET_FORM(g)
             return this;
         }}
     });
-    
-    function createDialog(ops)
+    modalDialog.onShown = function(e)
+    {
+        var dialog = BP_W$.w$get('#modalDialog');
+        if (!dialog) { return; }
+        
+        switch (dialog.mode)
+        {
+            case 'create':
+                dialog.walletForm.fieldsetDBName.focus();
+                break;
+            default:
+                dialog.walletForm.fieldsetChooseDB.focus();
+        }   
+    };
+    modalDialog.onHidden = function(e)
+    {
+        var dialog = BP_W$.w$get('#modalDialog');
+        if (!dialog) { return; }
+        dialog.destroy();
+    };    
+    modalDialog.create = function(ops)
     {
         var ctx, dialog, temp;
 
@@ -879,8 +881,8 @@ function BP_GET_WALLET_FORM(g)
             callbackHandleError: ops.callbackHandleError,
             appendTo: 'body'
         };
-        var wdl = modalDialog.wdt(ctx);
-        dialog = BP_W$.w$exec(wdl, ctx);
+
+        dialog = BP_W$.w$exec(modalDialog.wdt, ctx);
         
         BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
         
@@ -889,13 +891,12 @@ function BP_GET_WALLET_FORM(g)
         if (dialog)
         {
             $(g_dialog.el).tooltip(); // used to leak DOM nodes in version 2.0.4.
-            g_dialog.onInsert().showModal().onShown();
+            g_dialog.onInsert().showModal(); //.onShown();
         }
         
         return g_dialog;
-    }
-    
-    function destroyDialog()
+    };
+    modalDialog.destroy = function()
     {
         var w$dialog;
         if (g_dialog) {
@@ -906,15 +907,15 @@ function BP_GET_WALLET_FORM(g)
         }
 
         if (w$dialog) {
-            w$dialog.hideModal().destroy();
+            w$dialog.hideModal();//.destroy();
         }
         
         g_dialog = null;
-    }    
+    };
 
     BP_ERROR.loginfo("constructed mod_wallet_form");
     return Object.freeze(
     {
-        launch: createDialog
+        launch: modalDialog.create
     });
 }
