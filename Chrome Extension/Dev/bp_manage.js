@@ -666,7 +666,6 @@ var BP_MANAGE = (function ()
             ops.mode = 'mergeOut'; 
             g.BP_WALLET_FORM.launch(ops);
         });
-        
 
         $('#content *').tooltip();
     }

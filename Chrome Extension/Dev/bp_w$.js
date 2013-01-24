@@ -153,10 +153,17 @@ function BP_GET_W$(g)
     };
     WidgetElement.prototype.append = function(w)
     {
-        $(this.el).append(w.el);
+        if (w) {
+            $(this.el).append(w.el);
+        }
         //this.children.push(wgt);
     };
-    WidgetElement.prototype.prepend = function(w) {$(this.el).prepend(w.el);};
+    WidgetElement.prototype.prepend = function(w)
+    {
+        if (w) {
+            $(this.el).prepend(w.el);
+        }
+    };
     WidgetElement.prototype.appendTo = function(w) {w.append(this);};
     WidgetElement.prototype.prependTo = function(w) {w.prepend(this);};
     WidgetElement.prototype.insertAfter = function(w) 
@@ -349,11 +356,13 @@ function BP_GET_W$(g)
     
     function w$exec(wdl, ctx, recursion)
     {
-        BPError.push("WDL Interpret");
+        BPError.push("WDL Interpret " + (wdl?wdl.cons:""));
         
         if (typeof wdl === 'function') {
             wdl = wdl(ctx); // compile wdt to wdl
         }
+        if (wdl === w$undefined) { return undefined; }
+        
         if (!wdl || (typeof wdl !== 'object')) {
             throw new BPError("Bad WDL: not a JS object", 'BadWDL', 'NotJSObject');
         }
@@ -395,12 +404,6 @@ function BP_GET_W$(g)
         if (wdl.prop) {$el.prop(wdl.prop);}
         if (wdl.css)  {$el.css(wdl.css);}
         if (wdl.addClass){$el.addClass(wdl.addClass);}
-        
-        // $el.attr(wdl.attr || {})
-            // .text(wdl.text || "")
-            // .prop(wdl.prop || {})
-            // .css(wdl.css || {})
-            // .addClass(wdl.addClass || "");
 
         w$on(w$el, wdl.on, w$eventProxy); // will bind this to e.currentTarget
         w$on(w$el, wdl.onTarget, w$eTargetProxy); // will bind this to e.target
@@ -425,12 +428,16 @@ function BP_GET_W$(g)
         // Process and insert child widgets
         for (i=0, n=wdl.children? wdl.children.length:0; i<n; i++) {
             cwdl = wdl.children[i];
+            if (typeof cwdl === 'function') {
+                cwdl = cwdl(ctx); // compile wdt to wdl
+            }
             if (cwdl !== w$undefined) {
                 try {
                     w$el.append(w$exec(cwdl, ctx, true));
                 }
                 catch (err) {
                     logwarn(err);
+                    BPError.pop();
                 }
             }
         }
@@ -456,6 +463,7 @@ function BP_GET_W$(g)
                 }
             } catch (e) {
                 logwarn(e);
+                BPError.pop();
             }}
             
             it = null;
@@ -493,6 +501,7 @@ function BP_GET_W$(g)
                 }
             } catch (e) {
                 logwarn(e);
+                BPError.pop();
             }});
 
             walker = null;
@@ -527,8 +536,9 @@ function BP_GET_W$(g)
         }
          
         // Clear DOM refs inside the temp_ctx to aid GC
-        (!temp_ctx) || (MOD_COMMON.delProps(temp_ctx));
-            
+        if (temp_ctx) { MOD_COMMON.delProps(temp_ctx); }
+        
+        BPError.pop();
         return w$el;
     }
 
@@ -539,7 +549,8 @@ function BP_GET_W$(g)
        w$get: w$get,
        w$set: w$set,
        w$defineProto: w$defineProto,
-       Widget: WidgetElement
+       Widget: WidgetElement,
+       WidgetElement: WidgetElement
    });
    BP_ERROR.log("constructed mod_w$");
    return iface;

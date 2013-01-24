@@ -6,7 +6,7 @@
  */
 
 /* JSLint directives */
-/*global chrome, $, BP_BOOT */
+/*global chrome, $, BP_BOOT, CustomEvent */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -106,10 +106,16 @@ function BP_GET_CS_PLAT(g)
             }
         },
         
-        trigger: function (el, eventType, eventInterface)
+        trigger: function (el, eventType, eventInterface, detail)
         {
             var ev = g_doc.createEvent(eventInterface || 'HTMLEvents');
             ev.initEvent(eventType, true, true);
+            el.dispatchEvent(ev);
+        },
+        
+        customEvent: function (el, eventType, detail)
+        {
+            var ev = new CustomEvent(eventType, {cancelable:true, bubbles:true, detail:detail});
             el.dispatchEvent(ev);
         }
     };

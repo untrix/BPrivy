@@ -163,6 +163,10 @@ function BP_GET_ERROR(g)
    {
        if (actn) {this.actions.push(actn);}
    };
+   Activity.prototype.pop = function ()
+   {
+       this.actions.pop();
+   };
    Activity.prototype.toString = function ()
    {
        var str = this.name || "", i,
@@ -256,6 +260,12 @@ function BP_GET_ERROR(g)
             BPError.atvt = new Activity('unknown');
         }
         BPError.atvt.push(actn);
+    };
+    BPError.pop = function ()
+    {
+        if (BPError.atvt) {
+            BPError.atvt.pop();
+        }
     };
     
     function alert (arg)
