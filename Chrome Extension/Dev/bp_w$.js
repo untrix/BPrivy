@@ -70,7 +70,7 @@
                   3. Props listed under w$ctx are copied over from the context object - ctx - only makes
                      sense when you're copying into something other than the context itself, like iface
                      or _iface.
-     *     copy ==  copy:['name'] is short for iface:{ ctx:{ name:'name' } }.
+     *     save ==  save:['name'] is short for iface:{ ctx:{ name:'name' } }.
      *              Similar to _cull, except that properties won't get deleted from ctx.
      *              i.e. properties are copied rather than moved, from ctx to the w$el.
      *              Used by child elements to save a pointer to an ancestor element.
@@ -423,7 +423,7 @@ function BP_GET_W$(g)
 
         // Populate element's interface pre-children
         if (wdl.iface) { w$evalProps(wdl.iface, w$, ctx, w$el); }
-        if (wdl.copy) { copyProps(wdl.copy, ctx, w$el); }
+        if (wdl.save) { copyProps(wdl.save, ctx, w$el); }
 
         // Process and insert child widgets
         for (i=0, n=wdl.children? wdl.children.length:0; i<n; i++) {

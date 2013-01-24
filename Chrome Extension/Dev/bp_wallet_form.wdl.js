@@ -52,14 +52,8 @@ function BP_GET_WALLET_FORM(g)
         g_counter = 1;
     /** @globals-end **/
 
-    function chooseWalletFolder(o)
+    function chooseFolder(o)
     {
-        BP_COMMON.clear(o);
-
-        o.dtitle = "Untrix Wallet: Select Wallet Folder";
-        o.dbutton = "Select Wallet Folder";
-        o.clrHist = true;
-
         if (!BP_PLUGIN.chooseFolder(o)) 
         {
             BP_ERROR.loginfo(o.err);
@@ -67,6 +61,37 @@ function BP_GET_WALLET_FORM(g)
         else {
             return o.path;
         }
+    }
+    
+    function chooseWalletFolder(o)
+    {
+        BP_COMMON.clear(o);
+        o.dtitle = "Untrix Wallet: Select Wallet Folder";
+        o.dbutton = "Select Wallet Folder";
+        o.clrHist = true;
+
+        return chooseFolder(o);
+    }
+    
+    function chooseKeyFolder(o)
+    {
+        BP_COMMON.clear(o);
+        o.dtitle  = "Untrix Wallet: Select folder for storing Key File";
+        o.dbutton = "Select Key File Folder";
+
+        return chooseFolder(o);
+    }
+    
+    function chooseKeyFile(o)
+    {
+        BP_COMMON.clear(o);
+        o.filter = ['Key File','*.3ak'];
+        o.dtitle = "Untrix Wallet: Select Key File";
+        o.dbutton = "Select";
+        o.clrHist = true;
+        
+        if (!BP_PLUGIN.chooseFile(o)) {BP_ERROR.loginfo(o.err);}
+        else {return o.path;}
     }
     
     //////////////// Common Prototype Functions  //////////////////
@@ -121,7 +146,7 @@ function BP_GET_WALLET_FORM(g)
         return {
         tag:'li', cons:itemDBName,
         iface:{ dbName:db_name },
-        copy:['fieldsetDBName'],
+        save:['fieldsetDBName'],
             children:[
             {tag:'a', attr:{href:'#'}, text:'ctx.dbName',
              on:{ 'click':itemDBName.prototype.onClick }
@@ -162,7 +187,7 @@ function BP_GET_WALLET_FORM(g)
              ref:'menuItems'
             }
             ],
-        copy:['fieldsetDBName'],
+        save:['fieldsetDBName'],
             iterate:{ it:nIt, wdi:itemDBName.wdi },
         _cull:['button', 'menuItems'],
         _final:{ exec:menuDBSelect.prototype.init }
@@ -204,7 +229,7 @@ function BP_GET_WALLET_FORM(g)
                      title:"Please enter a name for the new Wallet that you would like to create. "+
                            "Example: <i>Tony's Wallet</i>"
                      },
-                     prop:{ required: (ctx.mode==='create') },
+                     prop:{ required: true },
                      on:{ 'change': function(e) {
                                     CS_PLAT.customEvent(this.el, 'dbNameChosen', {dbName:this.el.value});
                                     }}
@@ -242,7 +267,7 @@ function BP_GET_WALLET_FORM(g)
             text:'Browse',
             ref:'btnChooseDB',
             on:{ 'click':btnChooseDB.prototype.onClick },
-            copy:['fieldsetChooseDB', 'dialog']
+            save:['fieldsetChooseDB', 'dialog']
             };
         };
         btnChooseDB.prototype = w$defineProto(btnChooseDB, 
@@ -373,6 +398,8 @@ function BP_GET_WALLET_FORM(g)
             addClass:'btn btn-small btn-primary',
             text:'Browse',
             ref:'btnChooseKey',
+            on:{ 'click':btnChooseKey.prototype.onClick },
+            save:['fieldsetChooseKey']
             };
         };
         btnChooseKey.prototype = w$defineProto(btnChooseKey,
@@ -380,7 +407,7 @@ function BP_GET_WALLET_FORM(g)
             onClick: {value: function(e)
             {
                 var o = {},
-                    path = chooseKeyPath(o);
+                    path = chooseKeyFile(o);
                     
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
@@ -400,23 +427,27 @@ function BP_GET_WALLET_FORM(g)
             {html:'<label class="control-label">Key File</label>'},
             {tag:'div', addClass:'controls form-inline',
                 children:[
-                btnChooseKey.wdt,
-                {tag:'input',
-                 attr:{ type:'text', placeholder:"Key File Path" },
-                 prop:{ required:true },
-                 addClass:"input-xlarge",
-                 ref:'inputKeyPath',
-                 on:{ 'change': function(e) {
-                     if (this.el.checkValidity()) {
-                        CS_PLAT.customEvent(this.el, 'keyPathChosen', {keyPath:this.el.value});
-                     } } 
+                {tag:'div', addClass:'input-prepend',
+                    children:[
+                    btnChooseKey.wdt,
+                    {tag:'input',
+                     attr:{ type:'text', placeholder:"Key File Path" },
+                     prop:{ required:true },
+                     addClass:"input-xlarge",
+                     ref:'inputKeyPath',
+                     on:{ 'change': function(e) {
+                         if (this.el.checkValidity()) {
+                            CS_PLAT.customEvent(this.el, 'keyPathChosen', {keyPath:this.el.value});
+                         } } 
+                        }
                     }
-                }
+                    ]
                 //checkInternalKey.wdt
+                }
                 ]
             }
             ],
-        copy:['walletForm'],
+        save:['walletForm'],
         _cull:['inputKeyPath', 'btnChooseKey', 'checkInternalKey'],
         _final:{ exec:function() { this.disable(); } }
         };
@@ -441,7 +472,7 @@ function BP_GET_WALLET_FORM(g)
             else
             {
                 this.enable();
-                this.checkInternalKey.checked = false;
+                //this.checkInternalKey.el.checked = false;
                 this.btnChooseKey.el.focus();
             }
             
@@ -466,7 +497,7 @@ function BP_GET_WALLET_FORM(g)
                  attr:{ type:'checkbox' },
                  prop:{ checked:false },
                  ref:'checkInternalKey',
-                 copy:['fieldsetChooseKeyFolder'],
+                 save:['fieldsetChooseKeyFolder'],
                  on:{ 'change':function(e)
                      {if (this.el.checked) {
                          this.fieldsetChooseKeyFolder.onCheck();
@@ -491,6 +522,8 @@ function BP_GET_WALLET_FORM(g)
             addClass:'btn btn-small btn-primary',
             text:'Browse',
             ref:'btnChooseKeyFolder',
+            on:{ 'click':btnChooseKeyFolder.prototype.onClick },
+            save:['fieldsetChooseKeyFolder']
             };
         };
         btnChooseKeyFolder.prototype = w$defineProto(btnChooseKeyFolder,
@@ -502,7 +535,7 @@ function BP_GET_WALLET_FORM(g)
                     
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
-                    this.fieldsetChooseFolder.inputKeyFolder.el.value = path;
+                    this.fieldsetChooseKeyFolder.inputKeyFolder.el.value = path;
                     CS_PLAT.customEvent(this.fieldsetChooseKeyFolder.inputKeyFolder.el, 
                         'keyFolderChosen', {keyFolder:path});
                 }
@@ -515,25 +548,29 @@ function BP_GET_WALLET_FORM(g)
         ref:'fieldsetChooseKeyFolder',
         addClass:'control-group',
         prop:{ disabled:true },
-        copy:['walletForm'],
+        save:['walletForm'],
             children:[
             {html:'<label class="control-label">Key Folder</label>'},
             {tag:'div', addClass:'controls form-inline',
                 children:[
-                btnChooseKeyFolder.wdt,
-                {tag:'input',
-                 attr:{ type:'text', placeholder:"Key Folder Path" },
-                 prop:{ required:true },
-                 addClass:"input-xlarge",
-                 ref:'inputKeyFolder',
-                 on:{ 'change': function(e) 
-                      {
-                          if (this.el.checkValidity()) {
-                            CS_PLAT.customEvent(this.el, 'keyFolderChosen', {keyFolder:this.el.value});
-                          }
-                      }}
-                },
-                checkInternalKey.wdt
+                {tag:'div', addClass:'input-prepend',
+                    children:[
+                    btnChooseKeyFolder.wdt,
+                    {tag:'input',
+                     attr:{ type:'text', placeholder:"Key Folder Path" },
+                     prop:{ required:true },
+                     addClass:"input-xlarge",
+                     ref:'inputKeyFolder',
+                     on:{ 'change': function(e) 
+                          {
+                              if (this.el.checkValidity()) {
+                                CS_PLAT.customEvent(this.el, 'keyFolderChosen', {keyFolder:this.el.value});
+                              }
+                          }}
+                    },
+                    checkInternalKey.wdt
+                    ]
+                }
                 ]
             }
             ],
@@ -589,9 +626,10 @@ function BP_GET_WALLET_FORM(g)
             tag:'input',
             attr:{ type:'password', placeholder:bPass2?"Re-Enter Master Password":"Enter Master Password",
                    title:'10 or more characters required', pattern:'.{10,}' },
+            prop:{ required:true },
             ref:'inputPassword',
             on:{ 'change':inputPassword.prototype.onChange},
-            copy:['walletForm']
+            save:['walletForm']
             };
         };
         inputPassword.prototype = w$defineProto(inputPassword,
@@ -605,11 +643,11 @@ function BP_GET_WALLET_FORM(g)
                          this.el.setCustomValidity('Passwords do not match');
                      }
                      else {
-                         CS_PLAT.customEvent(this.inputPassword.el, 'passwordChosen');
+                         CS_PLAT.customEvent(this.el, 'passwordChosen');
                      }
                  }
                  else if (this.walletForm.mode !== 'create') {
-                     CS_PLAT.customEvent(this.inputPassword.el, 'passwordChosen');
+                     CS_PLAT.customEvent(this.el, 'passwordChosen');
                  }
              }}
         });
@@ -690,6 +728,7 @@ function BP_GET_WALLET_FORM(g)
         cons: WalletFormWdl,
         ref:'walletForm',
         addClass:'form-horizontal',
+        save:['dialog'],
         iface:{
             mode: ctx.mode,
             loadDB2: ctx.loadDB2,
@@ -704,7 +743,8 @@ function BP_GET_WALLET_FORM(g)
         on:{ 'dbNameChosen':WalletFormWdl.prototype.onDBNameChosen,
              'dbChosen':WalletFormWdl.prototype.onDBChosen,
              'keyPathChosen':WalletFormWdl.prototype.onKeyPathChosen,
-             'keyFolderChosen':WalletFormWdl.prototype.onKeyFolderChosen
+             'keyFolderChosen':WalletFormWdl.prototype.onKeyFolderChosen,
+             'passwordChosen':WalletFormWdl.prototype.onPasswordChosen
         },
             children:[
             fieldsetDBName.wdt,
@@ -752,6 +792,19 @@ function BP_GET_WALLET_FORM(g)
             this.fieldsetPassword2.onKeyFolderChosen();
             e.preventDefault();
             e.stopPropagation();
+        }},
+        onPasswordChosen: {value: function(e)
+        {
+            this.onSubmit();
+        }},
+        onSubmit: {value: function()
+        {
+            if (this.el.checkValidity()) {
+                BP_ERROR.alert('all is well');
+            }
+            else {
+                BP_ERROR.alert('errors in form');
+            }
         }}
     });
     
@@ -772,7 +825,7 @@ function BP_GET_WALLET_FORM(g)
                 {tag:'button', addClass:'close',
                  attr:{ "data-dismiss":'modal', 'aria-hidden':true },
                  text:'x',
-                 copy:['dialog'],
+                 save:['dialog'],
                  on:{ 'click': function(e){modalDialog.destroy();} }
                 },
                 {tag:'h3', ref:'modalHeader'}
@@ -788,10 +841,13 @@ function BP_GET_WALLET_FORM(g)
                 addClass:'btn', 
                 attr:{'data-dismiss':'modal', 'aria-hidden':true, tabindex:-1}, 
                 text:'Cancel',
-                on:{ 'click': function(e){modalDialog.destroy();}},
-                copy:['dialog']
+                on:{ 'click': function(e){modalDialog.destroy();}}
                 },
-                {tag:'button', addClass:'btn btn-primary', text:'Submit'}
+                {tag:'button', addClass:'btn btn-primary', text:'Submit',
+                 attr:{ 'type':'button'},
+                 save:['walletForm'],
+                 on:{ 'click': function(e) { WalletFormWdl.prototype.onSubmit.apply(this.walletForm, e);} }
+                }
                 ]
             }
             ]
