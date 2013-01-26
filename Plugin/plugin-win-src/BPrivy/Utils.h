@@ -1,6 +1,7 @@
 #ifndef H_BP_Utils
 #define H_BP_Utils
 #include "BPi18n.h"
+#include <boost/filesystem.hpp>
 
 namespace bp
 {
@@ -8,6 +9,8 @@ namespace bp
 	bool direntToVariant(const bfs::path& path, bp::VariantMap& v, 
 						 bp::VariantMap& v_e, bp::ENT_TYPE type);
 	//std::string RandomPassword(int length);
+	/** Normalizes <path> and returns it */
+	bfs::path& normalizePath(boost::filesystem::path& path);
 }
 
 #endif // H_BP_Utils

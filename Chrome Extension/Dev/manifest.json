@@ -11,7 +11,7 @@
 	   },
   "permissions": ["contextMenus", "tabs", "webRequest", "webNavigation", "notifications"],
   "background": {"page": "bp_Main.html"},
-  "content_scripts1": [
+  "content_scripts": [
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*"],
     "exclude_matches": ["*://chrome.google.com/webstore*"],
@@ -20,7 +20,7 @@
     "all_frames": true
     }
   ],
-  "content_scripts": [
+  "content_scripts2": [
     {
     "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     "exclude_matches": ["*://chrome.google.com/webstore*"],

@@ -52,6 +52,24 @@ function BP_GET_WALLET_FORM(g)
         g_counter = 1;
     /** @globals-end **/
 
+    // TODO: This is better done via CSS
+    function setValidity(w$ctrl, w$cg)
+    {
+        if ((!w$ctrl) || (!w$cg)) { return; }
+        if (w$ctrl.el.validity.valid) {
+            w$cg.removeClass('error');
+        }
+        else {
+            w$cg.addClass('error');
+        }
+    }
+    function checkValidity(w$ctrl, w$cg)
+    {
+        var valid = w$ctrl && w$ctrl.el.checkValidity();
+        setValidity(w$ctrl, w$cg);
+        return valid;
+    }
+    
     function chooseFolder(o)
     {
         if (!BP_PLUGIN.chooseFolder(o)) 
@@ -106,7 +124,12 @@ function BP_GET_WALLET_FORM(g)
         {
             this.el.disabled = false;
             this.show();
-        }}        
+        }},
+        checkValidity: {value: function(w$ctrl)
+        {
+            // Assumes that this element is surrounding w$ctrl and has class 'control-group'
+            return checkValidity(w$ctrl, this);
+        }}
     });
     
     //////////////// Widget: checkSaveDBLocation //////////////////
@@ -115,7 +138,7 @@ function BP_GET_WALLET_FORM(g)
     {
         return {
         tag:'label',
-        addClass:'checkbox',
+        addClass:'pull-left',
         attr:{ title:'If checked, saved wallet locations will be forgotten, otherwise '+
         'all opened/created wallet locations will be remembered. For privacy and security, '+
         'select it if this is not your computer.'
@@ -123,15 +146,14 @@ function BP_GET_WALLET_FORM(g)
             children:[
             {tag:'input',
              attr:{ type:'checkbox', tabindex:-1 },
-             addClass:'pull-left',
              prop:{ checked:(localStorage.dbDontSaveLocation==='y') },
              ref:'checkDontSaveLocation',
              on:{'change': function(e){
                     localStorage.dbDontSaveLocation= (this.el.checked ? 'y' : 'n');
                   }}
-            }
-            ],
-        _text:'Forget Wallets'
+            },
+            {tag:'span', text:"  Forget Wallets"}
+            ]
         };
     };
     checkDontSaveLocation.prototype = w$defineProto(checkDontSaveLocation,
@@ -244,6 +266,8 @@ function BP_GET_WALLET_FORM(g)
     };
     fieldsetDBName.prototype = w$defineProto(fieldsetDBName,
     {
+        val: {value: function(){ return this.inputDBName.el.value; }},
+        
         focus: {value: function()
         {
             this.inputDBName.el.focus();
@@ -303,9 +327,10 @@ function BP_GET_WALLET_FORM(g)
                      prop:{ required:true },
                      addClass:"input-large",
                      ref:'inputDBPath',
+                     save:['fieldsetChooseDB'],
                      on:{'change':function(e)
                          {
-                            if (this.el.checkValidity()) {
+                            if (this.fieldsetChooseDB.checkValidity(this)) {
                                 CS_PLAT.customEvent(this.el, 'dbChosen', {dbPath:this.el.value});
                             }
                          }
@@ -341,13 +366,6 @@ function BP_GET_WALLET_FORM(g)
         onDBNameChosen: {value: function(dbName) 
         {
             var names = localStorage.dbNames;
-
-            if (names && (this.walletForm.mode !== 'create')) {
-                this.inputDBPath.el.placeholder = 'Select or Enter Wallet Name';
-            }
-            else {
-                this.inputDBPath.el.placeholder = 'Enter Wallet Name';
-            }
 
             if (names) {
                 this.inputDBPath.el.value = names[dbName];
@@ -435,8 +453,9 @@ function BP_GET_WALLET_FORM(g)
                      prop:{ required:true },
                      addClass:"input-xlarge",
                      ref:'inputKeyPath',
+                     save:['fieldsetChooseKey'],
                      on:{ 'change': function(e) {
-                         if (this.el.checkValidity()) {
+                         if (this.fieldsetChooseKey.checkValidity(this)) {
                             CS_PLAT.customEvent(this.el, 'keyPathChosen', {keyPath:this.el.value});
                          } } 
                         }
@@ -454,6 +473,8 @@ function BP_GET_WALLET_FORM(g)
     };
     fieldsetChooseKey.prototype = w$defineProto(fieldsetChooseKey,
     {
+        val: {value: function(){ return this.inputKeyPath.el.value; }},
+        
         onDBChosen: {value: function(dbPath)
         {
             var keyPath;
@@ -553,7 +574,7 @@ function BP_GET_WALLET_FORM(g)
             {html:'<label class="control-label">Key Folder</label>'},
             {tag:'div', addClass:'controls form-inline',
                 children:[
-                {tag:'div', addClass:'input-prepend',
+                {tag:'div', addClass:'input-prepend', ref:'controlsKeyFolder',
                     children:[
                     btnChooseKeyFolder.wdt,
                     {tag:'input',
@@ -561,25 +582,28 @@ function BP_GET_WALLET_FORM(g)
                      prop:{ required:true },
                      addClass:"input-xlarge",
                      ref:'inputKeyFolder',
+                     save:['fieldsetChooseKeyFolder'],
                      on:{ 'change': function(e) 
                           {
-                              if (this.el.checkValidity()) {
-                                CS_PLAT.customEvent(this.el, 'keyFolderChosen', {keyFolder:this.el.value});
+                              if (this.fieldsetChooseKeyFolder.checkValidity(this)) {
+                                CS_PLAT.customEvent(this.el, 'keyFolderChosen',
+                                                    {keyFolder:this.el.value});
                               }
                           }}
                     },
-                    checkInternalKey.wdt
                     ]
-                }
+                },
+                checkInternalKey.wdt,
                 ]
             }
             ],
-        _cull:['inputKeyFolder','btnChooseKeyFolder','checkInternalKey'],
+        _cull:['inputKeyFolder','btnChooseKeyFolder','checkInternalKey', 'controlsKeyFolder'],
         _final:{ exec:function() { this.disable(); } }
         };
     };
     fieldsetChooseKeyFolder.prototype = w$defineProto(fieldsetChooseKeyFolder,
     {
+        val: {value: function(){ return this.inputKeyFolder.el.value; }},
         onDBChosen: {value: function()
         {          
             if (this.walletForm.mode === 'create')
@@ -599,6 +623,7 @@ function BP_GET_WALLET_FORM(g)
                 this.inputKeyFolder.el.value = null;
                 this.inputKeyFolder.el.disabled = true;
                 this.btnChooseKeyFolder.el.disabled = true;
+                this.controlsKeyFolder.hide();
                 CS_PLAT.customEvent(this.inputKeyFolder.el, 'keyFolderChosen', {keyFolder:null});
             }
         }},
@@ -609,6 +634,7 @@ function BP_GET_WALLET_FORM(g)
                 this.inputKeyFolder.el.value = null;
                 this.inputKeyFolder.el.disabled = false;
                 this.btnChooseKeyFolder.el.disabled = false;
+                this.controlsKeyFolder.show();
             }
         }}
     }, formFieldProto);
@@ -629,14 +655,14 @@ function BP_GET_WALLET_FORM(g)
             prop:{ required:true },
             ref:'inputPassword',
             on:{ 'change':inputPassword.prototype.onChange},
-            save:['walletForm']
+            save:['walletForm', 'fieldsetPassword']
             };
         };
         inputPassword.prototype = w$defineProto(inputPassword,
         {
             onChange: {value: function(e)
              {
-                 if (!this.el.checkValidity()) { return; }
+                 if (!this.fieldsetPassword.checkValidity(this)) { return; }
 
                  if (bPass2) {
                      if (this.el.value !== this.walletForm.fieldsetPassword.inputPassword.el.value) {
@@ -651,7 +677,7 @@ function BP_GET_WALLET_FORM(g)
                  }
              }}
         });
-        
+
         return {
         tag:'fieldset', cons: fieldsetPassword,
         ref: (bPass2 ? 'fieldsetPassword2' : 'fieldsetPassword'),
@@ -672,6 +698,7 @@ function BP_GET_WALLET_FORM(g)
     };
     fieldsetPassword.prototype = w$defineProto(fieldsetPassword,
     {
+        val: {value: function(){ return this.inputPassword.el.value; }},
         onKeyPathChosen: {value: function(e)
         {
             if (!this.bPass2) { this.enable(); this.inputPassword.el.focus(); }
@@ -737,8 +764,7 @@ function BP_GET_WALLET_FORM(g)
             mergeInDB2: ctx.mergeInDB2,
             mergeOutDB2: ctx.mergeOutDB2,
             updateDash: ctx.updateDash,
-            callbackHandleError: ctx.callbackHandleError,
-            destroyWalletForm: ctx.destroyWalletForm
+            callbackHandleError: ctx.callbackHandleError
         },
         on:{ 'dbNameChosen':WalletFormWdl.prototype.onDBNameChosen,
              'dbChosen':WalletFormWdl.prototype.onDBChosen,
@@ -753,20 +779,28 @@ function BP_GET_WALLET_FORM(g)
             fieldsetChooseKeyFolder.wdt,
             fieldsetPassword.wdt,
             fieldsetPassword2_wdt
-            //fieldsetSubmit.wdt
             ],
-        _cull:['formWalletLegend',
-               'fieldsetDBName',
+        _cull:['fieldsetDBName',
                'fieldsetChooseDB',
                'fieldsetChooseKey',
                'fieldsetChooseKeyFolder',
                'fieldsetPassword',
                'fieldsetPassword2']
-               //'fieldsetSubmit']
         };
     };
     WalletFormWdl.prototype = w$defineProto(WalletFormWdl,
     {
+        setValiditys: {value: function()
+        {
+            if (this.fieldsetDBName) { 
+                setValidity(this.fieldsetDBName.inputDBName, this.fieldsetDBName);
+            }
+            setValidity(this.fieldsetChooseDB.inputDBPath, this.fieldsetChooseDB);
+            setValidity(this.fieldsetChooseKey.inputKeyPath, this.fieldsetChooseKey);
+            setValidity(this.fieldsetChooseKeyFolder.inputKeyFolder, this.fieldsetChooseKeyFolder);
+            setValidity(this.fieldsetPassword.inputPassword, this.fieldsetPassword);
+            setValidity(this.fieldsetPassword2.inputPassword, this.fieldsetPassword2);            
+        }},
         onDBNameChosen: {value: function(e)
         {
             this.fieldsetChooseDB.onDBNameChosen(e.detail.dbName);
@@ -799,11 +833,91 @@ function BP_GET_WALLET_FORM(g)
         }},
         onSubmit: {value: function()
         {
-            if (this.el.checkValidity()) {
-                BP_ERROR.alert('all is well');
+            if (!this.el.checkValidity()) {
+                this.setValiditys();
+                BP_ERROR.alert('There were some errors');
+                return;
             }
-            else {
-                BP_ERROR.alert('errors in form');
+            
+            this.setValiditys();
+            var self = this;
+            
+            if (this.mode === 'open') {
+                this.loadDB2(this.fieldsetChooseDB.val(),
+                        this.fieldsetChooseKey.val(),
+                        this.fieldsetPassword.val(), function (resp)
+                {
+                    if (resp.result === true) {
+                        self.updateDash(resp);
+                        BP_ERROR.success('Opened password wallet at ' + resp.dbPath);
+                        modalDialog.destroy();
+                    }
+                    else {
+                        self.callbackHandleError(resp);
+                    }
+                });
+            }
+            else if (this.mode === 'create') 
+            {
+                this.createDB2(this.fieldsetDBName.val(),
+                              this.fieldsetChooseDB.val(),
+                              this.fieldsetChooseKeyFolder.val(),
+                              this.fieldsetPassword.val(), function (resp)
+                {
+                    if (resp.result === true) {
+                        self.updateDash(resp);
+                        BP_ERROR.success('Password store created at ' + resp.dbPath);
+                        modalDialog.destroy();
+                    }
+                    else {
+                        self.callbackHandleError(resp);
+                    }
+                });
+            }
+            else if (this.mode === 'merge')
+            {
+                this.mergeDB2(this.fieldsetChooseDB.val(),
+                        this.fieldsetChooseKey.val(),
+                        this.fieldsetPassword.val(), function (resp)
+                {
+                    if (resp.result === true) {
+                        BP_ERROR.success('Merged with password wallet at ' + this.fieldsetChooseDB.val());
+                        modalDialog.destroy();
+                    }
+                    else {
+                        self.callbackHandleError(resp);
+                    }
+                });
+            }
+            else if (this.mode === 'mergeIn')
+            {
+                this.mergeInDB2(this.fieldsetChooseDB.val(),
+                        this.fieldsetChooseKey.val(),
+                        this.fieldsetPassword.val(), function (resp)
+                {
+                    if (resp.result === true) {
+                        BP_ERROR.success('Merged In password wallet at ' + this.fieldsetChooseDB.val());
+                        modalDialog.destroy();
+                    }
+                    else {
+                        self.callbackHandleError(resp);
+                    }
+                });
+            }
+            else if (this.mode === 'mergeOut')
+            {
+                this.mergeOutDB2(this.fieldsetChooseDB.val(),
+                        this.fieldsetChooseKey.val(),
+                        this.fieldsetPassword.val(), function (resp)
+                {
+                    if (resp.result === true) {
+                        BP_ERROR.success('Merged out to password wallet at ' + this.fieldsetChooseDB.val());
+                        modalDialog.destroy();
+                    }
+                    else {
+                        self.callbackHandleError(resp);
+                    }
+                });
             }
         }}
     });
@@ -814,7 +928,7 @@ function BP_GET_WALLET_FORM(g)
         return {
         tag:'div', ref: 'dialog',
         cons:modalDialog,
-        addClass:'modal hide fade',
+        addClass:'modal',
         attr:{ id:'modalDialog', role:'dialog' },
         iface:{ mode:ctx.mode },
         _final:{ appendTo:ctx.appendTo, show:false },
@@ -839,14 +953,17 @@ function BP_GET_WALLET_FORM(g)
                 checkDontSaveLocation.wdt,
                 {tag:'button', 
                 addClass:'btn', 
-                attr:{'data-dismiss':'modal', 'aria-hidden':true, tabindex:-1}, 
+                attr:{'data-dismiss':'modal', 'aria-hidden':true, tabindex:-1},
                 text:'Cancel',
                 on:{ 'click': function(e){modalDialog.destroy();}}
                 },
                 {tag:'button', addClass:'btn btn-primary', text:'Submit',
                  attr:{ 'type':'button'},
                  save:['walletForm'],
-                 on:{ 'click': function(e) { WalletFormWdl.prototype.onSubmit.apply(this.walletForm, e);} }
+                 on:{ 'click': function(e) {
+                     this.walletForm.onSubmit(e);
+                 } 
+                 }
                 }
                 ]
             }
@@ -891,8 +1008,8 @@ function BP_GET_WALLET_FORM(g)
         
         hideModal: {value: function()
         {
-            this.$().modal('hide');
             this.walletForm.el.reset();
+            this.$().modal('hide');
             return this;
         }}
     });
@@ -947,7 +1064,7 @@ function BP_GET_WALLET_FORM(g)
         if (dialog)
         {
             $(g_dialog.el).tooltip(); // used to leak DOM nodes in version 2.0.4.
-            g_dialog.onInsert().showModal(); //.onShown();
+            g_dialog.onInsert().showModal();
         }
         
         return g_dialog;
@@ -963,7 +1080,7 @@ function BP_GET_WALLET_FORM(g)
         }
 
         if (w$dialog) {
-            w$dialog.hideModal();//.destroy();
+            w$dialog.hideModal();
         }
         
         g_dialog = null;

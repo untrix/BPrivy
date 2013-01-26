@@ -1,8 +1,8 @@
 ========================================================================
-    STATIC LIBRARY : test Project Overview
+    CONSOLE APPLICATION : test Project Overview
 ========================================================================
 
-AppWizard has created this test library project for you.
+AppWizard has created this test application for you.
 
 This file contains a summary of what you will find in each of the files that
 make up your test application.
@@ -21,8 +21,11 @@ test.vcxproj.filters
     similar extensions under a specific node (for e.g. ".cpp" files are associated with the
     "Source Files" filter).
 
+test.cpp
+    This is the main application source file.
 
 /////////////////////////////////////////////////////////////////////////////
+Other standard files:
 
 StdAfx.h, StdAfx.cpp
     These files are used to build a precompiled header (PCH) file

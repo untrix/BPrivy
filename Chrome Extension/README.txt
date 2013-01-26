@@ -31,7 +31,8 @@ Apart from cloning the git repository, do the following:
 	a. LESS (less.org) for generating CSS files.
 	b. twitter/bootstrap libs for styling.
 	c. jquery, jquery-UI, json2 (polyfill by Douglas Crockford)
-	d. firebreath, boost and VC++ for plugin development on Windows.
+	d. firebreath, boost, openssl and VC++ libs. for plugin development on Windows.
 	e. For build-env (plugin): python, cmake, VC++ (Windows).
 	f. Build-env HTML/CSS/Javascript parts: Aptana, JSLint (included in aptana), nodejs,
 	   recess (less compiler from twitter), node-inspector (npm install node-inspector -g)
+	g. Effective TLD list from publicsuffix.org

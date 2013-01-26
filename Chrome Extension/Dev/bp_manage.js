@@ -181,10 +181,16 @@ var BP_MANAGE = (function ()
             }
 
             g_dbName = cullDBName(resp.dbPath);
-            if (g_dbPath !== resp.dbPath) {clearEditor();}
+            //if (g_dbPath !== resp.dbPath) {clearEditor();}
+            if ($('#editor-pane').hasClass('active')) {
+                reloadEditor();
+            }
+            else {
+                clearEditor();
+            }
             
-            $('[data-dbName]').text(g_dbName||"No Open Wallet").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
-            $('[data-db-path]').val(resp.dbPath||"No Open Wallet").attr('data-path', resp.dbPath);
+            $('[data-dbName]').text(g_dbName||"No Wallet Opened").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+            $('[data-db-path]').text(resp.dbPath||"No Wallet Opened").attr('data-path', resp.dbPath);
 
             if (resp.memStats && resp.dbPath)
             {
@@ -236,11 +242,13 @@ var BP_MANAGE = (function ()
         }
         else 
         {
+            $('[data-dbName]').text().attr('data-original-title', '').attr('data-path', null);
             $('[data-db-path]').text(null).attr('data-original-title', '').attr('data-path', null);
             $('#stats').val('');
             $('#dbCompact').removeClass('btn-warning').removeClass('btn-primary').prop('disabled', true);
             $('#qclean-stats').val("");
             $('#dbClean').removeClass('btn-primary').prop('disabled', true);
+            clearEditor();
         }
     }
 
@@ -499,7 +507,7 @@ var BP_MANAGE = (function ()
                    id = e.currentTarget.getAttribute('id');
             $('#dbChooseLoad, #dbChooseLoad2').button('loading');
 
-            if (BP_PLUGIN.chooseFolder(o)) 
+            if (BP_PLUGIN.chooseFolder(o))
             {
                 loadDB(o.path, function (resp)
                 {
@@ -627,21 +635,21 @@ var BP_MANAGE = (function ()
         });
         
         
-        addEventListeners('#btnWalletOpen', 'click', function(e)
+        addEventListeners('#btnWalletOpen, #btnWalletOpen2', 'click', function(e)
         {
             var ops = getCallbacks();
-            ops.mode = 'open'; 
+            ops.mode = 'open';
             g.BP_WALLET_FORM.launch(ops);
         });
         
         addEventListeners('#btnWalletCreate', 'click', function(e)
         {
             var ops = getCallbacks();
-            ops.mode = 'create'; 
+            ops.mode = 'create';
             g.BP_WALLET_FORM.launch(ops);
         });
         
-        addEventListeners('#btnWalletClose', 'click', function(e)
+        addEventListeners('#btnWalletClose, #btnWalletClose2', 'click', function(e)
         {
             closeDB();
         });

@@ -1,15 +1,17 @@
 #include "Utils.h"
 #include "ErrorHandling.h"
 #include <string>
-#include <boost/random/random_device.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
+//#include <boost/random/random_device.hpp>
+//#include <boost/random/uniform_int_distribution.hpp>
 
 using namespace std;
 
 namespace bp
 {
+	namespace bfs = boost::filesystem;
+
 	// *** Value MUST be less than 4GiB since msize32_t is uint32_t
-	const msize32_t MAX_READ_BYTES = 10485760; // = 10MB
+	const msize32_t MAX_READ_BYTES = 0xFFFFFFFF; //10485760; // = 10MB
 
 	bool direntToVariant(const bfs::path& path, bp::VariantMap& v, bp::VariantMap& v_e,
 					 ENT_TYPE type)
@@ -56,6 +58,19 @@ namespace bp
 		}
 	}
 
+	bfs::path& normalizePath(boost::filesystem::path& path)
+	{
+		bfs::path normalized;
+
+		for (bfs::path::iterator it = path.begin(); it != path.end(); it++)
+		{
+			if (*it != ".") {
+				normalized /= *it;
+			}
+		}
+		path = normalized.make_preferred();
+		return path;
+	}
 
 /*	std::string RandomPassword(unsigned len) 
 	{

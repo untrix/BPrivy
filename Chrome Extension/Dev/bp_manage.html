@@ -45,7 +45,8 @@
               <!-- <h3>Manage Wallets</h3> -->
               <legend>
                 Currently Open Wallet : 
-                <span disabled id="dbPath" data-dbName style="text-align:center"></span>
+                <!-- <span id="dbPath" data-dbName style="text-align:center"></span> -->
+                <span data-dbName style="text-align:center"></span>
               </legend>
               
               <div class="well form-horizontal">
@@ -105,9 +106,9 @@
                       </a> or any other such cloud-drive. However, for added security be sure to 
                       remove the Key-file from the Wallet and store it on a
                       local drive or a thumb drive or memory card.
-                      <small><strong>IT IS NOT SAFE TO SYNC YOUR PASSWORDS VIA THE INTERNET. </strong>
+                      <small><strong>IT IS NOT SAFE TO KEEP YOUR PASSWORDS ON THE INTERNET. </strong>
                       However, if you must resort to cloud-based sync, we recommend that you store
-                      the Key-file on a local drive or a thumb drive / memory card but *not* on the internet. </small>
+                      the Key-file in a different location than the cloud-drive. </small>
                     </p>
                   </div>
                 </fieldset>
@@ -116,12 +117,14 @@
               
               <div class="form-horizontal well">
                 <legend>
-                    <span title="Import/Export a comma separated (CSV) password file exported from another password manager">
+                    <span>
                       Import / Export Passwords
                     </span>
                 </legend>
                 <div class="control-group">
-                  <label class="control-label">CSV File</label>
+                  <label class="control-label" title="Import/Export a comma separated (CSV) password file exported from another password manager">
+                    CSV File
+                  </label>
                   <div class="controls form-inline">
                     <button id="csvImport" type="button" class="btn btn-primary" title="Click to choose the file">
                       <img style="display:none" id="csvImportSpinner" src="icons/ajax-loader-white.gif" />
@@ -151,18 +154,20 @@
               </div>
             </div>
             <div class="tab-pane" id="editor-pane">
-              <h3>Edit Passwords</h3>
+              <h3>Edit Passwords: <span data-db-path>No Wallet Opened</span></h3>
+              
               <div id="editorPane">
                 <div class="form-inline">
                   <div class="control-group">
                     <!-- <label class="control-label">Wallet</label> -->
                     <div class="controls">
-                      <input type="text" data-db-path placeholder="No Wallet Opened" disabled title="The open Wallet">
-                      <button id="dbChooseLoad2" type="button" class="btn btn-primary" data-loading-text="Opening..." 
+                      <button id="btnWalletOpen2" type="button" class="btn btn-primary" data-loading-text="Opening..." 
                         title="Open/Re-open <i style='display:inline-block'>Wallet</i> folder">
-                         Open
+                         Open Wallet
                       </button>
-                      <button id="dbClose2" type="button" class="btn" title="Close the password Wallet">Close</button>
+                      <button id="btnWalletClose2" type="button" class="btn" title="Close the password Wallet">
+                        Close Wallet
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -205,6 +210,14 @@
                   <div class="controls">
                     <button disabled id="dbDelete" type="button" class="btn btn-primary" data-loading-text="Deleting...">
                       Secure Delete</button>
+                  </div>
+                </fieldset>
+
+                <fieldset class="control-group">
+                  <label class="control-label">Change Master Password</label>
+                  <div class="controls">
+                    <button disabled id="btnChngPass" type="button" class="btn btn-primary" data-loading-text="Deleting...">
+                      Change Password</button>
                   </div>
                 </fieldset>
 

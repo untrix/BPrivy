@@ -47,3 +47,4 @@ The following software is required to build the BPrivy plugin:
 11.	Build the project called "ALL_BUILD". If you get an error saying that the PCH heap limit is exceeded and that you should use supply a higher /Zm value then do as recommended. (e.g. provide 'Additional Option' /Zm170 under C/C++->Command Line of the failed project)
 12. Windows Platform Support - XP and above (WINVER, _WIN32_WINNT, NTDDI_VERSION >= 0x0501). See win_targetver.h.
 	Requires: Kernel32.dll (for filesystem api), Comdlg32.lib (for GetOpenFilename for chooseFileXP), Ole32.lib and Shell32.lib (for SHBrowseForFolderW for chooseFolderXP), Ole32.lib (for OleInitialize, CoCreateInstance etc. for CommonItemDialog for BPrivyAPI::_choose)
+13. NOTE: public domain scrypt source code is also used within the product.

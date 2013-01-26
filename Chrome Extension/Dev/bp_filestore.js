@@ -307,7 +307,7 @@ function BP_GET_FILESTORE(g)
         }
 
         var memStats,
-            cryptInfoPath, k, o = {};
+            cryptInfoPath, o = {};
         dbStats = dbStats || newDBMap(dbPath);
         // First determine if this DB exists and is good.
         dbPath = DB_FS.verifyDBForLoad(dbPath);
