@@ -184,7 +184,10 @@ function BP_GET_COMMON(g)
 
     function clear(obj)
     {
-        var keys = Object.keys(obj), n;
+        var keys, n;
+        
+        if (!obj) { return; }
+        keys = Object.keys(obj);
         for (n=keys.length-1; n >= 0; n--) {
             delete obj[keys[n]];
         }        

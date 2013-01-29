@@ -145,21 +145,6 @@ var BP_MANAGE = (function ()
         //rpcToMothership({cm: BP_CONNECT.cm_getDB, dt:dt}, cback);
     }
     
-    // function fillOptions(eid, dir)
-    // {
-        // var o={hide:true}, d, i=0, n=0;
-        // eid = '#' + eid;
-        // $(eid).empty(); // Empty the selector list anyway.
-        // if (BP_PLUGIN.ls(dir, o) && (o.lsd) && (d=(o.lsd)) && d.d) {
-            // var keys = Object.keys(d.d);
-            // if ((n = keys.length) > 0) {
-                // $(eid).append($(document.createElement('option')).text('Browse Files'));
-                // for (i=0; i<n; ++i) {
-                    // $(eid).append($(document.createElement('option')).val(keys[i]).text(keys[i]));
-                // }
-            // }
-        // }
-    // }
     function callbackHandleError (resp)
     {
         if (resp.result===false) {
@@ -181,6 +166,7 @@ var BP_MANAGE = (function ()
             }
 
             g_dbName = cullDBName(resp.dbPath);
+            g_dbPath = resp.dbPath;
             //if (g_dbPath !== resp.dbPath) {clearEditor();}
             if ($('#editor-pane').hasClass('active')) {
                 reloadEditor();
@@ -306,6 +292,7 @@ var BP_MANAGE = (function ()
             mergeOutDB2: mergeOutDB2,
             updateDash: updateDash,
             callbackHandleError: callbackHandleError,
+            getDBPath: function() { return g_dbPath; }
         };
     }
     
