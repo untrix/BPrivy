@@ -581,6 +581,24 @@ function BP_GET_FILESTORE(g)
         cleanLoadInternal(DB_FS.getDBPath());
     }        
 
+    function secureDelete(db)
+    {
+        var dbStats = DB_FS.lsFiles(db), o, keyFiles=[];
+        DB_FS.rmFiles(db);
+        
+        keyFiles = DB_FS.findCryptInfoFile2(db, true);
+
+        o = {secureDelete:true};
+        if (keyFiles.length) {
+            BP_COMMON.iterArray2(keyFiles, null, function(fPath)
+            {
+                BP_PLUGIN.rm(fPath, o);    
+            });
+        }
+
+        BP_PLUGIN.rm(db, o);
+    }
+    
     function merge (db1, db2, oneWay)
     {
         var dbStats1 = newDBMap(db1),
@@ -772,7 +790,7 @@ function BP_GET_FILESTORE(g)
             o = {};
             BP_PLUGIN.destroyCryptCtx(dbPath, o);
             BP_PLUGIN.rm(keyPath, {secureDelete:true});
-            BP_PLUGIN.rm(dbPath);
+            BP_PLUGIN.rm(dbPath, o);
             throw exp;
         }
         

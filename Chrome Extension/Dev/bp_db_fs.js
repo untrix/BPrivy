@@ -351,9 +351,9 @@ function BP_GET_DBFS(g)
                 
                 return path;
             },
-            findCryptInfoFile2: function(dbPath)
+            findCryptInfoFile2: function(dbPath, bAll)
             {
-                var o={}, path;
+                var o={}, path, paths=[];
                 
                 if (BP_PLUGIN.ls(dbPath, o) && o.lsd && o.lsd.f)
                 {
@@ -361,11 +361,22 @@ function BP_GET_DBFS(g)
                     {
                         if (ent.ext === mod.ext_Key) {
                             path = dbPath + path_sep + fname;
-                            return true; // exits the iterObj loop
+                            if (bAll) {
+                                paths.push(path);
+                            }
+                            else {
+                                return true; // exits the iterObj loop    
+                            }
                         }
                     }, dbPath);
                 }
-                return path;
+                
+                if (bAll) {
+                    return paths;
+                }
+                else {
+                    return path;
+                }
             },
             makeDTFilePath: function (dt, dbPath)
             {
