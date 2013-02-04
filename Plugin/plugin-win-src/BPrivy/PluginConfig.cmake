@@ -1,22 +1,24 @@
 #/**********************************************************\ 
 #
 # Auto-Generated Plugin Configuration file
-# for BPrivy
+# for BPrivy - then edited manually.
+#
+# This file is to be edited manually.
 #
 #\**********************************************************/
 
-set(PLUGIN_NAME "BPrivy")
-set(PLUGIN_PREFIX "BP")
-set(COMPANY_NAME "Untrix Soft")
+set(PLUGIN_NAME "UntrixPlugin")
+set(PLUGIN_PREFIX "BPL")
+set(COMPANY_NAME "UntrixSoft")
 
 # ActiveX constants:
-set(FBTYPELIB_NAME BPrivyLib)
-set(FBTYPELIB_DESC "BPrivy 1.0 Type Library")
-set(IFBControl_DESC "BPrivy Control Interface")
-set(FBControl_DESC "BPrivy Control Class")
-set(IFBComJavascriptObject_DESC "BPrivy IComJavascriptObject Interface")
-set(FBComJavascriptObject_DESC "BPrivy ComJavascriptObject Class")
-set(IFBComEventSource_DESC "BPrivy IFBComEventSource Interface")
+set(FBTYPELIB_NAME UntrixPluginLib)
+set(FBTYPELIB_DESC "UntrixPlugin 1.0 Type Library")
+set(IFBControl_DESC "UntrixPlugin Control Interface")
+set(FBControl_DESC "UntrixPlugin Control Class")
+set(IFBComJavascriptObject_DESC "UntrixPlugin IComJavascriptObject Interface")
+set(FBComJavascriptObject_DESC "UntrixPlugin ComJavascriptObject Class")
+set(IFBComEventSource_DESC "UntrixPlugin IFBComEventSource Interface")
 set(AXVERSION_NUM "1")
 
 # NOTE: THESE GUIDS *MUST* BE UNIQUE TO YOUR PLUGIN/ACTIVEX CONTROL!  YES, ALL OF THEM!
@@ -28,19 +30,19 @@ set(FBComJavascriptObject_GUID 85b7a40f-4a56-5daf-b63f-4b9c1cf85d4b)
 set(IFBComEventSource_GUID 0f8ba12f-b626-5759-870d-70b77f2a2c45)
 
 # these are the pieces that are relevant to using it from Javascript
-set(ACTIVEX_PROGID "untrix.com/BPrivy")
-set(MOZILLA_PLUGINID "untrix.com/BPrivy")
+set(ACTIVEX_PROGID "untrix.com/UntrixPlugin")
+set(MOZILLA_PLUGINID "untrix.com/UntrixPlugin")
 
 # strings
-set(FBSTRING_CompanyName "Untrix Soft")
-set(FBSTRING_PluginDescription "BPrivy Password Manager")
-set(FBSTRING_PLUGIN_VERSION "1.0.0.0")
-set(FBSTRING_LegalCopyright "Copyright 2012 Sumeet Singh sumeet@untrix.com")
+set(FBSTRING_CompanyName "Untrix Soft LLC")
+set(FBSTRING_PluginDescription "Untrix Portable Passwords")
+set(FBSTRING_PLUGIN_VERSION "1.1.0.0")
+set(FBSTRING_LegalCopyright "Copyright 2013 Untrix Soft LLC")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
-set(FBSTRING_ProductName "BPrivy")
-set(FBSTRING_FileExtents "3ab|3ac|3ad|3am|3ao|3at")
-set(FBSTRING_PluginName "BPrivy")
-set(FBSTRING_MIMEType "application/x-bprivy")
+set(FBSTRING_ProductName "Untrix Portable Passwords")
+set(FBSTRING_FileExtents "3ab|3ac|3ad|3ak|3am|3ao|3at")
+set(FBSTRING_PluginName "Untrix Portable Passwords")
+set(FBSTRING_MIMEType "application/x-untrix")
 
 # Uncomment this next line if you're not planning on your plugin doing
 # any drawing:
@@ -60,4 +62,4 @@ set(FBMAC_USE_INVALIDATINGCOREANIMATION 0)
 
 # Manually added by Sumeet
 add_boost_library(filesystem)
-add_firebreath_library(log4cplus)
+#add_firebreath_library(log4cplus)

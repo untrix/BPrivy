@@ -326,10 +326,10 @@ bool BPrivyAPI::_ls(bfs::path& path, bp::JSObject* p)
 				bfs::path pth = it->path();//TODO: Unnecessary copy
 				bp::VariantMap m, e;
 
-				if (hide && (it->status().hidden() == bfs::yes)) {
+				/*if (hide && (it->status().hidden() == bfs::yes)) {
 					continue;
 				}
-				else if (bfs::is_directory(it->status())) {
+				else*/ if (bfs::is_directory(it->status())) {
 					if (direntToVariant(pth, m, e, ENT_DIR)) {
 						md.insert(fname, m);
 					}

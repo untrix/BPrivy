@@ -1,11 +1,11 @@
 The following software is required to build the BPrivy plugin:
-1. Download firebreath into BPrivy/Plugin/firebreath1.7: git git://github.com/firebreath/FireBreath.git -b firebreath1.7 firebreath1.7
+1. Skip this step (Firebreath is already in SCM). Download firebreath into BPrivy/Plugin/firebreath1.7: git git://github.com/firebreath/FireBreath.git -b firebreath1.7 firebreath1.7
 2. MS Visual Studio 2010 Express or MS Visual Studio 2010
 3. If using MSVS Express, you will need to download and install Windows Driver Kit 7.1.0 (WDK) http://msdn.microsoft.com/en-us/windows/hardware/hh852361. If using full version of MSVS, you don't need the WDK.
 4. CMake (v2.8.8 being used today) from www.cmake.org. Install in default location.
 5. Python 2.6 or above (2.7.3 being used today). Install it in the default location.
-6. Get boost 1.49 from www.boost.org. Download source and build and install it into BPrivy/boost.
-7. Build the boost libraries:
+6. Skip this step - we're using Firebreath supplied boost libs. Get boost 1.49 from www.boost.org. Download source and build and install it into BPrivy/boost.
+7. Skip this step - we're using Firebreath supplied boost libs. Build the boost libraries:
 	1. Unzip into - say - $Boost_Build_Dir
 	2. cd $Boost_Build_Dir
 	3. .\bootstrap
@@ -40,9 +40,10 @@ The following software is required to build the BPrivy plugin:
 	We can also achieve the override by first building the project once (next step) and then going and changing the WITH_SYSTEM-BOOST option in plugin-win-build/CMakeCache.txt file to 'ON' instead of 'OFF'. But that would require creating the project first with the internal boost libraries that come with FireBreath.
 8.2. Download and install Wix 3.5 (not 3.6). Get it from the BPrivy downloads DVD or download from http://wixtoolset.org (be sure to only install v3.5, later versions won't work). WiX has a MPL type license. NOTE: This must be done before the next step, otherwise the installer project won't be generated.
 9. After all the above is done then run the firebreath\prep2010.cmd in the Windows PowerShell ISE in order to make the build directory:
-	.\firebreath1.7\prep2010.cmd .\plugin-win-src .\plugin-win-build-static -C C:\Dev\BPrivy\Plugin\plugin-win-src\BPrivy\CMakeInitialCache_Win32_Static.txt
-	.\firebreath1.7\prep2010.cmd .\plugin-win-src .\plugin-win-build-dynamic -C C:\Dev\BPrivy\Plugin\plugin-win-src\BPrivy\CMakeInitialCache_Win32_Dynamic.txt
-	This will build plugin-win-build\FireBreath.sln. Some error is printed regarding not being able to process initial cache, but the project gets build with the system-boost libs anyway.
+	1) Skip this step: .\firebreath\prep2010.cmd .\plugin-win-src .\plugin-win-build-static -C C:\Dev\BPrivy\Plugin\plugin-win-src\BPrivy\CMakeInitialCache_Win32_Static.txt
+	2) .\firebreath\prep2010.cmd .\plugin-win-src .\plugin-win-build-dynamic -C C:\Dev\BPrivy\Plugin\plugin-win-src\BPrivy\CMakeInitialCache_Win32_Dynamic.txt
+
+	This will create plugin-win-build-*\FireBreath.sln. Some error is printed regarding not being able to process initial cache, but the project gets build with the system-boost libs anyway.
 10. Open FireBreath.sln in VC++ Express 2010. Verify (Right-Click BPrivy then Properties) that the libs in C:\Boost are being linked-  thread, system, date_time and filesystem.
 11.	Build the project called "ALL_BUILD". If you get an error saying that the PCH heap limit is exceeded and that you should use supply a higher /Zm value then do as recommended. (e.g. provide 'Additional Option' /Zm170 under C/C++->Command Line of the failed project)
 12. Windows Platform Support - XP and above (WINVER, _WIN32_WINNT, NTDDI_VERSION >= 0x0501). See win_targetver.h.
