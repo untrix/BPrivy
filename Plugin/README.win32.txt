@@ -1,7 +1,7 @@
 The following software is required to build the BPrivy plugin:
 1. Download firebreath into BPrivy/Plugin/firebreath1.7: git git://github.com/firebreath/FireBreath.git -b firebreath1.7 firebreath1.7
-2. MS Visual C++ 2010 Express
-3. Windows Driver Kit 7.1.0 (WDK) http://msdn.microsoft.com/en-us/windows/hardware/hh852361
+2. MS Visual Studio 2010 Express or MS Visual Studio 2010
+3. If using MSVS Express, you will need to download and install Windows Driver Kit 7.1.0 (WDK) http://msdn.microsoft.com/en-us/windows/hardware/hh852361. If using full version of MSVS, you don't need the WDK.
 4. CMake (v2.8.8 being used today) from www.cmake.org. Install in default location.
 5. Python 2.6 or above (2.7.3 being used today). Install it in the default location.
 6. Get boost 1.49 from www.boost.org. Download source and build and install it into BPrivy/boost.

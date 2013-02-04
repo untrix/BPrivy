@@ -96,6 +96,7 @@ public:
 	std::wstring pathSeparator();
 	bool createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFilePath, const bp::ucs& dbPath, FB::JSObjectPtr in_out);
 	bool loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFilePath, const bp::ucs& dbPath, FB::JSObjectPtr in_out);
+	bool dupeCryptCtx(const bp::ucs& cryptInfoFile, const bp::ucs& dbDir, FB::JSObjectPtr in_out);
 	bool destroyCryptCtx(const bp::ucs& dbPath, FB::JSObjectPtr in_out);
 	bool cryptCtxLoaded(const bp::ucs& dbPath, FB::JSObjectPtr in_out);
 	//bool isNullCrypt(const bp::ucs& cryptInfoFilePath, FB::JSObjectPtr in_out);
@@ -132,9 +133,10 @@ private:
 	unsigned long long _lockFile(bfs::path& path, bp::JSObject* out);
 	bool _destroyCryptCtx(const bfs::path& dbPath, bp::JSObject* out);
 	bool _cryptCtxLoaded(const bfs::path& dbPath, bp::JSObject* out);
-	//bool _isNullCrypt(const bfs::path& cryptInfoFilePath, bp::JSObject* out);
 	bool _createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
 	bool _loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
+	bool _dupeCryptCtx(const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
+	//bool _isNullCrypt(const bfs::path& cryptInfoFilePath, bp::JSObject* out);
 #ifdef DEBUG
 public:
 	bool chooseFileXP(FB::JSObjectPtr p);

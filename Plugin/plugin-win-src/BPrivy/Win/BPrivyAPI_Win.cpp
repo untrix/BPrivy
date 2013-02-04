@@ -609,7 +609,7 @@ bool BPrivyAPI::_appendFile(const bfs::path& db_path, bfs::path& path,
 		GetDataProperty(inOut, PROP_SUFFIX, sfx);
 		bsiz = siz + pfx.length() + sfx.length();
 
-		const crypt::CryptCtx* pCtx = crypt::CryptCtx::GetP(db_path.wstring());
+		const crypt::CryptCtx* pCtx = crypt::CryptCtx::Get(db_path.wstring());
 
 		if (pCtx  || (bsiz > siz))
 		{
@@ -697,7 +697,7 @@ bool BPrivyAPI::_readFile(const bfs::path& db_path, bfs::path& path,
 		crypt::ByteBuf buf;
 
 		//ucs dbPath;
-		const crypt::CryptCtx* pCtx = crypt::CryptCtx::GetP(db_path.wstring());
+		const crypt::CryptCtx* pCtx = crypt::CryptCtx::Get(db_path.wstring());
 
 		if (pCtx)
 		{
@@ -796,7 +796,7 @@ bool BPrivyAPI::overwriteFile(const bfs::path& db_path, const bfs::path& path,
 {
 	CONSOLE_LOG("In overwriteFile");
 
-	const crypt::CryptCtx* pCtx = crypt::CryptCtx::GetP(db_path.wstring());
+	const crypt::CryptCtx* pCtx = crypt::CryptCtx::Get(db_path.wstring());
 
 	crypt::ByteBuf buf;
 	if (pCtx)

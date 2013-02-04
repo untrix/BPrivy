@@ -39,6 +39,7 @@ namespace crypt
 		static const wstring	CODE_NO_MEM; // possibly user retriable error
 		static const wstring	CODE_CRYPTO_ERROR; // user-retriable situation
 		static const wstring	CODE_BAD_DATA; // possibly user-retriable (corrupted file/data).
+		static const wstring	CODE_CTX_NOT_FOUND; // No CryptCtx was found for the given handle.
 
 		static const wstring	MSG_EMPTY;
 	};

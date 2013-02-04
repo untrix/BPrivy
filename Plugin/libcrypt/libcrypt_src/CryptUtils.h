@@ -119,6 +119,7 @@ namespace crypt
 			}
 		}
 		Buf&		operator=		(Buf<T>&& other);
+		Buf&		operator=		(const Buf&);
 		virtual		~Buf			() {zero();}
 		/** Buffer memory management is done by derived concrete classes */
 		T*			m_buf;
@@ -137,7 +138,6 @@ namespace crypt
 	private:
 		/* Disabled methods */
 					Buf				(const Buf&); // disabled
-		Buf&		operator=		(const Buf&); // disabled
 		virtual	void dummy			() = 0;
 	};
 
@@ -171,9 +171,21 @@ namespace crypt
 	{
 		if (this != &other)
 		{
+			//m_dataNum = other.m_dataNum;
+			//m_seek = other.m_seek;
+			*this = (const Buf<T>&)other; // delegate to assignment operator
+			other.m_dataNum = other.m_seek = 0;
+		}
+		return *this;
+	}
+
+	template <typename T> Buf<T>&
+	Buf<T>::operator=(const Buf<T>& other)
+	{
+		if (this != &other)
+		{
 			m_dataNum = other.m_dataNum;
 			m_seek = other.m_seek;
-			other.m_dataNum = other.m_seek = 0;
 		}
 		return *this;
 	}
@@ -235,8 +247,16 @@ namespace crypt
 		// structs because it uses memcpy to copy from c_str.
 		explicit		BufHeap			(const T* c_str);
 		explicit		BufHeap			(BufHeap<T>&& other);
+		// Assignment constructor - with an additional dummy argument so as
+		// to ensure that it is not picked up instead of the move constructor
+		explicit		BufHeap			(const BufHeap&, bool dummy);
 		/** Move operator capable of accepting expiring values (xvalue) */
 		BufHeap&		operator=		(BufHeap<T>&& other);
+		/** 
+		 * Assignment operator masked as serialization operator so as to not silently
+		 * override the move operator.
+		 */
+		BufHeap&		operator<<		(const BufHeap&);
 		virtual			~BufHeap		() {Delete();}
 		/**	
 		 * Ensures that the buffer has at least an additional delta_num
@@ -325,7 +345,7 @@ namespace crypt
 			{
 				m_buf[i] = c_str[i];  // Invokes assignment operator.
 			}*/
-			// WARNING: Below does a shallow copy only. Will only
+			// IMPORTANT: Below does a shallow copy only. Will only
 			// work on PODs and shallow structs.
 			memcpy(m_buf, c_str, m_num*sizeof(T));
 			setDataNum(m_num);
@@ -343,10 +363,33 @@ namespace crypt
 			Delete();
 			m_buf = other.m_buf; other.m_buf = NULL;
 			m_num = other.m_num; other.m_num = 0;
+			// Let base class do its own work
 			Buf<T>::operator=(std::forward<Buf<T> >(other));
 
 			other.zero(); // paranoia
 		}
+		return *this;
+	}
+
+	template <typename T>
+	BufHeap<T>::BufHeap(const BufHeap<T>& other, bool)
+	{
+		(*this) << other;
+	}
+
+	template <typename T> BufHeap<T>&
+	BufHeap<T>::operator<<(const BufHeap<T>& other)
+	{
+		if (this != &other)
+		{
+			Malloc(other.m_num);
+			// IMPORTANT: Below does a shallow copy only. Will only
+			// work on PODs and shallow structs.
+			memcpy(m_buf, other.m_buf, m_num*sizeof(T));
+			// Let base class do its own work
+			Buf<T>::operator=(other);
+		}
+
 		return *this;
 	}
 
@@ -367,15 +410,29 @@ namespace crypt
 							m_num = LEN;
 							setDataNum(uLen);
 						}
+		explicit		Array			(const Array&, bool dummy);
+
 	protected:
 		T				m_array[LEN];
 	private:
 		virtual void	dummy			() {}
 
 	private: // Disabled interfaces
-						Array			(const Array&); // undefined
-		Array&			operator=		(const Array&); // undefined
+		explicit		Array			(const Array&); // disabled
+		Array&			operator=		(const Array&); // disabled
 	};
+
+	template <typename T, size_t LEN>
+	Array<T, LEN>::Array(const Array<T, LEN>& other, bool)
+	{
+		m_buf = m_array;
+		m_num = LEN;
+		// IMPORTANT: Below does a shallow copy only. Will only
+		// work on PODs and shallow structs.
+		memcpy(m_array, other.m_array, LEN*sizeof(T));
+		// Let base class do its own work
+		Buf<T>::operator=(other);
+	}
 }
 
 #endif // !_UTILS_H_

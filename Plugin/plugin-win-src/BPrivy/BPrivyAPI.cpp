@@ -570,8 +570,8 @@ BPrivyAPI::_copy(const bfs::path& dbPath1, bfs::path& o_path,
 			if (dbPath1 != dbPath2)
 			{
 				const crypt::CryptCtx *p1, *p2;
-				p1 = crypt::CryptCtx::GetP(dbPath1.wstring());
-				p2 = crypt::CryptCtx::GetP(dbPath2.wstring());
+				p1 = crypt::CryptCtx::Get(dbPath1.wstring());
+				p2 = crypt::CryptCtx::Get(dbPath2.wstring());
 				if (p1 || p2)
 				{
 					if (p1 && p2)
@@ -676,6 +676,69 @@ bool BPrivyAPI::_cryptCtxLoaded(const bfs::path& dbPath, bp::JSObject* out)
 	return false;
 }
 
+bool
+BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
+{
+	try
+	{
+		bp::ucs ctxHandle(dbPath.wstring());
+		crypt::BufHeap<char> pass($.c_str());
+		crypt::CryptCtx::Create(ctxHandle, cryptInfoFilePath.wstring(), pass);
+		crypt::ByteBuf outBuf;
+		const crypt::CryptCtx* pCtx = crypt::CryptCtx::Get(ctxHandle);
+		BPError::Assert((pCtx!=NULL), ACODE_CANT_PROCEED, BPCODE_CRYPT_ERROR, 
+			L"Could not create CryptCtx");
+		pCtx->serializeInfo(outBuf);
+		overwriteFile(bfs::path(), cryptInfoFilePath, outBuf, false, in_out);
+
+		in_out->SetProperty(PROP_CRYPT_CTX, ctxHandle);
+		return true;
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
+	return false;
+}
+
+bool BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
+{
+	try
+	{
+		ucs ctxHandle(dbPath.wstring());
+		crypt::BufHeap<uint8_t> inBuf(bfs::file_size(cryptInfoFilePath));
+		bfs::basic_ifstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::in | std::ios_base::binary);
+		fStream.read(inBuf, inBuf.capacityBytes());
+		if (fStream.fail()) {
+			throw BPError(ACODE_BAD_CRYPTINFO, BPCODE_BAD_FILE, 
+				L"Bad CryptInfo File");
+		}
+		fStream.close();
+		inBuf.setDataNum(inBuf.capacityBytes());
+		crypt::BufHeap<char> pass($.c_str());
+		crypt::CryptCtx::Load(ctxHandle, cryptInfoFilePath.wstring(), pass, inBuf);
+		
+		in_out->SetProperty(PROP_DB_PATH, ctxHandle);
+		return true;
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
+	return false;
+}
+
+bool BPrivyAPI::_dupeCryptCtx(const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
+{
+	try
+	{
+		if (crypt::CryptCtx::Dupe(dbPath.wstring(), cryptInfoFilePath.wstring())) {
+			in_out->SetProperty(PROP_DB_PATH, dbPath.wstring()); // signals true
+		}
+		else {
+			in_out->RemoveProperty(PROP_DB_PATH); // signals false
+		}
+
+		return true;
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
+	return false;
+}
+
 /*bool BPrivyAPI::_isNullCrypt(const bfs::path& cryptInfoFilePath, bp::JSObject* out)
 {
 	try {
@@ -702,55 +765,6 @@ bool BPrivyAPI::_cryptCtxLoaded(const bfs::path& dbPath, bp::JSObject* out)
 	CATCH_FILESYSTEM_EXCEPTIONS(out);
 	return false;
 }*/
-
-bool
-BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
-{
-	try
-	{
-		bp::ucs ctxHandle(dbPath.wstring());
-		crypt::BufHeap<char> pass($.c_str());
-		crypt::CryptCtx::Create(ctxHandle, pass);
-		crypt::ByteBuf outBuf;
-		const crypt::CryptCtx* pCtx = crypt::CryptCtx::GetP(ctxHandle);
-		BPError::Assert((pCtx!=NULL), ACODE_CANT_PROCEED, BPCODE_CRYPT_ERROR, 
-			L"Could not create CryptCtx");
-		pCtx->serializeInfo(outBuf);
-		overwriteFile(bfs::path(), cryptInfoFilePath, outBuf, false, in_out);
-		//bfs::basic_ofstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-		//fStream.write(outBuf, outBuf.dataNum());
-		//fStream.flush();
-		//fStream.close();
-		in_out->SetProperty(PROP_CRYPT_CTX, ctxHandle);
-		return true;
-	}
-	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
-	return false;
-}
-
-bool BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
-{
-	try
-	{
-		ucs ctxHandle(dbPath.wstring());
-		crypt::BufHeap<uint8_t> inBuf(bfs::file_size(cryptInfoFilePath));
-		bfs::basic_ifstream<uint8_t> fStream(cryptInfoFilePath, std::ios_base::in | std::ios_base::binary);
-		fStream.read(inBuf, inBuf.capacityBytes());
-		if (fStream.fail()) {
-			throw BPError(ACODE_BAD_CRYPTINFO, BPCODE_BAD_FILE, 
-				L"Bad CryptInfo File");
-		}
-		fStream.close();
-		inBuf.setDataNum(inBuf.capacityBytes());
-		crypt::BufHeap<char> pass($.c_str());
-		crypt::CryptCtx::Load(ctxHandle, pass, inBuf);
-		
-		in_out->SetProperty(PROP_DB_PATH, ctxHandle);
-		return true;
-	}
-	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
-	return false;
-}
 
 //bool BPrivyAPI::writeFile(const std::string& pth, const std::string& data, FB::JSObjectPtr out)
 //{

@@ -686,8 +686,9 @@ function BP_GET_WALLET_FORM(g)
             var keyPath;
             
             if (this.walletForm.mode === 'create') {
-                this.enable();
-                this.onUncheck();
+                //this.enable();
+                //this.onUncheck();
+                this.disable();
                 return this;
             }
             
@@ -744,9 +745,11 @@ function BP_GET_WALLET_FORM(g)
         {
             return {
             tag:'label',
-            attr:{ title:'Uncheck to store the new key separately - for more security' },
+            attr:{ title:'Uncheck to create a new key or to use an existing one ' +
+                         '(required if you want a single master-password for multiple wallets). '+
+                         'It is also recommended if you are saving your wallet in a cloud-drive.' },
              addClass:'checkbox',
-             _text:'Create a new key and save within the Wallet',
+             _text:'I do not want to use a key (not recommended for cloud-drives)',
                 children:[
                 {tag:'input',
                  attr:{ type:'checkbox' },
@@ -807,6 +810,7 @@ function BP_GET_WALLET_FORM(g)
             {html:'<label class="control-label">New Key Location</label>'},
             {tag:'div', addClass:'controls form-inline',
                 children:[
+                checkInternalKey.wdt,
                 {tag:'div', addClass:'input-prepend', ref:'controlsKeyFolder',
                     children:[
                     btnChooseKeyFolder.wdt,
@@ -825,8 +829,7 @@ function BP_GET_WALLET_FORM(g)
                           }}
                     },
                     ]
-                },
-                checkInternalKey.wdt,
+                }
                 ]
             }
             ],
@@ -1224,7 +1227,7 @@ function BP_GET_WALLET_FORM(g)
                 checkDontSaveLocation.wdt,
                 {tag:'button', 
                 addClass:'btn', 
-                attr:{'data-dismiss':'modal', 'aria-hidden':true, tabindex:-1},
+                attr:{'data-dismiss':'modal', tabindex:-1},
                 text:'Cancel',
                 on:{ 'click': function(e){modalDialog.destroy();}}
                 },

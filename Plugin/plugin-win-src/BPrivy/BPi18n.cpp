@@ -161,7 +161,8 @@ bool BPrivyAPI::chooseFolder(FB::JSObjectPtr out)
 bool BPrivyAPI::createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, const bp::ucs& dbDir, FB::JSObjectPtr in_out)
 {
 	bp::JSObject o(in_out);
-	bfs::path path(cryptInfoFile); path.make_preferred();
+	bfs::path path(cryptInfoFile);
+	bp::normalizePath(path); // cryptInfoFile is used as ctxId, hence needs to be normalized.
 	bfs::path dbPath(dbDir); 
 	bp::normalizePath(dbPath); // dbPath is used as ctx-handle, hence needs to be normalized.
 	return _createCryptCtx($, path, dbPath, &o);
@@ -169,10 +170,21 @@ bool BPrivyAPI::createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, 
 bool BPrivyAPI::loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, const bp::ucs& dbDir, FB::JSObjectPtr in_out)
 {
 	bp::JSObject o(in_out);
-	bfs::path path(cryptInfoFile); path.make_preferred();
+	bfs::path path(cryptInfoFile);
+	bp::normalizePath(path); // cryptInfoFile is used as ctxId, hence needs to be normalized.
 	bfs::path dbPath(dbDir); 
 	bp::normalizePath(dbPath); // dbPath is used as ctx-handle, hence needs to be normalized.
 	return _loadCryptCtx($, path, dbPath, &o);
+}
+
+bool BPrivyAPI::dupeCryptCtx(const bp::ucs& cryptInfoFile, const bp::ucs& dbDir, FB::JSObjectPtr in_out)
+{
+	bp::JSObject o(in_out);
+	bfs::path path(cryptInfoFile);
+	bp::normalizePath(path); // cryptInfoFile is used as ctxId, hence needs to be normalized.
+	bfs::path dbPath(dbDir); 
+	bp::normalizePath(dbPath); // dbPath is used as ctx-handle, hence needs to be normalized.
+	return _dupeCryptCtx(path, dbPath, &o);
 }
 
 bool BPrivyAPI::destroyCryptCtx(const bp::ucs& dbPath, FB::JSObjectPtr in_out)

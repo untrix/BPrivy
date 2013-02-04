@@ -120,13 +120,14 @@ namespace crypt
 		// when had guessed the right password)
 		//Array<uint8_t, SIG_SIZE>  m_signature;
 		/** Following are ephemeral */
-		const EVP_CIPHER*	m_EVP_CIPHER;
+		const EVP_CIPHER*	m_EVP_CIPHER; // corresponds to m_cipher.
 		/*size_t		m_ivLen;  // IV size in #bytes*/
-		size_t		m_blkSize;// cipher's block size in #bytes
+		size_t		m_blkSize;// cipher's block size in #bytes. Corresponds to m_EVP_CIPHER.
 		uint8_t		getVersion		() const {return m_version;}
 
 					CryptInfo		(CipherEnum cipher, size_t keyLen, uint8_t version=1);
-					CryptInfo		(const Buf<uint8_t>& cryptInfo);
+		explicit	CryptInfo		(const Buf<uint8_t>& cryptInfo);
+		explicit	CryptInfo		(const CryptInfo&);
 					~CryptInfo		() {zero();}
 		void		zero			();
 		virtual void serialize		(ByteBuf& outbuf);
@@ -134,12 +135,18 @@ namespace crypt
 		friend class CryptInfoFormatBase;
 
 	private:
-					CryptInfo		(const CryptInfo&);// not to be defined
-		CryptInfo&	operator=		(const CryptInfo&);// not to be defined
+		CryptInfo&	operator=		(const CryptInfo&);// disabled
 		void		ConstructCommon	(CipherEnum);
 
 		uint8_t		m_version; //serialization format version.
 	};
 
+	inline
+	CryptInfo::CryptInfo(const CryptInfo& other)
+	: m_logN(other.m_logN), m_r(other.m_r), m_p(other.m_p), m_cipher(other.m_cipher),
+	m_keyLen(other.m_keyLen), m_salt(other.m_salt, true), m_randKey(other.m_randKey, true),
+	m_EVP_CIPHER(other.m_EVP_CIPHER), m_blkSize(other.m_blkSize), m_version(other.m_version)
+	
+	{}
 } // end namespace crypt
 #endif //  _H_CRYPT_INFO_

@@ -416,8 +416,7 @@ namespace crypt
 			size_t keySize = parse.GetU8();
 			ByteBuf key(keySize);
 			parse.GetBuf(key, keySize);
-			obj.m_randKey = std::move(key); // parsing of cipher-blob happens here.
-			//parse.GetBuf(obj.m_signature, FMT_SIG_SIZE);
+			obj.m_randKey = std::move(key);
 		}
 		catch (Error& e)
 		{
