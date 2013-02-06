@@ -6,6 +6,8 @@
     <LibScryptSrc>..\libscrypt_src</LibScryptSrc>
     <OpensslInclude>C:\openssl\include</OpensslInclude>
     <OpensslLib>C:\openssl\lib\libeay32.lib</OpensslLib>
+    <LibCrypt>libcrypt.lib</LibCrypt>
+    <LibScrypt>libscrypt.lib</LibScrypt>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup>
@@ -28,6 +30,14 @@
     </BuildMacro>
     <BuildMacro Include="OpensslLib">
       <Value>$(OpensslLib)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="LibCrypt">
+      <Value>$(LibCrypt)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="LibScrypt">
+      <Value>$(LibScrypt)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
   </ItemGroup>

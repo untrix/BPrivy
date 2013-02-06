@@ -3,7 +3,6 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
     <Plugin-Src>..\..\plugin-win-src\BPrivy</Plugin-Src>
-    <BoostInclude>C:/Boost/include/boost-1_49</BoostInclude>
     <SrcDir>..\libcrypt_src</SrcDir>
     <OpensslInclude>C:\openssl\include</OpensslInclude>
     <LibscryptSrc>..\libscrypt_src</LibscryptSrc>
@@ -13,10 +12,6 @@
   <ItemGroup>
     <BuildMacro Include="Plugin-Src">
       <Value>$(Plugin-Src)</Value>
-      <EnvironmentVariable>true</EnvironmentVariable>
-    </BuildMacro>
-    <BuildMacro Include="BoostInclude">
-      <Value>$(BoostInclude)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
     <BuildMacro Include="SrcDir">
