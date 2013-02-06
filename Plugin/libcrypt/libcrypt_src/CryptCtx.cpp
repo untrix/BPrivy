@@ -252,7 +252,7 @@ namespace crypt
 	{
 		try
 		{
-			s_ctxMap.at(ctxId);
+			const CryptCtx* p = s_ctxMap.at(ctxId);
 			// We got here indicates that the key exists. We can't depend
 			// on the return value since it will be NULL for nullCrytpInfo
 			// but we still want to return true in that case.
@@ -296,8 +296,8 @@ namespace crypt
 		// NOTE: We're ensuring that a null-string will never be a valid handle. This makes
 		// it possible to supply a null-string handle as a dummy handle in the file-system routines
 		// resting assured that no encrypt/decrypt operations will take place.
-		Error::Assert( (!handle.empty()) &&  (!ctxId.empty() && (!Exists(handle)) && 
-					   (!CtxExists(ctxId))), 
+		Error::Assert( ( (!handle.empty()) &&  (!ctxId.empty()) && (!Exists(handle)) && 
+					   (!CtxExists(ctxId)) ), 
 					  Error::CODE_BAD_PARAM, L"crypt Key is already loaded");
 
 
@@ -331,11 +331,10 @@ namespace crypt
 	}
 
 	bool
-	CryptCtx::Dupe(const ucs& ctxId, const ucs& dupeHandle)
+	CryptCtx::DupeIfNotLoaded(const ucs& ctxId, const ucs& dupeHandle)
 	{
-		if (!CtxExists(ctxId)) { return false; }
-
 		if (!Exists(dupeHandle)) {
+			if (!CtxExists(ctxId)) { return false; }
 			s_handleMap.insert(HandleMap::value_type(dupeHandle, ctxId));
 		}
 
@@ -345,10 +344,10 @@ namespace crypt
 	void
 	CryptCtx::Destroy(const ucs& handle)
 	{
-		const ucs& ctxId = GetCtxId(handle);
+		const ucs ctxId = GetCtxId(handle);
 		s_handleMap.erase(handle);
 		if (!CtxIdExists(ctxId)) {
-			delete Get(ctxId);
+			delete GetCtx(ctxId);
 			s_ctxMap.erase(ctxId);
 		}
 	}
@@ -373,7 +372,7 @@ namespace crypt
 	{
 		try
 		{
-			s_handleMap.at(handle);
+			const ucs ctxId = s_handleMap.at(handle);
 			// We got here indicates that the key exists, otherwise an
 			// exception would've been thrown.
 			return true;
@@ -389,7 +388,7 @@ namespace crypt
 		}
 	}
 
-	const CryptCtx::ucs&
+	const CryptCtx::ucs
 	CryptCtx::GetCtxId(const ucs& handle)
 	{
 		try {
@@ -397,7 +396,8 @@ namespace crypt
 		}
 		catch (const std::out_of_range&)
 		{
-			throw Error(Error::CODE_BAD_PARAM, L"crypt Key not loaded");
+			return L""; // empty contex-id implies no context.
+			// throw Error(Error::CODE_BAD_PARAM, L"crypt Key not loaded");
 		}
 		catch (std::exception& e)
 		{

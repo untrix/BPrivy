@@ -580,38 +580,6 @@ function BP_GET_WALLET_FORM(g)
     function fieldsetChooseKey() {}
     fieldsetChooseKey.wdt = function (ctx)
     {
-        //////////////// Widget: checkExistingKey //////////////////
-        function checkExistingKey() {}
-        checkExistingKey.wdt = function(ctx)
-        {
-            if (ctx.mode !== 'create') { return w$undefined; }
-
-            return {
-            tag:'label',
-            attr:{ 'title':'Check this if you want to use the same master-password across wallets' },
-            addClass:'checkbox',
-            _text:'Use an existing key',
-                children:[
-                {tag:'input',
-                 attr:{ type:'checkbox' },
-                 prop:{ checked:false }, // default value
-                 ref:'checkExistingKey',
-                 save:['fieldsetChooseKey'],
-                 
-                 on:{'change': function(e)
-                     {if (this.el.checked) {
-                         this.fieldsetChooseKey.onCheck();
-                      } else {
-                         this.fieldsetChooseKey.onUncheck();
-                      }
-                     }
-                 }
-                }
-                ]
-            };
-        };
-        checkExistingKey.prototype = w$defineProto(checkExistingKey, {});
-        
         //////////////// Widget: btnChooseKey //////////////////
         function btnChooseKey() {}
         btnChooseKey.wdt = function (ctx)
@@ -739,6 +707,38 @@ function BP_GET_WALLET_FORM(g)
     function fieldsetChooseKeyFolder() {}
     fieldsetChooseKeyFolder.wdt = function (ctx)
     {
+        //////////////// Widget: checkExistingKey //////////////////
+        function checkExistingKey() {}
+        checkExistingKey.wdt = function(ctx)
+        {
+            if (ctx.mode !== 'create') { return w$undefined; }
+
+            return {
+            tag:'label',
+            attr:{ 'title':'Check this if you want to use the same master-password across wallets' },
+            addClass:'checkbox',
+            _text:'Use an existing key',
+                children:[
+                {tag:'input',
+                 attr:{ type:'checkbox' },
+                 prop:{ checked:false }, // default value
+                 ref:'checkExistingKey',
+                 save:['fieldsetChooseKeyFolder'],
+                 
+                 on:{'change': function(e)
+                     {if (this.el.checked) {
+                         //this.fieldsetChooseKey.onCheck();
+                      } else {
+                         //this.fieldsetChooseKey.onUncheck();
+                      }
+                     }
+                 }
+                }
+                ]
+            };
+        };
+        checkExistingKey.prototype = w$defineProto(checkExistingKey, {});
+
         //////////////// Widget: checkInternalKey //////////////////
         function checkInternalKey() {}
         checkInternalKey.wdt = function(ctx)
@@ -921,6 +921,7 @@ function BP_GET_WALLET_FORM(g)
         iface:{ bPass2: bPass2 },
         prop:{ disabled:true },
         addClass:'control-group',
+        save:['walletForm'],
             children:[
             {tag:'label', addClass:'control-label',
              text:bPass2?'Re-Enter Master Password':'Master Password'
@@ -941,7 +942,25 @@ function BP_GET_WALLET_FORM(g)
         val: {value: function(){ return this.inputPassword.el.value; }},
         onKeyPathChosen: {value: function(e)
         {
-            if (!this.bPass2) { this.enable(); this.inputPassword.el.focus(); }
+        	var o, dbPath;
+            if (!this.bPass2) 
+            {
+            	dbPath = this.walletForm.fieldsetChooseDB.val();
+            	o = {};
+            	if (!BP_PLUGIN.dupeCryptCtx(e.detail.keyPath, dbPath, o)) {
+            		BP_ERROR.alert(o.err);
+            	}
+            	else if (!o.dbPath) {
+            		this.enable(); this.inputPassword.el.focus();
+            	}
+            	else {
+            		// CryptContext is loaded, therefore do not
+            		// query for password. But we need a dummy
+            		// password to satisfy constraint validation
+            		this.el.value = "abcABC123#*!";
+            		CS_PLAT.customEvent(this.el, 'passwordChosen');
+            	}
+           	}
         }},
         
         onKeyFolderChosen: {value: function(e)
@@ -1059,14 +1078,14 @@ function BP_GET_WALLET_FORM(g)
         }},
         onKeyPathChosen: {value: function(e)
         {
-            this.fieldsetPassword.onKeyPathChosen();
+            this.fieldsetPassword.onKeyPathChosen(e);
             e.preventDefault();
             e.stopPropagation();
         }},
         onKeyFolderChosen: {value: function(e)
         {
-            this.fieldsetPassword.onKeyFolderChosen();
-            this.fieldsetPassword2.onKeyFolderChosen();
+            this.fieldsetPassword.onKeyFolderChosen(e);
+            this.fieldsetPassword2.onKeyFolderChosen(e);
             e.preventDefault();
             e.stopPropagation();
         }},

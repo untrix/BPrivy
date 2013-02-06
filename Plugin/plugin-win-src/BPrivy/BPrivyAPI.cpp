@@ -73,6 +73,7 @@ BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host) :
 	registerMethod("pathSeparator", make_method(this, &BPrivyAPI::pathSeparator));
 	registerMethod("createCryptCtx", make_method(this, &BPrivyAPI::createCryptCtx));
 	registerMethod("loadCryptCtx", make_method(this, &BPrivyAPI::loadCryptCtx));
+	registerMethod("dupeCryptCtx", make_method(this, &BPrivyAPI::dupeCryptCtx));
 	registerMethod("destroyCryptCtx", make_method(this, &BPrivyAPI::destroyCryptCtx));
 	registerMethod("cryptCtxLoaded", make_method(this, &BPrivyAPI::cryptCtxLoaded));
 #ifdef DEBUG
@@ -726,7 +727,7 @@ bool BPrivyAPI::_dupeCryptCtx(const bfs::path& cryptInfoFilePath, const bfs::pat
 {
 	try
 	{
-		if (crypt::CryptCtx::Dupe(dbPath.wstring(), cryptInfoFilePath.wstring())) {
+		if (crypt::CryptCtx::DupeIfNotLoaded(dbPath.wstring(), cryptInfoFilePath.wstring())) {
 			in_out->SetProperty(PROP_DB_PATH, dbPath.wstring()); // signals true
 		}
 		else {

@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
 		int rVal = LoadCryptCtx(argv[2], argv[3], origHandle);
 		if (rVal != 0) { return rVal; }
 
-		crypt::CryptCtx::Dupe(origHandle, L"dupe");
+		crypt::CryptCtx::DupeIfNotLoaded(origHandle, L"dupe");
 
 		crypt::ByteBuf outBuf;
 		const crypt::CryptCtx* pCtx = crypt::CryptCtx::Get(dupeHandle);

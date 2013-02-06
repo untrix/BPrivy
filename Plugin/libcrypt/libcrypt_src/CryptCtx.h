@@ -72,7 +72,7 @@ namespace crypt
 		 * Otherwise, if newHandle already exists, then returns true.
 		 * Otherwise creates a newHandle->ctxId mapping and returns true.
 		 */
-		static bool					Dupe				(const ucs& ctxId,
+		static bool					DupeIfNotLoaded		(const ucs& ctxId,
 													     const ucs& newHandle);
 		/**
 		 *  Destroys the Handle entry and if this was the last handle for the corresponding
@@ -85,7 +85,7 @@ namespace crypt
 
 	private:
 		static bool					CtxExists			(const ucs& ctxId);
-		static const ucs&			GetCtxId			(const ucs& handle);
+		static const ucs			GetCtxId			(const ucs& handle);
 		/** If handle is an empty string, a NULL value is returned. See documentation for Create. */
 		static CryptCtx*			GetCtx				(const ucs& ctxId);
 
