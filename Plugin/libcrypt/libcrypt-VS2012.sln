@@ -3,36 +3,50 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{271C3FE2-FA64-4F86-81A6-8EA8BEFF5D27}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcrypt-VS2012", "libcrypt_proj\libcrypt-VS2012.vcxproj", "{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcrypt", "libcrypt_proj\libcrypt-VS2012.vcxproj", "{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{7375675C-69BF-4E82-BBDF-E483B08B612C} = {7375675C-69BF-4E82-BBDF-E483B08B612C}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crypt-VS2012", "crypt\crypt-VS2012.vcxproj", "{B06CD584-9BD8-4AA6-A362-81D070AC553E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crypt", "crypt\crypt-VS2012.vcxproj", "{B06CD584-9BD8-4AA6-A362-81D070AC553E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA} = {AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libscrypt-VS2012", "libscrypt_proj\libscrypt-VS2012.vcxproj", "{7375675C-69BF-4E82-BBDF-E483B08B612C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libscrypt", "libscrypt_proj\libscrypt-VS2012.vcxproj", "{7375675C-69BF-4E82-BBDF-E483B08B612C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		MinSizeRel|Win32 = MinSizeRel|Win32
 		Release|Win32 = Release|Win32
+		RelWithDebInfo|Win32 = RelWithDebInfo|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.Debug|Win32.ActiveCfg = Debug|Win32
 		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.Debug|Win32.Build.0 = Debug|Win32
+		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.MinSizeRel|Win32.ActiveCfg = Release|Win32
+		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.MinSizeRel|Win32.Build.0 = Release|Win32
 		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.Release|Win32.ActiveCfg = Release|Win32
 		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.Release|Win32.Build.0 = Release|Win32
+		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
+		{AE1DDDA3-F4EE-47DE-9EC9-1E935175E3BA}.RelWithDebInfo|Win32.Build.0 = Release|Win32
 		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.Debug|Win32.ActiveCfg = Debug|Win32
 		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.Debug|Win32.Build.0 = Debug|Win32
+		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.MinSizeRel|Win32.ActiveCfg = Release|Win32
+		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.MinSizeRel|Win32.Build.0 = Release|Win32
 		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.Release|Win32.ActiveCfg = Release|Win32
 		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.Release|Win32.Build.0 = Release|Win32
+		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
+		{B06CD584-9BD8-4AA6-A362-81D070AC553E}.RelWithDebInfo|Win32.Build.0 = Release|Win32
 		{7375675C-69BF-4E82-BBDF-E483B08B612C}.Debug|Win32.ActiveCfg = Debug|Win32
 		{7375675C-69BF-4E82-BBDF-E483B08B612C}.Debug|Win32.Build.0 = Debug|Win32
+		{7375675C-69BF-4E82-BBDF-E483B08B612C}.MinSizeRel|Win32.ActiveCfg = Release|Win32
+		{7375675C-69BF-4E82-BBDF-E483B08B612C}.MinSizeRel|Win32.Build.0 = Release|Win32
 		{7375675C-69BF-4E82-BBDF-E483B08B612C}.Release|Win32.ActiveCfg = Release|Win32
 		{7375675C-69BF-4E82-BBDF-E483B08B612C}.Release|Win32.Build.0 = Release|Win32
+		{7375675C-69BF-4E82-BBDF-E483B08B612C}.RelWithDebInfo|Win32.ActiveCfg = Release|Win32
+		{7375675C-69BF-4E82-BBDF-E483B08B612C}.RelWithDebInfo|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

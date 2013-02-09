@@ -296,10 +296,12 @@ namespace crypt
 		// NOTE: We're ensuring that a null-string will never be a valid handle. This makes
 		// it possible to supply a null-string handle as a dummy handle in the file-system routines
 		// resting assured that no encrypt/decrypt operations will take place.
-		Error::Assert( ( (!handle.empty()) &&  (!ctxId.empty()) && (!Exists(handle)) && 
-					   (!CtxExists(ctxId)) ), 
-					  Error::CODE_BAD_PARAM, L"crypt Key is already loaded");
+		Error::Assert( (!handle.empty()) &&  (!ctxId.empty()), 
+					   Error::CODE_BAD_PARAM, 
+					   L"Empty Key or DB Path" );
 
+		// Destroy ctx if already loaded (erring on side of security)
+		Error::Assert( Exists(handle), Error::CODE_CRYPTO_ERROR, L"Key is already loaded");
 
 		CryptCtx* pCtx = CryptCtx::CreateCtx(k, cipher, key_len);
 		if (pCtx) {
@@ -319,9 +321,12 @@ namespace crypt
 		// NOTE: We're ensuring that a null-string will never be a valid handle. This makes
 		// it possible to supply a null-string handle as a dummy handle in the file-system routines
 		// resting assured that no encrypt/decrypt operations will take place.
-		Error::Assert( (!handle.empty()) &&  (!ctxId.empty() && (!Exists(handle)) && 
-					   (!CtxExists(ctxId))), 
-					  Error::CODE_BAD_PARAM, L"crypt Key is already loaded");
+		Error::Assert( (!handle.empty()) &&  (!ctxId.empty()),
+					   Error::CODE_BAD_PARAM,
+					   L"Invalid Key or DB Path" );
+
+		// Destroy ctx if already loaded (erring on side of security)
+		if (Exists(handle)) { Destroy(handle); }
 
 		CryptCtx* pCtx = CryptCtx::LoadCtx(k, cryptInfo);
 		if (pCtx) {
@@ -337,6 +342,9 @@ namespace crypt
 			if (!CtxExists(ctxId)) { return false; }
 			s_handleMap.insert(HandleMap::value_type(dupeHandle, ctxId));
 		}
+		else if (GetCtxId(dupeHandle) != ctxId) {
+			return false;
+		}
 
 		return true;
 	}
@@ -347,7 +355,7 @@ namespace crypt
 		const ucs ctxId = GetCtxId(handle);
 		s_handleMap.erase(handle);
 		if (!CtxIdExists(ctxId)) {
-			delete GetCtx(ctxId);
+			delete GetCtx(ctxId); // may return null
 			s_ctxMap.erase(ctxId);
 		}
 	}

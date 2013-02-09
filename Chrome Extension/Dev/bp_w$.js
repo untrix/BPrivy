@@ -129,9 +129,9 @@ function BP_GET_W$(g)
     var w$undefined = Object.freeze({});
     function WidgetElement($el)
     {
-        this.cons($el);
+        this.w$cons($el);
     }
-    WidgetElement.prototype.cons = function($el) 
+    WidgetElement.prototype.w$cons = function($el) 
     {
         Object.defineProperties(this,
         {   // Properties are kept configurable so that they may be deleted by the
@@ -147,6 +147,7 @@ function BP_GET_W$(g)
         // jQuery. We'll try to remove this everywhere before destruction.
         $el.data('w$el', this);
     };
+    //WidgetElement.prototype.cons = WidgetElement.prototype.w$cons;
     WidgetElement.prototype.empty = function()
     {
         $(this.el).empty();
@@ -253,7 +254,14 @@ function BP_GET_W$(g)
         for (i=0,n=keys.length; i<n; i++)
         {
             k = keys[i];
-            dst[k] = src[k];
+            Object.defineProperty(dst, k, 
+            	{
+            		value: src[k],
+            		writable: true,
+            		enumerable: true,
+            		configurable: true
+            	});
+            //dst[k] = src[k];
         }
     }
     
@@ -265,7 +273,14 @@ function BP_GET_W$(g)
         for (i=0,n=keys.length; i<n; i++)
         {
             k = keys[i];
-            dst[k] = src[k];
+            Object.defineProperty(dst, k, 
+            	{
+            		value: src[k],
+            		writable: true,
+            		enumerable: true,
+            		configurable: true
+            	});
+            //dst[k] = src[k];
             delete src[k];
         }
     }
@@ -280,7 +295,14 @@ function BP_GET_W$(g)
         var ks = Object.keys(sk), i, n;
         for (i=0,n=ks.length; i<n; i++)
         {
-            dst[ks[i]] = sv[sk[ks[i]]];
+        	Object.defineProperty(dst, ks[i], 
+        		{
+        			value: sv[sk[ks[i]]],
+        			writable: true,
+        			configurable: true,
+        			enumerable: true
+        		})
+            //dst[ks[i]] = sv[sk[ks[i]]];
         }
     }
        
@@ -301,7 +323,14 @@ function BP_GET_W$(g)
                     copyIndirect(wdl[k], ctx, dst);
                     break;
                 default:
-                    dst[k] = wdl[k];
+                	Object.defineProperty(dst, k,
+                		{
+                			value: wdl[k], 
+                			writable:true, 
+                			configurable:true,
+                			enumerable: true
+                		});
+                    //dst[k] = wdl[k];
             }
         }
     }
@@ -356,11 +385,12 @@ function BP_GET_W$(g)
     
     function w$exec(wdl, ctx, recursion)
     {
-        BPError.push("WDL Interpret " + (wdl?wdl.cons:""));
-        
         if (typeof wdl === 'function') {
             wdl = wdl(ctx); // compile wdt to wdl
         }
+        
+        BPError.push("WDL-" + (wdl ? (wdl.ref || wdl.cons || wdl.tag) : "NULL"));
+        
         if (wdl === w$undefined) { return undefined; }
         
         if (!wdl || (typeof wdl !== 'object')) {
@@ -387,11 +417,11 @@ function BP_GET_W$(g)
         // Create the widget element
         if (wdl.cons) {
             w$el = new wdl.cons();
-            w$el.cons($el);
+            w$el.w$cons($el);
         }
         else if (wdl.proto) {
-            w$el = wdl.proto();
-            w$el.cons($el);
+            w$el = Object.create(wdl.proto);
+            w$el.w$cons($el);
         }
         else {
             w$el = new WidgetElement($el);

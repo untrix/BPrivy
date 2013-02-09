@@ -652,7 +652,7 @@ void BPrivyAPI::securityCheck(const bfs::path& path, const std::string allowedEx
 	//}
 }
 
-bool BPrivyAPI::_destroyCryptCtx(const bfs::path& dbPath, bp::JSObject* out)
+bool BPrivyAPI::_destroyCryptCtx(const bfs::path& dbPath, bp::JSObject* in_out)
 {
 	try {
 		crypt::CryptCtx::Destroy(dbPath.wstring());
@@ -688,10 +688,17 @@ BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath
 		crypt::ByteBuf outBuf;
 		const crypt::CryptCtx* pCtx = crypt::CryptCtx::Get(ctxHandle);
 		BPError::Assert((pCtx!=NULL), ACODE_CANT_PROCEED, BPCODE_CRYPT_ERROR, 
-			L"Could not create CryptCtx");
-		pCtx->serializeInfo(outBuf);
-		overwriteFile(bfs::path(), cryptInfoFilePath, outBuf, false, in_out);
+			L"Could not create Crypt Key");
 
+		try {
+			pCtx->serializeInfo(outBuf);
+			overwriteFile(bfs::path(), cryptInfoFilePath, outBuf, false, in_out);
+		}
+		catch (...) {
+			// cleanup
+			crypt::CryptCtx::Destroy(ctxHandle);
+			throw;
+		}
 		in_out->SetProperty(PROP_CRYPT_CTX, ctxHandle);
 		return true;
 	}
@@ -727,7 +734,7 @@ bool BPrivyAPI::_dupeCryptCtx(const bfs::path& cryptInfoFilePath, const bfs::pat
 {
 	try
 	{
-		if (crypt::CryptCtx::DupeIfNotLoaded(dbPath.wstring(), cryptInfoFilePath.wstring())) {
+		if (crypt::CryptCtx::DupeIfNotLoaded(cryptInfoFilePath.wstring(), dbPath.wstring())) {
 			in_out->SetProperty(PROP_DB_PATH, dbPath.wstring()); // signals true
 		}
 		else {

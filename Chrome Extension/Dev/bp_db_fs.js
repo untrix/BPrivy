@@ -300,21 +300,12 @@ function BP_GET_DBFS(g)
             makeCryptInfoPath: function(dbPath, dbName, keyDir)
             {
                 var path, o;
-                // if (BP_ERROR.confirm("Click OK if you would like to store the encryption "+
-                                     // "key file separate from the passwords (recommended)"))
                 if (keyDir)
-                {
-                    // o = {dtitle: "UWallet: Select folder for storing key file ",
-                        // dbutton: "Select"};
-                   // if (!BP_PLUGIN.chooseFolder(o)) {throw new BPError(o.err);}
-                   
+                {                  
                    path = keyDir + path_sep + dbName + mod.ext_Key;
-                   // BP_ERROR.alert("Key will be stored in: " + path + 
-                                  // ". You may move/copy it as you like.");
                 }
-                else {
+                else if (dbPath) {
                     path = dbPath + path_sep + dbName + mod.ext_Key;
-                    // BP_ERROR.alert("Encryption key will be stored along with the passwords");
                 }
                 
                 return path;

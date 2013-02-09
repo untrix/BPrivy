@@ -64,10 +64,10 @@ var BP_MANAGE = (function ()
         rpcToMothership({cm: BP_CONNECT.cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
     }
 
-    function createDB2 (dbName, dbDir, keyDir, k, callbackFunc)
+    function createDB2 (dbName, dbDir, keyDirOrPath, k, option, callbackFunc)
     {
         rpcToMothership({cm: BP_CONNECT.cm_createDB, dbName:dbName, dbDir:dbDir,
-                         keyDir:keyDir, k:k},
+                         keyDirOrPath:keyDirOrPath, k:k, option:option },
                         callbackFunc);
     }
 
@@ -135,7 +135,7 @@ var BP_MANAGE = (function ()
         rpcToMothership({cm: BP_CONNECT.cm_exportCSV, dirPath:dirPath, obfuscated: obfuscated}, callbackFunc);
     }
     
-    function unloadDB(cback) 
+    function unloadDB(clearCrypt, cback) 
     {
         rpcToMothership({cm: BP_CONNECT.cm_unloadDB}, cback);
     }
@@ -558,7 +558,7 @@ var BP_MANAGE = (function ()
             //capture the id in the closure for using from callback
             var id = e ? e.currentTarget.getAttribute('id') : undefined;
             
-            unloadDB(function (resp)
+            unloadDB(true, function (resp)
             {
                 if (resp.result === true) 
                 {

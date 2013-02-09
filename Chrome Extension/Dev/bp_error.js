@@ -127,7 +127,7 @@ function BP_GET_ERROR(g)
         Diag:'', // Diagnostic Message
         BadWDL: 'Bad WDL argument.',
         UserError: 'There seems to have been a user error. Did you do something wrong? :)',
-        BadPasswordOrCryptInfo: 'Either the password or the Key were wrong. Please retry with the right ones.',
+        BadPasswordOrCryptInfo: 'Wrong password or Key. Please retry with the right ones.',
         BadCryptInfo: 'You used the wrong Key. Please retry with the correct Key.',
         /*********** 'G-Codes/BP-Codes and Corresponding Messages' **************/
         ETLDLoadFailed: 'ETLD Load Failed',
@@ -137,7 +137,8 @@ function BP_GET_ERROR(g)
         DBAlreadyLoaded: "This wallet is already loaded. Please select a different one.",
         NoDBSelected: "Please choose a uWallet first.",
         InternalError: "InternalError",
-        CryptError: 'Encryption/Decryption Error: Perhaps you specified an incorrect password or encryption-key-file.',
+        CryptError: 'Encryption/Decryption Error: Perhaps an incorrect password or encryption-key-file.',
+        KeyNotLoaded: 'The Key file has not been loaded. Could be an error in the software. Please close the window and retry.'
     });
 
    function Activity(arg)

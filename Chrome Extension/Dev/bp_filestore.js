@@ -91,11 +91,16 @@ function BP_GET_FILESTORE(g)
         }
     });
     
-    function unloadDB()
+    function unloadDB(clearCrypt)
     {
         var dbPath = DB_FS.getDBPath(),
-            o = {};
-        if (dbPath) {
+            o;
+        if (clearCrypt) {
+        	o = {clearCrypt:true};
+        	BP_PLUGIN.destroyCryptCtx("", o);
+        }
+        else if (dbPath) {
+        	o = {};
             BP_PLUGIN.destroyCryptCtx(dbPath, o);
         }
         MEMSTORE.clear(); // unload the previous DB.
@@ -313,7 +318,13 @@ function BP_GET_FILESTORE(g)
         dbPath = DB_FS.verifyDBForLoad(dbPath);
 
         BP_ERROR.log("loadingDB " + dbPath);
-        MEMSTORE.clear(); // unload the previous DB.
+        //TODO: Fix this
+        // if (dbPath !== DB_FS.getDBPath()) {
+        	// unloadDB();
+        // }
+        // else {
+        	MEMSTORE.clear(); // unload the previous DB.	
+        }
         
         loadCryptCtx(dbPath, keyPath, k);
 
@@ -740,9 +751,9 @@ function BP_GET_FILESTORE(g)
         return fnames;
     }
     
-    function createDB(name, dir, keyDir, k) // throws
+    function createDB(name, dir, keyDirOrPath, k, option) // throws
     {
-        var dbPath, i, k, keyPath,
+        var dbPath, i, keyPath,
             o = {};
             
         if (DB_FS.insideDB(dir)) {
@@ -750,7 +761,41 @@ function BP_GET_FILESTORE(g)
         }
         
         dbPath = DB_FS.makeDBPath(name, dir);
-        keyPath = DB_FS.makeCryptInfoPath(dbPath, name, keyDir);
+        switch (option)
+        {
+        	case 'optionNoKey':
+        		keyPath = DB_FS.makeCryptInfoPath(dbPath, name);
+        		break;
+        	case 'optionNewKey':
+        		keyPath = DB_FS.makeCryptInfoPath(undefined, name, keyDirOrPath);
+        		if (!k) {
+                    throw new BPError("Please supply master password for " + keyPath);
+                }
+            	o={};
+                if (!BP_PLUGIN.createCryptCtx(k,keyPath,dbPath,o)) {
+                    throw new BPError(o.err);
+                }
+        		break;
+        	case 'optionHaveKey':
+        		keyPath = keyDirOrPath;
+        		if (!k) {
+        			o = {};
+        			if (!BP_PLUGIN.dupeCryptCtx(keyPath, dbPath, o)) {
+	            		throw new BPError(o.err);
+	            	}
+	            	if (!o.dbPath) {
+	            		throw new BPError('KeyNotLoaded');
+	            	}
+        		}
+        		else {
+        			o = {};
+        			if (!BP_PLUGIN.loadCryptCtx(k, keyPath, dbPath, o)) {
+	            		throw new BPError(o.err);
+	            	}
+        		}
+        		break;
+        	default:
+        }
         
         try
         {
@@ -759,15 +804,16 @@ function BP_GET_FILESTORE(g)
             if (BP_PLUGIN.createDir(dbPath,o))
             {
                 // Create the cryptInfo file and context
-                o={};
-                if (!BP_PLUGIN.createCryptCtx(k,keyPath,dbPath,o)) {
-                    throw new BPError(o.err);
-                }
+                if (option === 'optionNoKey') 
+                {
+                	if (!k) {
+	                    throw new BPError("Please supply master password for " + dbPath);
+	                }
 
-                o={};
-                if (!k) {
-                    //k = requestKey(dbPath);
-                    throw new BPError("Please supply master password for " + dbPath);
+                	o={};
+	                if (!BP_PLUGIN.createCryptCtx(k,keyPath,dbPath,o)) {
+	                    throw new BPError(o.err);
+	                }
                 }
     
                 DB_FS.dtl.forEach(function (dt, j)
@@ -789,7 +835,9 @@ function BP_GET_FILESTORE(g)
         catch (exp) {
             o = {};
             BP_PLUGIN.destroyCryptCtx(dbPath, o);
-            BP_PLUGIN.rm(keyPath, {secureDelete:true});
+            if ((option !== 'optionHaveKey') && keyPath) {
+            	BP_PLUGIN.rm(keyPath, {secureDelete:true});
+            }
             BP_PLUGIN.rm(dbPath, o);
             throw exp;
         }

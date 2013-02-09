@@ -357,7 +357,7 @@ var BP_MAIN = (function()
                     break;
                 case BP_CONNECT.cm_unloadDB:
                     BPError.push("UnloadDB");
-                    dbPath = FILE_STORE.unloadDB();
+                    dbPath = FILE_STORE.unloadDB(rq.clearCrypt);
                     funcSendResponse(makeDashResp(true));
                     break;
                 case BP_CONNECT.cm_mergeInDB:
@@ -387,7 +387,7 @@ var BP_MAIN = (function()
                     break;
                 case cm_createDB:
                     BPError.push("CreateDB");
-                    dbPath = FILE_STORE.createDB(rq.dbName, rq.dbDir, rq.keyDir, rq.k);
+                    dbPath = FILE_STORE.createDB(rq.dbName, rq.dbDir, rq.keyDirOrPath, rq.k, rq.option);
                     funcSendResponse(makeDashResp(true));
                     break;
                 case cm_getDBPath:
