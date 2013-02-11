@@ -652,7 +652,7 @@ void BPrivyAPI::securityCheck(const bfs::path& path, const std::string allowedEx
 	//}
 }
 
-bool BPrivyAPI::_destroyCryptCtx(const bfs::path& dbPath, bp::JSObject* in_out)
+bool BPrivyAPI::_destroyCryptCtx(const bfs::path& dbPath, bp::JSObject* out)
 {
 	try {
 		crypt::CryptCtx::Destroy(dbPath.wstring());

@@ -348,11 +348,16 @@ function BP_GET_CONNECT(g)
             postMsgToMothership(rq);
         }
         
-        function openPath(path)
+        function openPath(path, ops)
         {
-            postMsgToMothership({cm:'cm_openPath', path:path});
+            postMsgToMothership({cm:'cm_openPath', path:path, ops:ops});
         }
         
+	    function unloadDB(clearCrypt, cback) 
+	    {
+	        rpcToMothership({cm: cm_unloadDB}, cback);
+	    }
+
         //Assemble the interface    
         var iface = {};
         Object.defineProperties(iface, 
@@ -404,7 +409,8 @@ function BP_GET_CONNECT(g)
             getDBPath: {value: getDBPath},
             panelClosed: {value: panelClosed},
             putAutoFillable: {value: putAutoFillable},
-            openPath: {value: openPath}
+            openPath: {value: openPath},
+            unloadDB: {value: unloadDB}
         });
         Object.freeze(iface);
 

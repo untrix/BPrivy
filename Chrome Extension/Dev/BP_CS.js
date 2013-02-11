@@ -2402,7 +2402,8 @@
                 autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined), 
                 dbName:MOD_DB.dbName,
                 dbPath:MOD_DB.dbPath,
-                openPath: BP_CONNECT.openPath
+                openPath: BP_CONNECT.openPath,
+                unloadDB: BP_CONNECT.unloadDB
                 // onBlur: close
             };
             m_panel = w$exec(cs_panel_wdt, ctx);

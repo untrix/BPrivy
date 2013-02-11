@@ -329,16 +329,6 @@ function BP_GET_DBFS(g)
                 if (!path) {
                     throw new BPError("Key File not found inside the Wallet. Is it stored outside?");
                 }
-                // if (!path) {
-                    // // The user stored the key outside the DB, for extra security.
-                   // o = {filter:['Key File','*.3ak'],
-                        // dtitle: "UWallet: Select Key File for " + dbPath,
-                        // dbutton: "Select",
-                        // clrHist: true};
-                   // if (!BP_PLUGIN.chooseFile(o)) {throw new BPError(o.err);}
-//                    
-                   // path = o.path;
-                // }
                 
                 return path;
             },
@@ -447,6 +437,13 @@ function BP_GET_DBFS(g)
                 }
                 return dbPath;
             },
+			/**
+			 * Verifies:
+			 * 1) Supplied path is a DB-path or a path inside a DB.
+			 * 2) Prunes path to point to DB foler only, if it was longer.
+			 * 3) Normalizes the pruned path and assignes to out.dbPath
+			 * 3) Returns true if inside DB.
+			 * */
             insideDB: function  (dbPath, out)
             {
                 var pathArray = parsePath(dbPath), 
@@ -469,6 +466,14 @@ function BP_GET_DBFS(g)
                 
                 return inDB;
             },
+			/**
+			 * Verifies:
+			 * 1) Supplied path is a DB-path or a path inside a DB.
+			 * 2) Prunes path to point to DB foler only, if it was longer.
+			 * 3) Verifies that this is a legit DB.
+			 * 4) Normalizes the pruned path.
+			 * 4) Returns pruned and normalized path.
+			 * */
             verifyDBForLoad: function (dbPath, errMsg)
             {
                 var o={}, goodPath;

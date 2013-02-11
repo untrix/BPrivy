@@ -60,7 +60,6 @@ function BP_GET_COMMON(g)
     
   // // URL decomposition IDL attributes
            // attribute DOMString protocol;
-           // attribute DOMString host;
            // attribute DOMString hostname;
            // attribute DOMString port;
            // attribute DOMString pathname;
@@ -83,8 +82,9 @@ function BP_GET_COMMON(g)
             if (segs[6]) { loc.hash = segs[6];}
             
             if (loc.protocol && loc.hostname) {
-                // Browsers tack-on a '/' in case it is missing so we need to be consistent for URL-comparison purposes.
+                // Need to be consistent with browsers.
                 if (!loc.pathname) {loc.pathname = "/";}
+                else {loc.pathname = "/" + loc.pathname;}
                 return loc;
             }
             else {return loc;} // Without protocol and hostname we deem this string a non-URL for our purposes.
@@ -141,6 +141,24 @@ function BP_GET_COMMON(g)
     function getScheme(url)
     {
         return url.slice(0, url.indexOf("://")+1);
+    }
+    
+    function getQueryObj(loc)
+    {
+    	if (!loc.search) {return {};}
+    	var o = {},
+	    	query = loc.search.slice(1),
+	    	vars = query.split("&"),
+	    	i, 
+	    	len = vars.length,
+	    	pair;
+
+	    for (i=0; i < len; i++) {
+	      pair = vars[i].split("=");
+	      o[pair[0]] = pair[1];
+	    }
+
+  		return o;
     }
     
     function stripQuotes(s)
@@ -320,8 +338,10 @@ function BP_GET_COMMON(g)
         toJson: {value: toJson},
         isSupportedScheme:{value:isSupportedScheme},
         parseURL: {value: parseURL},
+        parseURL2: {value: parseURL2},
         locToURL: {value: locToURL},
         getScheme: {value: getScheme},
+        getQueryObj: {value: getQueryObj},
         stripQuotes: {value: stripQuotes},
         encrypt: {value: encrypt},
         decrypt: {value: decrypt},

@@ -39,7 +39,7 @@ function BP_GET_LISTENER(g)
         Object.defineProperties(this,
         {
             dict: {value:dict}, // dt or 'temp_'+dt
-            l:    {value:l},
+            l:    {value:l},    // BP_GET_CONNECT.L - normalized location/URL
             dt:   {value:dt}
         });
     }

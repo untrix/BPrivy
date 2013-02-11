@@ -329,10 +329,10 @@ namespace crypt
 		if (Exists(handle)) { Destroy(handle); }
 
 		CryptCtx* pCtx = CryptCtx::LoadCtx(k, cryptInfo);
-		if (pCtx) {
+		//if (pCtx) {
 			s_handleMap.insert(HandleMap::value_type(handle, ctxId));
 			s_ctxMap.insert(CryptCtx::CtxMap::value_type(ctxId, pCtx));
-		}
+		//}
 	}
 
 	bool

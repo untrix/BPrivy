@@ -207,7 +207,7 @@ function BP_GET_FILESTORE(g)
         return BP_ERROR.prompt("Please enter password for wallet at: " + dbPath);
     }
     
-    function loadCryptCtx(dbPath, cryptInfoPath, k)
+    function ensureKeyLoaded(dbPath, cryptInfoPath, k)
     {
         var o; 
 
@@ -247,17 +247,17 @@ function BP_GET_FILESTORE(g)
      *                  of the DB and loads that. That's the path which is returned.
      * @param {Object}  dbStats is created if not present. io.dbStats.fs and io.dbStats.recs 
      *                  are populated per the loaded DB. If an existing dbStats object was supplied
-     *                  then the impact of calling loadDB is additive - i.e. the existing values
+     *                  then the impact of calling loadDBInt is additive - i.e. the existing values
      *                  in the collection will stay and existing counts will simply be incremented.
      */
-    function loadDB(dbPath, dbStats, exclude, keyPath, k)
+    function loadDBInt(dbPath, dbStats, exclude, keyPath, k)
     {
         /**
-         * Helper function to loadDB. Loads files of given DB.
+         * Helper function to loadDBInt. Loads files of given DB.
          * @returns Nothing
          * @param   {Object}io  dbStats is created if not present. dbStats 
          *                  are populated per the loaded DB. If an existing dbStats object was supplied
-         *                  then the impact of calling loadDB is additive - i.e. the existing values
+         *                  then the impact of calling loadDBInt is additive - i.e. the existing values
          *                  in the collection will stay and existing counts will simply be incremented.
          * @param   {Object} excludes Optional. A DBStats object containing files to exclude from the
          *                  load operation. Used by the DB-cleanup operation.
@@ -312,21 +312,18 @@ function BP_GET_FILESTORE(g)
         }
 
         var memStats,
-            cryptInfoPath, o = {};
+            cryptInfoPath;
+            
         dbStats = dbStats || newDBMap(dbPath);
-        // First determine if this DB exists and is good.
-        dbPath = DB_FS.verifyDBForLoad(dbPath);
+
+        // EXPERIMENTAL: The following line was moved to loadDB.
+        // dbPath = DB_FS.verifyDBForLoad(dbPath);
 
         BP_ERROR.log("loadingDB " + dbPath);
-        //TODO: Fix this
-        // if (dbPath !== DB_FS.getDBPath()) {
-        	// unloadDB();
-        // }
-        // else {
-        	MEMSTORE.clear(); // unload the previous DB.	
-        }
+       	MEMSTORE.clear(); // unload the previous DB.
+       	DB_FS.setDBPath(null); // EXPERIMENTAL
         
-        loadCryptCtx(dbPath, keyPath, k);
+        ensureKeyLoaded(dbPath, keyPath, k);
 
         loadDBFiles(dbPath, dbStats, exclude);
         memStats = MEMSTORE.getStats();
@@ -340,20 +337,29 @@ function BP_GET_FILESTORE(g)
     }
     
     /**
-     *  Wrapper around loadDB. Unloads the previous DB which causes removal of the crypt
-     *  ctx of the currently loaded DB from within the plugin (even if it was same as 
-     *  dbPath). The internal loadDB function won't unload the crypt-ctx and hence the
+     *  Wrapper around loadDBInt. Unloads the previous DB which causes removal of the crypt
+     *  ctx of the currently loaded DB from within the plugin (unless it was same as 
+     *  dbPath). The internal loadDBInt function won't unload the crypt-ctx and hence the
      *  same DB maybe loaded multiple times - for operations such as mergeDB - without
      *  asking the user for password everytime.
-     *  When this function is invoked, the user will be prompted for password to dbPath
-     *  unless its crypt-ctx was already loaded - but in all use-cases so far, the 
-     *  crypt-ctx of dbPath should've been unloaded before loadDB is invoked hence as of
-     *  now the user will always be prompted for password.
      */
-    function loadDBExt(dbPath, keyPath, k)
+    function loadDB(dbPath, keyPath, k)
     {
-        unloadDB();
-        return loadDB(dbPath, undefined, undefined, keyPath, k);
+        // First determine if this DB exists and is good.
+        // Also, prune and normalize dbPath - very important !
+        // We also need the normalized dbPath for the next step.
+        dbPath = DB_FS.verifyDBForLoad(dbPath);
+
+    	if (dbPath !== DB_FS.getDBPath()) {
+        	unloadDB();
+      	}
+      	// Following is performed inside loadDBInt
+      	// else {
+      		// MEMSTORE.clear();
+      		// DB_FS.setDBPath(null);
+      	// }
+
+        return loadDBInt(dbPath, undefined, undefined, keyPath, k);
     }
     
     /**
@@ -477,7 +483,7 @@ function BP_GET_FILESTORE(g)
         // editing browser (either on the same device or on another device accessing a DB
         // stored on NFS) or through sky-drives such as DropBox. New records will be
         // written only to .3ao files.        tempDTFiles(newDBMap(dbPath));
-        // Clear old records and load DB to memory - including the temp files created above.        dbPath = loadDB(dbPath, dbStats);
+        // Clear old records and load DB to memory - including the temp files created above.        dbPath = loadDBInt(dbPath, dbStats);
         // Iterate the MEMSTORE and write recs to the appropriate files.
         dbStatsCompacted = newDBMap(dbPath);
         for (i=0; i<DB_FS.dtl.length; i++)
@@ -499,7 +505,7 @@ function BP_GET_FILESTORE(g)
         // those would've been surely created after step 1.
         DB_FS.rmFiles(dbStats, true);
                 // We have to reload again just to populate accurate mem-stats :(
-        loadDB(dbPath);
+        loadDBInt(dbPath);
         return dbPath;    }
 
     /**
@@ -569,7 +575,7 @@ function BP_GET_FILESTORE(g)
 
         // Now load db excluding the fluff. Collect load-stats into retStats for
         // final return.
-        loadDB(dbPath, retStats, dbSFluff);
+        loadDBInt(dbPath, retStats, dbSFluff);
 
         // Import the fluff now
         importFiles(DB_FS.cats_Load, dbSFluff, dbSWrote, dbSRead, retStats);
@@ -579,7 +585,7 @@ function BP_GET_FILESTORE(g)
 
         // Finally, consolidate the loaded files with those created as a result of
         // importation. These are the DB stats that would be generated
-        // if we were to run loadDB again at this point.
+        // if we were to run loadDBInt again at this point.
         retStats.merge(dbSWrote, DB_FS.cats_Load);
         // Set the global stats/path.
         DB_FS.setDBPath(dbPath, retStats);
@@ -676,14 +682,14 @@ function BP_GET_FILESTORE(g)
             throw new BPError ("", "UserError", "DBAlreadyLoaded");
         }
         
-        loadCryptCtx(db2, keyPath, k);
+        ensureKeyLoaded(db2, keyPath, k);
         
         if (bIn === true ) {
             merge(db1, db2, true);
         }
         else if (bIn === false) {
             merge(db2, db1, true);
-            loadDB(db1);
+            loadDBInt(db1);
         }
         else if (bIn === undefined) {
             merge(db1, db2, false);
@@ -1084,7 +1090,7 @@ function BP_GET_FILESTORE(g)
         exportCSV: {value: exportCSV},
         CSVFile: {value: CSVFile},
         createDB: {value: createDB},
-        loadDB: {value: loadDBExt}, // TODO: Change name of property to loadDB2
+        loadDB: {value: loadDB},
         unloadDB:   {value: unloadDB},
         cleanLoadDB:{value: cleanLoadDB},
         compactDB:  {value: compactDB},

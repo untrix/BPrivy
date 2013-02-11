@@ -416,6 +416,7 @@ var BP_MANAGE = (function ()
             });
         });
         
+        /*
         addEventListeners('#dbMergeIn', 'click', function (e)
         {
             var o={dtitle:"BPrivy: Select Other Wallet",
@@ -543,7 +544,7 @@ var BP_MANAGE = (function ()
             else {
                 console.log("ChooseFolder returned false");
             }
-        });
+        });*/
         
         // addEventListeners('[data-path-select]', 'change', function (e) 
         // {
@@ -621,47 +622,62 @@ var BP_MANAGE = (function ()
             e.preventDefault();
         });
         
-        
-        addEventListeners('#btnWalletOpen, #btnWalletOpen2', 'click', function(e)
+        function launchOpen()
         {
             var ops = getCallbacks();
             ops.mode = 'open';
             g.BP_WALLET_FORM.launch(ops);
-        });
+        }
         
-        addEventListeners('#btnWalletCreate', 'click', function(e)
+        function launchCreate()
         {
             var ops = getCallbacks();
             ops.mode = 'create';
             g.BP_WALLET_FORM.launch(ops);
-        });
+        }
         
-        addEventListeners('#btnWalletClose, #btnWalletClose2', 'click', function(e)
-        {
-            closeDB();
-        });
-
-        addEventListeners('#btnMerge', 'click', function(e)
+        function launchMerge()
         {
             var ops = getCallbacks();
             ops.mode = 'merge'; 
             g.BP_WALLET_FORM.launch(ops);
-        });
+        }
         
-        addEventListeners('#btnMergeIn', 'click', function(e)
+        function launchMergeIn()
         {
             var ops = getCallbacks();
             ops.mode = 'mergeIn'; 
             g.BP_WALLET_FORM.launch(ops);
-        });
+        }
         
-        addEventListeners('#btnMergeOut', 'click', function(e)
+        function launchMergeOut()
         {
             var ops = getCallbacks();
             ops.mode = 'mergeOut'; 
             g.BP_WALLET_FORM.launch(ops);
-        });
+        }
+        
+        addEventListeners('#btnWalletOpen, #btnWalletOpen2', 'click', launchOpen);
+        addEventListeners('#btnWalletCreate', 'click', launchCreate);
+        addEventListeners('#btnWalletClose, #btnWalletClose2', 'click', closeDB);
+        addEventListeners('#btnMerge', 'click', launchMerge);
+        addEventListeners('#btnMergeIn', 'click', launchMergeIn);
+        addEventListeners('#btnMergeOut', 'click', launchMergeOut);
 
+		switch (BP_COMMON.getQueryObj(g.g_win.location)['action'])
+		{
+			case 'open':
+				launchOpen();
+				break;
+			case 'close':
+				closeDB();
+				break;
+			case 'merge':
+				launchMerge();
+				break;
+			default:
+		}
+		
         $('#content *').tooltip();
     }
    

@@ -171,7 +171,8 @@
                 dbPath:MOD_DB.dbPath,
                 popup:true,
                 loc:MOD_DB.loc,
-                openPath: BP_MAIN.MOD_WIN.openPath
+                openPath: BP_MAIN.MOD_WIN.openPath,
+                unloadDB: BP_MAIN.unloadDB
             };
             m_panel = w$exec(cs_panel_wdt, ctx);
             

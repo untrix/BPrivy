@@ -364,14 +364,16 @@ function BP_GET_WDL (g)
         return {
         tag: 'a',
         on:{ click:SButton.prototype.onClick },
-        attr:{ class:css_class_xButton, href:BP_CS_PLAT.getURL("/bp_manage.html"),
-               target:"_blank", title:'Open settings page' },
+        attr:{ 'class':css_class_xButton,
+        	   href:'#',
+        	   //href:BP_CS_PLAT.getURL("/bp_manage.html"),
+               target:"_blank", title:'Settings/Options' },
         iface:{ panel:panel },
         css:{ width:'20px' },
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle', cursor:'auto' },
-            addClass:'icon-cog'
+            addClass:'icon-wrench'
             }]
         };
     };
@@ -382,6 +384,81 @@ function BP_GET_WDL (g)
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
             e.preventDefault(); // Causes event to get cancelled if cancellable
             this.panel.openPath('/bp_manage.html');
+        }}
+    });
+
+    /**
+     * Open Wallet link 
+     */
+    function OButton(){}
+    OButton.wdt = function (w$ctx)
+    {
+        var panel = w$ctx.panel;
+
+        return {
+        tag: 'a',
+        on:{ click:OButton.prototype.onClick },
+        attr:{ 'class':css_class_xButton,
+        	   href:'#',
+               title:'(Re)Open Wallet' },
+        iface:{ panel:panel },
+        css:{ width:'20px' },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle', cursor:'auto' },
+            addClass:'icon-folder-open'
+            }]
+        };
+    };
+    w$defineProto(OButton,
+    {
+        onClick: {value: function (e)
+        {
+            e.stopPropagation(); // We don't want the enclosing web-page to interefere
+            e.preventDefault(); // Causes event to get cancelled if cancellable
+            this.panel.openPath('/bp_manage.html?action=open');
+        }}
+    });
+
+    /**
+     * Close Wallet link 
+     */
+    function CButton(){}
+    CButton.wdt = function (w$ctx)
+    {
+        var panel = w$ctx.panel,
+        	unloadDB = w$ctx.unloadDB;
+
+        return {
+        tag: 'a',
+        on:{ click:CButton.prototype.onClick },
+        attr:{ 'class':css_class_xButton,
+        	   href:'#',
+               title:'Close Wallet' },
+        iface:{ panel:panel, unloadDB:unloadDB },
+        css:{ width:'20px' },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle', cursor:'auto' },
+            addClass:'icon-off'
+            }]
+        };
+    };
+    w$defineProto(CButton,
+    {
+        onClick: {value: function (e)
+        {
+            e.stopPropagation(); // We don't want the enclosing web-page to interefere
+            e.preventDefault(); // Causes event to get cancelled if cancellable
+            try {
+	            this.unloadDB(true, function ()
+	            {
+	                BP_ERROR.success('UWallet has been closed');
+	            });
+            }
+            catch (ex) {
+            	BP_ERROR.warn(ex);
+            }
         }}
     });
 
@@ -888,7 +965,8 @@ function BP_GET_WDL (g)
             showRecs = (UI_TRAITS.getTraits(dt_pRecord).showRecs(loc)&&dbName),
             popup = ctx.popup,
             openPath = ctx.openPath,
-            onBlur = ctx.onBlur;
+            onBlur = ctx.onBlur,
+            unloadDB = ctx.unloadDB;
         
         //BP_ERROR.logdebug('In panel.wdt. showRecs = ' + showRecs);
         return {
@@ -911,8 +989,8 @@ function BP_GET_WDL (g)
                 showRecs ? NButton.wdt : w$undefined,
                 cs_panelTitleText_wdt,
                 XButton.wdt,
-                SButton.wdt
-                // ctx.dbName? CButton.wdt: w$undefined,                // OButton.wdt
+                SButton.wdt,
+                ctx.dbName? CButton.wdt: w$undefined,                OButton.wdt
                 ]
             },
             showRecs ? PanelList.wdt : w$undefined,
