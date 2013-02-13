@@ -23,15 +23,13 @@ The following software is required to build the BPrivy plugin:
 	6. Open up Visual Studio 2010 and open a command prompt (Tools->Visual Studio Command Prompt). Inside the command prompt execute the rest of the procedure:
 		You can also setup the visual studio environment (C:\Program Files (x86)\Microsoft Visual Studio 10\Common7\Tools\vsvars32.bat). But the above is preferrable.
 	7. Follow instructions from INSTALL.W32 to build the static libraries with some additional options.
-		7.a		perl Configure VC-WIN32 --prefix=c:\openssl no-idea no-mdc2 no-rc5
+		7.a		perl Configure VC-WIN32 --prefix=c:\openssl
 		Refer to the Configure & README files for a description of these options. In the case of Mac/Linux supply --prefix=/openssl instead of C:\openssl
 		7.b		ms\do_nasm
 		7.c		nmake -f ms\nt.mak
-				nmake -f ms\ntdll.mak
+				# DO NOT EXECUTE nmake -f ms\ntdll.mak because that will override the .lib files generated above.
 		7.d		nmake -f ms\nt.mak test (Make sure that all tests pass).
-				nmake -f ms\ntdll.mak test
 		7.e		nmake -f ms\nt.mak install (installs to C:\openssl)
-				nmake -f ms\ntdll.mak install
 8. 
 NOTE: Currently we're using firebreath-provided boost, which will get downloaded when the prep script is run. This step is for documentation purpose only. Skip to next step.
 
@@ -46,7 +44,7 @@ Eventhough FireBreath documentation says that you can use system-boost libs by s
 	.\firebreath\prep2012.cmd .\plugin-win-src .\plugin-win-build-VS2012 -C D:\Dev\BPrivy\Plugin\plugin-win-src\BPrivy\CMakeInitialCache_Win32_Dynamic.txt
 
 	This will create plugin-win-build-*\FireBreath.sln. Some error is printed regarding not being able to process initial cache, but the project gets build with the system-boost libs anyway.
-10. Open FireBreath.sln in VC++ Express 2010. Verify (Right-Click BPrivy then Properties) that the libs in C:\Boost are being linked-  thread, system, date_time and filesystem.
+10. Open FireBreath.sln in VC++ 2012. Verify (Right-Click BPrivy then Properties) that the libs in C:\Boost are being linked-  thread, system, date_time and filesystem.
 11.	Build the project called "ALL_BUILD". If you get an error saying that the PCH heap limit is exceeded and that you should use supply a higher /Zm value then do as recommended. (e.g. provide 'Additional Option' /Zm170 under C/C++->Command Line of the failed project)
 12. Windows Platform Support - XP and above (WINVER, _WIN32_WINNT, NTDDI_VERSION >= 0x0501). See win_targetver.h.
 	Requires: Kernel32.dll (for filesystem api), Comdlg32.lib (for GetOpenFilename for chooseFileXP), Ole32.lib and Shell32.lib (for SHBrowseForFolderW for chooseFolderXP), Ole32.lib (for OleInitialize, CoCreateInstance etc. for CommonItemDialog for BPrivyAPI::_choose)

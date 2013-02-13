@@ -624,14 +624,14 @@ var BP_MAIN = (function()
                     chrome.windows.update(tabs[0].windowId , {focused:true});
                 }
                 else {
-                    //chrome.tabs.create({url:url, active:true});
-                    //chrome.windows.update(chrome.windows.WINDOW_ID_CURRENT, {focused:true});
-                    chrome.windows.create({
-                    	url:url, 
-                    	focused:true, 
-                    	type:ops.type || 'popup',
-                    	width:ops.width,
-                    	height:ops.height});
+                    chrome.tabs.create({url:url, active:true});
+                    chrome.windows.update(chrome.windows.WINDOW_ID_CURRENT, {focused:true});
+                    // chrome.windows.create({
+                    	// url:url, 
+                    	// focused:true, 
+                    	// type:ops.type || 'popup',
+                    	// width:ops.width,
+                    	// height:ops.height});
                 }
             });
         }

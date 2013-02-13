@@ -970,7 +970,7 @@ function BP_GET_WDL (g)
         
         //BP_ERROR.logdebug('In panel.wdt. showRecs = ' + showRecs);
         return {
-        cons:Panel, // static prototype object.
+        cons:Panel,
         tag:"article",
         attr:{ id:eid_panel, 'data-untrix':true/*, tabindex:-1*/ },
         css: popup ? {border:"none"} : { position:'fixed', top:'0px', right:'0px', padding:'4px', 'border-radius':'4px'},
@@ -983,7 +983,9 @@ function BP_GET_WDL (g)
 
             // Create children
             children:[
-            {tag:"div", attr:{ id:eid_panelTitle },
+            {tag:"div",
+             attr:{ id:eid_panelTitle },
+             css:{ cursor:(popup?'auto':'move')},
                 children:[
                 //showRecs ? ShowButton.wdt : w$undefined,
                 showRecs ? NButton.wdt : w$undefined,

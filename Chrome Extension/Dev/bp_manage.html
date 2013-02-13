@@ -76,11 +76,11 @@
 
                 <fieldset class="control-group">
                   <label class="control-label" 
-                    title="Merge two wallets without connecting to internet using our patent-pending SmartMerge&trade; technology.">
-                    <em>SmartMerge&trade;</em> (Without Internet)</label>
+                    title="Merge two wallets without connecting to internet using our patent-pending ActionReplay&trade; technology.">
+                    <em>ActionReplay&trade;</em> (Without Internet)</label>
                   <div class="controls">
                     <button data-path-choose id="btnMerge" type="button" class="btn btn-primary" 
-                    title="Merges password updates from the opened wallet and another wallet using our patent-pending SmartMerge&trade; technology.">
+                    title="Merges password updates from the opened wallet and another wallet using our patent-pending ActionReplay&trade; technology.">
                       Sync</button>
                   </div>
 
@@ -93,18 +93,13 @@
                   <label class="control-label">Cloud/Sky Drive</label>
                   <div class="controls" style="text-align:justify">
                     <p>
-                      To enable internet-based sync, just create or move
-                      your <em>Wallet</em> folder into a 
+                      Just create or move
+                      your <em>Wallet</em> folder into a cloud-drive such as
                       <a href="http://www.dropbox.com">Dropbox</a>, 
                       <a href="http://drive.google.com">Google Drive</a>, 
-                      <a href="http://windows.microsoft.com/en-US/skydrive/home">
-                        Microsoft Skydrive
-                      </a> or any other such cloud-drive. However, for added security be sure to 
-                      remove the Key-file from the Wallet and store it on a
-                      local drive or a thumb drive or memory card.
-                      <small><strong>IT IS NOT SAFE TO KEEP YOUR PASSWORDS ON THE INTERNET. </strong>
-                      However, if you must resort to cloud-based sync, we recommend that you store
-                      the Key-file in a different location than the cloud-drive. </small>
+                      <a href="http://windows.microsoft.com/en-US/skydrive/home">Microsoft Skydrive </a>
+                      on your PC. However, be sure to <strong> create a Key-file and store 
+                      it on a local drive or a thumb drive or memory card. This is extremely important.</strong>
                     </p>
                   </div>
                 </fieldset>
@@ -135,11 +130,11 @@
                   </div>
                 </div>
                 <div class="control-group">
-                  <label class="control-label">Another Wallet (<em>SmartMerge&trade;</em>)</label>
+                  <label class="control-label">Another Wallet (<em>ActionReplay&trade;</em>)</label>
                   <div class="controls form-inline">
-                    <button data-path-choose id="btnMergeIn" type="button" class="btn btn-primary" title="Import password updates from another wallet using our patent-pending SmartMerge&trade; technology.">
+                    <button data-path-choose id="btnMergeIn" type="button" class="btn btn-primary" title="Import password updates from another wallet using our patent-pending ActionReplay&trade; technology.">
                       Import</button>
-                    <button data-path-choose id="btnMergeOut" type="button" class="btn btn-inverse" title="Export password updates to another wallet using our patent-pending SmartMerge&trade; technology.">
+                    <button data-path-choose id="btnMergeOut" type="button" class="btn btn-inverse" title="Export password updates to another wallet using our patent-pending ActionReplay&trade; technology.">
                       Export</button>
                   </div>
                 </div>
@@ -205,7 +200,7 @@
                 <fieldset class="control-group">
                   <label class="control-label">Secure Delete Wallet</label>
                   <div class="controls">
-                    <button disabled id="dbDelete" type="button" class="btn btn-primary" data-loading-text="Deleting...">
+                    <button id="dbDelete" type="button" class="btn btn-primary" data-loading-text="Deleting...">
                       Secure Delete</button>
                   </div>
                 </fieldset>
@@ -213,7 +208,7 @@
                 <fieldset class="control-group">
                   <label class="control-label">Change Master Password</label>
                   <div class="controls">
-                    <button disabled id="btnChngPass" type="button" class="btn btn-primary" data-loading-text="Deleting...">
+                    <button disabled id="btnChngPass" type="button" class="btn btn-primary" data-loading-text="Working...">
                       Change Password</button>
                   </div>
                 </fieldset>
@@ -227,27 +222,27 @@
             <div class="tab-pane" id="license-pane">
               <!-- License and Credits Go Here -->
               <h6> EULA, Licenses and Credits Go Here</h6>
+              <p><small>
+		          Note: Untrix Wallet&trade; <em>never</em> transfers your passwords to anywhere
+		          other than the file-system folder - of your choosing - and - temporarily -
+		          the memory of the computer/device on which it is running. It certainly does not
+		          transfer them to any internet web-site or server.
+		          
+		          A network/internet/cloud/sky drive however, *will* transfer your passwords to
+		          locations outside of your control from where they could be lost, stolen, damaged
+		          or otherwise compromised.
+		      </small></p>
             </div>
           </div>
         </div>
       </div>
       <hr>
       <footer>
-        <p><small>
-          Note: Untrix Wallet&trade; <em>never</em> transfers your passwords to anywhere
-          other than the file-system folder - of your choosing - and - temporarily -
-          the memory of the computer/device on which it is running. It certainly does not
-          transfer them to any internet web-site or server.
-          
-          A network/internet/cloud/sky drive however, *will* transfer your passwords to
-          locations outside of your control from where they could be lost, stolen, damaged
-          or otherwise compromised.
-        </small></p>
         <p>
-          &copy; Copyright 2012 Untrix Soft LLC (http://www.untrix.com)
+          &copy; Copyright 2012-2013 Untrix Soft LLC (http://www.untrix.com)
         </p>
         <p>
-          Privy&trade;, Privy Wallet&trade;, SmartMerge&trade; and UTeach&trade; are trademarks of Untrix Soft LLC (http://www.untrix.com)
+          UntrixWallet&trade; and ActionReplay&trade; are trademarks of Untrix Soft LLC
         </p>
       </footer>
     </div>

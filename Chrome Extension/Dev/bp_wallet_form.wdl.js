@@ -57,23 +57,23 @@ function BP_GET_WALLET_FORM(g)
 	    };
     /** @globals-end **/
 
-    // TODO: This is better done via CSS
-    function setValidity(w$ctrl, w$cg)
-    {
-        if ((!w$ctrl) || (!w$cg)) { return; }
-        if (w$ctrl.el.validity.valid) {
-            w$cg.removeClass('error');
-        }
-        else {
-            w$cg.addClass('error');
-        }
-    }
-    function checkValidity(w$ctrl, w$cg)
-    {
-        var valid = w$ctrl && w$ctrl.el.checkValidity();
-        setValidity(w$ctrl, w$cg);
-        return valid;
-    }
+    // TODO: This is better done via CSS 
+    // function setValidity(w$ctrl, w$cg)
+    // {
+        // if ((!w$ctrl) || (!w$cg)) { return; }
+        // if (w$ctrl.el.validity.valid) {
+            // w$cg.removeClass('error');
+        // }
+        // else {
+            // w$cg.addClass('error');
+        // }
+    // }
+    // function checkValidity(w$ctrl, w$cg)
+    // {
+        // var valid = w$ctrl && w$ctrl.el.checkValidity();
+        // setValidity(w$ctrl, w$cg);
+        // return valid;
+    // }
     
     function chooseFolder(o)
     {
@@ -277,12 +277,12 @@ function BP_GET_WALLET_FORM(g)
         {
             this.el.disabled = false;
             this.show();
-        }},
-        checkValidity: {value: function(w$ctrl)
-        {
-            // Assumes that this element is surrounding w$ctrl and has class 'control-group'
-            return checkValidity(w$ctrl, this);
         }}
+        // ,checkValidity: {value: function(w$ctrl)
+        // {
+            // // Assumes that this element is surrounding w$ctrl and has class 'control-group'
+            // return checkValidity(w$ctrl, this);
+        // }}
     });
     var fieldProto = Object.create(fieldsetProto, 
     {
@@ -559,9 +559,9 @@ function BP_GET_WALLET_FORM(g)
                      save:['fieldsetChooseDB'],
                      on:{'change':function(e)
                          {
-                            if (this.fieldsetChooseDB.checkValidity(this)) {
+                            //if (this.fieldsetChooseDB.checkValidity(this)) {
                                 CS_PLAT.customEvent(this.el, 'dbChosen', {dbPath:this.el.value});
-                            }
+                            //}
                          }
                      }
                     },
@@ -664,9 +664,10 @@ function BP_GET_WALLET_FORM(g)
                      ref:'inputKeyPath',
                      save:['fieldsetChooseKey'],
                      on:{ 'change': function(e) {
-                         if (this.fieldsetChooseKey.checkValidity(this)) {
+                         //if (this.fieldsetChooseKey.checkValidity(this)) {
                             CS_PLAT.customEvent(this.el, 'keyPathChosen', {keyPath:this.el.value});
-                         } } 
+                         //} 
+                         }
                         }
                     }
                     ]
@@ -916,10 +917,10 @@ function BP_GET_WALLET_FORM(g)
                      save:['fieldsetChooseKeyFolder'],
                      on:{ 'change': function(e) 
                           {
-                              if (this.fieldsetChooseKeyFolder.checkValidity(this)) {
+                              //if (this.fieldsetChooseKeyFolder.checkValidity(this)) {
                                 CS_PLAT.customEvent(this.el, 'keyFolderChosen',
                                                     {keyFolder:this.el.value});
-                              }
+                              //}
                           }}
                     },
                     ]
@@ -954,10 +955,10 @@ function BP_GET_WALLET_FORM(g)
                      save:['fieldsetChooseKeyFolder'],
                      on:{ 'change': function(e) 
                           {
-                              if (this.fieldsetChooseKeyFolder.checkValidity(this)) {
+                              //if (this.fieldsetChooseKeyFolder.checkValidity(this)) {
                                 CS_PLAT.customEvent(this.el, 'keyFileChosen',
                                                     {keyFile:this.el.value});
-                              }
+                              //}
                           }}
                     },
                     ]
@@ -1020,34 +1021,43 @@ function BP_GET_WALLET_FORM(g)
             tag:'input',
             attr:{ type:'password', placeholder:bPass2?"Re-Enter Master Password":"Enter Master Password",
                    title:'10 or more characters required', pattern:'.{10,}' },
+            iface:{ 'bPass2':bPass2 },
             prop:{ required:true },
             ref:'inputPassword',
             on:{ 'change':inputPassword.prototype.onChange },
-            save:['walletForm', 'fieldsetPassword']
+            save:['walletForm']
             };
         };
         w$defineProto(inputPassword,
         {
-            onChange: {value: function(e)
+            onChange: {value: function()
              {
-                 if (!this.fieldsetPassword.checkValidity(this)) { return; }
+                 //if (!this.fieldsetPassword.checkValidity(this)) { return; }
 
-                 if (bPass2) {
+                 if (this.bPass2) {
                      if (this.el.value !== this.walletForm.fieldsetPassword.inputPassword.el.value) {
                          this.el.setCustomValidity('Passwords do not match');
                      }
                      else {
+                     	 this.el.setCustomValidity('');
                          CS_PLAT.customEvent(this.el, 'passwordChosen');
                      }
                  }
-                 else if (this.walletForm.mode !== 'create') {
-                     CS_PLAT.customEvent(this.el, 'passwordChosen');
+                 else {
+	                 if (this.walletForm.mode !== 'create') {
+	                 //if (this.walletForm.fieldsetPassword2.inputPassword.el.disabled) {
+	                     CS_PLAT.customEvent(this.el, 'passwordChosen');
+	                 }
+	                 else if (this.el.value === this.walletForm.fieldsetPassword2.inputPassword.el.value) {
+	                 	this.walletForm.fieldsetPassword2.inputPassword.el.setCustomValidity('');
+	                 }
                  }
              }}
         }, fieldProto);
 
         return {
-        tag:'fieldset', cons: fieldsetPassword,
+        tag:'fieldset',
+        cons: fieldsetPassword,
         ref: (bPass2 ? 'fieldsetPassword2' : 'fieldsetPassword'),
         iface:{ bPass2: bPass2 },
         prop:{ disabled:true },
@@ -1186,17 +1196,17 @@ function BP_GET_WALLET_FORM(g)
     };
     WalletFormWdl.prototype = w$defineProto(WalletFormWdl,
     {
-        setValiditys: {value: function()
-        {
-            if (this.fieldsetDBName) { 
-                setValidity(this.fieldsetDBName.inputDBName, this.fieldsetDBName);
-            }
-            setValidity(this.fieldsetChooseDB.inputDBPath, this.fieldsetChooseDB);
-            setValidity(this.fieldsetChooseKey.inputKeyPath, this.fieldsetChooseKey);
-            setValidity(this.fieldsetChooseKeyFolder.inputKeyFolder, this.fieldsetChooseKeyFolder);
-            setValidity(this.fieldsetPassword.inputPassword, this.fieldsetPassword);
-            setValidity(this.fieldsetPassword2.inputPassword, this.fieldsetPassword2);            
-        }},
+        // setValiditys: {value: function()
+        // {
+            // if (this.fieldsetDBName) { 
+                // setValidity(this.fieldsetDBName.inputDBName, this.fieldsetDBName);
+            // }
+            // setValidity(this.fieldsetChooseDB.inputDBPath, this.fieldsetChooseDB);
+            // setValidity(this.fieldsetChooseKey.inputKeyPath, this.fieldsetChooseKey);
+            // setValidity(this.fieldsetChooseKeyFolder.inputKeyFolder, this.fieldsetChooseKeyFolder);
+            // setValidity(this.fieldsetPassword.inputPassword, this.fieldsetPassword);
+            // setValidity(this.fieldsetPassword2.inputPassword, this.fieldsetPassword2);            
+        // }},
         clearDBPaths: {value: function()
         {
             if (this.fieldsetChooseDB && this.fieldsetChooseDB.menuDBSelect) {
@@ -1227,13 +1237,22 @@ function BP_GET_WALLET_FORM(g)
         }},
         onSubmit: {value: function(e)
         {
-            if (!this.el.checkValidity()) {
-                this.setValiditys();
-                BP_ERROR.alert('There were some errors');
-                return;
+        	e.preventDefault();
+        	
+            // if (!this.el.checkValidity()) {
+                // this.setValiditys();
+                // BP_ERROR.alert('There were some errors');
+                // return;
+            // }
+
+            //this.setValiditys();
+            
+            if (this.fieldsetPassword.inputPassword.el.value !==
+            	this.fieldsetPassword2.inputPassword.el.value) {
+            	this.fieldsetPassword2.inputPassword.el.setCustomValidity('Passwords do not match');
+            	return;
             }
             
-            this.setValiditys();
             var self = this,
                 spinner = newSpinner(self.modalBody.el);
 
@@ -1344,8 +1363,6 @@ function BP_GET_WALLET_FORM(g)
                     }
                 });
             }
-            
-            e.preventDefault();
         }}
     });
     

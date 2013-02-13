@@ -59,11 +59,6 @@ var BP_MANAGE = (function ()
     var g_editor, g_dbName, g_dbPath;
     /** @globals-end **/ 
     
-    function createDB (dbName, dbDir, callbackFunc)
-    {
-        rpcToMothership({cm: BP_CONNECT.cm_createDB, dbName:dbName, dbDir:dbDir}, callbackFunc);
-    }
-
     function createDB2 (dbName, dbDir, keyDirOrPath, k, option, callbackFunc)
     {
         rpcToMothership({cm: BP_CONNECT.cm_createDB, dbName:dbName, dbDir:dbDir,
@@ -71,30 +66,10 @@ var BP_MANAGE = (function ()
                         callbackFunc);
     }
 
-    function loadDB (dbPath, callbackFunc)
-    {
-        rpcToMothership({cm: BP_CONNECT.cm_loadDB, dbPath:dbPath}, callbackFunc);
-    }
-
     function loadDB2 (dbPath, keyPath, k, callbackFunc)
     {
         rpcToMothership({cm: BP_CONNECT.cm_loadDB, dbPath:dbPath,  keyPath:keyPath, k:k},
             callbackFunc);
-    }
-
-    function mergeInDB (dbPath, callbackFunc)
-    {
-        rpcToMothership({cm: BP_CONNECT.cm_mergeInDB, dbPath:dbPath}, callbackFunc);
-    }
-
-    function mergeDB (dbPath, callbackFunc)
-    {
-        rpcToMothership({cm: BP_CONNECT.cm_mergeDB, dbPath:dbPath}, callbackFunc);
-    }
-
-    function mergeOutDB (dbPath, callbackFunc)
-    {
-        rpcToMothership({cm: BP_CONNECT.cm_mergeOutDB, dbPath:dbPath}, callbackFunc);
     }
 
     function mergeInDB2 (dbPath, keyPath, k, callbackFunc)
@@ -225,6 +200,10 @@ var BP_MANAGE = (function ()
                 $('#qclean-stats').val("");
                 $('#dbClean').removeClass('btn-primary').prop('disabled', true);
             }
+            
+            if (resp.dbPath) {
+            	$('#btnChngPass').prop('disabled',false);
+            }
         }
         else 
         {
@@ -235,6 +214,7 @@ var BP_MANAGE = (function ()
             $('#qclean-stats').val("");
             $('#dbClean').removeClass('btn-primary').prop('disabled', true);
             clearEditor();
+            $('#btnChngPass').prop('disabled', true);
         }
     }
 
@@ -320,12 +300,6 @@ var BP_MANAGE = (function ()
             console.log("Import CSV File:" + path);
             e.preventDefault();
         });
-        
-        //$('#csvPathReset').click(function()
-        //addEventListeners('[data-path-reset]', 'click', function(e)
-        //{
-        //    fillOptions("csvPathSelect", "");
-        //});
         
         addEventListeners('#csvImport', 'click', function (e)
         {
@@ -414,146 +388,7 @@ var BP_MANAGE = (function ()
                 }                
                 $('#dbClean').button('reset');
             });
-        });
-        
-        /*
-        addEventListeners('#dbMergeIn', 'click', function (e)
-        {
-            var o={dtitle:"BPrivy: Select Other Wallet",
-                   dbutton: "Select Other Wallet",
-                   clrHist: true};
-            if (BP_PLUGIN.chooseFolder(o)) 
-            {
-                console.log("ChooseFolder returned:" + o.path);
-                mergeInDB(o.path, function (resp)
-                {
-                    if (resp.result === true) {
-                        BP_ERROR.success('Merged In password wallet at ' + o.path);
-                    }
-                    else {
-                        callbackHandleError(resp);
-                    }
-                });
-            }
-            else {
-                console.log("ChooseFolder returned false");
-            }
-        });
-        
-        addEventListeners('#dbMerge', 'click', function (e)
-        {
-            var o={dtitle:"BPrivy: Select Other Wallet",
-                   dbutton: "Select Other Wallet",
-                   clrHist: true};
-            if (BP_PLUGIN.chooseFolder(o)) 
-            {
-                console.log("ChooseFolder returned:" + o.path);
-                mergeDB(o.path, function (resp)
-                {
-                    if (resp.result === true) {
-                        BP_ERROR.success('Merged with password wallet at ' + o.path);
-                    }
-                    else {
-                        callbackHandleError(resp);
-                    }
-                });
-            }
-            else {
-                console.log("ChooseFolder returned false");
-            }
-        });
-        
-        addEventListeners('#dbMergeOut', 'click', function (e)
-        {
-            var o={dtitle:"BPrivy: Select Other Wallet",
-                   dbutton: "Select Other Wallet",
-                   clrHist: true};
-            if (BP_PLUGIN.chooseFolder(o)) 
-            {
-                console.log("ChooseFolder returned:" + o.path);
-                mergeOutDB(o.path, function (resp)
-                {
-                    if (resp.result === true) {
-                        BP_ERROR.success('Merged out to password wallet at ' + o.path);
-                    }
-                    else {
-                        callbackHandleError(resp);
-                    }
-                });
-            }
-            else {
-                console.log("ChooseFolder returned false");
-            }
-        });
-        
-        addEventListeners('#dbChooseLoad, #dbChooseLoad2', 'click', function (e)
-        {
-            var o={dtitle:"BPrivy: Select Wallet Folder",
-                   dbutton: "Select Wallet Folder",
-                   clrHist: true},
-                   //capture the id in the closure for using from callback
-                   id = e.currentTarget.getAttribute('id');
-            $('#dbChooseLoad, #dbChooseLoad2').button('loading');
-
-            if (BP_PLUGIN.chooseFolder(o))
-            {
-                loadDB(o.path, function (resp)
-                {
-                    if (resp.result === true) {
-                        updateDash(resp);
-                        if (id === 'dbChooseLoad2') {
-                            reloadEditor();
-                        }
-                        BP_ERROR.success('Opened password wallet at ' + resp.dbPath);
-                    }
-                    else {
-                        callbackHandleError(resp);
-                    }
-                    $('#dbChooseLoad, #dbChooseLoad2').button('reset');
-                });
-            }
-            else {
-                $('#dbChooseLoad, #dbChooseLoad2').button('reset');
-                console.log("ChooseFolder returned false");
-            }
-        });
-        
-        addEventListeners('#dbChooseCreate', 'click', function (e)
-        {
-            var dbName = $('#dbName').val();
-            if (!dbName) {
-                BP_ERROR.alert("Please first enter a name for the new Wallet");
-                return;
-            }
-            var o={dtitle:"BPrivy: Select a Folder to contain the Wallet",
-                   dbutton: "Select Folder",
-                   clrHist: true};
-            if (BP_PLUGIN.chooseFolder(o)) {
-                console.log("ChooseFolder returned:" + o.path);
-                createDB(dbName, o.path, function (resp)
-                {
-                    if (resp.result === true) {
-                        updateDash(resp);
-                        BP_ERROR.success('Password store created at ' + resp.dbPath);
-                    }
-                    else {
-                        callbackHandleError(resp);
-                    }
-                });
-            }
-            else {
-                console.log("ChooseFolder returned false");
-            }
-        });*/
-        
-        // addEventListeners('[data-path-select]', 'change', function (e) 
-        // {
-            // var inp = $('[data-path]', this.form)[0];
-            // inp.value = inp.value + this.value + DIR_SEP;
-            // fillOptions(this.getAttribute('id'), inp.value);
-            // //$(this).trigger('click');
-            // this.focus();
-        // });
+        });
         function closeDB(e)
         {
             //capture the id in the closure for using from callback

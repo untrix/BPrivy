@@ -300,8 +300,8 @@ namespace crypt
 					   Error::CODE_BAD_PARAM, 
 					   L"Empty Key or DB Path" );
 
-		// Destroy ctx if already loaded (erring on side of security)
-		Error::Assert( Exists(handle), Error::CODE_CRYPTO_ERROR, L"Key is already loaded");
+		// Do not create a new one if one already exists.
+		Error::Assert( (!Exists(handle)), Error::CODE_CRYPTO_ERROR, L"Key is already loaded");
 
 		CryptCtx* pCtx = CryptCtx::CreateCtx(k, cipher, key_len);
 		if (pCtx) {

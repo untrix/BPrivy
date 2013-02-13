@@ -95,7 +95,7 @@ function BP_GET_CS_PLAT(g)
             }
         },
         
-        addHandlers: function (el, on) 
+        addHandlers: function (el, on)
         {
             if (!el || !on || (typeof on !== 'object')) {return;}
             

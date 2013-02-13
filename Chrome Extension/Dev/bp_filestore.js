@@ -97,7 +97,7 @@ function BP_GET_FILESTORE(g)
             o;
         if (clearCrypt) {
         	o = {clearCrypt:true};
-        	BP_PLUGIN.destroyCryptCtx("", o);
+        	BP_PLUGIN.destroyCryptCtx(dbPath, o);
         }
         else if (dbPath) {
         	o = {};
