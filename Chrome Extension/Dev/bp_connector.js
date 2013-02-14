@@ -60,7 +60,8 @@ function BP_GET_CONNECT(g)
         cm_getDomn      = "cm_getDomn",
         cm_closed       = "cm_closed",
         cm_tempRec      = "cm_tempRec",
-        cm_saveRec      = "cm_saveRec";
+        cm_saveRec      = "cm_saveRec",
+        cm_deleteDB		= "cm_deleteDB";
 
     var DICT_TRAITS={};
    
@@ -401,6 +402,7 @@ function BP_GET_CONNECT(g)
             cm_closed:  {value: cm_closed},
             cm_tempRec: {value: cm_tempRec},
             cm_saveRec: {value: cm_saveRec},
+            cm_deleteDB:{value: cm_deleteDB},
             // MOD_CONNECT
             saveRecord: {value: saveRecord},
             saveTempRec: {value: saveTempRec},

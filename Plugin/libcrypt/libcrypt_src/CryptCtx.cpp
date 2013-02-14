@@ -127,18 +127,31 @@ namespace crypt
 			throw;
 		}
 	}
-	void
-	CryptCtx::DecryptImpl(ByteBuf&& in, ByteBuf& out, const uint8_t* pKey) const
+	bool
+	CryptCtx::DecryptImpl(ByteBuf&& in, ByteBuf& out, const uint8_t* pKey, bool bestEffort) const
 	{
-		size_t totalBytes = in.dataNum();
+		size_t totalBytes = in.dataNum(),
+               processed, count;
+
 		out.ensureCap(totalBytes);
 		CipherBlob ciBlob(std::forward<ByteBuf>(in)); // in-buf is parsed here.
-		for ( size_t processed=0, count=0; processed < totalBytes; )
+		for ( processed=0, count=0; processed < totalBytes; )
 		{
-			ciBlob.seek(count, (totalBytes-processed)); // in-buf is parsed again at position <count>
-			count = DecryptOne(ciBlob, out, pKey);
+            try {
+    			ciBlob.seek(count, (totalBytes-processed)); // in-buf is parsed again at position <count>
+			    count = DecryptOne(ciBlob, out, pKey);
+            }
+            catch (...) {
+                if (bestEffort) {
+                    // Return data that has been successfully decrypted so far.
+                    break;
+                }
+                else { throw; }
+            }
 			processed += count;
 		}
+
+        return (processed == totalBytes);
 	}
 	size_t
 	CryptCtx::DecryptOne(CipherBlob& ciBlob, ByteBuf& out, const uint8_t* pKey) const
@@ -372,7 +385,11 @@ namespace crypt
 	const CryptCtx*
 	CryptCtx::Get(const ucs& handle)
 	{
-		return GetCtx(GetCtxId(handle));
+        ucs ctxId = GetCtxId(handle);
+        Error::Assert(!ctxId.empty(), 
+                      Error::CODE_CTX_NOT_FOUND, 
+                      L"Key is not loaded");
+		return GetCtx(ctxId);
 	}
 
 	bool

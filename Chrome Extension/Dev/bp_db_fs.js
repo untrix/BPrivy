@@ -371,35 +371,42 @@ function BP_GET_DBFS(g)
                     return mod.makeDTDirPath(dt, dbPath) + file_dt[dt];
                 }
             },
-            makeFileName: function (cat, dt)
+            makeFileName: function (cat, dt, dirEnt /*optional*/)
             {
                 var fname = Date.now().valueOf() + DOT + dt;
+                dirEnt = dirEnt || {};
+                
                 switch (cat)
                 {
                     case mod.cat_Closed:
                         fname += mod.ext_Closed;
+                        dirEnt.ext = mod.ext_Closed;
                         break;
                     case mod.cat_Bad:
                         fname += mod.ext_Bad;
+                        dirEnt.ext = mod.ext_Bad;
                         break;
                     case mod.cat_Open:
                         fname += mod.ext_Open;
+                        dirEnt.ext = mod.ext_Open;
                         break;
                     case mod.cat_Temp:
                         fname += mod.ext_Temp;
+                        dirEnt.ext = mod.ext_Temp;
                         break;
                     default:
                         BP_ERROR.logwarn("filestore.js@makeFileName: Bad 'cat' argument");
                         throw new BPError("", "InternalError", "BadArgument");
                 }
                 
+                dirEnt.stm = fname;
                 return fname;
             },
             quarantineFile: function (fname, fpath)
             {
                 // dbPath1 and dbPath2 are being passed as NULL because the only reason
                 // BP_PLUGIN.rename needs them is for decryption/encryption. Since we're
-                // renaming within the same DB, there is no need o decrypt/encrypt the
+                // renaming within the same DB, there is no need to decrypt/encrypt the
                 // data. Hence it is okay to pass null for both DBs.
                 BP_PLUGIN.rename("null", fpath, "null", fpath+mod.ext_Bad, {}); //  no clobber by default
             },
@@ -574,6 +581,7 @@ function BP_GET_DBFS(g)
             },
             rmFiles: function (dbStats, keepDTFiles)
             {
+            	var rVal = true;
                 dbStats.iterEnt(this_null, dtl_null, cats_null,
                 function anonRmDirEnt(dt, cat, fname, dirEnt)
                 {
@@ -582,10 +590,15 @@ function BP_GET_DBFS(g)
         
                     if ( (!keepDTFiles) || (fname !== DB_FS.getDTFileName(dt)) )
                     {
-                        BP_PLUGIN.rm(fpath, o);
+                        if (!BP_PLUGIN.rm(fpath, o)) {
+                        	BP_ERROR.logwarn(o.err);
+                        	rVal = false;
+                        } ;
                     } // else skip the main DT-file
                 });
                 //dbStats.walkCats(DB_FS.cats_Load, rmCbk, keepDTFiles);
+                
+                return rVal;
             },
             copy: function (dbMap, db2Path, bClobber)
             {

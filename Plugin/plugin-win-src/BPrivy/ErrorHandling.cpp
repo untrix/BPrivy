@@ -66,6 +66,7 @@ namespace bp
 	const bp::ustring ACODE_UNSUPPORTED			(L"Unsupported");
 	const bp::ustring ACODE_BAD_PASSWD_OR_CRYPTINFO(L"BadPasswordOrCryptInfo");
 	const bp::ustring ACODE_BAD_CRYPTINFO		(L"BadCryptInfo");
+    const bp::ustring ACODE_INFO                (L"Info");
 
 
 	const bp::ustring BPCODE_UNAUTHORIZED_CLIENT(L"UnauthorizedClient");
@@ -203,10 +204,12 @@ namespace bp
 		ParseSystemException(e, m);
 	}
 
-	void SetInfoMsg(const ustring& g_code, bp::JSObject* js)
+	void SetInfoMsg(const ustring& g_code, bp::JSObject* js, const std::wstring& msg)
 	{
 		bp::VariantMap m;
+        m.insert(PROP_ERRNAME, EXCEPTION_NAME);
 		m.insert(PROP_GENERIC_CODE, g_code);
+        if (!msg.empty()) {m.insert(PROP_GENERIC_MESSAGE, msg);}
 		js->SetProperty(PROP_INFO, m);
 	}
 

@@ -56,6 +56,8 @@ namespace bp
 
 	///////////// USER RECOVERABLE ERRORS ///////////
 	/***** Actionable Codes. GENERIC & System Error Codes are mapped to one of these *****/
+    // User informational.
+    extern const bp::ustring ACODE_INFO;
  	// User Actionable. User should resolve the situation
  	// and retry.
  	extern const bp::ustring ACODE_ACCESS_DENIED;
@@ -189,7 +191,7 @@ namespace bp
 	void HandleUnknownException (bp::JSObject* p);
 	void HandleUnknownException (bp::VariantMap& me);
 	void HandleBPError(const BPError&, bp::JSObject*);
-	void SetInfoMsg(const bp::ustring& code, bp::JSObject*);
+	void SetInfoMsg(const bp::ustring& code, bp::JSObject*, const std::wstring& msg = MSG_EMPTY);
 	void HandleCryptError(crypt::Error&, bp::JSObject*);
 
 #define CHECK(b) \

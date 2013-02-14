@@ -108,14 +108,16 @@ function BP_GET_FILESTORE(g)
     }
     
     /**
-     * @param filePath
-     * @param dt
      * @parm  {Object} dbStats  Output pram. dbStats is updated based on loading activity.
      * @param {Object} dirEnt   Directory entry object (for dbStats) to be updated. May or may not
      *                  eventually get inserted into dbStats.
      * @param {Object} buf      A RecsBuf object is present specifies that the loaded records should be
      *                  collected for saving in addition to being loaded in memory. This is used
      *                  for importing records from an external DB.
+     * @returns {Boolean} Returns true or false in most cases except wrong password case.
+     * @throws 			Throws an exception only when the password/encryption-key is wrong. For
+     * 					other errors, just a false value is returned. This separates fatal errros
+     * 					from per-file errors.
      */
     function loadFile(dbPath, cat, dt, dtDirPath, fname, dirEnt, dbStats, buf)
     {
@@ -130,21 +132,25 @@ function BP_GET_FILESTORE(g)
             // the two copies).
             o={prefix: '[{"header":true}', suffix: "]"},
             recs,
-            filePath = dtDirPath+fname;
+            filePath = dtDirPath+fname,
+            fname2, dirEnt2 = {}, bAccounted = false;
             
         if (!BP_PLUGIN.readFile(dbPath, filePath, o))
         {
-            BP_ERROR.logwarn(o.err);
-            if (o.err) {
+        	BP_ERROR.logwarn(o.err);
+            dbStats.putBad(dt, fname, dirEnt);
+
+            if (o.err) 
+            {
                 if ((o.err.acode === 'BadPasswordOrCryptInfo') || (o.err.acode === 'BadCryptInfo'))
                 {
                     throw new BPError(o.err);
                 }
             }
-
+            
             return false;
         }
-        
+
         try
         {
             recs = JSON.parse(o.dat);
@@ -190,7 +196,26 @@ function BP_GET_FILESTORE(g)
             },0);
             
             BP_ERROR.log("Loaded file " + filePath);
-            dbStats.put(dt, cat, fname, dirEnt);
+
+	        if (o.inf && (o.inf.gcode === 'FileCorrupted'))
+	        {
+	        	BP_ERROR.logwarn(o.inf);
+	        	if (cat === DB_FS.cat_Open)
+	        	{
+	        		BP_COMMON.copy2(dirEnt, dirEnt2);
+	        		fname2 = DB_FS.makeFileName(DB_FS.cat_Closed, dt, dirEnt2);
+                	//buf.flush(dbStats.dbPath, DB_FS.makeDTDirPath(dt, dbStats.dbPath) + fname);
+                	o={};
+                	if (BP_PLUGIN.rename(dbPath, filePath, dbPath, dtDirPath+fname2, o)) {
+                		dbStats.put(dt, DB_FS.cat_Closed, fname2, dirEnt2);
+                		bAccounted = true;
+                	}
+               	}
+	        }
+	        
+			if (!bAccounted) {
+				dbStats.put(dt, cat, fname, dirEnt);
+			}	
 
             return true;
         }
@@ -290,9 +315,9 @@ function BP_GET_FILESTORE(g)
                             {
                                 loadFile(dbPath, cat, dt, dtDirPath, name, f[name], dbStats);
                             }
-                            catch (e) 
+                            catch (e)
                             {
-                                if (e.err.acode && ((e.err.acode === 'BadPasswordOrCryptInfo') || (e.err.acode === 'BadCryptInfo'))) {
+                                if (e.err && e.err.acode && ((e.err.acode === 'BadPasswordOrCryptInfo') || (e.err.acode === 'BadCryptInfo'))) {
                                     throw new BPError(e);
                                 }
                                 var oldPath = dtDirPath + name,
@@ -598,10 +623,20 @@ function BP_GET_FILESTORE(g)
         cleanLoadInternal(DB_FS.getDBPath());
     }        
 
-    function secureDelete(db)
+    function deleteDB(db)
     {
-        var dbStats = DB_FS.lsFiles(db), o, keyFiles=[];
-        DB_FS.rmFiles(db);
+        var o, keyFiles=[], 
+        	rVal = true;
+
+		db = DB_FS.verifyDBForLoad(db);
+		if (db === DB_FS.getDBPath()) {
+			throw new BPError('This Wallet is currently open. Please close the Wallet and retry');
+		}
+		else if (!BP_ERROR.confirm('Are you sure you want to delete all contents of the Wallet at: ' + db + "?")) {
+			return;
+		}
+
+        DB_FS.rmFiles(DB_FS.lsFiles(db)) || (rVal = false);
         
         keyFiles = DB_FS.findCryptInfoFile2(db, true);
 
@@ -609,11 +644,13 @@ function BP_GET_FILESTORE(g)
         if (keyFiles.length) {
             BP_COMMON.iterArray2(keyFiles, null, function(fPath)
             {
-                BP_PLUGIN.rm(fPath, o);    
+                BP_PLUGIN.rm(fPath, o) || (rVal = false);
             });
         }
 
-        BP_PLUGIN.rm(db, o);
+        BP_PLUGIN.rm(db, o) || (rVal = false);
+        
+        return rVal;
     }
     
     function merge (db1, db2, oneWay)
@@ -1092,6 +1129,7 @@ function BP_GET_FILESTORE(g)
         createDB: {value: createDB},
         loadDB: {value: loadDB},
         unloadDB:   {value: unloadDB},
+        deleteDB: {value: deleteDB},
         cleanLoadDB:{value: cleanLoadDB},
         compactDB:  {value: compactDB},
         mergeDB:    {value: mergeDB},

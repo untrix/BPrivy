@@ -41,7 +41,6 @@ function BP_GET_NTNF_CNTR(g)
 
     function onClose(ev)
     {
-        BP_ERROR.loginfo('BP_NTFN_CNTR: onClose invoked');
         g_notification = null;
     }
 
@@ -75,10 +74,7 @@ function BP_GET_NTNF_CNTR(g)
         );
         g_notification.ondisplay = function(ev)
         {	// close after a few seconds
-        	g.g_win.setTimeout(function()
-        	{
-        		g_notification.cancel();
-        	}, 10000);
+        	g.g_win.setTimeout(close, 10000);
         };
         g_notification.onclose = onClose;
         g_notification.onclick = function(ev) {
@@ -401,6 +397,11 @@ var BP_MAIN = (function()
                     BPError.push("LoadDB");
                     dbPath = FILE_STORE.loadDB(rq.dbPath, rq.keyPath, rq.k);
                     funcSendResponse(makeDashResp(Boolean(dbPath)));
+                    break;
+                case BP_CONNECT.cm_deleteDB:
+                    BPError.push("DeleteDB");
+                    result = FILE_STORE.deleteDB(rq.dbPath);
+                    funcSendResponse({result:result});
                     break;
                 case BP_CONNECT.cm_unloadDB:
                     unloadDB(rq.clearCrypt);

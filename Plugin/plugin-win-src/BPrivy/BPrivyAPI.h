@@ -118,7 +118,7 @@ private:
 	bool _chooseFileXP(bp::JSObject* p);
 	bool _chooseFolderXP(bp::JSObject* p);
 	bool _choose(bp::JSObject* p, bool chooseFile = false);
-	void zeroFile(const bfs::path& path, bp::JSObject* p, size_t num=1);
+	void zeroFile(const bfs::path& path, bp::JSObject* p, size_t num=7);
 	/** Helper to copy */
 	bool overwriteFile(const bfs::path& db_path, const bfs::path& path, 
 					   crypt::ByteBuf& text, bool exists,

@@ -59,6 +59,50 @@ var BP_MANAGE = (function ()
     var g_editor, g_dbName, g_dbPath;
     /** @globals-end **/ 
     
+    function chooseFolder(o)
+    {
+        if (!BP_PLUGIN.chooseFolder(o)) 
+        {
+            o.err && BP_ERROR.loginfo(o.err);
+        }
+        else {
+            return o.path;
+        }
+    }
+    
+    function chooseWalletFolder(o)
+    {
+        BP_COMMON.clear(o);
+        o.dtitle = "Untrix Wallet: Select Wallet Folder";
+        o.dbutton = "Select Wallet Folder";
+        o.clrHist = true;
+
+        return chooseFolder(o);
+    }
+    
+    function deleteDB()
+    {
+    	var o = {},
+    		db = chooseWalletFolder(o);
+    		
+    	if (!db) {
+    		if (o.err) {
+    			BP_ERROR.warn(o.err);
+    		}
+    		return;
+    	}
+    	
+    	rpcToMothership({cm:BP_CONNECT.cm_deleteDB, dbPath:db}, function(resp)
+    	{
+    		if (resp.result === true) {
+    			BP_ERROR.success('Deleted Wallet at: ' + db);
+    		}
+    		else {
+    			BP_ERROR.warn(resp.err || 'Some problems were encountered. The Wallet may not have been completely removed. Please try again.');
+    		}
+    	});
+    }
+    
     function createDB2 (dbName, dbDir, keyDirOrPath, k, option, callbackFunc)
     {
         rpcToMothership({cm: BP_CONNECT.cm_createDB, dbName:dbName, dbDir:dbDir,
@@ -512,6 +556,8 @@ var BP_MANAGE = (function ()
 				break;
 			default:
 		}
+		
+		addEventListeners('#dbDelete', 'click', deleteDB);
 		
         $('#content *').tooltip();
     }

@@ -25,7 +25,12 @@ namespace crypt
 		void						serializeInfo		(BufHeap<uint8_t>& outBuf) const;
 		void						Encrypt				(const Buf<uint8_t>& in,
 														 ByteBuf& out) const;
-		void						Decrypt				(ByteBuf&& in, ByteBuf& out) const;
+        // if Decrypt returns false, but doesn't throw an exception, then it
+        // means that only part of the data was successfully decrypted. However,
+        // that part of usable.
+		bool						Decrypt				(ByteBuf&& in, 
+                                                         ByteBuf& out,
+                                                         bool bestEffort = true) const;
 		bool						operator==			(const CryptCtx& other) const 
 			{ return m_randKey == other.m_randKey; }
 
@@ -43,9 +48,10 @@ namespace crypt
 		void						EncryptImpl			(const Buf<uint8_t>& in,
 														 ByteBuf& out,
 														 const uint8_t* pKey = NULL) const;
-		void						DecryptImpl			(ByteBuf&& in,
+		bool						DecryptImpl			(ByteBuf&& in,
 														 ByteBuf& out,
-														 const uint8_t* pKey = NULL) const;
+														 const uint8_t* pKey = NULL,
+                                                         bool bestEffort = false) const;
 		size_t						DecryptOne			(CipherBlob& in, ByteBuf& out,
 														 const uint8_t* pKey = NULL) const;
 		
@@ -135,10 +141,10 @@ namespace crypt
 	// m_dk is not used after Ctx creation hence it is left out.
 	{}
 
-	inline void
-	CryptCtx::Decrypt(ByteBuf&& in, ByteBuf& out) const
+	inline bool
+	CryptCtx::Decrypt(ByteBuf&& in, ByteBuf& out, bool bestEffort) const
 	{
-		DecryptImpl(std::forward<ByteBuf>(in), out, m_randKey);
+		return DecryptImpl(std::forward<ByteBuf>(in), out, m_randKey, bestEffort);
 	}
 
 	inline void

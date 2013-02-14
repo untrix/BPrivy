@@ -53,7 +53,7 @@ function BP_GET_WALLET_FORM(g)
         g_text =
 	    {
 	    	keyOptionsHelpText: 'For more security: Do not store the Key file on the same device as the Wallet. A thief will need three things to steal your data: 1) Wallet, 2) Key and 3) Master Password. '+
-	    	'Therefore, store the Wallet and Key in separate locations (e.g. store one of the two on a removable memory-stick which you keep with you always).'
+	    	'Therefore, store the Wallet and Key in separate locations. The key could be stored on a memory-stick and carried with you always.'
 	    };
     /** @globals-end **/
 
@@ -733,28 +733,28 @@ function BP_GET_WALLET_FORM(g)
         	cons:radioKeyOptions,
         	_cull:['optionNoKey', 'optionHaveKey', 'optionNewKey'],
         		children:[
-	        	{tag:'label',
-	        	_text:'  Do not use a Key (Master-Password won\'t be shared with any other Wallet)',
-	        	 attr:{ title: 'Not recommended for cloud-drives - use one of the other options for cloud-drives. '+
-	        	 			   'If you create multiple Wallets with this option then you\'ll have to separately change '+
-	        	 			   'the master-password for each. If you want the convenience of a single master-password '+
-	        	 			   'for multiple Wallets then use a Key (following options).' },
-	             css:{ 'text-align':'left' },
-	                children:[
-	                {tag:'input',
-	                 ref:'optionNoKey',
-	                 save: ['radioKeyOptions'],
-	                 attr:{ type:'radio', tabindex:-1, name:'keyOptions' },
-	                 prop:{ checked:false },
-	                 on:{'change': function(e) {
-	                 		if (this.el.checked) { this.radioKeyOptions.onChoose('optionNoKey');}
-	                    }}
-	                },
-	                ]
-	            },
+	        	// {tag:'label',
+	        	// _text:'  Do not use a Key (Least Secure Option)',
+	        	 // attr:{ title: 'Not recommended for cloud-drives - use one of the other options for cloud-drives. '+
+	        	 			   // 'If you create multiple Wallets with this option then you\'ll have to separately change '+
+	        	 			   // 'the master-password for each. If you want the convenience of a single master-password '+
+	        	 			   // 'for multiple Wallets then use a Key (following options).' },
+	             // css:{ 'text-align':'left' },
+	                // children:[
+	                // {tag:'input',
+	                 // ref:'optionNoKey',
+	                 // save: ['radioKeyOptions'],
+	                 // attr:{ type:'radio', tabindex:-1, name:'keyOptions' },
+	                 // prop:{ checked:false },
+	                 // on:{'change': function(e) {
+	                 		// if (this.el.checked) { this.radioKeyOptions.onChoose('optionNoKey');}
+	                    // }}
+	                // },
+	                // ]
+	            // },
 	            {tag:'label',
-	             _text:'  Use an existing Key (Share master-password with another Wallet).',
-	             attr:{ title:'Share master-password and key with another Wallet. Changing master-password once will change it for all Wallets that use this Key'+
+	             _text:'  I already have a Key',
+	             attr:{ title:'Use an existing Key to encrypt this Wallet. '+
 	             			   g_text.keyOptionsHelpText},
 	             css:{ 'text-align':'left' },
 	                children:[
@@ -770,8 +770,11 @@ function BP_GET_WALLET_FORM(g)
 	                ]
 	            },
 	            {tag:'label',
-	             _text:'  Create a new key (Select for either more security or for sharing master-password)',
-	        	 attr:{ title: 'This key can be used by Wallets created later allowing all to have the same master-password. The key may also be used exclusively for this Wallet alone.'+
+	             _text:'  I do not have a Key - create one.',
+	        	 attr:{ title: 'Create an encryption Key (file) to encrypt this Wallet. This key may also be used for Wallets created later. ' +
+	        	 			   'For more security advanced users may choose to create a new Key per Wallet, but while doing so be aware that a '+
+	        	 			   'new Key file implies a separate master-password to remember (and to change periodically). If you have too many '+
+	        	 			   'Key files, then keeping track of individual master-passwords can get tricky.'+
 	        	 			   g_text.keyOptionsHelpText },
 	             css:{ 'text-align':'left' },
 	                children:[
@@ -883,7 +886,7 @@ function BP_GET_WALLET_FORM(g)
         save:['walletForm'],
         on:{ 'keyOptionChosen':fieldsetChooseKeyFolder.prototype.onOptionChosen },
             children:[
-            {html:'<label class="control-label">Key</label>'},
+            {html:'<label class="control-label">Encryption Key</label>'},
             {tag:'div', addClass:'controls',
                 children:[
                 radioKeyOptions.wdt,
@@ -1239,17 +1242,18 @@ function BP_GET_WALLET_FORM(g)
         {
         	e.preventDefault();
         	
-            // if (!this.el.checkValidity()) {
-                // this.setValiditys();
-                // BP_ERROR.alert('There were some errors');
-                // return;
-            // }
+            if (!this.el.checkValidity()) {
+            	//this.setValiditys();
+                BP_ERROR.alert('Please fix the errors and retry');
+                return;
+            }
 
             //this.setValiditys();
             
-            if (this.fieldsetPassword.inputPassword.el.value !==
-            	this.fieldsetPassword2.inputPassword.el.value) {
-            	this.fieldsetPassword2.inputPassword.el.setCustomValidity('Passwords do not match');
+            if ((!this.fieldsetPassword2.el.disabled) &&
+            	(this.fieldsetPassword.inputPassword.el.value !==
+            	 this.fieldsetPassword2.inputPassword.el.value)) {
+            	 this.fieldsetPassword2.inputPassword.el.setCustomValidity('Passwords do not match');
             	return;
             }
             

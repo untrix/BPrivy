@@ -714,7 +714,12 @@ bool BPrivyAPI::_readFile(const bfs::path& db_path, bfs::path& path,
 			outBuf.append((const uint8_t*)pfx.data(), pfx.length());
 			outBuf.seek(pfx.length());
 
-			pCtx->Decrypt(std::move(inBuf), outBuf);
+            // if Decrypt returns false, but doesn't throw an exception, then it
+            // means that only part of the data was successfully decrypted. However,
+            // that part of usable, hence we will return true.
+			if (!pCtx->Decrypt(std::move(inBuf), outBuf)) {
+                SetInfoMsg(BPCODE_BAD_FILE, inOut, L"Decryption Error in: " + path.wstring());
+            }
 
 			buf = std::move(outBuf);
 			buf.rewind();
