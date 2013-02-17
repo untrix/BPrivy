@@ -88,9 +88,9 @@ namespace crypt
 		static const CryptCtx*		Get					(const ucs& handle);
 		static bool					Exists				(const ucs& handle);
 		static bool					CtxIdExists			(const ucs& ctxId);
+		static bool					CtxExists			(const ucs& ctxId);
 
 	private:
-		static bool					CtxExists			(const ucs& ctxId);
 		static const ucs			GetCtxId			(const ucs& handle);
 		/** If handle is an empty string, a NULL value is returned. See documentation for Create. */
 		static CryptCtx*			GetCtx				(const ucs& ctxId);

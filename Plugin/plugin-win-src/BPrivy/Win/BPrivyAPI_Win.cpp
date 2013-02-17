@@ -796,6 +796,46 @@ bool BPrivyAPI::renameFile(const bfs::path& db_path1, bfs::path& o_path,
 	return true;
 }
 
+bool writeFileInt(HANDLEGuard& h, const bfs::path& path, crypt::ByteBuf& buf)
+{
+	h.WriteLock();
+	DWORD n;
+	BOOL st = WriteFile(h.GetHandle(), static_cast<const uint8_t*>(buf), buf.dataBytes(), &n, NULL);
+	THROW_IF2 ((!st) || (n!= buf.dataBytes()), path);
+
+	return true;
+}
+
+bool BPrivyAPI::createFileNE(const bfs::path& path, crypt::ByteBuf& buf, bp::JSObject* inOut)
+{
+    CONSOLE_LOG("In createFileNE");
+
+	HANDLEGuard h( HANDLEGuard::OpenFileForOverwrite(path, false, inOut), path );
+    return writeFileInt(h, path, buf);
+	/*h.WriteLock();
+	DWORD n;
+	BOOL st = WriteFile(h.GetHandle(), static_cast<const uint8_t*>(buf), buf.dataBytes(), &n, NULL);
+	THROW_IF2 ((!st) || (n!= buf.dataBytes()), path);
+
+	return true;*/
+}
+
+bool BPrivyAPI::overwriteFileNE(const bfs::path& path, 
+							    crypt::ByteBuf& buf,
+                                bp::JSObject* inOut)
+{
+    CONSOLE_LOG("In overwriteFileNE");
+
+    HANDLEGuard h( HANDLEGuard::OpenFileForOverwrite(path, true, inOut), path );
+    return writeFileInt(h, path, buf);
+	/*h.WriteLock();
+	DWORD n;
+	BOOL st = WriteFile(h.GetHandle(), static_cast<const uint8_t*>(buf), buf.dataBytes(), &n, NULL);
+	THROW_IF2 ((!st) || (n!= buf.dataBytes()), path);
+
+	return true;*/
+}
+
 bool BPrivyAPI::overwriteFile(const bfs::path& db_path, const bfs::path& path, 
 							  crypt::ByteBuf& text, bool exists, bp::JSObject* inOut)
 {
@@ -815,12 +855,13 @@ bool BPrivyAPI::overwriteFile(const bfs::path& db_path, const bfs::path& path,
 	}
 	
 	HANDLEGuard h( HANDLEGuard::OpenFileForOverwrite(path, exists, inOut), path );
-	h.WriteLock();
+    return writeFileInt(h, path, buf);
+	/*h.WriteLock();
 	DWORD n;
 	BOOL st = WriteFile(h.GetHandle(), static_cast<const uint8_t*>(buf), buf.dataBytes(), &n, NULL);
 	THROW_IF2 ((!st) || (n!= buf.dataBytes()), path);
 
-	return true;
+	return true;*/
 }
 
 bool BPrivyAPI::copyFile(bfs::path& o_path, bfs::path& n_path, bool nexists)

@@ -99,6 +99,7 @@ public:
 	bool dupeCryptCtx(const bp::ucs& cryptInfoFile, const bp::ucs& dbDir, FB::JSObjectPtr in_out);
 	bool destroyCryptCtx(const bp::ucs& dbPath, FB::JSObjectPtr in_out);
 	bool cryptCtxLoaded(const bp::ucs& dbPath, FB::JSObjectPtr in_out);
+    bool cryptKeyLoaded(const bp::ucs& cryptInfoFilePath, FB::JSObjectPtr in_out);
 	//bool isNullCrypt(const bp::ucs& cryptInfoFilePath, FB::JSObjectPtr in_out);
 
 private:
@@ -119,10 +120,18 @@ private:
 	bool _chooseFolderXP(bp::JSObject* p);
 	bool _choose(bp::JSObject* p, bool chooseFile = false);
 	void zeroFile(const bfs::path& path, bp::JSObject* p, size_t num=7);
-	/** Helper to copy */
+	/** Helper functions */
 	bool overwriteFile(const bfs::path& db_path, const bfs::path& path, 
 					   crypt::ByteBuf& text, bool exists,
 					   bp::JSObject* inOut);
+    /** Suffix 'NE' = No Encryption */
+    bool createFileNE(const bfs::path& path, 
+                                crypt::ByteBuf& text,
+                                bp::JSObject* inOut);
+    /** Suffix 'NE' = No Encryption */
+    bool overwriteFileNE(const bfs::path& path, 
+					     crypt::ByteBuf& buf,
+					     bp::JSObject* inOut);
 	// Platform specific rename operation.
 	bool renameFile(const bfs::path& db_path1, bfs::path& o_path, 
 					const bfs::path& db_path2, bfs::path& n_path, 
@@ -133,6 +142,7 @@ private:
 	unsigned long long _lockFile(bfs::path& path, bp::JSObject* out);
 	bool _destroyCryptCtx(const bfs::path& dbPath, bp::JSObject* out);
 	bool _cryptCtxLoaded(const bfs::path& dbPath, bp::JSObject* out);
+	bool _keyLoaded(const bfs::path& keyPath, bp::JSObject* out);
 	bool _createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
 	bool _loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
 	bool _dupeCryptCtx(const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);

@@ -76,6 +76,7 @@ BPrivyAPI::BPrivyAPI(const BPrivyPtr& plugin, const FB::BrowserHostPtr& host) :
 	registerMethod("dupeCryptCtx", make_method(this, &BPrivyAPI::dupeCryptCtx));
 	registerMethod("destroyCryptCtx", make_method(this, &BPrivyAPI::destroyCryptCtx));
 	registerMethod("cryptCtxLoaded", make_method(this, &BPrivyAPI::cryptCtxLoaded));
+    registerMethod("cryptKeyLoaded", make_method(this, &BPrivyAPI::cryptKeyLoaded));
 #ifdef DEBUG
 	registerMethod("chooseFileXP", make_method(this, &BPrivyAPI::chooseFileXP));
 	registerMethod("chooseFolderXP", make_method(this, &BPrivyAPI::chooseFolderXP));
@@ -403,21 +404,17 @@ bool BPrivyAPI::_createDir(bfs::path& path, bp::JSObject* p)
 
 void BPrivyAPI::zeroFile(const bfs::path& path, bp::JSObject* p, size_t num)
 {
-	try
+	size_t fSize = bfs::file_size(path);
+	if (fSize>0) 
 	{
-		size_t fSize = bfs::file_size(path);
-		if (fSize>0) 
-		{
-			crypt::ByteBuf zeroBuf(fSize); // constructor zeroes it out.
-			bfs::path nullPath;
+		crypt::ByteBuf zeroBuf(fSize, fSize); // constructor zeroes it out.
+		bfs::path nullPath;
 
-			for (; num>0; num--)
-			{
-				overwriteFile(nullPath, path, zeroBuf, true, p);
-			}
+		for (; num>0; num--)
+		{
+			overwriteFileNE(path, zeroBuf, p);
 		}
 	}
-	CATCH_FILESYSTEM_EXCEPTIONS(p)
 }
 
 bool BPrivyAPI::_rm(bfs::path& path, bp::JSObject* p)
@@ -677,6 +674,21 @@ bool BPrivyAPI::_cryptCtxLoaded(const bfs::path& dbPath, bp::JSObject* out)
 	return false;
 }
 
+bool BPrivyAPI::_keyLoaded(const bfs::path& key_path, bp::JSObject* out)
+{
+	try {
+		if (crypt::CryptCtx::CtxExists(key_path.wstring())) {
+			out->SetProperty(PROP_KEY_PATH, key_path.wstring()); //signals context exists
+		}
+		else {
+			out->RemoveProperty(PROP_KEY_PATH); // signals context does not exist
+		}
+		return true;
+	}
+	CATCH_FILESYSTEM_EXCEPTIONS(out);
+	return false;
+}
+
 bool
 BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
 {
@@ -692,7 +704,11 @@ BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath
 
 		try {
 			pCtx->serializeInfo(outBuf);
-			overwriteFile(bfs::path(), cryptInfoFilePath, outBuf, false, in_out);
+            // Be very paranoid when writing a new file. We *never ever* want to overwrite
+            // an existing key file !! That would cause encryption of all new records using
+            // the new key, causing all old records to be corrupted and unrecoverable !!
+            // Also, we don't want this data to be encrypted !
+			createFileNE(cryptInfoFilePath, outBuf, in_out);
 		}
 		catch (...) {
 			// cleanup
@@ -723,7 +739,7 @@ bool BPrivyAPI::_loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFileP
 		crypt::BufHeap<char> pass($.c_str());
 		crypt::CryptCtx::Load(ctxHandle, cryptInfoFilePath.wstring(), pass, inBuf);
 		
-		in_out->SetProperty(PROP_DB_PATH, ctxHandle);
+		in_out->SetProperty(PROP_CRYPT_CTX, ctxHandle);
 		return true;
 	}
 	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
@@ -735,10 +751,10 @@ bool BPrivyAPI::_dupeCryptCtx(const bfs::path& cryptInfoFilePath, const bfs::pat
 	try
 	{
 		if (crypt::CryptCtx::DupeIfNotLoaded(cryptInfoFilePath.wstring(), dbPath.wstring())) {
-			in_out->SetProperty(PROP_DB_PATH, dbPath.wstring()); // signals true
+			in_out->SetProperty(PROP_CRYPT_CTX, dbPath.wstring()); // signals true
 		}
 		else {
-			in_out->RemoveProperty(PROP_DB_PATH); // signals false
+			in_out->RemoveProperty(PROP_CRYPT_CTX); // signals false
 		}
 
 		return true;

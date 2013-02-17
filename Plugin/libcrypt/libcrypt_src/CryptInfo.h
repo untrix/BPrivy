@@ -107,6 +107,7 @@ namespace crypt
 		// Random generated key used for encrypting data. This key is
 		// itself encrypted using password-derived key and stored here.
 		ByteBuf		m_randKey;
+        ByteBuf     m_keyUuid;
 		// NOTE: Signature was removed on purpose, in order to make it
 		// impossible for an attacker to know for certain whether they had
 		// sucessfully guessed the user's password (using rainbow attack).

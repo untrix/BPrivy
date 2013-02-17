@@ -80,7 +80,7 @@ namespace crypt
 			VAL_FMT_VER = 1,
 			FMT_HEADER_FIXED_SIZE = 2
 		} Constant;
-		/** 
+		/**
 		 *  BYTE#            NIBBLE 1        NIBBLE 2
 		 *
 		 *	1           [Size Field Size][Format Version #]

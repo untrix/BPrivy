@@ -876,7 +876,7 @@ function BP_GET_EDITOR(g)
         {
             //BP_ERROR.log("g_editor: filter invoked on " + site);
             var $coll = $('.com-untrix-dnode', this.el),
-                $show = site ? $coll.filter('[id*="'+site+'"]') : $coll,
+                $show = site ? $coll.filter('[id*="'+site.toLowerCase()+'"]') : $coll,
                 $hide = site ? $coll.not($show) : $();
                 
             $hide.hide();

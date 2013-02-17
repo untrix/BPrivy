@@ -710,7 +710,10 @@ function BP_GET_MEMSTORE(g)
     ActionIterator.prototype.next = function ()
     {
         // Return records in chronological order
-        return this.actions[--this.i]; // TODO: Should we floor 'this.i' at -1?
+        var j = --this.i;
+        if (j>=0) {
+        	return this.actions[j];
+        }
     };
     function newItemHistory(dt, jo) {
         return new ItemHistory(dt, jo);

@@ -139,7 +139,6 @@ namespace crypt
 		{
             try {
     			ciBlob.seek(count, (totalBytes-processed)); // in-buf is parsed again at position <count>
-			    count = DecryptOne(ciBlob, out, pKey);
             }
             catch (...) {
                 if (bestEffort) {
@@ -148,6 +147,18 @@ namespace crypt
                 }
                 else { throw; }
             }
+
+            try {
+			    count = DecryptOne(ciBlob, out, pKey);
+            }
+            catch (...) {
+                if (bestEffort) {
+                    // Skip to the next blob.
+                    continue;
+                }
+                else { throw; }
+            }
+
 			processed += count;
 		}
 
@@ -313,8 +324,12 @@ namespace crypt
 					   Error::CODE_BAD_PARAM, 
 					   L"Empty Key or DB Path" );
 
-		// Do not create a new one if one already exists.
-		Error::Assert( (!Exists(handle)), Error::CODE_CRYPTO_ERROR, L"Key is already loaded");
+		// Do not create a new one if one already exists. Be extra-paranoid here because if a different
+        // key with the same ctxId exists (for an existing DB), then we don't want to inadvertently
+        // replace it. Doing so would make any new records going into the old DB be completely unintelligible
+        // when decrypted by the original key. That would be disaster because these records would be
+        // completely unrecoverable.
+		Error::Assert( (!Exists(handle))&&(!CtxExists(ctxId))&&(!CtxIdExists(ctxId)), Error::CODE_CRYPTO_ERROR, L"Key is already loaded");
 
 		CryptCtx* pCtx = CryptCtx::CreateCtx(k, cipher, key_len);
 		if (pCtx) {

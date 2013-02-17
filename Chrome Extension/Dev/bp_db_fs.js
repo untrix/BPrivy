@@ -109,8 +109,8 @@ function BP_GET_DBFS(g)
                 ext_MMap: ".3am", // unused as yet: dump of in-memory dictionary
                 ext_Temp: ".3at",
                 ext_Bad : ".3aq", // q => Quarantine
-                ext_CryptInfo : ".3ak", // Encrypted key and Cryptinfo
-                ext_Key : ".3ak", // Same as cryptinfo
+                ext_KeyInfo : ".3aki", // Info that holds Key-ID 
+                ext_Key : ".3ak", // Encryption Key / Cryptinfo
                 ext_Csv : ".csv"
             },
             cat_Load = {
@@ -133,7 +133,7 @@ function BP_GET_DBFS(g)
             ext_MMap: ext.ext_MMap,
             ext_Temp: ext.ext_Temp,
             ext_Bad : ext.ext_Bad, // q => Quarantine
-            ext_CryptInfo: ext.ext_CryptInfo,
+            ext_KeyInfo: ext.ext_KeyInfo,
             ext_Key: ext.ext_Key,
             ext_Csv : ext.ext_Csv,
             cat_Open : cat_Load.cat_Open,

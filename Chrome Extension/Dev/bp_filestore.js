@@ -9,7 +9,7 @@
 /*global $, BP_PLUGIN, IMPORT */
  
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
-  undef:false, vars:true, white:true, continue: true, nomen:true */
+  undef:false, vars:true, white:true, continue: true, nomen:true, white:true */
 
 /**
  * @ModuleBegin FileStore
@@ -95,11 +95,11 @@ function BP_GET_FILESTORE(g)
     {
         var dbPath = DB_FS.getDBPath(),
             o;
-        if (clearCrypt) {
+        /*if (clearCrypt) {
         	o = {clearCrypt:true};
         	BP_PLUGIN.destroyCryptCtx(dbPath, o);
         }
-        else if (dbPath) {
+        else */if (dbPath) {
         	o = {};
             BP_PLUGIN.destroyCryptCtx(dbPath, o);
         }
@@ -197,8 +197,12 @@ function BP_GET_FILESTORE(g)
             
             BP_ERROR.log("Loaded file " + filePath);
 
-	        if (o.inf && (o.inf.gcode === 'FileCorrupted'))
+	        if (o.inf && (o.inf.gcode === 'EncryptionCorrupted'))
 	        {
+	        	// We were able to decrypt and salvage some portion of the file. Hence we will
+	        	// use this file, but if it was an open file then we'll close it so that any
+	        	// newer data will not be appended here because that would be lost owing to the
+	        	// file corruption just before it.
 	        	BP_ERROR.logwarn(o.inf);
 	        	if (cat === DB_FS.cat_Open)
 	        	{
@@ -248,7 +252,10 @@ function BP_GET_FILESTORE(g)
                 o = {};
 
                 if (!k) {
-                    //k = requestKey(dbPath);
+                    if (!BP_PLUGIN.dupeCryptCtx(cryptInfoPath, dbPath, o)) { throw new BPError(o.err); }
+                    if (!o.cryptCtx) {
+	            		throw new BPError('','KeyNotLoaded');
+	            	}
                     throw new BPError("Please supply master password for " + dbPath);
                 }
                 
@@ -259,8 +266,9 @@ function BP_GET_FILESTORE(g)
                     throw new BPError(o.err);
                 }
             }
-            //else this wallet is in cleartext - only use this mode for 
-            // debugging/development purposes.   
+            else {
+            	throw new BPError("", 'KeyNotLoaded');
+            }
         }
     }
     
@@ -450,6 +458,7 @@ function BP_GET_FILESTORE(g)
             dbPath = DB_FS.getDBPath(),
             o={};
 
+		// TODO: Insert code in here to close the open file if it was full.
         if (dtPath)
         {
             result = BP_PLUGIN.appendFile(dbPath, dtPath, rec_sep+JSON.stringify(rec), o);
@@ -517,7 +526,9 @@ function BP_GET_FILESTORE(g)
             dnIt = MEMSTORE.newDNodeIterator(dt);
             buf = new RecsBuf();
             
-            dnIt.walk(writeAction, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted}, {doGC:true});
+            // TODO: turning off doGC for collecting data for a rarely occuring issue. Turn it
+            // back on afterwards.
+            dnIt.walk(writeAction, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted}, {doGC:false});
             
             if (buf.length)
             {
@@ -807,9 +818,12 @@ function BP_GET_FILESTORE(g)
         switch (option)
         {
         	case 'optionNoKey':
+                if (!k) {
+                    throw new BPError("Please supply master password for " + dbPath);
+                }
         		keyPath = DB_FS.makeCryptInfoPath(dbPath, name);
         		break;
-        	case 'optionNewKey':
+            case 'optionNewKey':
         		keyPath = DB_FS.makeCryptInfoPath(undefined, name, keyDirOrPath);
         		if (!k) {
                     throw new BPError("Please supply master password for " + keyPath);
@@ -826,8 +840,8 @@ function BP_GET_FILESTORE(g)
         			if (!BP_PLUGIN.dupeCryptCtx(keyPath, dbPath, o)) {
 	            		throw new BPError(o.err);
 	            	}
-	            	if (!o.dbPath) {
-	            		throw new BPError('KeyNotLoaded');
+	            	if (!o.cryptCtx) {
+	            		throw new BPError('','KeyNotLoaded');
 	            	}
         		}
         		else {
@@ -849,10 +863,6 @@ function BP_GET_FILESTORE(g)
                 // Create the cryptInfo file and context
                 if (option === 'optionNoKey') 
                 {
-                	if (!k) {
-	                    throw new BPError("Please supply master password for " + dbPath);
-	                }
-
                 	o={};
 	                if (!BP_PLUGIN.createCryptCtx(k,keyPath,dbPath,o)) {
 	                    throw new BPError(o.err);
@@ -871,8 +881,8 @@ function BP_GET_FILESTORE(g)
             else {
                 throw new BPError(o.err);
             }
-            
-            MEMSTORE.clear(); // unload the previous DB.
+
+            unloadDB(); //MEMSTORE.clear(); // unload the previous DB.
             DB_FS.setDBPath(dbPath); // The DB is deemed loaded (though it is empty)
         }
         catch (exp) {

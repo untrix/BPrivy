@@ -268,7 +268,7 @@ function BP_GET_ERROR(g)
             BPError.atvt.pop();
         }
     };
-    
+
     function alert (arg)
     {
         var be = new BPError(arg);

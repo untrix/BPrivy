@@ -177,7 +177,16 @@ function BP_GET_CONNECT(g)
         });
     }
     //Action.prototype.setDeleted = function () { this.a = 'd'; };
+    Action.isDelete = function(actn) { return Boolean((actn.a==='d') || (actn.a==='pd')); }
+    Action.isPermDelete = function (actn) { return Boolean(actn.a==='pd'); }
     
+    // This should ideally be part of ItemHistory class, but that would require a dependency
+    // on Memstore, which is not a good idea since this function is used by bp_cs.
+    function itemDeleted(iHist){return Action.isDelete(iHist.curr);}
+    function itemPermDeleted(iHist){return Action.isPermDelete(iHist.curr);}
+    // function itemDeleted(iHist){return Boolean(iHist.curr.a);}
+    // function itemPermDeleted(iHist){return Boolean(iHist.curr.a==='pd');}
+
     function EAction(loc, date, atype, fieldName, tagName, id, name, type, formId, formNm)
     {
         Action.apply(this, [dt_eRecord, loc, date, atype]);
@@ -233,11 +242,6 @@ function BP_GET_CONNECT(g)
         }
     }
 
-    // This shoudl ideally be part of ItemHistory class, but that would require a dependency
-    // on Memstore, which is not a good idea since this function is used by bp_cs.
-    function itemDeleted(iHist){return Boolean(iHist.curr.a);}
-    function itemPermDeleted(iHist){return Boolean(iHist.curr.a==='pd');}
-    
     function ItemIterator (itemsMap, skipDeleted, sort)
     {
         var k = itemsMap ? (sort ? Object.keys(itemsMap).sort() : Object.keys(itemsMap)) : BP_COMMON.EMPTY_ARRAY;

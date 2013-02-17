@@ -108,7 +108,7 @@ function BP_GET_WALLET_FORM(g)
     function chooseKeyFile(o)
     {
         BP_COMMON.clear(o);
-        o.filter = ['Key File','*.3ak'];
+        o.filter = ['Key File', '*' + DB_FS.ext_Key];
         o.dtitle = "Untrix Wallet: Select Key File";
         o.dbutton = "Select";
         o.clrHist = true;
@@ -801,15 +801,15 @@ function BP_GET_WALLET_FORM(g)
         	
         	reset: {value: function()
         	{
-        		this.optionNoKey.el.checked = true;
-        		this.onChoose('optionNoKey');
+        		this.optionHaveKey.el.checked = true;
+        		this.onChoose('optionHaveKey');
         	}},
         	
         	val: {value: function()
         	{
-        		if (this.optionNoKey.el.checked) { 
+        		/*if (this.optionNoKey.el.checked) { 
         			return 'optionNoKey'; }
-        		else if (this.optionHaveKey.el.checked) {
+        		else */if (this.optionHaveKey.el.checked) {
         			return 'optionHaveKey';
         		}
         		else if (this.optionNewKey.el.checked) {
@@ -858,7 +858,7 @@ function BP_GET_WALLET_FORM(g)
             text:'Browse',
             ref:'btnChooseKeyFolder',
             on:{ 'click':btnChooseKeyFolder.prototype.onClick },
-            save:['controlsKeyFolder']
+            save:['controlsKeyFolder','fieldsetChooseKeyFolder']
             };
         };
         w$defineProto(btnChooseKeyFolder,
@@ -869,7 +869,8 @@ function BP_GET_WALLET_FORM(g)
                     path = chooseKeyFolder(o);
                     
                 if (o.err) { BP_ERROR.alert(o.err); }
-                else if (path) {
+                else if (path && this.fieldsetChooseKeyFolder.validateKeyFolder(path))
+                {
                     this.controlsKeyFolder.inputKeyFolder.el.value = path;
                     CS_PLAT.customEvent(this.controlsKeyFolder.inputKeyFolder.el, 
                         'keyFolderChosen', {keyFolder:path});
@@ -885,6 +886,8 @@ function BP_GET_WALLET_FORM(g)
         prop:{ disabled:true },
         save:['walletForm'],
         on:{ 'keyOptionChosen':fieldsetChooseKeyFolder.prototype.onOptionChosen },
+        _cull:['radioKeyOptions', 'controlsKeyFolder', 'controlsKeyFile'],
+        _final:{ exec:function() { this.disable(); } },
             children:[
             {html:'<label class="control-label">Encryption Key</label>'},
             {tag:'div', addClass:'controls',
@@ -920,10 +923,10 @@ function BP_GET_WALLET_FORM(g)
                      save:['fieldsetChooseKeyFolder'],
                      on:{ 'change': function(e) 
                           {
-                              //if (this.fieldsetChooseKeyFolder.checkValidity(this)) {
+                              if (this.fieldsetChooseKeyFolder.validateKeyFolder(this.el.value)) {
                                 CS_PLAT.customEvent(this.el, 'keyFolderChosen',
                                                     {keyFolder:this.el.value});
-                              //}
+                              }
                           }}
                     },
                     ]
@@ -968,13 +971,28 @@ function BP_GET_WALLET_FORM(g)
                 }
                 ]
             }
-            ],
-        _cull:['radioKeyOptions', 'controlsKeyFolder', 'controlsKeyFile'],
-        _final:{ exec:function() { this.disable(); } }
+            ]
         };
     };
     fieldsetChooseKeyFolder.prototype = w$defineProto(fieldsetChooseKeyFolder,
     {
+    	validateKeyFolder: {value: function(path)
+    	{
+    		var fName = this.walletForm.fieldsetDBName.val() + DB_FS.ext_Key,
+    			keyPath = path + DB_FS.getPathSep() + fName;
+    		if (BP_PLUGIN.exists(keyPath, {})) {
+    			this.controlsKeyFolder.inputKeyFolder.el.setCustomValidity('A Key file called ' + fName + ' already exists at this location');
+    			this.controlsKeyFolder.inputKeyFolder.el.checkValidity();
+    			BP_ERROR.warn('A Key file called ' + fName + ' already exists at this location. Choose a different folder or a different Wallet name.');
+    			return false;
+    		}
+    		else {
+    			this.controlsKeyFolder.inputKeyFolder.el.setCustomValidity('');
+    			this.controlsKeyFolder.inputKeyFolder.el.checkValidity();
+    			return true;
+    		}
+    	}},
+    	
         val: {value: function()
         { 
         	return this.controlsKeyFolder.val() || this.controlsKeyFile.val();
@@ -1091,10 +1109,10 @@ function BP_GET_WALLET_FORM(g)
             {
             	dbPath = this.walletForm.fieldsetChooseDB.val();
             	o = {};
-            	if (!BP_PLUGIN.dupeCryptCtx(e.detail.keyPath, dbPath, o)) {
+            	if (!BP_PLUGIN.cryptKeyLoaded(e.detail.keyPath, o)) {
             		BP_ERROR.alert(o.err);
             	}
-            	else if (!o.dbPath) {
+            	else if (!o.cryptKeyPath) {
             		this.enable();
             		this.inputPassword.el.focus();
             	}
@@ -1288,11 +1306,22 @@ function BP_GET_WALLET_FORM(g)
                                self.fieldsetChooseKeyFolder.radioKeyOptions.val(),
                                function (resp)
                 {
+                    var option, keyFolderOrPath, keyPath;
                     spinner.stop();
-                    if (resp.result === true) {
-                        SETTINGS.setDB(self.fieldsetDBName.val(),
-                                            resp.dbPath, 
-                                            self.fieldsetChooseKey.val());
+
+                    if (resp.result === true) 
+                    {
+                    	option = self.fieldsetChooseKeyFolder.radioKeyOptions.val();
+                    	keyFolderOrPath = self.fieldsetChooseKeyFolder.val();
+
+						if (option === 'optionHaveKey') {
+							keyPath = keyFolderOrPath;
+						}
+                    	else if (option === 'optionNewKey'){
+                    		keyPath = DB_FS.makeCryptInfoPath(undefined, self.fieldsetDBName.val(), keyFolderOrPath);
+                    	}
+                    	
+                        SETTINGS.setDB(self.fieldsetDBName.val(), resp.dbPath, keyPath);
                         self.updateDash(resp);
                         BP_ERROR.success('Password store created at ' + resp.dbPath);
                         modalDialog.destroy();

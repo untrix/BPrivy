@@ -203,6 +203,14 @@ bool BPrivyAPI::cryptCtxLoaded(const bp::ucs& dbPath, FB::JSObjectPtr in_out)
 	return _cryptCtxLoaded(db_path, &o);
 }
 
+bool BPrivyAPI::cryptKeyLoaded(const bp::ucs& cryptInfoFile, FB::JSObjectPtr in_out)
+{
+	bp::JSObject o(in_out);
+	bfs::path key_path(cryptInfoFile);
+	bp::normalizePath(key_path); // dbPath is used as ctx-handle, hence needs to be normalized.
+	return _keyLoaded(key_path, &o);
+}
+
 /*bool BPrivyAPI::isNullCrypt(const bp::ucs& cryptInfoFilePath, FB::JSObjectPtr in_out)
 {
 	bp::JSObject o(in_out);

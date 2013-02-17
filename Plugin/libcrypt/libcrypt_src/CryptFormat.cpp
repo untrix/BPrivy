@@ -66,7 +66,9 @@ namespace crypt
 		Parser parse(ciBlob.m_buf);
 		uint8_t header_first = parse.GetU8();
 		// LS Nibble represents serialization format version.
-		Error::Assert((header_first&0x0F)==VAL_FMT_VER, Error::CODE_BAD_DATA, L"Error while parsing CipherBlob header");
+		Error::Assert((header_first&0x0F)==VAL_FMT_VER,
+                      Error::CODE_BAD_DATA,
+                      L"Error while parsing CipherBlob header");
 		// MS Nibble has size of the data_size field of the header.
 		unsigned int size_field_size = ( (header_first&0xF0) >> 4 );
 		Error::Assert(size_field_size<=4, Error::CODE_BAD_DATA, L"Error while parsing CipherBlob header");
@@ -431,6 +433,56 @@ namespace crypt
 	}
 
 	/*****************************************************************/
+	/*********************** CryptInfoFormat1 ************************/
+	/*****************************************************************/
+	/**
+	* Serialization Format Version 1 for CryptInfo. Carries code that is
+	* used to marshall and unmarshall data to/from files. Hence the format
+	* can never be changed once it is put to use. If you want to change the
+	* format, then write a new class and increment the VER template parameter.
+	*/
+	class CryptInfoFormat2 : public CryptInfoFormatBase
+	{
+		/**
+		 *  BYTE#                    CONTENTS
+         *
+         *  1-N        [         [CryptInfoFormat1]          ]
+         *  N+1-N+16   [              Key UUID               ]
+		*/
+	public:
+		static size_t			EstimateBufSize	(const CryptInfo& obj);
+		static void				serialize		(const CryptInfo& obj,
+												 Buf<uint8_t>& outbuf);
+		static void				parse			(const Buf<uint8_t>& inbuf, CryptInfo& obj);
+
+	private:
+		/**
+		* VALues are fixed for posterity. They are never to be changed since 
+		* they are persisted to disk 
+		*/
+		typedef enum {
+			FMT_UUID_SIZE = 16
+		} Constant;
+	};
+
+    size_t	
+    CryptInfoFormat2::EstimateBufSize(const CryptInfo& obj)
+    {
+        return CryptInfoFormat1::EstimateBufSize(obj) + FMT_UUID_SIZE;
+    }
+
+    void
+    CryptInfoFormat2::serialize(const CryptInfo& obj, Buf<uint8_t>& outbuf)
+    {
+        CryptInfoFormat1::serialize(obj, outbuf);
+        outbuf.append(obj.m_keyUuid, obj.m_keyUuid.dataNum());
+    }
+
+    void
+    CryptInfoFormat2::parse(const Buf<uint8_t>& inbuf, CryptInfo& obj)
+    {}
+
+    /*****************************************************************/
 	/********************** CryptInfoFormatBase **********************/
 	/*****************************************************************/
 	void
@@ -444,6 +496,9 @@ namespace crypt
 			break;
 		case 1:
 			CryptInfoFormat1::parse(inbuf, obj);
+			break;
+		case 2:
+			CryptInfoFormat2::parse(inbuf, obj);
 			break;
 		default:
 			Error::Assert(false, Error::CODE_BAD_DATA, L"CryptInfoFormatBase::parse. Bad CryptInfo File");
@@ -463,6 +518,10 @@ namespace crypt
 		case 1:
 			outbuf.ensureCap(CryptInfoFormat1::EstimateBufSize(obj));
 			CryptInfoFormat1::serialize(obj, outbuf);
+			break;
+		case 2:
+			outbuf.ensureCap(CryptInfoFormat2::EstimateBufSize(obj));
+			CryptInfoFormat2::serialize(obj, outbuf);
 			break;
 		default:
 			Error::Assert(false, Error::CODE_INTERNAL_ERROR, L"CryptInfoFormatBase::serialize. Bad CryptInfo Object");
