@@ -48,8 +48,7 @@ function BP_GET_WALLET_FORM(g)
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
-    var g_dialog,
-        g_counter = 1,
+    var g_counter = 1,
         g_text =
 	    {
 	    	keyOptionsHelpText: 'For more security: Do not store the Key file on the same device as the Wallet. A thief will need three things to steal your data: 1) Wallet, 2) Key and 3) Master Password. '+
@@ -1456,7 +1455,7 @@ function BP_GET_WALLET_FORM(g)
     {
         onInsert: {value: function()
         {
-            this.$().modal({show:false});
+            this.$().modal({show:false, backdrop:'static'});
             this.$().on('shown', modalDialog.onShown);  // must use JQuery for Bootstrap events.
             this.$().on('hidden', modalDialog.onHidden);// must use JQuery fro Bootstrap events.
             
@@ -1517,7 +1516,7 @@ function BP_GET_WALLET_FORM(g)
     modalDialog.onShown = function(e)
     {
         var dbPath,
-            dialog = g_dialog; //BP_W$.w$get('#modalDialog');
+            dialog = BP_W$.w$get('#modalDialog');
         if (!dialog) { return; }
         
         switch (dialog.mode)
@@ -1556,11 +1555,12 @@ function BP_GET_WALLET_FORM(g)
     };    
     modalDialog.create = function(ops)
     {
-        var ctx, dialog, temp;
+        var ctx, temp,
+            dialog = BP_W$.w$get('#modalDialog');
 
-        if (g_dialog) {
-            g_dialog.hide().destroy();
-            g_dialog = null;
+        if (dialog) {
+            dialog.hide().destroy();
+            dialog = null;
         }
 
         // Create the Widget.
@@ -1572,30 +1572,20 @@ function BP_GET_WALLET_FORM(g)
         
         BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
         
-        g_dialog = dialog;
-        
         if (dialog)
         {
-            g_dialog.onInsert().showModal();
+            dialog.onInsert().showModal();
         }
         
-        return g_dialog;
+        return dialog;
     };
     modalDialog.destroy = function()
     {
-        var w$dialog;
-        if (g_dialog) {
-            w$dialog = g_dialog;
-        }
-        else {
-            w$dialog = BP_W$.w$get('#modalDialog');
-        }
+        var w$dialog = BP_W$.w$get('#modalDialog');
 
         if (w$dialog) {
             w$dialog.hideModal();
         }
-        
-        g_dialog = null;
     };
 
     BP_ERROR.loginfo("constructed mod_wallet_form");

@@ -1,6 +1,6 @@
 {
   "name": "BPrivy",
-  "version": "0.6.18",
+  "version": "0.6.19",
   "manifest_version": 2,
   "minimum_chrome_version": "7",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",

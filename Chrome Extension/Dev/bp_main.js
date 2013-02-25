@@ -682,15 +682,10 @@ var BP_MAIN = (function()
             // Initialize notifications only after all modules
             // that it listens to have been inited.
             BP_NTFN_CNTR.init();
-            BP_NTFN_CNTR.notify('', 'Click here to open a Wallet', function()
-            {
-            	MOD_WIN.openPath('/bp_manage.html?action=open');
-            });
-            // if (dbPath)
+            // BP_NTFN_CNTR.notify('', 'Click here to open a Wallet', function()
             // {
-                // BPError.atvt = new Activity('LoadDBAtInit');
-                // dbPath = FILE_STORE.loadDB(dbPath);
-            // }
+            	// MOD_WIN.openPath('/bp_manage.html?action=open');
+            // });
         } 
         catch (e)
         {

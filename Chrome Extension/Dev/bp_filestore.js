@@ -251,18 +251,16 @@ function BP_GET_FILESTORE(g)
             if (cryptInfoPath) {
                 o = {};
 
-                if (!k) {
-                    if (!BP_PLUGIN.dupeCryptCtx(cryptInfoPath, dbPath, o)) { throw new BPError(o.err); }
-                    if (!o.cryptCtx) {
+                if (!k)
+                {
+                    if (!BP_PLUGIN.dupeCryptCtx(cryptInfoPath, dbPath, o)) { 
+                        throw new BPError(o.err); 
+                    }
+                    else if (!o.cryptCtx) {
 	            		throw new BPError('','KeyNotLoaded');
 	            	}
-                    throw new BPError("Please supply master password for " + dbPath);
                 }
-                
-                if (!BP_PLUGIN.loadCryptCtx(k, cryptInfoPath, dbPath, o)) {
-                    // var bp_err = new BPError(o.err);
-                    // BP_ERROR.logwarn(bp_err);
-                    // o.err.gmsg = BP_ERROR.msg[o.err.acode || o.err.gcode];
+                else if (!BP_PLUGIN.loadCryptCtx(k, cryptInfoPath, dbPath, o)) {
                     throw new BPError(o.err);
                 }
             }
@@ -384,6 +382,7 @@ function BP_GET_FILESTORE(g)
         dbPath = DB_FS.verifyDBForLoad(dbPath);
 
     	if (dbPath !== DB_FS.getDBPath()) {
+    	    ensureKeyLoaded(dbPath, keyPath, k);
         	unloadDB();
       	}
       	// Following is performed inside loadDBInt

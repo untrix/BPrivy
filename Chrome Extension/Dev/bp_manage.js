@@ -169,6 +169,8 @@ var BP_MANAGE = (function ()
         if (resp.result===false) {
             BP_ERROR.alert(resp.err);
         }
+        
+        updateDash(resp);
     }
     
     function updateDash (resp)
@@ -251,7 +253,9 @@ var BP_MANAGE = (function ()
         }
         else 
         {
-            $('[data-dbName]').text().attr('data-original-title', '').attr('data-path', null);
+            g_dbName = resp ? cullDBName(resp.dbPath) : null;
+            g_dbPath = resp ? resp.dbPath : null;
+            $('[data-dbName]').text("No Wallet Opened").attr('data-original-title', '').attr('data-path', null);
             $('[data-db-path]').text(null).attr('data-original-title', '').attr('data-path', null);
             $('#stats').val('');
             $('#dbCompact').removeClass('btn-warning').removeClass('btn-primary').prop('disabled', true);
