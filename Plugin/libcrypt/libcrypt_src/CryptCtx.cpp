@@ -70,6 +70,7 @@ namespace crypt
 	/*****************************************************************/
 	CryptCtx::HandleMap CryptCtx::s_handleMap;
 	CryptCtx::CtxMap CryptCtx::s_ctxMap;
+    const wstring NULL_HANDLE(L"nul");
 
 	CryptCtx::CryptCtx(const Buf<uint8_t>& cryptInfo) : m_info(cryptInfo)
 	{}
@@ -284,8 +285,10 @@ namespace crypt
 		} 
 		catch (const std::out_of_range&)
 		{
+            // There imaginary null-handle always exists
+            if (ctxId == NULL_HANDLE) { return true; }
 			// The key wasn't found (even a NULL value'd entry wasn't found)
-			return false;
+            else { return false; }
 		}
 		catch (std::exception& e)
 		{
@@ -302,6 +305,9 @@ namespace crypt
 		}
 		catch (const std::out_of_range&)
 		{
+            // We'll get here in the following cases:
+            // 1. (ctxId == NULL_HANDLE)
+            // 2. (ctxId != NULL_HANDLE) and ctx does not exist.
 			return NULL;
 		}
 		catch (std::exception& e)
@@ -317,10 +323,10 @@ namespace crypt
 					 CipherEnum cipher,
 					 unsigned int key_len)
 	{
-		// NOTE: We're ensuring that a null-string will never be a valid handle. This makes
-		// it possible to supply a null-string handle as a dummy handle in the file-system routines
+		// NOTE: We're ensuring that a NULL_HANDLE will never be a valid handle. This makes
+		// it possible to supply a null-handle as a dummy handle in the file-system routines
 		// resting assured that no encrypt/decrypt operations will take place.
-		Error::Assert( (!handle.empty()) &&  (!ctxId.empty()), 
+		Error::Assert( (!handle.empty()) &&  (!ctxId.empty()) && (ctxId != NULL_HANDLE) && (handle != NULL_HANDLE), 
 					   Error::CODE_BAD_PARAM, 
 					   L"Empty Key or DB Path" );
 
@@ -346,15 +352,19 @@ namespace crypt
 				   Buf<char>& k,
 				   const Buf<uint8_t>& cryptInfo)
 	{
-		// NOTE: We're ensuring that a null-string will never be a valid handle. This makes
-		// it possible to supply a null-string handle as a dummy handle in the file-system routines
+		// NOTE: We're ensuring that a NULL_HANDLE will never be a valid handle. This makes
+		// it possible to supply a NULL_handle as a dummy handle in the file-system routines
 		// resting assured that no encrypt/decrypt operations will take place.
-		Error::Assert( (!handle.empty()) &&  (!ctxId.empty()),
+		Error::Assert( (!handle.empty()) &&  (!ctxId.empty()) && (ctxId != NULL_HANDLE) && (handle != NULL_HANDLE),
 					   Error::CODE_BAD_PARAM,
 					   L"Invalid Key or DB Path" );
 
-		// Destroy ctx if already loaded (erring on side of security)
-		if (Exists(handle)) { Destroy(handle); }
+		// Do not create a new one if one already exists. Be extra-paranoid here because if a different
+        // key with the same ctxId exists (for an existing DB), then we don't want to inadvertently
+        // replace it. Doing so would make any new records going into the old DB be completely unintelligible
+        // when decrypted by the original key. That would be disaster because these records would be
+        // completely unrecoverable.
+		Error::Assert( (!Exists(handle))&&(!CtxExists(ctxId))&&(!CtxIdExists(ctxId)), Error::CODE_CRYPTO_ERROR, L"Key is already loaded");
 
 		CryptCtx* pCtx = CryptCtx::LoadCtx(k, cryptInfo);
 		//if (pCtx) {
@@ -366,6 +376,10 @@ namespace crypt
 	bool
 	CryptCtx::DupeIfNotLoaded(const ucs& ctxId, const ucs& dupeHandle)
 	{
+        // Right now there is no need for special handling of NULL_HANDLE, but remember it in the future.
+        // if (dupeHandle == NULL_HANDLE) the code returns true as it should.
+        // else if (ctxId == NULL_HANDLE) then the code returns false as it should.
+
 		if (!Exists(dupeHandle)) {
 			if (!CtxExists(ctxId)) { return false; }
 			s_handleMap.insert(HandleMap::value_type(dupeHandle, ctxId));
@@ -394,7 +408,9 @@ namespace crypt
 		for (HandleMap::const_iterator it = s_handleMap.begin(); it != s_handleMap.end(); it++) {
 			if (it->second == ctxId) { return true; }
 		}
-		return false;
+        // There imaginary null-handle always exists
+        if (ctxId == NULL_HANDLE) { return true; }
+        else { return false; }
 	}
 	
 	const CryptCtx*
@@ -420,7 +436,9 @@ namespace crypt
 		catch (const std::out_of_range&)
 		{
 			// The key wasn't found
-			return false;
+            // There imaginary null-handle always exists
+            if (handle == NULL_HANDLE) { return true; }
+            else { return false; }
 		}
 		catch (std::exception& e)
 		{
@@ -436,7 +454,9 @@ namespace crypt
 		}
 		catch (const std::out_of_range&)
 		{
-			return L""; // empty contex-id implies no context.
+            // There imaginary null-handle always exists
+            if (handle == NULL_HANDLE) { return NULL_HANDLE; }
+            else { return L""; }// empty contex-id implies no context.
 			// throw Error(Error::CODE_BAD_PARAM, L"crypt Key not loaded");
 		}
 		catch (std::exception& e)

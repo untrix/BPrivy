@@ -52,13 +52,18 @@
               <div class="well form-horizontal">
               <legend>Manage Wallets</legend>                
                 <fieldset class='control-group'>
-                  <!-- <label class="control-label">Wallet</label> -->
+                  <label class="control-label">Open / Close</label>
                   <div class='controls'>
                     <button id="btnWalletOpen" type="button" class="btn btn-primary" title="Open/Reopen a Wallet">Open</button>
                     <button id="btnWalletClose" type="button" class="btn" title="Close the open Wallet">Close</button>
-                    <button id="btnWalletCreate" type="button" class="btn btn-success" title="Create a new Wallet">Create</button>
-                    <button id="btnWalletDupe" disabled type="button" class="btn btn-info" title="Make a copy of the open Wallet">Duplicate</button>
                     <button id="btnWalletReload" disabled type="button" class="btn btn-info" title="Reload the open Wallet">Reload</button>
+                  </div>
+                </fieldset>
+                <fieldset class='control-group'>
+                  <label class="control-label">New</label>
+                  <div class='controls'>
+                    <button id="btnWalletCreate" type="button" class="btn btn-success" title="Create a new Wallet">New</button>
+                    <button id="btnWalletDupe" disabled type="button" class="btn btn-info" title="Make a copy of the open Wallet">Duplicate</button>                      
                   </div>
                 </fieldset>
 
@@ -69,18 +74,21 @@
 
               <div class="form-horizontal well">
                 <legend>
-                    <span title="Keep all your Wallet copies up-to-date">
-                      Sync Wallets
+                    <span>
+                      Sync / Merge Wallets <i class="icon-question-sign" title="Keep all your Wallet copies up-to-date"></i>
                     </span>
                 </legend>
 
                 <fieldset class="control-group">
-                  <label class="control-label" 
-                    title="Merge two wallets without connecting to internet using our patent-pending ActionReplay&trade; technology.">
-                    Local Sync (Without Internet)</label>
+                  <label class="control-label">
+                    Home-Sync 
+                        <i class="icon-question-sign"
+                            title="Sync (i.e. update) wallets <strong>without connecting to the internet</strong> using our patent-pending ActionReplay&trade; technology.">
+                        </i>
+                  </label>
                   <div class="controls">
                     <button data-path-choose id="btnMerge" type="button" class="btn btn-primary" 
-                    title="Merges password updates from the opened wallet and another wallet using our patent-pending ActionReplay&trade; technology.">
+                    title="Click to choose the other Wallet to sync with">
                       Sync</button>
                   </div>
 
@@ -90,9 +98,16 @@
                 </fieldset>
                 
                 <fieldset class="control-group">
-                  <label class="control-label">Cloud/Sky Drive</label>
-                  <div class="controls" style="text-align:justify">
-                    <p>
+                  <label class="control-label">Internet Sync 
+                    <i class="icon-question-sign" title="Just create or move your <em>Wallet</em> folder into a cloud-drive such as <em>Dropbox&trade;, 
+                        Google Drive&trade; 
+                        or Microsoft Skydrive&trade;</em> on your PC. However, be sure to <strong> create a Key-file and store it on a 
+                        different drive (e.g. on your computer or in a thumb-drive).</strong>">
+                    </i>
+                  </label>
+                  <div class="controls">
+                    <p> Nothing to do !</p>
+                    <!-- <p>
                       Just create or move
                       your <em>Wallet</em> folder into a cloud-drive such as
                       <a href="http://www.dropbox.com">Dropbox</a>, 
@@ -100,7 +115,7 @@
                       <a href="http://windows.microsoft.com/en-US/skydrive/home">Microsoft Skydrive </a>
                       on your PC. However, be sure to <strong> create a Key-file and store 
                       it on a different drive (e.g. on your computer or in a thumb-drive). This is extremely important.</strong>
-                    </p>
+                    </p> -->
                   </div>
                 </fieldset>
 
@@ -113,8 +128,11 @@
                     </span>
                 </legend>
                 <div class="control-group">
-                  <label class="control-label" title="Import/Export a comma separated (CSV) password file exported from another password manager">
-                    To/From a CSV File
+                  <label class="control-label">
+                    CSV File 
+                    <i class="icon-question-sign"
+                        title="Import/Export a comma separated (CSV) password file exported from another password manager">
+                    </i>
                   </label>
                   <div class="controls form-inline">
                     <button id="csvImport" type="button" class="btn btn-primary" title="Click to choose the file">
@@ -130,11 +148,15 @@
                   </div>
                 </div>
                 <div class="control-group">
-                  <label class="control-label">To/From Another Wallet</label>
+                  <label class="control-label">Home-Sync 
+                      <i class="icon-question-sign"
+                        title="Import or Export password updates from/to another wallet using our patent-pending ActionReplay&trade; technology.">
+                      </i>
+                  </label>
                   <div class="controls form-inline">
-                    <button data-path-choose id="btnMergeIn" type="button" class="btn btn-primary" title="Import password updates from another wallet using our patent-pending ActionReplay&trade; technology.">
+                    <button data-path-choose id="btnMergeIn" type="button" class="btn btn-primary" title="Click to select the other Wallet">
                       Import</button>
-                    <button data-path-choose id="btnMergeOut" type="button" class="btn btn-inverse" title="Export password updates to another wallet using our patent-pending ActionReplay&trade; technology.">
+                    <button data-path-choose id="btnMergeOut" type="button" class="btn btn-inverse" title="Click to select the other Wallet">
                       Export</button>
                   </div>
                 </div>

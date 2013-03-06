@@ -331,6 +331,21 @@ var BP_MANAGE = (function ()
             updateDash(resp);
         });
 
+        switch (BP_COMMON.getQueryObj(g.g_win.location)['action'])
+        {
+            case 'open':
+                launchOpen({closeWin:true});
+                return;
+            case 'close':
+                closeDB();
+                g.g_win.close();
+                return;
+            case 'merge':
+                launchMerge({closeWin:true});
+                return;
+            default:
+        }
+        
         // Enable button toggling effects
         $('.nav-tabs').button();
         //$("#nav-list a[data-nav]").click(function (e)
@@ -340,14 +355,15 @@ var BP_MANAGE = (function ()
             $(this).tab('show');
         });
         $("#nav-settings").tab('show');
+
         //$("#csvPathSubmit").click(function (e)
         //addEventListeners("#csvPathSubmit", "click", function(e)
-        addEventListeners("[data-path-submit]", "click", function(e)
-        {
-            var path = $("#csvPath").val();
-            console.log("Import CSV File:" + path);
-            e.preventDefault();
-        });
+        // addEventListeners("[data-path-submit]", "click", function(e)
+        // {
+            // var path = $("#csvPath").val();
+            // console.log("Import CSV File:" + path);
+            // e.preventDefault();
+        // });
         
         addEventListeners('#csvImport', 'click', function (e)
         {
@@ -356,7 +372,7 @@ var BP_MANAGE = (function ()
                    dbutton: "Import"};
             $('#csvImportSpinner').show();
             if (BP_PLUGIN.chooseFile(o)) {
-                console.loginfo("ChooseFile returned:" + o.path);
+                BP_ERROR.loginfo("ChooseFile returned:" + o.path);
                 var obfuscated = false; //$('#csvImportObfuscated')[0].checked;
                 //var overrides = $('#csvImportOverrides')[0].checked;
                 importCSV(o.path, obfuscated, function (resp)
@@ -471,22 +487,31 @@ var BP_MANAGE = (function ()
         addEventListeners('#newDNode', 'click', 
         function(e)
         {
-            var site, show;
+            var site, show, loc;
             e.preventDefault();
             e.stopPropagation();
             if (g_dbName) {
                 site = $('#dnSearch').val();
                 if (!site) {
-                    BP_ERROR.alert("Please enter a web-site first");
+                    BP_ERROR.alert("Please enter a web-site (e.g. google.com)");
                 }
-                else 
+                else
                 {
-                    show=g_editor.filter(site);
-                     if (!show.length) {
-                        g_editor.newDNode(site);
+                    loc = BP_COMMON.parseURL2(site);
+                    if (!loc) {
+                       BP_ERROR.alert("Please enter a website (e.g. google.com)"); 
                     }
                     else {
-                        show.focus();
+                        // Normalize the site per DT_TRAITS
+                        site = MEMSTORE.getSite(loc, dt_pRecord);
+                        
+                        show=g_editor.filter(site);
+                         if (!show.length) {
+                            g_editor.newDNode(site);
+                        }
+                        else {
+                            show.focus();
+                        }    
                     }
                 }
             }
@@ -505,31 +530,35 @@ var BP_MANAGE = (function ()
             e.preventDefault();
         });
         
-        function launchOpen()
+        function launchOpen(o)
         {
             var ops = getCallbacks();
             ops.mode = 'open';
+            BP_COMMON.copy2(o, ops);
             g.BP_WALLET_FORM.launch(ops);
         }
         
-        function launchCreate()
+        function launchCreate(o)
         {
             var ops = getCallbacks();
             ops.mode = 'create';
+            BP_COMMON.copy2(o, ops);
             g.BP_WALLET_FORM.launch(ops);
         }
         
-        function launchMerge()
+        function launchMerge(o)
         {
             var ops = getCallbacks();
-            ops.mode = 'merge'; 
+            ops.mode = 'merge';
+            BP_COMMON.copy2(o, ops);
             g.BP_WALLET_FORM.launch(ops);
         }
         
-        function launchMergeIn()
+        function launchMergeIn(o)
         {
             var ops = getCallbacks();
-            ops.mode = 'mergeIn'; 
+            ops.mode = 'mergeIn';
+            BP_COMMON.copy2(o, ops);
             g.BP_WALLET_FORM.launch(ops);
         }
         
@@ -547,20 +576,6 @@ var BP_MANAGE = (function ()
         addEventListeners('#btnMergeIn', 'click', launchMergeIn);
         addEventListeners('#btnMergeOut', 'click', launchMergeOut);
 
-		switch (BP_COMMON.getQueryObj(g.g_win.location)['action'])
-		{
-			case 'open':
-				launchOpen();
-				break;
-			case 'close':
-				closeDB();
-				break;
-			case 'merge':
-				launchMerge();
-				break;
-			default:
-		}
-		
 		addEventListeners('#dbDelete', 'click', deleteDB);
 		
         $('#content *').tooltip();

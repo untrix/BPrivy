@@ -1,13 +1,14 @@
 {
   "name": "BPrivy",
-  "version": "0.6.19",
+  "version": "0.6.20",
   "manifest_version": 2,
   "minimum_chrome_version": "7",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
   "description":"U-Wallet: Personal, Protected and Portable Passwords.",
   "icons": {
-	     "128": "icons/icon128.png",
-  	     "16": "icons/icon16.png"
+         "16": "icons/icon16.png",
+         "48": "icons/icon48.png",
+	     "128": "icons/icon128.png"
 	   },
   "permissions": ["contextMenus", "tabs", "webRequest", "webNavigation", "notifications"],
   "background": {"page": "bp_Main.html"},
@@ -35,12 +36,14 @@
     }
   ],
   "browser_action": {
-    "default_icon": "icons/icon16.png",
+    "default_icon": "icons/icon128.png",
     "default_popup": "bp_panel.html"
   },
   "options_page": "bp_manage.html",
   "offline_enabled": true,
   "web_accessible_resources": [
+    "icons/icon128.png",
+    "icons/icon48.png",
     "icons/icon16.png",
     "tp/bootstrap/img/glyphicons-halflings.png",
     "tp/bootstrap/img/glyphicons-halflings-white.png",

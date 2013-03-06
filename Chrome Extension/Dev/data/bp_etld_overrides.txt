@@ -1,0 +1,3 @@
+gov
+*.gov
+!usa.gov

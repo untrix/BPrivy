@@ -36,16 +36,16 @@ function BP_GET_FILESTORE(g)
         iterObj     = IMPORT(m.iterObj),
         iterArray2  = IMPORT(m.iterArray2);
     /** @import-module-begin **/
+    /** @import-module-begin UI Traits **/
     m = g.BP_TRAITS;
     var dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord);
+    var eid_pfx = IMPORT(g.BP_TRAITS.eid_pfx);
     /** @import-module-begin connector **/
     m = g.BP_CONNECT; 
     var newPAction = IMPORT(m.newPAction);
     /** @import-module-begin MemStore **/
     var MEMSTORE = IMPORT(g.BP_MEMSTORE);
-    /** @import-module-begin UI Traits **/
-    var eid_pfx = IMPORT(g.BP_TRAITS.eid_pfx);
     /** @import-module-begin **/
     m = g.BP_DBFS;
     var newDBMap = IMPORT(m.newDBMap),
@@ -767,7 +767,7 @@ function BP_GET_FILESTORE(g)
         
         buf.push(ctx.traits.toCSV(actn));
         if (buf.length>=1000) {
-            buf.flush("", ctx.fpath);
+            buf.flush("nul", ctx.fpath);
         }
     }
     
@@ -786,7 +786,7 @@ function BP_GET_FILESTORE(g)
         buf = new RecsBuf("\n");
         buf.push(traits.csvHeader());
         MEMSTORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits});
-        buf.flush("", fpath);
+        buf.flush("nul", fpath);
     }
     
     function exportCSV(dirPath, obfuscated)
@@ -977,7 +977,7 @@ function BP_GET_FILESTORE(g)
 
         Object.defineProperties(this,
         {
-            fstrm: {value: new TextFileStream(null, path), writable:false, enumerable:false, configurable:false},
+            fstrm: {value: new TextFileStream("nul", path), writable:false, enumerable:false, configurable:false},
             csvex: {value: /\s*,\s*/, writable:false, configurable:false, enumerable:false},
             props: {writable:true, enumerable:false, configurable:false},
             regex: {writable:true, enumerable:false, configurable:false},

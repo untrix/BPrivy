@@ -109,15 +109,15 @@ var src = abs(argv[0]),
                      "bp_main_chrome.js", "bp_cs_chrome.js",
                      "bp_listener.js", "bp_connector.js", "bp_memstore.js", "bp_db_fs.js",
                      "bp_filestore.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js" ],
-    // release_manage_js=["bp_error.js","bp_common.js","bp_uitraits.js","bp_cs_chrome.js","bp_w$.js",
-                       // "bp_connector.js", "bp_db_fs.js", "bp_editor.wdl.js", "bp_manage.js"],
     release_manage_js=["bp_build.js", "bp_cs_chrome.js", "bp_w$.js", "bp_editor.wdl.js",
                        "bp_wallet_form.wdl.js", "bp_listener.js", "bp_manage.js"],
     release_panel_js=["bp_build.js", "bp_panel.js"],
-    //release_panel_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js', "bp_connector.js",
-    //                  "bp_w$.js", "bp_panel.wdl.js", "bp_panel.js"],
-    release_notification_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js', "bp_connector.js",
-                      "bp_w$.js", "bp_listener.js", "bp_memstore.js", "bp_notification.js"],
+    release_tools_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js', 
+                     "bp_main_plat.stub.js", "bp_cs_plat.stub.js",
+                     "bp_listener.js", "bp_connector.js", "bp_memstore.js", "bp_db_fs.js",
+                     "bp_filestore.js"],
+    // release_notification_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js', "bp_connector.js",
+                      // "bp_w$.js", "bp_listener.js", "bp_memstore.js", "bp_notification.js"],
     release_others = [
     'bp_manage.html',
     'BP_Main.html',
@@ -169,6 +169,7 @@ catIfNeeded(qualifyA(src,release_cs_js), src + path.sep + 'bp_cs.cat.js');
 catIfNeeded(qualifyA(src,release_main_js), src + path.sep + 'bp_main.cat.js');
 catIfNeeded(qualifyA(src,release_manage_js), src + path.sep + 'bp_manage.cat.js');
 catIfNeeded(qualifyA(src,release_panel_js), src + path.sep + 'bp_panel.cat.js');
+catIfNeeded(qualifyA(src,release_tools_js), src + path.sep + 'bp_tools.cat.js');
 //catIfNeeded(qualifyA(src,release_notification_js), src + path.sep + 'bp_notification.cat.js');
 
 if (all)

@@ -68,7 +68,7 @@ function BP_GET_NTNF_CNTR(g)
     	close();
 
         g_notification = BP_PLAT.notifications.createNotification(
-          BP_CS_PLAT.getURL('icons/icon16.png'), // ICON URL
+          BP_CS_PLAT.getURL('icons/icon48.png'), // ICON URL
           title || "",
           text || ""
         );

@@ -825,7 +825,7 @@ function BP_GET_EDITOR(g)
             e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
             e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
-            e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon16.png"}).el, 0, 0);
+            e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon48.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //BP_ERROR.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
             //return true;
@@ -854,11 +854,11 @@ function BP_GET_EDITOR(g)
                 self = this;
             getDomain(loc, function(resp)
             {
+                if (!resp) {return;}
+
                 if (!resp.domn) {
                     resp = BP_ERROR.confirm('Unrecognized website ['+site+']. Are you sure you want to proceed?');
-                }
-                
-                if (!resp) {return;}
+                }                
                 
                 var dNode = MEMSTORE.newDNode(site),
                     dt = dt_pRecord,

@@ -1,8 +1,8 @@
 /**
  * @preserve
- * @author Sumeet Singh
+ * @author Sumeet S Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
+ * Copyright (c) 2012. All Rights Reserved, Untrix Soft
  */
 
 /* JSLint directives */
@@ -19,7 +19,8 @@ function BP_GET_WALLET_FORM(g)
 {
     "use strict";
     var window = null, document = null, console = null,
-        g_doc = g.g_win.document;
+        g_doc = g.g_win.document,
+        g_win = g.g_win;
 
     var m;
     /** @import-module-begin Common */
@@ -1407,7 +1408,7 @@ function BP_GET_WALLET_FORM(g)
         cons: modalDialog,
         addClass:'modal',
         attr:{ id:'modalDialog', role:'dialog' },
-        iface:{ mode:ctx.mode },
+        iface:{ mode:ctx.mode, closeWin:ctx.closeWin },
         on:{ 'dbChosen':modalDialog.prototype.onDBChosen,
              'dbNameChosen':modalDialog.prototype.onDBNameChosen,
              'passwordChosen':modalDialog.prototype.onPasswordChosen },
@@ -1421,8 +1422,13 @@ function BP_GET_WALLET_FORM(g)
                  save:['dialog'],
                  on:{ 'click': function(e){modalDialog.destroy();} }
                 },
-                { tag:'h4', ref:'modalHeader' },
-                { tag:'h3', ref:'headerDBName', css:{ 'text-align':'center' } }
+                { tag:'h4',
+                 css:{ 'text-align':'center' },
+                    children:[
+                    { tag:'span', ref:'modalHeader' },
+                    { tag:'h3', ref:'headerDBName' }
+                    ]
+                }
                 ]
             },
             {tag:'div', addClass:'modal-body', ref:'modalBody',
@@ -1581,10 +1587,15 @@ function BP_GET_WALLET_FORM(g)
     };
     modalDialog.destroy = function()
     {
-        var w$dialog = BP_W$.w$get('#modalDialog');
+        var w$dialog = BP_W$.w$get('#modalDialog'),
+            closeWin;
 
         if (w$dialog) {
+            closeWin = w$dialog.closeWin;
             w$dialog.hideModal();
+            if (closeWin) {
+                g_win.close();
+            }
         }
     };
 

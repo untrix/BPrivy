@@ -236,7 +236,7 @@ function BP_GET_MEMSTORE(g)
             }},
             toCSV: {value: function(actn)
             {
-                return  (actn.l.H + (actn.l.P || "")) + COMMA + 
+                return  ('http://' + actn.l.H + (actn.l.P || "")) + COMMA + 
                         (actn.u || "") + COMMA + 
                         (actn.p || "");
             }}
@@ -295,7 +295,7 @@ function BP_GET_MEMSTORE(g)
             }},
             toCSV: {value: function(actn)
             {
-                return  (actn.l.H + (actn.l.P || "")) + COMMA + 
+                return  ('http://' + actn.l.H + (actn.l.P || "")) + COMMA + 
                         (actn.f  || "") + COMMA +
                         (actn.t  || "") + COMMA +
                         (actn.id || "") + COMMA +

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Product Id="*" Name="${FBSTRING_PluginName}" Language="1033" Version="${FBSTRING_PLUGIN_VERSION}" Manufacturer="${FBSTRING_CompanyName}" UpgradeCode="{7de7ad6c-3b99-513c-81ae-4cfc439e969f}">
-        <Package InstallerVersion="200" Compressed="yes" Description="Installer for the ${PLUGIN_NAME} plugin" InstallScope="perUser" />
+        <Package InstallerVersion="405" Compressed="yes" Description="Installer for the ${PLUGIN_NAME} plugin" InstallScope="perUser" />
         <Upgrade Id="{7de7ad6c-3b99-513c-81ae-4cfc439e969f}">
             <UpgradeVersion
                 Property="OLD_VERSION_FOUND"
@@ -10,7 +10,7 @@
                 OnlyDetect="no" IgnoreRemoveFailure="yes"
                 MigrateFeatures="yes" />
         </Upgrade>
-		<Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+	    	<Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
         <InstallExecuteSequence>
             <RemoveExistingProducts After="InstallInitialize" />
             <InstallExecute After="RemoveExistingProducts" />
@@ -53,6 +53,25 @@
                                     KeyPath="yes" />
                             </Component>
 
+                          <Component Id="MSVCR_DLL" Guid="{${MSVCR_DLL_GUID}}">
+                              <RegistryValue Root="HKCU"
+                                             Key="SOFTWARE\${COMPANY_NAME}\${PLUGIN_NAME}\${FBSTRING_PLUGIN_VERSION}\MSVCR_DLL"
+                                             Name="Uninstall"
+                                             Value="${FBSTRING_PLUGIN_VERSION}"
+                                             Type="string"
+                                             KeyPath="yes" />
+                            <File Id="MSVCR_DLL" Source="C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\redist\x86\Microsoft.VC110.CRT\msvcr110.dll" />
+                          </Component>
+                          <Component Id="MSVCP_DLL" Guid="{${MSVCP_DLL_GUID}}">
+                              <RegistryValue Root="HKCU"
+                                             Key="SOFTWARE\${COMPANY_NAME}\${PLUGIN_NAME}\${FBSTRING_PLUGIN_VERSION}\MSVCP_DLL"
+                                             Name="Uninstall"
+                                             Value="${FBSTRING_PLUGIN_VERSION}"
+                                             Type="string"
+                                             KeyPath="yes" />
+                            
+                            <File Id="MSVCP_DLL" Source="C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\redist\x86\Microsoft.VC110.CRT\msvcp110.dll" />
+                          </Component>
                             <!-- Put Additional files here: -->
                             <!-- example:
                             <Component Id="UniqueComponentId" Guid="*">
@@ -65,12 +84,18 @@
                 </Directory>
             </Directory>
         </Directory>
-
+      
         <Feature Id="MainPluginFeature" Title="${FBSTRING_ProductName}" Level="1">
             <ComponentRef Id="InstallDirComp"/>
             <ComponentRef Id="PluginNameDirComp"/>
             <ComponentRef Id="CompanyDirComp"/>
+            <ComponentRef Id="MSVCR_DLL"/>
+            <ComponentRef Id="MSVCP_DLL"/>
             <ComponentGroupRef Id="PluginDLLGroup"/>
         </Feature>
+      
+      <UI>
+        <UIRef Id="WixUI_Minimal" />
+      </UI>
     </Product>
 </Wix>
