@@ -15,7 +15,7 @@ function BP_GET_MEMSTORE(g)
     "use strict";
     var window = null, document = null, console = null,
         g_doc = g.g_win.document;
-    
+
     /** @import-module-begin Error */
     var m = g.BP_ERROR,
         BP_ERROR = IMPORT(m),
@@ -42,9 +42,9 @@ function BP_GET_MEMSTORE(g)
 
     /** @globals-begin */
 
-    /** 
-     * @constant 
-     * @enumerator return values of comparison function 
+    /**
+     * @constant
+     * @enumerator return values of comparison function
      */
     var EQUAL = Number(0),
         SUBSET = Number(-1),
@@ -65,8 +65,8 @@ function BP_GET_MEMSTORE(g)
             // segments.
             HOST:  'NH', // Prefix for URL-hostname
             PATH:  'NP', // Prefix for URL-path
-            ETLD:  'E', // ETLD rule marker. 0=> regular ETLD rule, 1 implies an override 
-                       // (e.g. !educ.ar). See publicsuffix.org for details.
+            ETLD:  'E', // ETLD rule marker. 1=> regular ETLD rule, 2 implies an override
+                       // (e.g. !educ.ar). See ETLDMark and publicsuffix.org for details.
             DATA:  'D', // Prefix for data - e.g. De for E-Rec, Dp for P-Rec etc.
             ITER:  "I", // Property used by DNodeIterator to save notes
             URL:   "U", // 'Site': Concatenation of URL segments leading upto the DNode.
@@ -115,11 +115,11 @@ function BP_GET_MEMSTORE(g)
                         ha.length = j+1;
                         return true;
                     }
-                }                
+                }
             },
             getDomain: function (loc)
             {
-                // Split hostname into an array of strings.       
+                // Split hostname into an array of strings.
                 var ha = loc.hostname.split('.');
                 ha.reverse();
                 if (MOD_ETLD.cullDomain(ha)) {
@@ -133,7 +133,7 @@ function BP_GET_MEMSTORE(g)
 
     function isValidLocation(loc)
     {
-        return (loc && 
+        return (loc &&
                 //(typeof loc.S=== "string") && (loc.S.length > 0) &&
                 (typeof loc.H === "string") && (loc.H.length > 0)
                 //(typeof loc.P === "string") && (loc.P.length > 0)
@@ -142,7 +142,7 @@ function BP_GET_MEMSTORE(g)
 
     function isValidAction(that)
     {
-        if (that  && 
+        if (that  &&
                 //(typeof that.dt === "string") &&
                 (typeof that.tm === "number") &&
                 isValidLocation(that.l))
@@ -151,7 +151,7 @@ function BP_GET_MEMSTORE(g)
     }
 
     /** @begin-static-class-defn DT_TRAITS */
-    var DT_TRAITS = 
+    var DT_TRAITS =
     {
         traits: {}, // Various traits objects defined & populated later/below.
         getTraits: function (dt) {
@@ -162,11 +162,12 @@ function BP_GET_MEMSTORE(g)
             return this.getTraits(dt).dict;
         }
     };
-    
+
     // Most properties defined in DEFAULT_TRAITS are optional for urlMap type dictionaries.
     // Omitting second-level properties (e.g. dict.url_scheme) implies false for
     // boolean properties.
-    var DEFAULT_TRAITS = Object.freeze(    {        // dict: Properties referenced by dictionary/trie/URLA.        // dict.url_xyz=true implies that xyz will be matched in insertions and lookups from dictionary.        dict: DICT_TRAITS[undefined],        // action: properties referenced by the ItemHistory class.        iHistory: { // not needed by dt_etld            // history=true asserts we're interested in maintaining history.            // Will cause ItemHistory class to keep history in memory            // A value of false asserts the opposite. Will            // cause ItemHistory to only keep current value in memory.            history: 0        },
+    var DEFAULT_TRAITS = Object.freeze(    {        // dict: These are traits relevant to the dictionary/trie/URLA. See DICT_TRAITS.        dict: DICT_TRAITS[undefined],        // action: These are traits relevant to the ItemHistory class.        iHistory: { // not needed by dt_etld            // history>0 asserts we're interested in maintaining history.            // Will cause ItemHistory class to keep that many past values in memory            // A value of 0 asserts the opposite. Will            // cause ItemHistory to only keep current value in memory.            history: 0        },
+        // file: These are traits relevant to the file-store.
         file: {
             // An assert action is one that re-asserts the existing value. When a record
             // is received that has the same value as the most current value for its key,
@@ -179,7 +180,7 @@ function BP_GET_MEMSTORE(g)
             // affect that behaviour.
             persist_asserts: false
         },        // Returns record key        getKey: function (actn) {return actn.k;},// not needed by dt_etld
-        // return true if the record is valid, false otherwise. Only needed for pRecords        isValidCSV: function(actn) {return Boolean(actn.k);}, // only needed for some types.
+        // return true if the record is valid, false otherwise. Only needed for pRecords        isValidCSV: function(actn) {return Boolean(actn.k);}, // only needed for types that import CSVs.
         // Returns value converted to a string suitable to be used as a property name
         valStr: function(actn)
         {
@@ -204,7 +205,7 @@ function BP_GET_MEMSTORE(g)
         DELETE_ACTION_VAL: "D}" // to be used as part of prototype
     });
 
-    function PStoreTraits() 
+    function PStoreTraits()
     {
         Object.freeze(Object.defineProperties(this,
         {
@@ -217,7 +218,7 @@ function BP_GET_MEMSTORE(g)
             }},
             isValidCSV: {value:function(actn)
             {
-                return (isValidAction(actn) && 
+                return (isValidAction(actn) &&
                     (typeof actn.u === "string") &&
                     (typeof actn.p === "string"));
             }},
@@ -236,18 +237,18 @@ function BP_GET_MEMSTORE(g)
             }},
             toCSV: {value: function(actn)
             {
-                return  ('http://' + actn.l.H + (actn.l.P || "")) + COMMA + 
-                        (actn.u || "") + COMMA + 
+                return  ('http://' + actn.l.H + (actn.l.P || "")) + COMMA +
+                        (actn.u || "") + COMMA +
                         (actn.p || "");
             }}
-        }));   
+        }));
     }
     PStoreTraits.prototype = DEFAULT_TRAITS; // Inherit the rest from DEFAULT_TRAITS
     var PREC_TRAITS = DT_TRAITS.traits[dt_pRecord] = new PStoreTraits();
 
     function EStoreTraits()
     {
-        Object.freeze(Object.defineProperties(this, 
+        Object.freeze(Object.defineProperties(this,
         {
             dict: {value:DICT_TRAITS[dt_eRecord]},
             iHistory: {value:{history: 0}},
@@ -258,7 +259,7 @@ function BP_GET_MEMSTORE(g)
             }},
             isValidCSV: {value:function(actn)
             {
-                return (isValidAction(actn) && 
+                return (isValidAction(actn) &&
                     (typeof actn.f === "string") &&
                     (typeof actn.t === "string"));
             }},
@@ -295,7 +296,7 @@ function BP_GET_MEMSTORE(g)
             }},
             toCSV: {value: function(actn)
             {
-                return  ('http://' + actn.l.H + (actn.l.P || "")) + COMMA + 
+                return  ('http://' + actn.l.H + (actn.l.P || "")) + COMMA +
                         (actn.f  || "") + COMMA +
                         (actn.t  || "") + COMMA +
                         (actn.id || "") + COMMA +
@@ -308,20 +309,20 @@ function BP_GET_MEMSTORE(g)
     }
     EStoreTraits.prototype = DEFAULT_TRAITS;// Inherit the rest from DEFAULT_TRAITS
     var EREC_TRAITS = DT_TRAITS.traits[dt_eRecord] = new EStoreTraits();
-    
+
     function SStoreTraits()
     {
-        Object.freeze(Object.defineProperties(this, 
+        Object.freeze(Object.defineProperties(this,
         {
             dict: {value:DICT_TRAITS[BP_TRAITS.dt_settings]},
-            // everything else is inherited from DEFAULT_TRAITS            
-        }));        
+            // everything else is inherited from DEFAULT_TRAITS
+        }));
     }
     SStoreTraits.prototype = DEFAULT_TRAITS;// Inherit the rest from DEFAULT_TRAITS
     DT_TRAITS.traits[BP_TRAITS.dt_settings] = new SStoreTraits();
-    
+
     Object.freeze(DT_TRAITS);
-    /** @end-static-class-defn DT_TRAITS **/    
+    /** @end-static-class-defn DT_TRAITS **/
 
     /** @globals-end **/
 
@@ -364,24 +365,24 @@ function BP_GET_MEMSTORE(g)
         }
         Object.seal(this);
     }
-    
+
     /** Helper function invoked by insertNewVal only
     ItemHistory.prototype.delHelper = function (dItem, i)
     {
         var valStr = dItem.traits.valStr(dItem);
         delete this[valStr];
     };*/
-        
-    
+
+
     /**
      * This is a helper function intended to be invoked by ItemHistory.prototype.insert only.
-     * 
+     *
      * Inserts a new value into the collection. Assumes that the value does not already
      * exist within the collection and that it has been verified to be recent enough
      * to be inserted either: 1) In the front or in the middle of the sorted list in which
      * case an item-overflow is possible. 2) Appended to the end of the sorted list in which case
      * an item-overflow is *not* possible otherwise we wouldn't have been invoked.
-     * 
+     *
      * We optimize the algorithm for insertions from behind - i.e. older
      * items are visited first.
      * CAUTION: If the same value existed within the collection, then things
@@ -397,7 +398,7 @@ function BP_GET_MEMSTORE(g)
             len = actions.length,
             res, ins, fluff,
             memStats = MemStats.stats;
-        
+
         if (len===0)        {            // This will happen the first time a key is created            actions[0] = actn;            actions[valStr] = actn;
             memStats.loaded++;        }        else if (actn.tm<=actions[len-1].tm)        {            // In the case of loadDB, we load records in reverse chronological order. That            // allows us to simply push subsequent records to the end of the array.            actions.push(actn);            actions[valStr] = actn;
             memStats.loaded++;            // We don't need to check for item-overflow because that has already            // been checked before we were invoked.        }        // // Below clause is useful in optimizing mergeDB use-case, and new records
@@ -410,7 +411,7 @@ function BP_GET_MEMSTORE(g)
             // guarantee that loading-order though have tried hard to.
             // Arecs are sorted in reverse chronological order here starting with the newest
             // at position 0
-            
+
             res = this.actions.some (function (_actn, i, _actions)
             {   // NOTE: Ensure that 'this' is bound to enclosing ItemHistory object
                 var dItm, l;
@@ -455,13 +456,13 @@ function BP_GET_MEMSTORE(g)
                 memStats.fluff++;
             }
         }
-        
+
         this.curr = actions[0];
         if (this.curr === actn) {
             drec.notes.causedCurrChange = true;
         }
     };
-    
+
     /**
      * Helper function to be invoked by ItemHistory.prototype.insert only.
      * Is invoked when a new action is to be inserted with a value that already exists
@@ -474,7 +475,7 @@ function BP_GET_MEMSTORE(g)
      */
     ItemHistory.prototype.updateTm = function (oActn, drec, valStr)
     {
-        var actions = this.actions, 
+        var actions = this.actions,
             nActn = drec.actn,
             notes = drec.notes,
             tm = nActn.tm,
@@ -518,7 +519,7 @@ function BP_GET_MEMSTORE(g)
                 ins = 0;
                 this.curr = actions[0];
             }
-            
+
             if ((nActn.a==='pd')) {
                 // Delete actions to the right hand side of GC-point.
                 ItemHistory.prototype.GC.apply(this,[ins, drec]);
@@ -550,8 +551,8 @@ function BP_GET_MEMSTORE(g)
         memStats.gcd += fluff;
         drec.notes.causedGC = true;
     };
-    /** 
-     *  Method. Insert a record into the Action Records collection 
+    /**
+     *  Method. Insert a record into the Action Records collection
      *  We're optimizing the file-loading use-case over new item insertions. This is so because
      *  thousands of items will be loaded at the time of file-load and the impact of performance
      *  will be obviously more visible there than when inserting one item (such as when adding
@@ -559,7 +560,7 @@ function BP_GET_MEMSTORE(g)
      *  DB merging. With this approach, the items loaded from the DB are visited
      *  starting from the newest first, to the oldest last (we start at the end of
      *  the file and work our way towards the top. If there were multiple files to load,
-     *  then we would start with the newest file first, and then work our way to the oldest file). 
+     *  then we would start with the newest file first, and then work our way to the oldest file).
      *  This will ensure that we'll have minimum data-structure insertions/deletions
      *  because the top traits.iHistory.history slots will fill up first and then the
      *  remaining ones will simply be discarded at first check (see insert code below). If
@@ -573,11 +574,11 @@ function BP_GET_MEMSTORE(g)
      *  where inserted records have older timestamps than those already present in the
      *  data-structure. That is, when linearly traversing the ItemHistory.actions array, we
      *  visit the older items first and then work our way to the newer ones.
-     *  
+     *
      *  This approach is suboptimal for new record insertions which occur at runtime
      *  (such as inserting a new password or knowledge action) or at CSV import time.
      *  However, it optimizes the most used use-case - that of DB load at startup. It
-     *  will incidentally also optimize DB merges (which is not expected to happen a lot 
+     *  will incidentally also optimize DB merges (which is not expected to happen a lot
      *  and therefore is not the reason for choosing this approach).
      *  As mentioned above, single-record insertions will be fast in terms of total time
      *  anyway, therefore optimizing bulk-loads is more important. That leaves the matter
@@ -595,9 +596,9 @@ function BP_GET_MEMSTORE(g)
             oActn,
             memStats = MemStats.stats,
             len = this.actions.length;
-            
+
         Object.freeze(actn);
-        
+
         if (len && (actn.tm <= this.actions[len-1].tm))
         {
             if (len >= max)
@@ -617,10 +618,10 @@ function BP_GET_MEMSTORE(g)
             }
         }
 
-        
+
         // Now check if we already have this value.
         oActn = this.actions[valStr];
-        if (oActn) 
+        if (oActn)
         {
             // This value already exists in the collection. Is this the same
             // record being replayed or an older record with same value?
@@ -698,7 +699,7 @@ function BP_GET_MEMSTORE(g)
         gcActn.tm = Date.now();
         return gcActn;
     };
-    
+
     function ActionIterator(iHist)
     {
         Object.defineProperties(this,
@@ -743,21 +744,21 @@ function BP_GET_MEMSTORE(g)
             l = {};
             //throw new BPError(JSON.stringify(l), "BadURL");
         }
-        
+
         //scm = (l.S?l.S.toLowerCase():null);
 
         if (dictTraits.url_host && l.H)
         {
-            // Split hostname into an array of strings.       
+            // Split hostname into an array of strings.
             ha = l.H.split('.');
             ha.reverse();
-            
-            if (dictTraits.domain_only) 
+
+            if (dictTraits.domain_only)
             {
                 MOD_ETLD.cullDomain(ha); // removes non-domain segments
             }
         }
-        
+
         if (dictTraits.url_path && l.P)
         {
             // At this point we're certain that l.P !== "/" hence no need to check.
@@ -773,15 +774,15 @@ function BP_GET_MEMSTORE(g)
         // {
             // qa = l.search.split('&');
         // }
-        
+
         // if (l.O && dictTraits.url_port)        // {            // i = Number(l.O);            // switch(scm) {                // case PROTO_HTTP:                    // if(i !== 80) {pn = i;}                // break;                // case PROTO_HTTPS:                    // if(i !== 443) {pn = i;}                // break;                // default:                    // pn = i;            // }        // }
-        
+
         // Construct the url segment array
         // if (dictTraits.url_scheme && scm) {            // switch(scm) {                // case PROTO_HTTP:                    // urla.push(DNODE_TAG.HTTP);                    // break;                // case PROTO_HTTPS:                    // urla.push(DNODE_TAG.HTTPS);                    // break;                // default:                    // urla.push(DNODE_TAG.SCHEME + scm);            // }        // }
 
-        if (ha) 
+        if (ha)
         {
-            for (i=0; i<ha.length; i++) 
+            for (i=0; i<ha.length; i++)
             {
                 // Host name
                 urla.push(DNODE_TAG.HOST + ha[i].toLowerCase());
@@ -795,7 +796,7 @@ function BP_GET_MEMSTORE(g)
                 }
             }
         }
-        
+
         // Object structure definition
         Object.defineProperties(this,
         {
@@ -807,7 +808,7 @@ function BP_GET_MEMSTORE(g)
         Object.seal(this);
     }
     /** Returns current value and advances iterator if possible */
-    DURL.prototype.incr = function() 
+    DURL.prototype.incr = function()
     {
         var i = this._i;
         if ((++this._i) > this._a.length) {this._i = i;}
@@ -820,11 +821,11 @@ function BP_GET_MEMSTORE(g)
         if ((--this.i) < 0) { this.i = i; }
         return this._a[i];
     };
-    DURL.prototype.count = function() 
+    DURL.prototype.count = function()
     {
         return (this._a.length - this._i);
     };
-    DURL.prototype.get = function(i) 
+    DURL.prototype.get = function(i)
     {
         return this._a[i || this._i];
     };
@@ -833,7 +834,7 @@ function BP_GET_MEMSTORE(g)
         this._i = 0;
         return this._a[this._i];
     };
-    DURL.prototype.pos = function() 
+    DURL.prototype.pos = function()
     {
         return this._i;
     };
@@ -861,7 +862,7 @@ function BP_GET_MEMSTORE(g)
                 i2.incr();
             }
         }
-        
+
         if (i1.count() === i2.count() === 0) {return EQUAL;}
         else if (i1.count() < i2.count()) {return SUBSET;}
         else {return SUPERSET;}
@@ -878,7 +879,7 @@ function BP_GET_MEMSTORE(g)
         }
         return site;
     };
-    
+
     function getSite(loc, dt)
     {
         var l = BP_CONNECT.newL(loc, dt),
@@ -886,7 +887,7 @@ function BP_GET_MEMSTORE(g)
         return urli.getSite();
     }
     /** @end-class-defn DURL **/
-    
+
     /** @begin-class-def DNode */
 
     // Following properties will be added as needed
@@ -955,7 +956,7 @@ function BP_GET_MEMSTORE(g)
          */
         Object.defineProperty(this, DNODE_TAG.URL, {value:_url, enumerable:true});
     }
-    /** Makes url of child node by extracting its url-segment from its key and 
+    /** Makes url of child node by extracting its url-segment from its key and
      * appending that to this[DNODE_TAG.URL] */
     function makeURL(baseURL, childKey)
     {
@@ -970,9 +971,9 @@ function BP_GET_MEMSTORE(g)
                 url = baseURL + "/" + childKey.slice(2);
                 break;
         }
-        
+
         return url;
-    }    
+    }
     var DNProto = DNode.prototype;
     DNProto.getData = function(dt) {return this[DNODE_TAG.DATA+dt];};
     DNProto.putData = function(drec)
@@ -987,9 +988,9 @@ function BP_GET_MEMSTORE(g)
             drec.notes.firstKey = true;
         }
         // var recsMap = this.d[dt];        // if (!recsMap) {            // this.d[dt] = (recsMap = {});        // }
-        
+
         var recsMap = this[d];
-        
+
         //r = recsMap[ki=DT_TRAITS.getKey(actn, dt)];
         r = recsMap[ki=drec.dtt.getKey(actn)];
         if (r) {
@@ -1013,16 +1014,16 @@ function BP_GET_MEMSTORE(g)
         // Simple struct for ETLD
         this[DNODE_TAG.ETLD] = drec.actn.val;
     };
-    
+
     function newDNode (url) {return new DNode(url);}
-    
+
     /** Helper function to DNProto.insert */
     DNProto.tryInsert = function (drec)
     {
         var actn = drec.actn,
             k = drec.urli.incr(),
             t = drec.dtt;
-        if (!k) 
+        if (!k)
         {
             if (drec.dt === dt_etld) {
                 DNProto.putETLD.apply(this, [drec]);
@@ -1032,13 +1033,13 @@ function BP_GET_MEMSTORE(g)
             }
             drec.dnode = this;
         }
-        else 
+        else
         {   // continue walking down the trie
             var n = this[k];
             if (!n) {
                 this[k] = (n = newDNode(makeURL(this[DNODE_TAG.URL], k)));
             }
-            
+
             return n; // Non-recursive
             // n.insert(drec); Tail-recursive.
         }
@@ -1073,17 +1074,17 @@ function BP_GET_MEMSTORE(g)
     /**
      * Non-recursive findBest match method. Invoked at the root node. Returns the
      * DNode that best matches {urli}
-     * 
+     *
      * @param urli is an Iterator over url segments. The function will walk the url
      * segment array and navigate the dictionary by following nodes that match
      * the current url-segment. The walk will stop when/if a matching node isn't
-     * found or if the url segment array is exhausted. Upon return, urli.count() 
+     * found or if the url segment array is exhausted. Upon return, urli.count()
      * indicates the number of unmatched url segments at the tail of the url array.
      * The segments before urli.count() matched. The matched node however, may not
      * have a value in it though. You will need to walk either up or down the tree
      * to find values depending on your use case.
     *
-    DNProto.findBestNode = function (urli, dt) 
+    DNProto.findBestNode = function (urli, dt)
     {
         var n, r = this;
         // Walk down the dictionary tree.
@@ -1091,7 +1092,7 @@ function BP_GET_MEMSTORE(g)
             n = r;
             r = n.tryFind(urli);
         } while (r);
-        
+
         return n;
     };
     */
@@ -1112,9 +1113,9 @@ function BP_GET_MEMSTORE(g)
             n = r;
             r = DNProto.tryFind.apply(n, [urli]);
         } while (r);
-    
+
         //r = {};
-        
+
         // In case of KDB records we need a full uri match.
         // Therfore we'll pick up the matched node's value
         // only if all of urli segments were matched - i.e.
@@ -1132,7 +1133,7 @@ function BP_GET_MEMSTORE(g)
     /**
      * Returns dt_pRecord records that best match urli.
      */
-    DNProto.findPRecsMap = function(l, out) 
+    DNProto.findPRecsMap = function(l, out)
     {
         var n = this, n2, urli = new DURL(l, dt_pRecord);
         // Walk down the dictionary tree.
@@ -1145,26 +1146,26 @@ function BP_GET_MEMSTORE(g)
         // While constructing DURL during insert we've already ensured that
         // inserts will be below TLD level - and just one level below TLD.
         // Therefore we need an exact DURL-match, not a substring match here.
-        if (n2) 
+        if (n2)
         {
             if (out) {out.dNode = n2;}
             return DNProto.getData.apply(n2, [dt_pRecord]);
         }
     };
-    
+
     /**
-     * Returns DNode with exact DURL match 
+     * Returns DNode with exact DURL match
      */
     DNProto.getDNode = function (l, dt)
     {
-        var urli = new DURL(l, dt), 
+        var urli = new DURL(l, dt),
             n = this, n2;
         do
         {
             n2 = n;
             n = DNProto.tryFind.apply(n, [urli]);
         } while (n);
-        
+
         if (n===null) {
             return n2;
         }
@@ -1246,9 +1247,9 @@ function BP_GET_MEMSTORE(g)
                 recs = DNProto.findERecsMapArray.apply(DNode[dt_eRecord], [newL(loc,dt_eRecord)]);
                 break;
         }
-        return recs; 
+        return recs;
     }
-    
+
     function getTRecs (loc, out)
     {
         return DNProto.findPRecsMap.apply(DNode['temp_'+dt_pRecord],[newL(loc,dt_pRecord), out]);
@@ -1270,7 +1271,7 @@ function BP_GET_MEMSTORE(g)
         r.tRecsMap = getTRecs(loc);
         if (out.dNode) {
             // Site that pertains to the pRecords. Should be same as DURL(l, dt_pRecord)
-            // concatenated back into a URL. 
+            // concatenated back into a URL.
             r.site = out.dNode[DNODE_TAG.URL];
         }
         return r;
@@ -1307,11 +1308,11 @@ function BP_GET_MEMSTORE(g)
     function insertTempRec(actn, dt)
     {
         if (dt !== dt_pRecord) {return;}
-        
+
         var dr, pRecsMap, u1, notes,
             dict = 'temp_' + dt,
             dnode = DNode[dict];
-        
+
         if (!actn.u)
         {
             pRecsMap = DNProto.findPRecsMap.apply(dnode, [actn.l]);
@@ -1337,10 +1338,10 @@ function BP_GET_MEMSTORE(g)
         notes = DNProto.insert.apply(dnode, [dr]) ? dr.notes : undefined;
         if (notes)
         {
-            BP_ERROR.logdebug("Saved temp pRecord: " + JSON.stringify(actn));
+            //BP_ERROR.logdebug("Saved temp pRecord: ");
         }
         else {
-            BP_ERROR.logwarn("Could not save temp pRecord: " + JSON.stringify(actn));
+            BP_ERROR.logwarn("Could not save temp pRecord: ");
         }
 
         return dr;
@@ -1349,7 +1350,7 @@ function BP_GET_MEMSTORE(g)
     function loadETLD ()
     {
         var xhr = new XMLHttpRequest();
-        
+
         // xhr.onloadend = function (e)        // {             // ETLD = JSON.parse(e.target.response);        // };
         xhr.open("GET", g.BP_CS_PLAT.getURL('/data/etld.json'), false);
         xhr.send();
@@ -1367,7 +1368,7 @@ function BP_GET_MEMSTORE(g)
     {
         var dnode;
         if (!eventType || !scope || !cbackInfo) {return;}
-        
+
         dnode = getDNode(scope.l, scope.dt, scope.dict);
         if (dnode)
         {
@@ -1380,17 +1381,17 @@ function BP_GET_MEMSTORE(g)
 
     DRecord.prototype.trigger = function()
     {
-        if (this.notes.causedCurrChange) 
+        if (this.notes.causedCurrChange)
         {
             this.root.dispatch('bp_change', this);
             this.dnode.dispatch('bp_change', this);
         }
     };
-    
+
     function trigger (dr)
     {
         var root, dnode;
-        if (dr.notes.causedCurrChange) 
+        if (dr.notes.causedCurrChange)
         {
             root = dr.root  || getRootDNode(dr.dt, dr.dict);
             dnode= dr.dnode || getDNode(dr.actn.l, dr.dt, dr.dict);
@@ -1399,7 +1400,7 @@ function BP_GET_MEMSTORE(g)
             dnode.dispatch('bp_change', dr);
         }
     }
-    
+
     function DNodeIterHelper(node, up, myURL)
     {
         return Object.defineProperties(this,
@@ -1424,10 +1425,10 @@ function BP_GET_MEMSTORE(g)
                 break;
             }
         }
-        
+
         return found? key : undefined;
     };
-    /** Makes url of child node by extracting its url-segment from its key and 
+    /** Makes url of child node by extracting its url-segment from its key and
      * appending that to this.myURL */
     DNodeIterHelper.prototype.childURL = function (childKey)
     {
@@ -1442,12 +1443,12 @@ function BP_GET_MEMSTORE(g)
                 url = this.myURL + "/" + childKey.slice(2);
                 break;
         }
-        
+
         return url;
     };
 
     /**
-     * Iterate DNodes 
+     * Iterate DNodes
      * @param {String} dt - data-type
      */
     function DNodeIterator (root, dt)
@@ -1470,7 +1471,7 @@ function BP_GET_MEMSTORE(g)
     DNodeIterator.prototype.next = function ()
     {
         var notes, key;
-        
+
         // Walk back up the tree if dead-ended, until you get to a node which has at
         // least one unvisited child remaining, or if you get back to the top/root of
         // the tree.
@@ -1529,12 +1530,12 @@ function BP_GET_MEMSTORE(g)
                     }
                 }
             }
-        }        
+        }
     };
 
     /**
      * Walks the DNode tree and calls a callback for each current-record in the tree. It
-     * visits only current actions of the ItemHistory collections. That is, it skips the 
+     * visits only current actions of the ItemHistory collections. That is, it skips the
      * historical actions. It also entirely skips deleted or gc'd items. The idea is to
      * provide a snapshot of the un-deleted items.
      * @param {Object} callback
@@ -1553,7 +1554,7 @@ function BP_GET_MEMSTORE(g)
                     callback(iHist.curr, ctx);
                 }
             }
-        }        
+        }
     };
     function newDNodeIterator (dt, dict)
     {
@@ -1576,8 +1577,8 @@ function BP_GET_MEMSTORE(g)
     {
         this.dnIt.walkCurr(callback, ctx);
     };
-    
-    //Assemble the interface    
+
+    //Assemble the interface
     var iface = Object.freeze(
     {
         insertRec:   insertRec,
