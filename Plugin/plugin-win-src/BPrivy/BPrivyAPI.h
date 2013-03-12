@@ -163,8 +163,8 @@ private:
 	void BPrivyAPI::AAAInit(FB::JSObjectPtr io);
 	void securityCheck(const bfs::path& path, const std::string allowedExt[] );
 	void securityCheck(const bfs::path& path, const bfs::path& path2, const std::string allowedExt[] );
-	void BPrivyAPI::CONSOLE_LOG(const std::string& s);
-	void BPrivyAPI::CONSOLE_LOG(const std::wstring& s);
+	//void BPrivyAPI::CONSOLE_LOG(const std::string& s);
+	//void BPrivyAPI::CONSOLE_LOG(const std::wstring& s);
 
 	bfs::path m_dbPath;
 	std::string m_aclToken;

@@ -1,5 +1,5 @@
 The following software is required to build the BPrivy plugin:
-1. Skip this step (Firebreath is already in SCM). Download firebreath into BPrivy/Plugin/firebreath1.7: git git://github.com/firebreath/FireBreath.git -b firebreath1.7 firebreath1.7
+1. Download firebreath into BPrivy/Plugin/firebreath: git clone git://github.com/firebreath/FireBreath.git firebreath
 2. MS Visual Studio 2010 Express or MS Visual Studio 2010
 3. If using MSVS Express, you will need to download and install Windows Driver Kit 7.1.0 (WDK) http://msdn.microsoft.com/en-us/windows/hardware/hh852361. If using full version of MSVS, you don't need the WDK.
 4. CMake (v2.8.8 being used today) from www.cmake.org. Install in default location.
@@ -15,7 +15,7 @@ The following software is required to build the BPrivy plugin:
 		This will install into C:\Boost
 	7. cd C:\Boost\lib
 7.2 Bulid openssl libraries:
-	1. Skip this step because openssl is already available in the SCM. Download and unzip openssl v1.0.0c to - say - $Openssl_Dist. The distribution may alread be in the SCM.
+	1. Download and unzip openssl v1.0.0c to - say - $Openssl_Dist. The distribution may alread be in the SCM.
 	2. Read $Openssl_Dist/INSTALL.W32
 	3. Download and install nasm as instructed in INSTALL.W32 (http://nasm.sourceforge.net/), or form the thirdparty CD. The 'installer' just copies files. You'll need to setup the path environment by hand. Best is to ignore the installer and instead just download the zip file and unzip it into a suitable location and then manually edit the path env. var.
 	4. Download and install ActiveState Perl as instructed in INSTALL.w32 (from 	http://www.activestate.com/ActivePerl), or from the thirdparty CD.

@@ -5,7 +5,7 @@
  * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  */
 
-/* JSLint directives */ 
+/* JSLint directives */
 /*global $, console, window, BP_GET_CONNECT, BP_GET_CS_PLAT, IMPORT, BP_GET_COMMON, BP_GET_ERROR,
   ls, BP_PLUGIN, BP_GET_EDITOR, BP_GET_W$, BP_GET_TRAITS, chrome, BP_GET_DBFS,
   BP_GET_WALLET_FORM */
@@ -17,7 +17,7 @@ var BP_WALLET_FORM = (function ()
 {
     "use strict";
     /** @globals-begin */
-    var g = {g_win:window, g_console:console, g_chrome:chrome};
+    var g = {g_win:window, g_console:console, g_chrome:chrome, $:$, jQuery:jQuery};
     g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
     var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
     g.BP_ERROR = BP_CS_PLAT.getBackgroundPage().BP_GET_ERROR(g);
@@ -29,7 +29,7 @@ var BP_WALLET_FORM = (function ()
 
     var g_walletForm;
     /** @globals-end */
-   
+
     /** @import-module-begin */
     var BP_COMMON = IMPORT(g.BP_COMMON);
     /** @import-module-begin CSPlatform */
@@ -82,7 +82,7 @@ var BP_WALLET_FORM = (function ()
         var ctx,
             walletForm,
             temp;
-            
+
         if (!(options && options.containerID)) { return; }
 
         // Create the Widget.
@@ -98,25 +98,25 @@ var BP_WALLET_FORM = (function ()
             destroyWalletForm: destroyWalletForm
         };
         walletForm = g.BP_W$.w$exec(g.BP_WALLET_FORM.WalletFormWdl_wdt, ctx);
-        
+
         BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
-        
+
         if (g_walletForm) {
             g_walletForm.destroy();
             g_walletForm = null;
         }
-        
+
         g_walletForm = walletForm;
         $(g_walletForm.el).appendTo('#'+options.containerID);
-        
+
         $('#'+options.containerID).tooltip(); // used to leak DOM nodes in version 2.0.4.
-        
+
         return g_walletForm;
     }
 
     // Assemble the interface
     var iface = {};
-    Object.defineProperties(iface, 
+    Object.defineProperties(iface,
     {
         onload: {value: onload},
         g: {value: g}

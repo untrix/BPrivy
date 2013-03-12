@@ -238,22 +238,6 @@ o: {
 }
  */
 
-#ifdef DEBUG
-void BPrivyAPI::CONSOLE_LOG(const std::string& s) 
-{
-	m_host->htmlLog(std::string("BPlugin: ") + (s));
-}
-void BPrivyAPI::CONSOLE_LOG(const std::wstring& s)
-{
-	std::wstring temp(L"BPlugin: ");
-	m_host->htmlLog(FB::wstring_to_utf8(temp.append(s)));
-}
-
-#else
-void BPrivyAPI::CONSOLE_LOG(const std::string& s){}
-void BPrivyAPI::CONSOLE_LOG(const std::wstring& s) {}
-#endif
-
 bool BPrivyAPI::_exists(bfs::path& path, bp::JSObject* p)
 {
 	static const std::string allowedExt[] = {".3ab", ".3ad", ".3ao", ".3ac", ".3am", ".3at", ".csv", ""};
@@ -606,7 +590,7 @@ BPrivyAPI::_copy(const bfs::path& dbPath1, bfs::path& o_path,
 std::wstring BPrivyAPI::pathSeparator()
 {
 	bfs::path path(L"/");
-	path.make_preferred();
+	//path.make_preferred();
 	return path.wstring();
 }
 

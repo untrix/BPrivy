@@ -6,7 +6,7 @@
  */
 
 /*global $, IMPORT, BP_PLUGIN */
- 
+
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -31,7 +31,7 @@ function BP_GET_DBFS(g)
         dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord);
     /** @import-module-end **/ m = null;
-    
+
     var dtl_null = null,
         this_null = null,
         cats_null = null;
@@ -40,7 +40,7 @@ function BP_GET_DBFS(g)
     {
         var regex = /^(.*)(\.[^.]+)$/;
         var o = {'name': sgmnt};
-        
+
         if (sgmnt)
         {
             var vals=[], array;
@@ -53,14 +53,14 @@ function BP_GET_DBFS(g)
                 o.stem = sgmnt;
             }
         }
-        
+
         return o;
     }
 
     function parsePath(path)
     {
         var regex = /(^[\/\\]*)?(?:([^\\\/]+)[\\\/]+)/g;
-        var lastex =/([^\\\/]+)$/; 
+        var lastex =/([^\\\/]+)$/;
         if (path)
         {
             var vals=[], idx, array;
@@ -74,9 +74,29 @@ function BP_GET_DBFS(g)
             if (array && array[1]) {
                 vals.push(parseSegment(array[1]));
             }
-            
+
             return vals.length ? vals : null;
         }
+    }
+
+    function getDir(path)
+    {
+        var pathArray = parsePath(path),
+            n, i,
+            dir = "",
+            path_sep = DB_FS.getPathSep();
+
+        if (pathArray)
+        {
+            pathArray.pop();
+            for (i=0, n=pathArray.length; i<n; i++)
+            {
+                dir += pathArray[i].name;
+                if (i!=(n-1)) { dir += '/'; }
+            }
+        }
+
+        return dir;
     }
 
     var DB_FS = (function ()
@@ -91,8 +111,8 @@ function BP_GET_DBFS(g)
             valid_dt={},// populated below
             path_sep = null, // populated below
             dt_settings = IMPORT(BP_TRAITS.dt_settings),
-            /* 
-             * NOTE. The list dtl is in processing order. That is, we want to deliberately 
+            /*
+             * NOTE. The list dtl is in processing order. That is, we want to deliberately
              * process load and store DTs in the order least important to most important.
              * This will ensure that if something were to go wrong with file-system access
              * it would happen with the less important DT first and hopefully would exception
@@ -109,7 +129,7 @@ function BP_GET_DBFS(g)
                 ext_MMap: ".3am", // unused as yet: dump of in-memory dictionary
                 ext_Temp: ".3at",
                 ext_Bad : ".3aq", // q => Quarantine
-                ext_KeyInfo : ".3aki", // Info that holds Key-ID 
+                ext_KeyInfo : ".3aki", // Info that holds Key-ID
                 ext_Key : ".3ak", // Encryption Key / Cryptinfo
                 ext_Csv : ".csv"
             },
@@ -140,10 +160,10 @@ function BP_GET_DBFS(g)
             cat_Closed:cat_Load.cat_Closed,
             cat_Temp : cat_Load.cat_Temp,
             cat_Bad  : cat_Bad,
-            /** 
+            /**
              * Returns true if the file should be loaded into the DB
              * @param {Object} dirEnt dirEnt should be a dir-entry listing from BP_PLUGIN.ls and it should
-             *      be a regular file. IN other words, it should be obtained from o.lsd.f or o.lsf   
+             *      be a regular file. IN other words, it should be obtained from o.lsd.f or o.lsf
              */
             // Loadable DB-file categories. Populated later/below
             cats_Load: [],
@@ -224,7 +244,7 @@ function BP_GET_DBFS(g)
                 else {
                     regex = /^.*\\([^\\]+)$/;
                 }
-                
+
                 array = regex.exec(dbPath);
                 if (array) {
                     var o = parseSegment(array[1]);
@@ -261,7 +281,7 @@ function BP_GET_DBFS(g)
                         g_path_dt[dtl[i]] = null;
                     }
                 }
-                
+
                 g_dbStats = dbStats;
                 if (g_dbStats) {Object.freeze(g_dbStats);}
             },
@@ -292,7 +312,7 @@ function BP_GET_DBFS(g)
                 {
                     dupes = g_dbStats.calcDupes();
                 }
-                
+
                 return {
                     'dupes': dupes
                 };
@@ -301,21 +321,21 @@ function BP_GET_DBFS(g)
             {
                 var path, o;
                 if (keyDir)
-                {                  
+                {
                    path = keyDir + path_sep + dbName + mod.ext_Key;
                 }
                 else if (dbPath) {
                     path = dbPath + path_sep + dbName + mod.ext_Key;
                 }
-                
+
                 return path;
             },
             findCryptInfoFile: function(dbPath)
             {
                 var o={}, path;
-                
+
                 if (!BP_PLUGIN.ls(dbPath, o)) {throw new BPError(o.err);}
-                
+
                 if (o.lsd && o.lsd.f) {
                     iterObj(o.lsd.f, o, function(fname, ent, dbPath)
                     {
@@ -325,17 +345,17 @@ function BP_GET_DBFS(g)
                         }
                     }, dbPath);
                 }
-                
+
                 if (!path) {
                     throw new BPError("Key File not found inside the Wallet. Is it stored outside?");
                 }
-                
+
                 return path;
             },
             findCryptInfoFile2: function(dbPath, bAll)
             {
                 var o={}, path, paths=[];
-                
+
                 if (BP_PLUGIN.ls(dbPath, o) && o.lsd && o.lsd.f)
                 {
                     iterObj(o.lsd.f, o, function(fname, ent, dbPath)
@@ -346,12 +366,12 @@ function BP_GET_DBFS(g)
                                 paths.push(path);
                             }
                             else {
-                                return true; // exits the iterObj loop    
+                                return true; // exits the iterObj loop
                             }
                         }
                     }, dbPath);
                 }
-                
+
                 if (bAll) {
                     return paths;
                 }
@@ -363,10 +383,10 @@ function BP_GET_DBFS(g)
             {
                 var fname = file_dt[dt];
                 if (!dbPath || !fname) {
-                    BP_ERROR.logwarn("@makeDTFilePath: Bad argument supplied. path="+dbPath+" dt="+dt); 
+                    BP_ERROR.logwarn("@makeDTFilePath: Bad argument supplied. path="+dbPath+" dt="+dt);
                     throw new BPError("", "InternalError");
                 }
-                
+
                 if (fname) {
                     return mod.makeDTDirPath(dt, dbPath) + file_dt[dt];
                 }
@@ -375,7 +395,7 @@ function BP_GET_DBFS(g)
             {
                 var fname = Date.now().valueOf() + DOT + dt;
                 dirEnt = dirEnt || {};
-                
+
                 switch (cat)
                 {
                     case mod.cat_Closed:
@@ -398,7 +418,7 @@ function BP_GET_DBFS(g)
                         BP_ERROR.logwarn("filestore.js@makeFileName: Bad 'cat' argument");
                         throw new BPError("", "InternalError", "BadArgument");
                 }
-                
+
                 dirEnt.stm = fname;
                 return fname;
             },
@@ -413,7 +433,7 @@ function BP_GET_DBFS(g)
             renameBad: function (name)
             {
                 if (!name) {
-                    BP_ERROR.logwarn("filestore.js@renameBad: Bad argument supplied."); 
+                    BP_ERROR.logwarn("filestore.js@renameBad: Bad argument supplied.");
                     throw new BPError("", "InternalError");
                 }
                 return name + mod.ext_Bad;
@@ -421,24 +441,24 @@ function BP_GET_DBFS(g)
             makeCsvFilePath: function (dt, dirPath)
             {
                 if (!dirPath || !valid_dt[dt]) {
-                    BP_ERROR.logwarn("@makeCsvFilePath: Bad argument supplied."); 
+                    BP_ERROR.logwarn("@makeCsvFilePath: Bad argument supplied.");
                     throw new BPError("", "InternalError");
                 }
-                
+
                 return dirPath + path_sep + csv_dt[dt] + "_" + Date.now() + mod.ext_Csv;
             },
             makeDTDirPath: function (dt, dbPath)
             {
                 if (!dbPath || !valid_dt[dt]) {
-                    BP_ERROR.logwarn("@makeDTDirPath: Bad argument supplied. path="+dbPath+" dt="+dt); 
+                    BP_ERROR.logwarn("@makeDTDirPath: Bad argument supplied. path="+dbPath+" dt="+dt);
                     throw new BPError("", "InternalError");
                 }
-                return dbPath + path_sep + dir_dt[dt] + path_sep;                
+                return dbPath + path_sep + dir_dt[dt] + path_sep;
             },
             makeDBPath: function (name, dir)
             {
                 var dbPath = dir + path_sep + name;
-                if (name.slice(name.length - mod.ext_Root.length) !== mod.ext_Root) 
+                if (name.slice(name.length - mod.ext_Root.length) !== mod.ext_Root)
                 {
                     dbPath += mod.ext_Root;
                 }
@@ -453,9 +473,9 @@ function BP_GET_DBFS(g)
 			 * */
             insideDB: function  (dbPath, out)
             {
-                var pathArray = parsePath(dbPath), 
+                var pathArray = parsePath(dbPath),
                     i, j, inDB=false;
-                
+
                 for (i = pathArray.length - 1; i >= 0; i--)
                 {
                     if (pathArray[i] && (pathArray[i].ext === mod.ext_Root)) {
@@ -463,14 +483,14 @@ function BP_GET_DBFS(g)
                         break;
                     }
                 }
-                
-                if (inDB && out) 
+
+                if (inDB && out)
                 {
                     for (out.dbPath='',j=0; j<=i; j++) {
                         out.dbPath += (j>0 ? path_sep : '') + pathArray[j].name;
                     }
                 }
-                
+
                 return inDB;
             },
 			/**
@@ -484,7 +504,7 @@ function BP_GET_DBFS(g)
             verifyDBForLoad: function (dbPath, errMsg)
             {
                 var o={}, goodPath;
-        
+
                 if (!mod.insideDB(dbPath, o)) {
                     goodPath = false;
                 }
@@ -492,16 +512,16 @@ function BP_GET_DBFS(g)
                     dbPath = o.dbPath;
                     goodPath = true;
                 }
-        
+
                 var path_k = dbPath + path_sep + dir_dt[dt_eRecord],
                     path_p = dbPath + path_sep + dir_dt[dt_pRecord];
-                
+
                 if (!(goodPath && BP_PLUGIN.ls(dbPath, o) && BP_PLUGIN.ls(path_k, o) &&
                     BP_PLUGIN.ls(path_p, o)))
                 {
                     throw new BPError(errMsg || '', 'BadDBPath');
                 }
-                
+
                 return dbPath;
             },
             lsFiles: function (dbPath)
@@ -517,10 +537,10 @@ function BP_GET_DBFS(g)
                     {
                         f = o.lsd.f;
                         file_names = Object.keys(f);
-        
+
                         // List files in reverse chronological order for faster insertion into
                         // MEMSTORE.
-                        
+
                         for (j=0; j < file_names.length; j++)
                         {
                             name = file_names[j];
@@ -531,7 +551,7 @@ function BP_GET_DBFS(g)
                         }
                     }
                 });
-                
+
                 return dbStats;
             },
             renameDTFile: function (toCat, dt, dbStats)
@@ -542,7 +562,7 @@ function BP_GET_DBFS(g)
                     dbPath = dbStats.dbPath,
                     dtDirPath = DB_FS.makeDTDirPath(dt, dbStats.dbPath),
                     done;
-    
+
                 frmPath = DB_FS.makeDTFilePath(dt, dbPath);
                 toName  = DB_FS.makeFileName(toCat, dt);
 
@@ -553,7 +573,7 @@ function BP_GET_DBFS(g)
                         done = true;
                         continue;
                     }
-                    
+
                     o={};
                     done = BP_PLUGIN.rename(dbPath, frmPath, dbPath, dtDirPath + toName, o); // no clobber by default
                     if (!done)
@@ -569,7 +589,7 @@ function BP_GET_DBFS(g)
                         }
                     }
                 }
-                
+
                 if (!done) {
                     BP_ERROR.logwarn("renameDTFile@filestore.js: Could not rename file");
                     throw new BPError("", "InternalError");
@@ -587,7 +607,7 @@ function BP_GET_DBFS(g)
                 {
                     var o = {secureDelete:true},
                         fpath = DB_FS.makeDTDirPath(dt, dbStats.dbPath) + fname;
-        
+
                     if ( (!keepDTFiles) || (fname !== DB_FS.getDTFileName(dt)) )
                     {
                         if (!BP_PLUGIN.rm(fpath, o)) {
@@ -597,7 +617,7 @@ function BP_GET_DBFS(g)
                     } // else skip the main DT-file
                 });
                 //dbStats.walkCats(DB_FS.cats_Load, rmCbk, keepDTFiles);
-                
+
                 return rVal;
             },
             copy: function (dbMap, db2Path, bClobber)
@@ -608,16 +628,16 @@ function BP_GET_DBFS(g)
                     var frmPath = DB_FS.makeDTDirPath(dt, dbMap.dbPath)+fname,
                         toPath = DB_FS.makeDTDirPath(dt, db2Path) + fname,
                         o = {};
-                                
-                    if (!BP_PLUGIN.copy(dbMap.dbPath, frmPath, 
+
+                    if (!BP_PLUGIN.copy(dbMap.dbPath, frmPath,
                                         db2Path, toPath, o, bClobber))
                     {
                         throw new BPError (o.err);
                     }
                 });
-            },            
-            /** 
-             * Returns negative if modified-time eX < eY, zero if same, positive if mtime eX>eY 
+            },
+            /**
+             * Returns negative if modified-time eX < eY, zero if same, positive if mtime eX>eY
              * Takes into account the fact that on FAT filesystems, m-timestamps have a granularity
              * of 2 seconds which makes multiple files have the same timestamp in case of compacted
              * DB.
@@ -626,13 +646,13 @@ function BP_GET_DBFS(g)
             {
                 var n = eX.mtm-eY.mtm;
                 if (n) {return n;}
-                else 
+                else
                 {   // timestamps are same. So now we look at the filenames - they have timestamps in them.
                     if ((eX.stm === dt) && (eX.ext === DB_FS.ext_Open)) {return 1;}
                     else if ((eY.stm === dt) && (eY.ext === DB_FS.ext_Open)) {return -1;}
-                    else if (!isNaN(Number(eX.stm))) 
+                    else if (!isNaN(Number(eX.stm)))
                     {
-                        if (!isNaN(Number(eY.stm))) 
+                        if (!isNaN(Number(eY.stm)))
                         {
                             return eX.stm - eY.stm;
                         }
@@ -642,7 +662,7 @@ function BP_GET_DBFS(g)
                 return 0;
             }
         };
-                
+
         // populate dir and file with all possible data-types
         // Right now, we're using the dt string as the file/dirname as well. However,
         // if needed a mapping can be performed in this function. For e.g. dt_eRecord
@@ -652,7 +672,7 @@ function BP_GET_DBFS(g)
             dir_dt[dt] = dt + mod.ext_Dict;
             file_dt[dt]= dt + mod.ext_Open;
             valid_dt[dt] = true;
-            
+
             switch (dt)
             {
                 case dt_pRecord:
@@ -667,27 +687,27 @@ function BP_GET_DBFS(g)
         {
             mod.cats_Load.push(val);
         });
-        
+
         return Object.freeze(mod);
     }());
 
 
     /**
      * Normally invoked with only one argument - dbPath. Constructs a new DBStats object.
-     * dbSObj should be an Object object derived after converting DBStats to JSON and back. 
+     * dbSObj should be an Object object derived after converting DBStats to JSON and back.
      */
     function newDBMap (dbPath, dbMObj)
     {
         function DBMap(dbPath, dbMObj)
         {
             if (dbMObj)
-            {                
+            {
                 Object.seal(Object.defineProperties(this,
                 {
                     dbPath: {value:dbMObj.dbPath, enumerable:true},
                     dtM:    {value: dbMObj.dtM, enumerable:true, writable:true}
                 }));
-                
+
                 // empty out dbMObj.
                 //This is a Object object, hence 'dtM' should be configurable. If dbMObj
                 //was a DBMap object, then an exception will be thrown here as it should.
@@ -762,11 +782,11 @@ function BP_GET_DBFS(g)
                     func.apply(thisArg, [dt, catM, ctx]);
                 }
             });
-                
+
         }
         function iterDTCatM (self, thisArg, dtl, catl, func, ctx)// private, therefore not in prototype
         {
-            iterDTM (self, self, dtl, 
+            iterDTM (self, self, dtl,
             function anonVisitCatM(dt, catM)
             {
                 iterArray2(catl || DB_FS.cats_Load, self,
@@ -782,20 +802,20 @@ function BP_GET_DBFS(g)
         DBMap.prototype.numEnts = function (catl)
         {
             var num = 0;
-            iterDTCatM (this, this, this.getDTL(), catl, 
+            iterDTCatM (this, this, this.getDTL(), catl,
             function anonCountEnts(dt, cat, entM)
             {
                 num += Object.keys(entM).length;
             });
-                
+
             return num;
         };
         DBMap.prototype.iterEnt = function (thisArg, dtl, catl, func, ctx)
         {
-            iterDTCatM(this, this, dtl, catl, 
+            iterDTCatM(this, this, dtl, catl,
             function anonIterEntM(dt, cat, entM)
-            {                        
-                iterObj(entM, this, 
+            {
+                iterObj(entM, this,
                 function anonVisitDirEnt(fname, dirEnt)
                 {
                     func.apply(thisArg, [dt, cat, fname, dirEnt, ctx]);
@@ -824,7 +844,7 @@ function BP_GET_DBFS(g)
                         ents.push(dirEnt);
                     });
                 });
-                
+
                 ents.sort(function (e1, e2) {
                 // We want a reverse-sort, hence flip x and y.
                  return cmp(e1.dt, e2, e1);
@@ -833,8 +853,8 @@ function BP_GET_DBFS(g)
                 function anonSortedApply(dirEnt)
                 {
                     func.apply(thisArg, [dt, dirEnt.cat, dirEnt.fname, dirEnt, ctx]);
-                });  
-            }); 
+                });
+            });
         };
         DBMap.prototype.calcDupes = function ()
         {
@@ -846,7 +866,7 @@ function BP_GET_DBFS(g)
                     dupes++;
                 }
             });
-    
+
             return dupes;
         };
         // DEPRICATED
@@ -907,7 +927,7 @@ function BP_GET_DBFS(g)
                     diffStats.put(dt, cat, fname, dirEnt);
                 }
             });
-            
+
             return diffStats;
         };
         DBMap.prototype.merge = function (rhs, cats)
@@ -917,7 +937,7 @@ function BP_GET_DBFS(g)
                 this.put(dt, cat, fname, dirEnt);
             });
         };
-        
+
         return new DBMap(dbPath, dbMObj);
     }
 
@@ -932,6 +952,7 @@ function BP_GET_DBFS(g)
         init: init,
         DB_FS: DB_FS,
         getDBPath: DB_FS.getDBPath,
+        getDir: getDir,
         getDBStats: DB_FS.getDBStats,
         cullDBName: DB_FS.cullDBName,
         getDBName: DB_FS.getDBName,

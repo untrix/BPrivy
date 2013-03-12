@@ -14,7 +14,7 @@
  */
 function BP_GET_NTFN_WDL(g)
 {   'use strict';
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_doc = g.g_win.document;
 
     /** @import-module-begin */
@@ -50,7 +50,7 @@ function BP_GET_NTFN_WDL(g)
     TempPItems.wdt = function (ctx)
     {
         var walker = ctx.walker;
-            
+
         return {
         cons: TempPItems,
         tag:'div',
@@ -67,7 +67,7 @@ function BP_GET_NTFN_WDL(g)
                 HomeButton.wdt,
                 OffButton.wdt
                 ],
-             
+
             },
             ],
             walk:{ walker:walker, wdi:IoItem.wdi },
@@ -78,17 +78,17 @@ function BP_GET_NTFN_WDL(g)
     {
         reload: {value:function()
         {
-            
+
         }}
     });
-    
+
     NtfnTitle.wdt = function(ctx)
     {
         return {
         tag:'div'
-        };    
+        };
     };
-    
+
     IoItem.wdi = function(w$ctx)
     {
         var actn = w$ctx.w$rec,
@@ -117,21 +117,21 @@ function BP_GET_NTFN_WDL(g)
         doSave: {value:function(){console.log('click');}},
         filterSite: {value:function(){console.log('click');}}
     });
-    
+
     FieldPass.wdt = function(ctx, args)
     {
         args = args || {};
         args.fn = fn_pass;
         args.placeholder = 'Password';
         args.v = ctx.p;
-        
+
         return Field.wdt(ctx, args);
     };
     FieldPass.prototype = w$defineProto(FieldPass,
     {
-        
+
     }, Field.prototype);
-    
+
     FieldUser.wdt = function(ctx, args)
     {
         args = args || {};
@@ -142,9 +142,9 @@ function BP_GET_NTFN_WDL(g)
     };
     FieldUser.prototype = w$defineProto(FieldUser,
     {
-        
+
     }, Field.prototype);
-    
+
     FieldSite.wdt = function(ctx, args)
     {
         args = args || {};
@@ -155,9 +155,9 @@ function BP_GET_NTFN_WDL(g)
     };
     FieldSite.prototype = w$defineProto(FieldSite,
     {
-        
+
     }, Field.prototype);
-    
+
     Field.wdt = function(ctx, args)
     {
         // v = args.v,
@@ -172,9 +172,9 @@ function BP_GET_NTFN_WDL(g)
     };
     Field.prototype = w$defineProto(Field,
     {
-        
+
     });
-    
+
     NoButton.wdt = function (w$ctx)
     {
         var item = w$ctx.item;
@@ -196,7 +196,7 @@ function BP_GET_NTFN_WDL(g)
     {
         onClick: {value: function click (e)
         {
-            if (this.item) {               
+            if (this.item) {
                 e.stopPropagation(); // We don't want the enclosing web-page to interefere
                 e.preventDefault(); // Causes event to get cancelled if cancellable
                 this.item.doDelete();
@@ -204,7 +204,7 @@ function BP_GET_NTFN_WDL(g)
             }
         }}
     });
-    
+
     YesButton.wdt = function (w$ctx)
     {
         var item = w$ctx.item;
@@ -226,7 +226,7 @@ function BP_GET_NTFN_WDL(g)
     {
         onClick: {value: function click (e)
         {
-            if (this.item) {               
+            if (this.item) {
                 e.stopPropagation(); // We don't want the enclosing web-page to interefere
                 e.preventDefault(); // Causes event to get cancelled if cancellable
                 this.item.doSave();
@@ -234,7 +234,7 @@ function BP_GET_NTFN_WDL(g)
             }
         }}
     });
-    
+
     FilterSiteButton.wdt = function (w$ctx)
     {
         var item = w$ctx.item;
@@ -256,7 +256,7 @@ function BP_GET_NTFN_WDL(g)
     {
         onClick: {value: function click (e)
         {
-            if (this.item) {               
+            if (this.item) {
                 e.stopPropagation(); // We don't want the enclosing web-page to interefere
                 e.preventDefault(); // Causes event to get cancelled if cancellable
                 this.item.filterSite();
@@ -264,7 +264,7 @@ function BP_GET_NTFN_WDL(g)
             }
         }}
     });
-    
+
     OffButton.wdt = function (w$ctx)
     {
         var item = w$ctx.item;
@@ -286,7 +286,7 @@ function BP_GET_NTFN_WDL(g)
     {
         onClick: {value: function click (e)
         {
-            if (this.item) {               
+            if (this.item) {
                 e.stopPropagation(); // We don't want the enclosing web-page to interefere
                 e.preventDefault(); // Causes event to get cancelled if cancellable
                 console.log('click');
@@ -294,7 +294,7 @@ function BP_GET_NTFN_WDL(g)
             }
         }}
     });
-    
+
     HomeButton.wdt = function (w$ctx)
     {
         var item = w$ctx.item;
@@ -316,7 +316,7 @@ function BP_GET_NTFN_WDL(g)
     {
         onClick: {value: function click (e)
         {
-            if (this.item) {               
+            if (this.item) {
                 e.stopPropagation(); // We don't want the enclosing web-page to interefere
                 e.preventDefault(); // Causes event to get cancelled if cancellable
                 console.log('click');
@@ -325,7 +325,7 @@ function BP_GET_NTFN_WDL(g)
         }}
     });
 
-    
+
     return Object.freeze(
     {
         tempPassWdt: TempPItems.wdt
@@ -340,10 +340,11 @@ function BP_GET_NTFN_WDL(g)
     "use strict";
     // g => Global Env.
     var g = {
-        g_win:window, 
-        g_console:console, 
-        g_chrome:chrome, 
-        webkitNotifications: webkitNotifications
+        g_win:window,
+        g_console:console,
+        g_chrome:chrome,
+        webkitNotifications: webkitNotifications,
+        $:$, jQuery:jQuery
     };
 
     g.BP_CS_PLAT = chrome.extension.getBackgroundPage().BP_GET_CS_PLAT(g);

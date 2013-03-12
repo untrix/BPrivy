@@ -4,9 +4,16 @@
 #include <string> // for std::string
 #include <cstdint> // for uint64_t and uint32_t
 #include <boost/filesystem.hpp>
+#include "logging.h"
 #include "Utils.h"
 #include "BPi18n.h"
 #include <CryptError.h>
+
+#ifdef DEBUG
+#define CONSOLE_LOG(s) FBLOG_WARN("UntrixPlugin", s)
+#else
+#define CONSOLE_LOG(s)
+#endif
 
 // Error Handling Stuff
 namespace bp

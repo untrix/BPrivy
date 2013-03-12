@@ -7,8 +7,8 @@
 
 /* JSLint directives */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
-  undef:false, vars:true, white:true, continue: true, nomen:true, 
-  stupid:true, 
+  undef:false, vars:true, white:true, continue: true, nomen:true,
+  stupid:true,
   sloppy:true */
 /*global require, process, __filename */
 
@@ -43,12 +43,12 @@ var fs = require('fs.extra'),
     lsDir = function (dirPath, src)
     {   'use strict';
         var list = [];
-        
+
         function processFiles(files)
         {
             var i, n, stat, fpath;
 
-            for (i=0,n=files.length; i<n; i++) 
+            for (i=0,n=files.length; i<n; i++)
             {
                 fpath = abs(dirPath, files[i]);
                 stat = fs.lstatSync(fpath);
@@ -60,15 +60,15 @@ var fs = require('fs.extra'),
                 }
             }
         }
-        
+
         processFiles(fs.readdirSync(dirPath));
-        
+
         return list;
     },
     lsSkel = function (basePath, files)
     {
         var list = {}, b;
-            
+
         files.forEach(function (f, i, files)
         {
             if (f.indexOf(path.sep) !== -1) {
@@ -76,11 +76,11 @@ var fs = require('fs.extra'),
                 list[abs(basePath, b)] = true;
             }
         });
-        
+
         return list;
     };
-    
-if (argv.length < 2) 
+
+if (argv.length < 2)
 {
     console.error("Usage: node " + path.basename(__filename) + " <src dir> <build dir>");
     process.exit(1);
@@ -96,23 +96,26 @@ var src = abs(argv[0]),
     'bp_cs.cat.js',
     'bp_main.cat.js',
     'bp_manage.cat.js',
+    'bp_dialog.cat.js',
     'bp_cs_boot.cat.js',
     'bp_panel.cat.js'
     ],
     release_cs_boot_js = ["bp_cs_boot_head.js", "bp_cs_boot.js"],
     release_cs_js = [
-       "bp_build.js", "bp_error.js", "bp_common.js", "bp_uitraits.js", 
+       "bp_build.js", "bp_error.js", "bp_common.js", "bp_uitraits.js",
        "bp_cs_chrome.js", "bp_connector.js", "bp_w$.js", "bp_panel.wdl.js",
        "bp_cs.js"
     ],
-    release_main_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js', 
+    release_main_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js',
                      "bp_main_chrome.js", "bp_cs_chrome.js",
                      "bp_listener.js", "bp_connector.js", "bp_memstore.js", "bp_db_fs.js",
                      "bp_filestore.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js" ],
     release_manage_js=["bp_build.js", "bp_cs_chrome.js", "bp_w$.js", "bp_editor.wdl.js",
-                       "bp_wallet_form.wdl.js", "bp_listener.js", "bp_manage.js"],
+                       "bp_wallet_form.wdl.js", "bp_manage.js"],
+    release_dialog_js=["bp_build.js", "bp_cs_chrome.js", "bp_wallet_form.wdl.js",
+                       "bp_plugin_installer.wdl.js", "bp_dialog.js"],
     release_panel_js=["bp_build.js", "bp_panel.js"],
-    release_tools_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js', 
+    release_tools_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js',
                      "bp_main_plat.stub.js", "bp_cs_plat.stub.js",
                      "bp_listener.js", "bp_connector.js", "bp_memstore.js", "bp_db_fs.js",
                      "bp_filestore.js"],
@@ -121,7 +124,8 @@ var src = abs(argv[0]),
     release_others = [
     'bp_manage.html',
     'BP_Main.html',
-    'bp_panel.html'].
+    'bp_panel.html',
+    'bp_dialog.html'].
     concat(qualify('data', 'etld.json')).
     concat(lsDir(abs(src,'icons'), src)).    concat(lsDir(abs(src,'tp'), src)),
     release_json = ['manifest.json'];
@@ -134,7 +138,7 @@ ch1.disconnect();
 
 function copy(srcDir, dstDir, files)
 {
-    var i, n, 
+    var i, n,
         fsrc, fdst;
     files.forEach(function (f, i, files)
     {
@@ -168,6 +172,7 @@ catIfNeeded(qualifyA(src,release_cs_boot_js), src + path.sep + 'bp_cs_boot.cat.j
 catIfNeeded(qualifyA(src,release_cs_js), src + path.sep + 'bp_cs.cat.js');
 catIfNeeded(qualifyA(src,release_main_js), src + path.sep + 'bp_main.cat.js');
 catIfNeeded(qualifyA(src,release_manage_js), src + path.sep + 'bp_manage.cat.js');
+catIfNeeded(qualifyA(src,release_dialog_js), src + path.sep + 'bp_dialog.cat.js');
 catIfNeeded(qualifyA(src,release_panel_js), src + path.sep + 'bp_panel.cat.js');
 catIfNeeded(qualifyA(src,release_tools_js), src + path.sep + 'bp_tools.cat.js');
 //catIfNeeded(qualifyA(src,release_notification_js), src + path.sep + 'bp_notification.cat.js');
@@ -183,7 +188,7 @@ if (all)
         copy(src, dist, release_others);
         var pem_dir = path.dirname(bld);
         copy(pem_dir, dist, ['key.pem']);
-    
+
     }));
     ch2.disconnect();
 }
@@ -199,7 +204,7 @@ if (all)
 {
     async2 = bp.newAsync('package');
     // Interleave async and async2 here.
-    async.on('done', async2.runHere(function() {bp.buildPackage(src, bld, async2);}));    
+    async.on('done', async2.runHere(function() {bp.buildPackage(src, bld, async2);}));
 }
 async.end();
 if (async2) {async2.end();}

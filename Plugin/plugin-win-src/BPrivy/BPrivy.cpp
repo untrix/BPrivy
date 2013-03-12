@@ -125,11 +125,10 @@ FB::JSAPIPtr BPrivy::createJSAPI()
 #ifndef DEBUG
 	std::string allowed("chrome-extension://bkpchbpkjdeiplcjdgnopcjlelddanlp");
 	if (loc.compare(0, allowed.size(), allowed) != 0)
-	{
-		m_host->htmlLog("In BPrivy::createJSAPI, loc = " + loc);
+    {
 		pWin->alert(std::string(
-			"Possibly malicious website [") + loc + "] is trying to access your passwords."
-			" Please email security.bprivy@untrix.com if possible");
+			"Possibly malicious website [") + loc + "] is trying to access your drive."
+			" Please email support@untrix.com if possible");
 		return boost::shared_ptr<BPrivyAPI>((BPrivyAPI*)NULL);
 	}
 	else

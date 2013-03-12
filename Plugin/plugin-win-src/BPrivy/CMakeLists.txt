@@ -17,6 +17,8 @@ file (GLOB GENERAL RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
 include_directories( ${PLUGIN_INCLUDE_DIRS} )
+#link directories added by Sumeet to satisfy boost dependencies
+link_directories( ${BOOST_LIB_DIR} )
 
 # Generated files are stored in ${GENERATED} by the project configuration
 SET_SOURCE_FILES_PROPERTIES(
@@ -54,6 +56,7 @@ include_directories(
 	${LIBCRYPT_PATH}/libscrypt_src
 	${OPENSSL_INC_PATH}
 )
+
 
 # The following was added by Sumeet
 target_link_libraries(${PROJECT_NAME}

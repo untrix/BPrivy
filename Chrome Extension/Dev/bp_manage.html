@@ -14,6 +14,8 @@
     <!-- Icons -->
     <link rel="shortcut icon" href="icons/icon16.png">
     <link rel="apple-touch-icon" sizes="128x128" href="icons/icon128.png">
+    <link rel="apple-touch-icon" sizes="48x48" href="icons/icon48.png">
+    <link rel="apple-touch-icon" sizes="16x16" href="icons/icon16.png">
   </head>
   <body>
     <div class="container">
@@ -44,13 +46,13 @@
             <div class="tab-pane" id="settings-pane">
               <!-- <h3>Manage Wallets</h3> -->
               <legend>
-                <!-- Currently Open Wallet : --> 
+                <!-- Currently Open Wallet : -->
                 <!-- <span id="dbPath" data-dbName style="text-align:center"></span> -->
                 <span data-dbName></span>
               </legend>
-              
+
               <div class="well form-horizontal">
-              <legend>Manage Wallets</legend>                
+              <legend>Manage Wallets</legend>
                 <fieldset class='control-group'>
                   <label class="control-label">Open / Close</label>
                   <div class='controls'>
@@ -63,7 +65,7 @@
                   <label class="control-label">New</label>
                   <div class='controls'>
                     <button id="btnWalletCreate" type="button" class="btn btn-success" title="Create a new Wallet">New</button>
-                    <button id="btnWalletDupe" disabled type="button" class="btn btn-info" title="Make a copy of the open Wallet">Duplicate</button>                      
+                    <button id="btnWalletDupe" disabled type="button" class="btn btn-info" title="Make a copy of the open Wallet">Duplicate</button>
                   </div>
                 </fieldset>
 
@@ -81,13 +83,13 @@
 
                 <fieldset class="control-group">
                   <label class="control-label">
-                    Home-Sync 
+                    Home-Sync
                         <i class="icon-question-sign"
                             title="Sync (i.e. update) wallets <strong>without connecting to the internet</strong> using our patent-pending ActionReplay&trade; technology.">
                         </i>
                   </label>
                   <div class="controls">
-                    <button data-path-choose id="btnMerge" type="button" class="btn btn-primary" 
+                    <button data-path-choose id="btnMerge" type="button" class="btn btn-primary"
                     title="Click to choose the other Wallet to sync with">
                       Sync</button>
                   </div>
@@ -96,12 +98,12 @@
                 <div id="mergeFormContainer"></div>
 
                 </fieldset>
-                
+
                 <fieldset class="control-group">
-                  <label class="control-label">Internet Sync 
-                    <i class="icon-question-sign" title="Just create or move your <em>Wallet</em> folder into a cloud-drive such as <em>Dropbox&trade;, 
-                        Google Drive&trade; 
-                        or Microsoft Skydrive&trade;</em> on your PC. However, be sure to <strong> create a Key-file and store it on a 
+                  <label class="control-label">Internet Sync
+                    <i class="icon-question-sign" title="Just create or move your <em>Wallet</em> folder into a cloud-drive such as <em>Dropbox&trade;,
+                        Google Drive&trade;
+                        or Microsoft Skydrive&trade;</em> on your PC. However, be sure to <strong> create a Key-file and store it on a
                         different drive (e.g. on your computer or in a thumb-drive).</strong>">
                     </i>
                   </label>
@@ -110,17 +112,17 @@
                     <!-- <p>
                       Just create or move
                       your <em>Wallet</em> folder into a cloud-drive such as
-                      <a href="http://www.dropbox.com">Dropbox</a>, 
-                      <a href="http://drive.google.com">Google Drive</a>, 
+                      <a href="http://www.dropbox.com">Dropbox</a>,
+                      <a href="http://drive.google.com">Google Drive</a>,
                       <a href="http://windows.microsoft.com/en-US/skydrive/home">Microsoft Skydrive </a>
-                      on your PC. However, be sure to <strong> create a Key-file and store 
+                      on your PC. However, be sure to <strong> create a Key-file and store
                       it on a different drive (e.g. on your computer or in a thumb-drive). This is extremely important.</strong>
                     </p> -->
                   </div>
                 </fieldset>
 
               </div>
-              
+
               <div class="form-horizontal well">
                 <legend>
                     <span>
@@ -129,7 +131,7 @@
                 </legend>
                 <div class="control-group">
                   <label class="control-label">
-                    CSV File 
+                    CSV File
                     <i class="icon-question-sign"
                         title="Import/Export a comma separated (CSV) password file exported from another password manager">
                     </i>
@@ -148,7 +150,7 @@
                   </div>
                 </div>
                 <div class="control-group">
-                  <label class="control-label">Home-Sync 
+                  <label class="control-label">Home-Sync
                       <i class="icon-question-sign"
                         title="Import or Export password updates from/to another wallet using our patent-pending ActionReplay&trade; technology.">
                       </i>
@@ -169,13 +171,13 @@
             <div class="tab-pane" id="editor-pane">
               <legend><span data-dbName></span></legend>
               <!-- <legend><span data-db-path>No Wallet Opened</span></legend> -->
-              
+
               <div id="editorPane">
                 <div class="form-inline">
                   <div class="control-group">
                     <!-- <label class="control-label">Wallet</label> -->
                     <div class="controls">
-                      <button id="btnWalletOpen2" type="button" class="btn btn-primary" data-loading-text="Opening..." 
+                      <button id="btnWalletOpen2" type="button" class="btn btn-primary" data-loading-text="Opening..."
                         title="Open/Re-open <i style='display:inline-block'>Wallet</i> folder">
                          Open Wallet
                       </button>
@@ -199,7 +201,7 @@
                 <span data-dbName></span>
               </legend>
               <div class="well form-horizontal">
-                
+
                 <fieldset class="control-group ">
                   <label class="control-label" title="Clean up duplicate files generated by cloud-sync (e.g. Dropbox&trade;, Microsoft SkyDrive&trade; or Google Drive&trade;)">Cloud Sync Cleanup</label>
                   <div class="controls">
@@ -249,7 +251,7 @@
 		          other than the file-system folder - of your choosing - and - temporarily -
 		          the memory of the computer/device on which it is running. It certainly does not
 		          transfer them to any internet web-site or server.
-		          
+
 		          A network/internet/cloud/sky drive however, *will* transfer your passwords to
 		          locations outside of your control from where they could be lost, stolen, damaged
 		          or otherwise compromised.

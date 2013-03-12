@@ -16,16 +16,16 @@
 function BP_GET_PLAT(gg)
 {
     "use strict";
-    var window = null, document = null, console = null, chrome = gg.g_chrome;
-        
+    var window = null, document = null, console = null, $ = gg.$, jQuery = gg.jQuery, chrome = gg.g_chrome;
+
     /** @import-module-begin */
     var BP_ERROR = IMPORT(gg.BP_ERROR);
     /** @import-module-begin */
     var BP_COMMON = IMPORT(gg.BP_COMMON);
     /** @import-module-end **/
-    
+
     var g = {contextMenuID: null, mW: null},
-        MOD_WIN, 
+        MOD_WIN,
         JS_INJECT_DETAILS = {allFrames:true, runAt:'document_start', file:'bp_cs.cat.js'},
         JQ_INJECT_DETAILS = {allFrames:true, runAt:'document_start', file:"tp/jquery.js"},
         CSS_INJECT_DETAILS = {file:'bp.css'};
@@ -38,7 +38,7 @@ function BP_GET_PLAT(gg)
         chrome.tabs.sendMessage(tab.id, req,
         function(resp)
         {
-            /*if (!resp) 
+            /*if (!resp)
             { // Set badge text
                 // TODO: Remove badge related code when we're sure that its not needed
                 switch (BP_COMMON.getScheme(tab.url))
@@ -64,8 +64,8 @@ function BP_GET_PLAT(gg)
                 MOD_WIN.clickResp(tab.url);// MOD_WIN is a vestige at this time.
             }
         });
-    }  
-    
+    }
+
     function bpMenuClick(info, tab)
     {
         if (info.menuItemId === g.contextMenuID)
@@ -74,16 +74,16 @@ function BP_GET_PLAT(gg)
         }
     }
 
-    function initScaffolding(doc, mod_win) 
-    {          
-        var menuProperties = {"type": "normal", "title": "BPrivy", "contexts": ["all"], 
+    function init(doc, mod_win)
+    {
+        var menuProperties = {"type": "normal", "title": "BPrivy", "contexts": ["all"],
                               "onclick": bpMenuClick/*, "documentUrlPatterns": document.url*/};
         var menu_id = chrome.contextMenus.create(menuProperties);
         //BP_ERROR.loginfo("Menu Item ID " + menu_id + " Created");
-    
+
         //chrome.browserAction.onClicked.addListener(bpClick);
         //chrome.pageAction.onClicked.addListener(bpClick);
-       
+
         g.contextMenuID = menu_id;
         MOD_WIN = mod_win;
         //BP_ERROR.loginfo("Menu Item ID = " + g.contextMenuID);
@@ -109,12 +109,12 @@ function BP_GET_PLAT(gg)
         req.frameUrl = frameUrl;
         chrome.tabs.sendMessage(tabId, req, callback);
     }
-    
+
     var module =
     {
         registerMsgListener: function(foo) {chrome.extension.onRequest.addListener(foo);},
         sendRequestToTab: function(tabID, obj) {chrome.tabs.sendRequest(tabID, obj);},
-        initScaffolding: initScaffolding,
+        init: init,
         bpClick: bpClick,
         showPageAction: function(tabId) {chrome.pageAction.show(tabId);},
         notifications: gg.webkitNotifications,
@@ -122,7 +122,7 @@ function BP_GET_PLAT(gg)
         removeBadge: removeBadge,
         sendMessage: sendMessage
     };
-    
+
     Object.seal(module);
     BP_ERROR.log("constructed mod_main_plat");
     return module;

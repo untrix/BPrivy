@@ -18,7 +18,7 @@
 function BP_GET_EDITOR(g)
 {
     "use strict";
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_doc = g.g_win.document;
 
     var m;
@@ -90,12 +90,12 @@ function BP_GET_EDITOR(g)
         //rpcToMothership({cm:cm_getDomn, loc:loc}, cback);
         cback ({result:true, domn:MEMSTORE.MOD_ETLD.getDomain(loc)});
     }
-    
+
     function image_wdt(ctx)
     {
         var imgPath = ctx.imgPath;
         return {
-            tag:"img", 
+            tag:"img",
             attrs:{ src:getURL(imgPath) }
         };
     }
@@ -126,7 +126,7 @@ function BP_GET_EDITOR(g)
     }
 
     /**
-     * Expand/Collapse button 
+     * Expand/Collapse button
      */
     function EButton () {}
     EButton.prototype = w$defineProto(EButton,
@@ -146,7 +146,7 @@ function BP_GET_EDITOR(g)
                     this.setOpen();
                 }
             }
-            else 
+            else
             {
                 this.panel.createList();
                 this.setOpen();
@@ -158,7 +158,7 @@ function BP_GET_EDITOR(g)
             this.icon.removeClass('icon-resize-full');
             this.icon.addClass('icon-resize-small');
         }},
-        setClosed: {value: function() 
+        setClosed: {value: function()
         {
             this.isOpen = false;
             this.icon.removeClass('icon-resize-small');
@@ -168,7 +168,7 @@ function BP_GET_EDITOR(g)
     EButton.wdt = function (w$ctx)
     {
         var bOpen = w$ctx.bOpen;
-        
+
         return {
         cons: EButton,
         tag: 'a',
@@ -188,7 +188,7 @@ function BP_GET_EDITOR(g)
     };
 
     /**
-     * New Item button 
+     * New Item button
      */
     function NButton () {}
     NButton.prototype = w$defineProto(NButton,
@@ -206,7 +206,7 @@ function BP_GET_EDITOR(g)
     NButton.wdt = function (w$ctx)
     {
         var bOpen = w$ctx.bOpen;
-        
+
         return {
         cons: NButton,
         tag: 'a',
@@ -278,9 +278,9 @@ function BP_GET_EDITOR(g)
             this.dNode.destroy();
         }}
     });
-    
+
     function isValidInput(str) {return Boolean(str);}
-    
+
     function TButton () {}
     TButton.wdt = function (w$ctx)
     {
@@ -302,7 +302,7 @@ function BP_GET_EDITOR(g)
     };
     TButton.prototype = w$defineProto(TButton,
     {
-        toggle: {value: function (e) 
+        toggle: {value: function (e)
         {
             var bInp = this.ioItem.toggleIO();
             // if (bInp) {
@@ -311,13 +311,13 @@ function BP_GET_EDITOR(g)
             // }
             // else {
                 // this.icon.removeClass('icon-ok');
-                // this.icon.addClass('icon-pencil');                    
+                // this.icon.addClass('icon-pencil');
             // }
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
             e.preventDefault(); // Causes event to get cancelled if cancellable
         }}
     });
-    
+
     function NewRecord() {}
     NewRecord.prototype = w$defineProto(NewRecord,
     {
@@ -348,14 +348,14 @@ function BP_GET_EDITOR(g)
             _iface:{ w$ctx:{urlF:'urlF' } }
         };
     };
-    
+
     function IItemP () {}
     IItemP.wdt = function (w$ctx)
     {
-        var u, p, 
+        var u, p,
         ioItem = w$ctx.ioItem,
         pRec = ioItem.rec;
-        
+
         if (pRec)
         {
             u = pRec.u;
@@ -381,7 +381,7 @@ function BP_GET_EDITOR(g)
              //addClass:css_class_field+css_class_userIn,
              addClass: "input-large",
              ctx:{ w$:{u:'w$el' } },
-             _iface:{ value: u } 
+             _iface:{ value: u }
             },
             {tag:'input',
              attr:{ type:'text', value:p, placeholder:'Password', name:'p' },
@@ -398,18 +398,18 @@ function BP_GET_EDITOR(g)
     };
     IItemP.prototype = w$defineProto (IItemP,
     {
-        checkInput: {value: function() 
+        checkInput: {value: function()
         {
             var ioItem = this.ioItem,
                 nU = this.u.el.value,
                 oU = ioItem.rec ? ioItem.rec.u : undefined,
                 nP = encrypt(this.p.el.value),
                 oP = ioItem.rec? ioItem.rec.p: undefined;
-            
+
             if (!isValidInput(nU) || !isValidInput(nP)) {
                 return false; // inputs are invalid
             }
-            
+
             if ((nU !== oU) || (nP !== oP)) {
                 return true; // inputs are valid and different
             }
@@ -436,9 +436,9 @@ function BP_GET_EDITOR(g)
                     }
                     else {
                         callback(resp);
-                    }                   
+                    }
                 }
-                else { 
+                else {
                     callback(resp);
                 }
             }, true);
@@ -451,8 +451,8 @@ function BP_GET_EDITOR(g)
             e.preventDefault();
         }}
     });
-    
-    function OItemP () 
+
+    function OItemP ()
     {}
     OItemP.wdt = function (w$ctx)
     {
@@ -460,15 +460,15 @@ function BP_GET_EDITOR(g)
             autoFill = w$ctx.autoFill,
             ioItem = w$ctx.ioItem,
             pRec = (ioItem && ioItem.rec) ? ioItem.rec:undefined;
-        if (pRec) 
+        if (pRec)
         {
             u = pRec.u;
             p = pRec.p;
             d = new Date(pRec.tm);
-            
+
             return {
             cons: OItemP,
-            tag:'div', 
+            tag:'div',
             addClass: 'com-untrix-ioItem',
             prop:{ 'data-oitem':true },
             on:{ dblclick:OItemP.prototype.onDblClick },
@@ -511,9 +511,9 @@ function BP_GET_EDITOR(g)
             e.preventDefault();
         }}
     });
-    
+
     /**
-     * Settings/Options page link 
+     * Settings/Options page link
      */
     /*function LinkButton(){}
     LinkButton.wdt = function (w$ctx)
@@ -545,7 +545,7 @@ function BP_GET_EDITOR(g)
             //autoFill = panel.autoFill;
         return {
         cons: IoItem,
-        tag:'div', 
+        tag:'div',
         //addClass: "span8",
         ctx:{ w$:{ ioItem:'w$el' } },
         iface: { 'acns':acns, 'rec':rec, 'loc':loc, 'url':url, 'panel':panel, 'bInp':bInp },
@@ -561,9 +561,9 @@ function BP_GET_EDITOR(g)
     };
     IoItem.prototype = w$defineProto(IoItem, // same syntax as Object.defineProperties
     {
-        toggleIO: {value: function() 
+        toggleIO: {value: function()
         {
-            var iI = this.iItem, 
+            var iI = this.iItem,
                 oI = this.oItem,
                 ctx={ioItem:this /*,autoFill:this.panel.autoFill*/},
                 res,
@@ -571,7 +571,7 @@ function BP_GET_EDITOR(g)
             if (iI)
             { // Create output element
                 res = iI.checkInput();
-                if (res===undefined) 
+                if (res===undefined)
                 {
                     this.oItem = w$exec(OItemP.wdt, ctx);
                     MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
@@ -583,7 +583,7 @@ function BP_GET_EDITOR(g)
                         this.bInp = false;
                     }
                 }
-                else if (res === true) 
+                else if (res === true)
                 {
                     iI.saveInput(function(resp)
                     {
@@ -603,13 +603,13 @@ function BP_GET_EDITOR(g)
                 MOD_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                 if (this.iItem) {
                     delete this.oItem;
-                    this.iItem.insertAfter(oI); 
+                    this.iItem.insertAfter(oI);
                     oI.destroy();
                     //this.append(this.iItem);
                     this.bInp = true;
                 }
             }
-            
+
             return Boolean(this.iItem);
         }},
         deleteRecord: {value: function()
@@ -623,7 +623,7 @@ function BP_GET_EDITOR(g)
                 }
                 else {self.destroy();}
             }
-            
+
             if (this.rec) {
                 MOD_CONNECT.sendDelActn(this.rec, dt_pRecord, handleResp, true);
             }
@@ -640,7 +640,7 @@ function BP_GET_EDITOR(g)
             panel = ctx.panel,
             it = ctx.it,
             io_bInp = ctx.io_bInp;
-            
+
         return {
         cons: PanelList,
         tag:'div',
@@ -662,7 +662,7 @@ function BP_GET_EDITOR(g)
 
     // 'Panel'
     function DNodeWdl () {}
-    DNodeWdl.wdi = function(w$ctx) 
+    DNodeWdl.wdi = function(w$ctx)
     {
         if (w$ctx.dt!==dt_pRecord) {
             BPError.logwarn("DNodeWdl.wdi&editwdl.js: bad dt-type passed in");
@@ -675,27 +675,27 @@ function BP_GET_EDITOR(g)
             bOpen = w$ctx.bOpen,
             emptyOk = w$ctx.emptyOk,
             recs, rIt, loc, H;
-        
+
         recs = DNProto.getData.apply(dNode, [dt]);//dNode.getData(dt)
-        // If this node has no data, then have it be skipped.    
-        if (!recs) {return w$undefined;}        
+        // If this node has no data, then have it be skipped.
+        if (!recs) {return w$undefined;}
         rIt = new MOD_CONNECT.ItemIterator(recs, true);
         if ((!emptyOk) && (!rIt.num())) {return w$undefined;}
-        
+
         loc = MOD_COMMON.parseURL('http://' + dNode[DNODE_TAG.URL]);
         H = loc.hostname;
-            
+
         return {
         cons:DNodeWdl, // w$el constructor
         tag:"div",
         attr:{ id:H },
         //css:{ display:'block', padding:5, 'margin-bottom':2 },
-        addClass: "accordion-group com-untrix-dnode",         
+        addClass: "accordion-group com-untrix-dnode",
         // Post w$el creation steps.
         ctx:{ w$:{ panel:"w$el" }, loc:loc, it:rIt },// TODO: populate loc and rIt directly.
         // Copy props to the widget object for future use.
         // NOTE: rIt references MEMSTORE indirectly.
-        iface:{ 'dt':dt, 'rIt':rIt, 'loc':loc,  w$:{ panel:"w$el" }, 
+        iface:{ 'dt':dt, 'rIt':rIt, 'loc':loc,  w$:{ panel:"w$el" },
                 dNIdx:dNIdx, isOpen:bOpen },
 
             // Create children
@@ -727,7 +727,7 @@ function BP_GET_EDITOR(g)
             getDNode(l, this.dt, function (resp)
             {
                 if (!resp.result) {callbackHandleError(resp); return;}
-                
+
                 var ctx = {
                         w$rec: resp.dN,
                         w$i: self.dNIdx,
@@ -768,7 +768,7 @@ function BP_GET_EDITOR(g)
                     this.setOpen();
                 }
             }
-            else 
+            else
             {
                 this.createList();
                 this.setOpen();
@@ -781,7 +781,7 @@ function BP_GET_EDITOR(g)
             this.isOpen = true;
 
         }},
-        setClosed: {value: function() 
+        setClosed: {value: function()
         {
             this.nB.hide();
             this.itemList.hide();
@@ -794,16 +794,16 @@ function BP_GET_EDITOR(g)
     {
         var dnIt = ctx.dnIt;
         if (!ctx.bOpen) {ctx.bOpen = false;} // An undefined or null value implies no-op in case of '_final.show'.
-        
+
         return {
         cons:EditorWdl,
         tag:"div",
         onTarget:{ dragstart:EditorWdl.prototype.handleDragStart,
-                   drag:EditorWdl.prototype.handleDrag, 
+                   drag:EditorWdl.prototype.handleDrag,
                    dragend:EditorWdl.prototype.handleDragEnd },
         attr:{ id:MOD_TRAITS.eid_pfx+'panel' },
         ctx:{ w$:{ editor:'w$el' } },
-        
+
               iterate:{ it:dnIt, wdi:DNodeWdl.wdi }
         };
     };
@@ -811,7 +811,7 @@ function BP_GET_EDITOR(g)
     {
         handleDragStart: {value: function handleDragStart (e)
         {   // CAUTION: 'this' is bound to e.target
-            
+
             if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
                 return;
             }
@@ -821,7 +821,7 @@ function BP_GET_EDITOR(g)
             if (this.fn === fn_pass) {
                 data = decrypt(this.value);
             }
-            
+
             e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
             e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
@@ -858,18 +858,19 @@ function BP_GET_EDITOR(g)
 
                 if (!resp.domn) {
                     resp = BP_ERROR.confirm('Unrecognized website ['+site+']. Are you sure you want to proceed?');
-                }                
-                
+                    if (!resp) { return; }
+                }
+
                 var dNode = MEMSTORE.newDNode(site),
                     dt = dt_pRecord,
                     bOpen = true;
-                    
+
                 dNode.makeRecsMap(dt_pRecord);
-                
+
                 var wel = w$exec(DNodeWdl.wdi, {w$rec:dNode, dt:dt, bOpen:bOpen, emptyOk:true});
                 if (wel) {
                     self.prepend(wel);
-                }                
+                }
             });
         }},
         filter: {value: function(site)
@@ -878,14 +879,14 @@ function BP_GET_EDITOR(g)
             var $coll = $('.com-untrix-dnode', this.el),
                 $show = site ? $coll.filter('[id*="'+site.toLowerCase()+'"]') : $coll,
                 $hide = site ? $coll.not($show) : $();
-                
+
             $hide.hide();
             $show.show();
-                
-            return $show;    
+
+            return $show;
         }}
     });
-    
+
     BP_ERROR.log("constructed mod_editor");
     return Object.freeze(
     {

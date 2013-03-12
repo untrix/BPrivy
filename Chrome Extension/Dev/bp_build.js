@@ -11,11 +11,12 @@ function IMPORT(sym)
     'use strict';
     var window = null, document = null, console = null;
     if(sym===undefined || sym===null) {
-        throw new ReferenceError("Linker:Symbol Not Found");
+        //throw new ReferenceError("Linker:Symbol Not Found");
+        console.log("Linker:Symbol Not Found");
     }
-    else {
-        return sym;
-    }
+
+    return sym;
+
 }
 
 // Dummy function

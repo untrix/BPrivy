@@ -17,7 +17,7 @@
 function BP_GET_CONNECT(g)
 {
     "use strict";
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_win = g.g_win,
         g_doc = g_win.document;
     /** @import-module-begin **/
@@ -33,6 +33,7 @@ function BP_GET_CONNECT(g)
     var MOD_TRAITS = IMPORT(m),
         dt_eRecord = IMPORT(m.dt_eRecord),  // Represents a E-Record (html-element record). Value is persisted.
         dt_pRecord = IMPORT(m.dt_pRecord),  // Represents a P-Record (password record). Value is persisted.
+        dict_t_pRecord = IMPORT(m.dict_t_pRecord),
         dt_etld    = IMPORT(m.dt_etld),   // Represents a ETLD (Public Suffix) record. Value is persisted.
         fn_userid = IMPORT(m.fn_userid),   // Represents field userid. Copy value from P_UI_TRAITS.
         fn_pass = IMPORT(m.fn_pass);       // Represents field password. Copy value from P_UI_TRAITS.
@@ -64,8 +65,15 @@ function BP_GET_CONNECT(g)
         cm_deleteDB		= "cm_deleteDB";
 
     var DICT_TRAITS={};
-   
-    /** list of traits properties */
+
+    /** Dictionaries
+     *  Add a DICT_TRAIT entry here to instantiate a new dictionary. The DICT_TRAITS object
+     *  could also be stored along with the data, thereby allowing runtime schema instantiation,
+     *  and discovery but that's something for the future. For now all dictionaries are
+     *  hard-coded here. The data-types and their behaviours, however are hard-coded as part of
+     *  MEMSTORE.
+     */
+    /** list of dictionary traits properties */
     var TRAITS_PROPS = DICT_TRAITS[undefined] = Object.freeze(Object.create(Object.prototype,
     {
         url_scheme:{}, // currently unused by DURL
@@ -73,34 +81,42 @@ function BP_GET_CONNECT(g)
         domain_only:{},
         url_path:{},
         url_query:{}, // currently unused by DURL
-        url_port:{} // currently unused by DURL
+        url_port:{}, // currently unused by DURL
+        url_notags:{}, // Forces DURL to not pre-fix url-segments with DNODE_TAGs. Needed for etld.
+        dt:{} // represents data_type held by this dictionary. Is usually same as the dict_type.
     }));
-    
+
     DICT_TRAITS[dt_pRecord] = Object.freeze(Object.create(TRAITS_PROPS,
     {
         url_host: {value:true},
         url_path: {value:false},
-        domain_only: {value:true} // Store records agains domain only - e.g. facebook.com
-        // instead of apps.facebook.com.
+        domain_only: {value:true}, // Store records against domain only - e.g. facebook.com
+                                   // instead of apps.facebook.com.
+        dt: {value:dt_pRecord}
     }));
+    DICT_TRAITS[dict_t_pRecord] = DICT_TRAITS[dt_pRecord];
 
     DICT_TRAITS[dt_eRecord] = Object.freeze(Object.create(TRAITS_PROPS,
     {
         url_host:{value:true},
-        url_path:{value:true}
+        url_path:{value:true},
+        dt: {value:dt_eRecord}
     }));
 
     DICT_TRAITS[dt_etld] = Object.freeze(Object.create(TRAITS_PROPS,
     {
-        url_host:{value:true}
+        url_host:{value:true},
+        url_notags:{value:true}, // Forces DURL to not insert DNODE_TAGS into the url-segments.
+        dt: {value:dt_etld}
     }));
-    
+
     DICT_TRAITS[MOD_TRAITS.dt_settings] = Object.freeze(Object.create(TRAITS_PROPS,
     {
         url_host:{value:false},
-        url_path:{value:false}
+        url_path:{value:false},
+        dt: {value:MOD_TRAITS.dt_settings}
     }));
-    
+
     function L(loc, dt)
     {
         Object.defineProperties(this,
@@ -135,7 +151,7 @@ function BP_GET_CONNECT(g)
     {
         var url;
         if (this.U) {return this.U;}
-        
+
         url = "http://";
         if (this.H) {
             url += this.H;
@@ -143,11 +159,11 @@ function BP_GET_CONNECT(g)
         if (this.P) {
             url += this.P;
         }
-        
+
         return url;
     };
 
-    function newL (loc, dt) { 
+    function newL (loc, dt) {
         return (new L(loc,dt));
     }
 
@@ -157,9 +173,9 @@ function BP_GET_CONNECT(g)
         // date is number of milliseconds since midnight Jan 1, 1970.
         if (date !== undefined && date !== null)
         {
-            date = Number(date); 
+            date = Number(date);
         }
-        
+
         Object.defineProperties(this,
         {
             // Date and timestamp of record creation. Should be a Date object.
@@ -179,7 +195,7 @@ function BP_GET_CONNECT(g)
     //Action.prototype.setDeleted = function () { this.a = 'd'; };
     Action.isDelete = function(actn) { return Boolean((actn.a==='d') || (actn.a==='pd')); }
     Action.isPermDelete = function (actn) { return Boolean(actn.a==='pd'); }
-    
+
     // This should ideally be part of ItemHistory class, but that would require a dependency
     // on Memstore, which is not a good idea since this function is used by bp_cs.
     function itemDeleted(iHist){return Action.isDelete(iHist.curr);}
@@ -190,7 +206,7 @@ function BP_GET_CONNECT(g)
     function EAction(loc, date, atype, fieldName, tagName, id, name, type, formId, formNm)
     {
         Action.apply(this, [dt_eRecord, loc, date, atype]);
-        Object.defineProperties(this, 
+        Object.defineProperties(this,
         {
             f: {value: fieldName, enumerable: true}, // key
             t: {value: tagName, enumerable: true},
@@ -213,7 +229,7 @@ function BP_GET_CONNECT(g)
         return new EAction(L.prototype.toLoc.apply(this.l), Date.now(), 'd', this.f);
     };
     function newEAction(loc, date, fieldName, tagName, id, name, type, formId, formNm) {
-        return new EAction(loc, date, undefined, fieldName, tagName, id, name, type, formId, formNm);    
+        return new EAction(loc, date, undefined, fieldName, tagName, id, name, type, formId, formNm);
     }
 
     function PAction(loc, date, type, userid, pass)
@@ -231,8 +247,8 @@ function BP_GET_CONNECT(g)
     PAction.prototype.newDelActn = function ()
     {
         return new PAction(L.prototype.toLoc.apply(this.l), Date.now(), 'd', this.u);
-    };    
-    
+    };
+
     function getDTProto(dt)
     {
         switch (dt)
@@ -262,10 +278,10 @@ function BP_GET_CONNECT(g)
         while (this._i < this._n)
         {
             t = this._o[this._k[this._i++]];
-            // Return this item  unless we're skipping 
+            // Return this item  unless we're skipping
             // deletes and ths was a deleted item.
-            if (!(this._sd && itemDeleted(t))) { 
-                iHist=t; break; 
+            if (!(this._sd && itemDeleted(t))) {
+                iHist=t; break;
             }
         }
 
@@ -323,15 +339,15 @@ function BP_GET_CONNECT(g)
                 saveTempRec(del, dt, callback, dontGet);
             }
             else {
-                saveRecord(del, dt, callback, dontGet);                
+                saveRecord(del, dt, callback, dontGet);
             }
         }
-        
+
         var getRecs = function(loc, callback)
         {
             return rpcToMothership({cm:cm_getRecs, loc: loc}, callback);
         };
-        
+
         var getDBPath = function (callback)
         {
             return rpcToMothership({cm:cm_getDBPath}, callback);
@@ -341,41 +357,41 @@ function BP_GET_CONNECT(g)
         {
             return new PAction(loc, date, undefined, userid, pass);
         }
-        
+
         function panelClosed(loc)
         {
-            postMsgToMothership({cm:cm_closed, loc:loc});   
+            postMsgToMothership({cm:cm_closed, loc:loc});
         }
-        
+
         function putAutoFillable(rq)
         {
             rq.cm = cm_autoFillable;
             postMsgToMothership(rq);
         }
-        
+
         function openPath(path, ops)
         {
             postMsgToMothership({cm:'cm_openPath', path:path, ops:ops});
         }
-        
-	    function unloadDB(clearCrypt, cback) 
+
+	    function unloadDB(clearCrypt, cback)
 	    {
 	        rpcToMothership({cm: cm_unloadDB}, cback);
 	    }
 
-        //Assemble the interface    
+        //Assemble the interface
         var iface = {};
-        Object.defineProperties(iface, 
+        Object.defineProperties(iface,
         {
             // MOD_DT
             dt_eRecord: {value: dt_eRecord},
             dt_pRecord: {value: dt_pRecord},
-            dt_etld:    {value: dt_etld},
             DICT_TRAITS: {value: DICT_TRAITS},
             newL: {value: newL},
             L: {value: L},
             lToLoc: {value: function(l){return L.prototype.toLoc.apply(l);}},
             getDTProto: {value:getDTProto},
+            Action: {value: Action},
             newEAction: {value: newEAction},
             newPAction: {value: newPAction},
             itemDeleted:{value: itemDeleted},
@@ -422,7 +438,7 @@ function BP_GET_CONNECT(g)
 
         return iface;
     }
-    
+
     BP_ERROR.log("constructed mod_connector");
     return getModuleInterface();
 

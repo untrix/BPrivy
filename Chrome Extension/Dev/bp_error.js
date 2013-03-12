@@ -12,7 +12,7 @@
 function BP_GET_ERROR(g)
 {
     'use strict';
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_win = g.g_win,
         g_console = g.g_console;
 

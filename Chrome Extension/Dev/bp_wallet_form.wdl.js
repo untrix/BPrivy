@@ -7,7 +7,7 @@
 
 /* JSLint directives */
 
-/*global $, IMPORT, BP_PLUGIN */
+/*global BP_PLUGIN */
 
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
@@ -18,7 +18,7 @@
 function BP_GET_WALLET_FORM(g)
 {
     "use strict";
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_doc = g.g_win.document,
         g_win = g.g_win;
 
@@ -29,7 +29,7 @@ function BP_GET_WALLET_FORM(g)
     /** @import-module-begin CSPlatform */
         m = IMPORT(g.BP_CS_PLAT);
     var CS_PLAT = IMPORT(g.BP_CS_PLAT),
-        rpcToMothership = IMPORT(CS_PLAT.rpcToMothership),
+        //rpcToMothership = IMPORT(CS_PLAT.rpcToMothership),
         addEventListeners = IMPORT(m.addEventListeners), // Compatibility function
         addEventListener = IMPORT(m.addEventListener); // Compatibility function
     /** @import-module-begin W$ */
@@ -57,7 +57,7 @@ function BP_GET_WALLET_FORM(g)
 	    };
     /** @globals-end **/
 
-    // TODO: This is better done via CSS 
+    // TODO: This is better done via CSS
     // function setValidity(w$ctrl, w$cg)
     // {
         // if ((!w$ctrl) || (!w$cg)) { return; }
@@ -74,10 +74,10 @@ function BP_GET_WALLET_FORM(g)
         // setValidity(w$ctrl, w$cg);
         // return valid;
     // }
-    
+
     function chooseFolder(o)
     {
-        if (!BP_PLUGIN.chooseFolder(o)) 
+        if (!BP_PLUGIN.chooseFolder(o))
         {
             o.err && BP_ERROR.loginfo(o.err);
         }
@@ -85,7 +85,7 @@ function BP_GET_WALLET_FORM(g)
             return o.path;
         }
     }
-    
+
     function chooseWalletFolder(o)
     {
         BP_COMMON.clear(o);
@@ -95,7 +95,7 @@ function BP_GET_WALLET_FORM(g)
 
         return chooseFolder(o);
     }
-    
+
     function chooseKeyFolder(o)
     {
         BP_COMMON.clear(o);
@@ -104,7 +104,7 @@ function BP_GET_WALLET_FORM(g)
 
         return chooseFolder(o);
     }
-    
+
     function chooseKeyFile(o)
     {
         BP_COMMON.clear(o);
@@ -112,13 +112,13 @@ function BP_GET_WALLET_FORM(g)
         o.dtitle = "Untrix Wallet: Select Key File";
         o.dbutton = "Select";
         o.clrHist = true;
-        
+
         if (!BP_PLUGIN.chooseFile(o)) {
         	o.err && BP_ERROR.loginfo(o.err);
         }
         else {return o.path;}
     }
-    
+
     function newSpinner(el)
     {
         var opts = {
@@ -138,7 +138,7 @@ function BP_GET_WALLET_FORM(g)
           top: 'auto', // Top position relative to parent in px
           left: 'auto' // Left position relative to parent in px
         };
-        
+
         var spinner = new Spinner(opts).spin(el);
         //el.appendChild(spinner.el);
         return spinner;
@@ -147,7 +147,7 @@ function BP_GET_WALLET_FORM(g)
     var SETTINGS = (function()
     {
         // The following is the structure of stored dbNames.
-        // 1. A property in localStorage with key = dbNames. Its value is 
+        // 1. A property in localStorage with key = dbNames. Its value is
         // a JSON.stringify'd object whose keys are db names and values are the DB-Paths.
         // 2. Another propety in localStorage with key = dbKeys. Its value
         //    is a JSON.stringify'd object whose keys are db paths and values are
@@ -156,7 +156,7 @@ function BP_GET_WALLET_FORM(g)
         // the last loaded DB. This is the one to be loaded by default, the next time.
 
         var dbPaths, keyPaths;
-        
+
         function construct(propPrefix)
         {
             var o = {},
@@ -168,10 +168,10 @@ function BP_GET_WALLET_FORM(g)
                     o[key.slice(n)] = value;
                 }
             });
-            
+
             return o;
         }
-        
+
         function eraseProps(propPrefix)
         {
             BP_COMMON.iterObj(localStorage, localStorage, function(key)
@@ -181,13 +181,13 @@ function BP_GET_WALLET_FORM(g)
                 }
             });
         }
-        
+
         function clearCache()
         {
             BP_COMMON.clear(dbPaths); dbPaths = null;
             BP_COMMON.clear(keyPaths); keyPaths = null;
         }
-        
+
         function dontSaveLocation(val)
         {
             if (val === undefined) {
@@ -234,15 +234,15 @@ function BP_GET_WALLET_FORM(g)
             setPaths : function (dbName, dbPath, keyPath)
             {
                 if (dontSaveLocation() || (!dbPath)) { return; }
-                
+
                 if (!dbName) { dbName = BP_DBFS.cullDBName(dbPath);}
 
                 localStorage['db.path.' + dbName] = dbPath;
                 mod.getDBPaths()[dbName] = dbPath;
-                
-                if (keyPath) { 
+
+                if (keyPath) {
                     localStorage['db.key.' + dbPath] = keyPath;
-                    mod.getKeyPaths()[dbPath] = keyPath; 
+                    mod.getKeyPaths()[dbPath] = keyPath;
                 }
             },
             setDB :  function (dbName, dbPath, keyPath)
@@ -260,13 +260,13 @@ function BP_GET_WALLET_FORM(g)
             },
             dontSaveLocation : dontSaveLocation
         };
-        
+
         return Object.freeze(mod);
     }());
 
 
     //////////////// Common Prototype Functions  //////////////////
-    var fieldsetProto = Object.create(WidgetElement.prototype, 
+    var fieldsetProto = Object.create(WidgetElement.prototype,
     {
         disable: {value: function()
         {
@@ -284,7 +284,7 @@ function BP_GET_WALLET_FORM(g)
             // return checkValidity(w$ctrl, this);
         // }}
     });
-    var fieldProto = Object.create(fieldsetProto, 
+    var fieldProto = Object.create(fieldsetProto,
     {
     	disable: {value: function()
     	{
@@ -305,7 +305,7 @@ function BP_GET_WALLET_FORM(g)
     		return this.el.value;
     	}}
     });
-    
+
     //////////////// Widget: checkSaveDBLocation //////////////////
     function checkDontSaveLocation() {}
     checkDontSaveLocation.wdt = function(ctx)
@@ -323,7 +323,7 @@ function BP_GET_WALLET_FORM(g)
                         SETTINGS.dontSaveLocation(!this.el.checked);
                         if (!this.el.checked) {
                             SETTINGS.clear();
-                            this.walletForm.clearDBPaths(); 
+                            this.walletForm.clearDBPaths();
                         }
                       }}
                 },
@@ -339,14 +339,14 @@ function BP_GET_WALLET_FORM(g)
                         SETTINGS.dontSaveLocation(this.el.checked);
                         if (this.el.checked) {
                             SETTINGS.clear();
-                            this.walletForm.clearDBPaths(); 
+                            this.walletForm.clearDBPaths();
                         }
                       }}
                 },
                 ]
             }
             ]
-            
+
             // {tag:'label', css:{display:'block'},
             // attr:{ title:'If checked, saved wallet locations will be forgotten, otherwise '+
             // 'all opened/created wallet locations will be remembered. For privacy and security, '+
@@ -362,7 +362,7 @@ function BP_GET_WALLET_FORM(g)
                         // SETTINGS.dontSaveLocation(this.el.checked);
                         // if (this.el.checked) {
                             // SETTINGS.clear();
-                            // this.walletForm.clearDBPaths(); 
+                            // this.walletForm.clearDBPaths();
                         // }
                       // }}
                 // },
@@ -389,9 +389,9 @@ function BP_GET_WALLET_FORM(g)
     itemDBName.wdi = function(w$ctx)
     {
         var db_name = w$ctx.w$rec;
-        
+
         return {
-        tag:'li', 
+        tag:'li',
         cons:itemDBName,
         save:['fieldsetDBName'],
             children:[
@@ -415,20 +415,20 @@ function BP_GET_WALLET_FORM(g)
     menuDBSelect.wdt = function(ctx)
     {
         var menuID, nIt;
-            
+
         if (ctx.mode === 'create') { return w$undefined; }
-        
+
         // return undefined if there are no options to select.
-        if (!SETTINGS.hasDBPaths()) {return w$undefined; }        
-        
+        if (!SETTINGS.hasDBPaths()) {return w$undefined; }
+
         menuID = 'dbNameMenu' + g_counter++;
         nIt = new BP_COMMON.ArrayIterator(Object.keys(SETTINGS.getDBPaths()));
-        
+
         return {
         tag:'div', ref:'menuDBSelect', cons:menuDBSelect, addClass:'dropdown',
         css:{display:'inline-block'},
             children:[
-            {tag:'button', text:'Select ', attr:{type:'button'}, 
+            {tag:'button', text:'Select ', attr:{type:'button'},
              addClass:'dropdown-toggle btn', ref:'button',
                 children:[{tag:'span', addClass:'caret'}]
             },
@@ -440,7 +440,7 @@ function BP_GET_WALLET_FORM(g)
         save:['fieldsetDBName'],
         _cull:['button', 'menuItems'],
         _final:{ exec:menuDBSelect.prototype.init }
-        };    
+        };
     };
     menuDBSelect.prototype = w$defineProto(menuDBSelect,
     {
@@ -460,7 +460,7 @@ function BP_GET_WALLET_FORM(g)
     fieldsetDBName.wdt = function (ctx)
     {
         if (ctx.mode !== 'create') { return w$undefined; }
-        
+
         return {
         tag:'fieldset',
         cons:fieldsetDBName,
@@ -494,14 +494,14 @@ function BP_GET_WALLET_FORM(g)
     fieldsetDBName.prototype = w$defineProto(fieldsetDBName,
     {
         val: {value: function(){ return this.inputDBName.el.value; }},
-        
+
         focus: {value: function()
         {
             this.inputDBName.el.focus();
             return this;
         }}
     }, fieldsetProto);
-        
+
     //////////////// Widget: fieldsetChooseDB //////////////////
     function fieldsetChooseDB() {}
     fieldsetChooseDB.wdt = function (ctx)
@@ -521,17 +521,17 @@ function BP_GET_WALLET_FORM(g)
             save:['fieldsetChooseDB', 'dialog']
             };
         };
-        btnChooseDB.prototype = w$defineProto(btnChooseDB, 
+        btnChooseDB.prototype = w$defineProto(btnChooseDB,
         {
             onClick: {value: function(e)
             {
                 var o = {},
                     path = chooseWalletFolder(o);
-                    
+
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
                     this.fieldsetChooseDB.inputDBPath.el.value = path;
-                    CS_PLAT.customEvent(this.fieldsetChooseDB.inputDBPath.el, 'dbChosen', 
+                    CS_PLAT.customEvent(this.fieldsetChooseDB.inputDBPath.el, 'dbChosen',
                         {dbPath:path});
                 }
             }}
@@ -583,7 +583,7 @@ function BP_GET_WALLET_FORM(g)
             else {
                 this.btnChooseDB.el.focus();
             }
-            
+
             return this;
         }},
 
@@ -602,9 +602,9 @@ function BP_GET_WALLET_FORM(g)
 	                CS_PLAT.customEvent(this.inputDBPath.el, 'dbChosen', {dbPath:path});
 	            }
            	}
-            
+
             this.enable();
-        }}        
+        }}
     }, fieldsetProto);
 
 
@@ -632,7 +632,7 @@ function BP_GET_WALLET_FORM(g)
             {
                 var o = {},
                     path = chooseKeyFile(o);
-                    
+
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
                     this.fieldsetChooseKey.inputKeyPath.el.value = path;
@@ -666,7 +666,7 @@ function BP_GET_WALLET_FORM(g)
                      on:{ 'change': function(e) {
                          //if (this.fieldsetChooseKey.checkValidity(this)) {
                             CS_PLAT.customEvent(this.el, 'keyPathChosen', {keyPath:this.el.value});
-                         //} 
+                         //}
                          }
                         }
                     }
@@ -679,19 +679,19 @@ function BP_GET_WALLET_FORM(g)
     };
     fieldsetChooseKey.prototype = w$defineProto(fieldsetChooseKey,
     {
-        val: {value: function(){ 
-        	return this.inputKeyPath.el.value; 
+        val: {value: function(){
+        	return this.inputKeyPath.el.value;
         }},
-        
+
         onDBChosen: {value: function(dbPath)
         {
             var keyPath;
-            
+
             if (this.walletForm.mode === 'create') {
                 this.disable();
                 return this;
             }
-            
+
             keyPath = dbPath ? DB_FS.findCryptInfoFile2(dbPath) : undefined;
 
             if (keyPath) {
@@ -713,7 +713,7 @@ function BP_GET_WALLET_FORM(g)
                     this.btnChooseKey.el.focus();
                 }
             }
-            
+
             return this;
         }}
     }, fieldsetProto);
@@ -798,16 +798,16 @@ function BP_GET_WALLET_FORM(g)
         	{
         		CS_PLAT.customEvent(this.el, 'keyOptionChosen', {option:option});
         	}},
-        	
+
         	reset: {value: function()
         	{
         		this.optionHaveKey.el.checked = true;
         		this.onChoose('optionHaveKey');
         	}},
-        	
+
         	val: {value: function()
         	{
-        		/*if (this.optionNoKey.el.checked) { 
+        		/*if (this.optionNoKey.el.checked) {
         			return 'optionNoKey'; }
         		else */if (this.optionHaveKey.el.checked) {
         			return 'optionHaveKey';
@@ -838,7 +838,7 @@ function BP_GET_WALLET_FORM(g)
             {
                 var o = {},
                     path = chooseKeyFile(o);
-                    
+
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
                     this.controlsKeyFile.inputKeyFile.el.value = path;
@@ -867,12 +867,12 @@ function BP_GET_WALLET_FORM(g)
             {
                 var o = {},
                     path = chooseKeyFolder(o);
-                    
+
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path && this.fieldsetChooseKeyFolder.validateKeyFolder(path))
                 {
                     this.controlsKeyFolder.inputKeyFolder.el.value = path;
-                    CS_PLAT.customEvent(this.controlsKeyFolder.inputKeyFolder.el, 
+                    CS_PLAT.customEvent(this.controlsKeyFolder.inputKeyFolder.el,
                         'keyFolderChosen', {keyFolder:path});
                 }
             }}
@@ -893,11 +893,11 @@ function BP_GET_WALLET_FORM(g)
             {tag:'div', addClass:'controls',
                 children:[
                 radioKeyOptions.wdt,
-                {tag:'fieldset', 
+                {tag:'fieldset',
                  proto:fieldsetProto,
                  addClass:'input-prepend',
                  ref:'controlsKeyFolder',
-                 iface:{ 
+                 iface:{
 	         		 disable:function(){
 	                 	this.inputKeyFolder.el.value = null;
 	        			this.inputKeyFolder.el.disabled = true;
@@ -921,7 +921,7 @@ function BP_GET_WALLET_FORM(g)
                      prop:{ required:true },
                      addClass:"input-xlarge",
                      save:['fieldsetChooseKeyFolder'],
-                     on:{ 'change': function(e) 
+                     on:{ 'change': function(e)
                           {
                               if (this.fieldsetChooseKeyFolder.validateKeyFolder(this.el.value)) {
                                 CS_PLAT.customEvent(this.el, 'keyFolderChosen',
@@ -935,7 +935,7 @@ function BP_GET_WALLET_FORM(g)
                  proto:fieldsetProto,
                  addClass:'input-prepend',
                  ref:'controlsKeyFile',
-                 iface:{ 
+                 iface:{
 	         		 disable:function(){
 	                 	this.inputKeyFile.el.value = null;
 	        			this.inputKeyFile.el.disabled = true;
@@ -959,7 +959,7 @@ function BP_GET_WALLET_FORM(g)
                      prop:{ required:true },
                      addClass:"input-xlarge",
                      save:['fieldsetChooseKeyFolder'],
-                     on:{ 'change': function(e) 
+                     on:{ 'change': function(e)
                           {
                               //if (this.fieldsetChooseKeyFolder.checkValidity(this)) {
                                 CS_PLAT.customEvent(this.el, 'keyFileChosen',
@@ -992,13 +992,13 @@ function BP_GET_WALLET_FORM(g)
     			return true;
     		}
     	}},
-    	
+
         val: {value: function()
-        { 
+        {
         	return this.controlsKeyFolder.val() || this.controlsKeyFile.val();
         }},
         onDBChosen: {value: function()
-        {          
+        {
             if (this.walletForm.mode === 'create')
             {
                 this.enable();
@@ -1007,7 +1007,7 @@ function BP_GET_WALLET_FORM(g)
 
             return this;
         }},
-        
+
         onOptionChosen: {value: function(e)
         {
         	switch(e.detail.option)
@@ -1019,7 +1019,7 @@ function BP_GET_WALLET_FORM(g)
         		case 'optionNewKey':
         			this.controlsKeyFolder.enable();
         			this.controlsKeyFile.disable();
-        			break;        		
+        			break;
         		case 'optionNoKey':
         		default:
         			this.controlsKeyFolder.disable();
@@ -1034,7 +1034,7 @@ function BP_GET_WALLET_FORM(g)
     fieldsetPassword.wdt = function(ctx)
     {
         var bPass2 = ctx.bPass2;
-        
+
         function inputPassword() {}
         inputPassword.wdt = function(ctx)
         {
@@ -1095,7 +1095,7 @@ function BP_GET_WALLET_FORM(g)
         _cull:['inputPassword'],
         _final:{ exec:function() { if (bPass2) { this.disable(); }
                                    else { this.enable(); }
-                 } 
+                 }
                }
         };
     };
@@ -1105,7 +1105,7 @@ function BP_GET_WALLET_FORM(g)
         onKeyPathChosen: {value: function(e)
         {
         	var o, dbPath;
-            if (!this.bPass2) 
+            if (!this.bPass2)
             {
             	dbPath = this.walletForm.fieldsetChooseDB.val();
             	o = {};
@@ -1128,7 +1128,7 @@ function BP_GET_WALLET_FORM(g)
            		this.disable();
            	}
         }},
-        
+
         onKeyFolderChosen: {value: function(e)
         {
             this.enable();
@@ -1146,7 +1146,7 @@ function BP_GET_WALLET_FORM(g)
         delete ctx.bPass2;
         return wdl;
     }
-    
+
     //////////////// Widget: fieldsetSubmit //////////////////
     function fieldsetSubmit() {}
     fieldsetSubmit.wdt = function(ctx)
@@ -1170,11 +1170,11 @@ function BP_GET_WALLET_FORM(g)
         };
     };
     fieldsetSubmit.prototype = w$defineProto(fieldsetSubmit, {}, fieldsetProto);
-    
+
     //////////////// Widget: WalletFormWdl //////////////////
     function WalletFormWdl() {}
     WalletFormWdl.wdt = function (ctx)
-    {      
+    {
         return {
         tag:'form',
         cons: WalletFormWdl,
@@ -1219,14 +1219,14 @@ function BP_GET_WALLET_FORM(g)
     {
         // setValiditys: {value: function()
         // {
-            // if (this.fieldsetDBName) { 
+            // if (this.fieldsetDBName) {
                 // setValidity(this.fieldsetDBName.inputDBName, this.fieldsetDBName);
             // }
             // setValidity(this.fieldsetChooseDB.inputDBPath, this.fieldsetChooseDB);
             // setValidity(this.fieldsetChooseKey.inputKeyPath, this.fieldsetChooseKey);
             // setValidity(this.fieldsetChooseKeyFolder.inputKeyFolder, this.fieldsetChooseKeyFolder);
             // setValidity(this.fieldsetPassword.inputPassword, this.fieldsetPassword);
-            // setValidity(this.fieldsetPassword2.inputPassword, this.fieldsetPassword2);            
+            // setValidity(this.fieldsetPassword2.inputPassword, this.fieldsetPassword2);
         // }},
         clearDBPaths: {value: function()
         {
@@ -1241,7 +1241,7 @@ function BP_GET_WALLET_FORM(g)
         onDBChosen: {value: function(e)
         {
             this.fieldsetChooseKey.onDBChosen(e.detail.dbPath);
-            this.fieldsetChooseKeyFolder.onDBChosen();           
+            this.fieldsetChooseKeyFolder.onDBChosen();
         }},
         onKeyPathChosen: {value: function(e)
         {
@@ -1259,7 +1259,7 @@ function BP_GET_WALLET_FORM(g)
         onSubmit: {value: function(e)
         {
         	e.preventDefault();
-        	
+
             if (!this.el.checkValidity()) {
             	//this.setValiditys();
                 BP_ERROR.alert('Please fix the errors and retry');
@@ -1267,14 +1267,14 @@ function BP_GET_WALLET_FORM(g)
             }
 
             //this.setValiditys();
-            
+
             if ((!this.fieldsetPassword2.el.disabled) &&
             	(this.fieldsetPassword.inputPassword.el.value !==
             	 this.fieldsetPassword2.inputPassword.el.value)) {
             	 this.fieldsetPassword2.inputPassword.el.setCustomValidity('Passwords do not match');
             	return;
             }
-            
+
             var self = this,
                 spinner = newSpinner(self.modalBody.el);
 
@@ -1309,7 +1309,7 @@ function BP_GET_WALLET_FORM(g)
                     var option, keyFolderOrPath, keyPath;
                     spinner.stop();
 
-                    if (resp.result === true) 
+                    if (resp.result === true)
                     {
                     	option = self.fieldsetChooseKeyFolder.radioKeyOptions.val();
                     	keyFolderOrPath = self.fieldsetChooseKeyFolder.val();
@@ -1320,7 +1320,7 @@ function BP_GET_WALLET_FORM(g)
                     	else if (option === 'optionNewKey'){
                     		keyPath = DB_FS.makeCryptInfoPath(undefined, self.fieldsetDBName.val(), keyFolderOrPath);
                     	}
-                    	
+
                         SETTINGS.setDB(self.fieldsetDBName.val(), resp.dbPath, keyPath);
                         self.updateDash(resp);
                         BP_ERROR.success('Password store created at ' + resp.dbPath);
@@ -1343,7 +1343,7 @@ function BP_GET_WALLET_FORM(g)
                 {
                     spinner.stop();
                     if (resp.result === true) {
-                        SETTINGS.setPaths(null, 
+                        SETTINGS.setPaths(null,
                                                self.fieldsetChooseDB.val(),
                                                self.fieldsetChooseKey.val());
                         self.updateDash(resp);
@@ -1387,7 +1387,7 @@ function BP_GET_WALLET_FORM(g)
                                           self.fieldsetChooseDB.val(),
                                           self.fieldsetChooseKey.val());
                         //self.updateDash(resp);
-                        BP_ERROR.success('Merged out to password wallet at ' + 
+                        BP_ERROR.success('Merged out to password wallet at ' +
                                          self.fieldsetChooseDB.val());
                         modalDialog.destroy();
                     }
@@ -1398,7 +1398,7 @@ function BP_GET_WALLET_FORM(g)
             }
         }}
     });
-    
+
     function modalDialog() {}
     modalDialog.wdt = function(ctx)
     {
@@ -1437,8 +1437,8 @@ function BP_GET_WALLET_FORM(g)
             {tag:'div', addClass:'modal-footer',
                 children:[
                 checkDontSaveLocation.wdt,
-                {tag:'button', 
-                addClass:'btn', 
+                {tag:'button',
+                addClass:'btn',
                 attr:{'data-dismiss':'modal', tabindex:-1},
                 text:'Cancel',
                 on:{ 'click': function(e){modalDialog.destroy();}}
@@ -1449,7 +1449,7 @@ function BP_GET_WALLET_FORM(g)
                  save:['walletForm']
                  // on:{ 'click': function(e) {
                      // this.walletForm.onSubmit();
-                 // } 
+                 // }
                  // }
                 }
                 ]
@@ -1464,7 +1464,7 @@ function BP_GET_WALLET_FORM(g)
             this.$().modal({show:false, backdrop:'static'});
             this.$().on('shown', modalDialog.onShown);  // must use JQuery for Bootstrap events.
             this.$().on('hidden', modalDialog.onHidden);// must use JQuery fro Bootstrap events.
-            
+
             switch (this.mode)
             {
                 case 'merge':
@@ -1483,23 +1483,23 @@ function BP_GET_WALLET_FORM(g)
                 default:
                     this.modalHeader.$().text('Open Wallet:');
             }
-            
+
             return this;
         }},
-        
+
         showModal: {value: function()
         {
             this.$().modal('show');
             return this;
         }},
-        
+
         hideModal: {value: function()
         {
             this.walletForm.el.reset();
             this.$().modal('hide');
             return this;
         }},
-        
+
         onDBChosen: {value: function(e)
         {
             this.headerDBName.$().text(BP_DBFS.cullDBName(e.detail.dbPath));
@@ -1511,9 +1511,9 @@ function BP_GET_WALLET_FORM(g)
         {
             this.headerDBName.$().text(e.detail.dbName);
             e.preventDefault();
-            e.stopPropagation();            
+            e.stopPropagation();
         }},
-        
+
         onPasswordChosen: {value: function(e)
         {
         	this.btnSubmit.el.focus();
@@ -1524,7 +1524,7 @@ function BP_GET_WALLET_FORM(g)
         var dbPath,
             dialog = BP_W$.w$get('#modalDialog');
         if (!dialog) { return; }
-        
+
         switch (dialog.mode)
         {
             case 'create':
@@ -1533,7 +1533,7 @@ function BP_GET_WALLET_FORM(g)
             case 'merge':
             case 'mergeIn':
             case 'mergeOut':
-                if (SETTINGS.getDefaultDBPath() && 
+                if (SETTINGS.getDefaultDBPath() &&
                         (dialog.walletForm.getDBPath() !== SETTINGS.getDefaultDBPath())) {
                     dialog.walletForm.fieldsetChooseDB.onDBNameChosen(SETTINGS.getDefaultDBName());
                 }
@@ -1550,15 +1550,21 @@ function BP_GET_WALLET_FORM(g)
                     dialog.walletForm.fieldsetChooseDB.focus();
                 }
         }
-        
+
         $('#modalDialog *').tooltip(); // used to leak DOM nodes in version 2.0.4.
     };
     modalDialog.onHidden = function(e)
     {
-        var dialog = BP_W$.w$get('#modalDialog');
-        if (!dialog) { return; }
-        dialog.destroy();
-    };    
+        var dialog = BP_W$.w$get('#modalDialog'),
+            closeWin;
+        if (dialog) {
+            closeWin = dialog.closeWin;// do this before dialog destroy
+            dialog.destroy();
+            if (closeWin) {
+                g_win.close();
+            }
+        }
+    };
     modalDialog.create = function(ops)
     {
         var ctx, temp,
@@ -1575,27 +1581,22 @@ function BP_GET_WALLET_FORM(g)
         ctx.appendTo = 'body';
 
         dialog = BP_W$.w$exec(modalDialog.wdt, ctx);
-        
+
         BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
-        
+
         if (dialog)
         {
             dialog.onInsert().showModal();
         }
-        
+
         return dialog;
     };
     modalDialog.destroy = function()
     {
-        var w$dialog = BP_W$.w$get('#modalDialog'),
-            closeWin;
+        var w$dialog = BP_W$.w$get('#modalDialog');
 
         if (w$dialog) {
-            closeWin = w$dialog.closeWin;
             w$dialog.hideModal();
-            if (closeWin) {
-                g_win.close();
-            }
         }
     };
 

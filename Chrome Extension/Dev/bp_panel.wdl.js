@@ -8,7 +8,7 @@
 /* JSLint directives */
 /*global $, IMPORT */
 
-/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, 
+/*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true,
   regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true */
 
 /**
@@ -18,7 +18,7 @@ function BP_GET_WDL (g)
 {   // NOTE: Requires g.g_win to be the target DOM window. Instantiate a fresh module
     // for the DOM window where you want to use this.
     "use strict";
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_doc = g.g_win.document;
 
     var m;
@@ -114,7 +114,7 @@ function BP_GET_WDL (g)
     var u_cir_N = '\u24C3';
     var u_cir_X = '\u24CD';
     /** @globals-end **/
-       
+
     function MiniDB(readOnly)
     {
         this.clear();
@@ -128,10 +128,10 @@ function BP_GET_WDL (g)
     {
         ingest: function(db, dbInfo, loc)
         {
-            if (db) 
+            if (db)
             {
                 this.empty();
-                if (db.pRecsMap) {this.pRecsMap = db.pRecsMap;} 
+                if (db.pRecsMap) {this.pRecsMap = db.pRecsMap;}
                 if (db.tRecsMap) {this.tRecsMap = db.tRecsMap;}
                 if (db.eRecsMapArray) {this.eRecsMapArray = db.eRecsMapArray;}
                 if (this.pRecsMap) {this.numUserids = this.numRecs(this.pRecsMap);}
@@ -144,7 +144,7 @@ function BP_GET_WDL (g)
                 }
             }
             else
-            { 
+            {
                 this.clear();
             }
             this.loc = loc;
@@ -237,7 +237,7 @@ function BP_GET_WDL (g)
     MiniDB.wProto = Object.freeze(
     {
         saveTRec: function(rec)
-        {   // Should be invoked with 
+        {   // Should be invoked with
             var d;
             if (this.tRecsMap) {
                 d = this.tRecsMap[rec.u] || {};
@@ -254,12 +254,12 @@ function BP_GET_WDL (g)
             --this.numUnsaved;
         }
     });
-    
+
     function image_wdt(ctx)
     {
         var imgPath = ctx.imgPath;
         return {
-            tag:"img", 
+            tag:"img",
             attrs:{ src:getURL(imgPath) }
         };
     }
@@ -306,13 +306,13 @@ function BP_GET_WDL (g)
         onClick: {value: function(ev)
         {
             var isVisible;
-            
-            ev.stopPropagation(); 
+
+            ev.stopPropagation();
             ev.preventDefault();
-            
+
             if (this.panel.itemList) {
                 isVisible = this.panel.itemList.toggle();
-                
+
                 if (isVisible) {
                     this.removeClass('icon-chevron-down');
                     this.addClass('icon-chevron-up');
@@ -326,7 +326,7 @@ function BP_GET_WDL (g)
     });
 
     /**
-     * New Item button 
+     * New Item button
      */
     function NButton () {}
     NButton.prototype = w$defineProto(NButton,
@@ -340,7 +340,7 @@ function BP_GET_WDL (g)
     {
         return {
         cons: NButton,
-        html:'<button type="button"></button>', 
+        html:'<button type="button"></button>',
         attr:{ class:css_class_nButton},
         on:{ click:NButton.prototype.newItem },
         css:{ width:'20px', float:'left' },
@@ -352,9 +352,9 @@ function BP_GET_WDL (g)
         _iface:{ w$ctx:{ panel:'panel' } }
         };
     };
-    
+
     /**
-     * Settings/Options page link 
+     * Settings/Options page link
      */
     function SButton(){}
     SButton.wdt = function (w$ctx)
@@ -388,7 +388,7 @@ function BP_GET_WDL (g)
     });
 
     /**
-     * Open Wallet link 
+     * Open Wallet link
      */
     function OButton(){}
     OButton.wdt = function (w$ctx)
@@ -416,12 +416,12 @@ function BP_GET_WDL (g)
         {
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
             e.preventDefault(); // Causes event to get cancelled if cancellable
-            this.panel.openPath('/bp_manage.html?action=open');
+            this.panel.openPath('/bp_dialog.html?action=open');
         }}
     });
 
     /**
-     * Close Wallet link 
+     * Close Wallet link
      */
     function CButton(){}
     CButton.wdt = function (w$ctx)
@@ -463,7 +463,7 @@ function BP_GET_WDL (g)
     });
 
     /**
-     * Panel Dismiss/Close button - 'x' button 
+     * Panel Dismiss/Close button - 'x' button
      */
     function XButton () {}
     XButton.wdt = function (w$ctx)
@@ -492,7 +492,7 @@ function BP_GET_WDL (g)
     {
         x: {value: function click (e)
         {
-            if (this.panel) {               
+            if (this.panel) {
                 e.stopPropagation(); // We don't want the enclosing web-page to interefere
                 e.preventDefault(); // Causes event to get cancelled if cancellable
                 this.panel.close();
@@ -502,7 +502,7 @@ function BP_GET_WDL (g)
     });
 
     /**
-     * AutoFill button 
+     * AutoFill button
      */
     function FButton(){}
     FButton.prototype =  w$defineProto(FButton,
@@ -537,7 +537,7 @@ function BP_GET_WDL (g)
             }]
         };
     };
-    
+
     function DButton () {}
     DButton.wdt = function(w$ctx)
     {
@@ -563,9 +563,9 @@ function BP_GET_WDL (g)
             this.ioItem.deleteRecord();
         }}
     });
-        
+
     function isValidInput(str) {return Boolean(str);}
-    
+
     function TButton () {}
     TButton.wdt = function (w$ctx)
     {
@@ -587,7 +587,7 @@ function BP_GET_WDL (g)
     };
     TButton.prototype = w$defineProto(TButton,
     {
-        toggleIO2: {value: function (ev) 
+        toggleIO2: {value: function (ev)
         {
             var bInp = this.ioItem.toggleIO();
             if (bInp) {
@@ -596,19 +596,19 @@ function BP_GET_WDL (g)
             }
             else {
                 this.icon.removeClass('icon-ok');
-                this.icon.addClass('icon-pencil');                    
+                this.icon.addClass('icon-pencil');
             }
         }}
     });
-    
+
     function IItemP () {}
     IItemP.wdt = function (w$ctx)
     {
-        var u, p, 
+        var u, p,
         ioItem = w$ctx.ioItem,
         pRec = ioItem.rec,
         isTRec = ioItem.isTRec;
-        
+
         if (pRec)
         {
             u = pRec.u;
@@ -646,7 +646,7 @@ function BP_GET_WDL (g)
     };
     IItemP.prototype = w$defineProto (IItemP,
     {
-        checkInput: {value: function() 
+        checkInput: {value: function()
         {
             var ioItem = this.ioItem,
                 nU = this.u.el.value,
@@ -657,13 +657,13 @@ function BP_GET_WDL (g)
             if (!isValidInput(nU) || !isValidInput(nP)) {
                 return false; // inputs are invalid
             }
-            
+
             if (isTRec) {
                 // If this is a temporary-Rec, then the input must be saved if
                 // valid.
                 return true;
             }
-            else 
+            else
             {
                 oU = ioItem.rec? ioItem.rec.u: undefined;
                 oP = ioItem.rec? ioItem.rec.p: undefined;
@@ -692,7 +692,7 @@ function BP_GET_WDL (g)
                     //ioItem.rec = pRec;
                     if (oU && (nU !== oU)) {
                         // This behaviour is blocked at a higher-level so we should never come here.
-                        
+
                         // If user edited the userid, then delete the old userid. This means
                         // that we loose history on that userid as well.
                         ioItem.panel.delRec(oRec, dt_pRecord, function(){callback(resp);}, false);
@@ -707,11 +707,11 @@ function BP_GET_WDL (g)
             });
         }}
     });
-    
+
     function OItemP () {}
     OItemP.wdt = function (w$ctx)
     {
-        var u, p, 
+        var u, p,
             //autoFill = w$ctx.autoFill,
             ioItem = w$ctx.ioItem,
             pRec = (ioItem && ioItem.rec) ? ioItem.rec:undefined;
@@ -746,7 +746,7 @@ function BP_GET_WDL (g)
         }
     };
     OItemP.prototype = w$defineProto (OItemP, {});
-    
+
     function IoItem () {}
     IoItem.wdi = function (w$ctx)
     {
@@ -762,7 +762,7 @@ function BP_GET_WDL (g)
             isTRec = w$ctx.isTRec;
         return {
         cons: IoItem,
-        tag:'div', 
+        tag:'div',
         attr:{ class:css_class_li, 'data-untrix':true },
         ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.prototype.toggleIO },
         iface: { rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec,
@@ -780,9 +780,9 @@ function BP_GET_WDL (g)
     };
     IoItem.prototype = w$defineProto(IoItem, // same syntax as Object.defineProperties
     {
-        toggleIO: {value: function() 
+        toggleIO: {value: function()
         {
-            var iI = this.iItem, 
+            var iI = this.iItem,
                 oI = this.oItem,
                 ctx={ioItem:this, autoFill:this.panel.autoFill},
                 res,
@@ -791,23 +791,23 @@ function BP_GET_WDL (g)
             if (iI)
             { // Create output element
                 res = iI.checkInput();
-                if (res===undefined) 
+                if (res===undefined)
                 {
                     this.oItem = w$exec(OItemP.wdt, ctx);
                     BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                     if (this.oItem) {
-                        delete this.iItem; 
+                        delete this.iItem;
                         iI.destroy();
                         this.append(this.oItem);
                         this.bInp = false;
                     }
                 }
-                else if (res === true) 
+                else if (res === true)
                 {
                     iI.saveInput(function(resp)
                     {
                         if ((resp.result===true)) {
-                            
+
                             if (self.isTRec) {
                                 // will destroy the self object.
                                 self.deleteRecord();
@@ -831,7 +831,7 @@ function BP_GET_WDL (g)
                     this.bInp = true;
                 }
             }
-            
+
             return Boolean(this.iItem);
         }},
         deleteRecord: {value: function()
@@ -869,7 +869,7 @@ function BP_GET_WDL (g)
             }
         }}
     });
-    
+
     function PanelList () {}
     PanelList.wdt = function (ctx)
     {
@@ -880,7 +880,7 @@ function BP_GET_WDL (g)
         cons: PanelList,
         tag:'div', attr:{ id:eid_panelList },
         onTarget:{ dragstart:PanelList.prototype.handleDragStart,
-        drag:PanelList.prototype.handleDrag, 
+        drag:PanelList.prototype.handleDrag,
         dragend:PanelList.prototype.handleDragEnd },
         ctx:{ io_bInp:false, w$:{ itemList:'w$el' } },
         iface:{ loc:loc, panel:panel },
@@ -898,7 +898,7 @@ function BP_GET_WDL (g)
         cons: PanelList,
         tag:'div', attr:{ id:eid_panelList },
         onTarget:{ dragstart:PanelList.prototype.handleDragStart,
-        drag:PanelList.prototype.handleDrag, 
+        drag:PanelList.prototype.handleDrag,
         dragend:PanelList.prototype.handleDragEnd },
         ctx:{ io_bInp:false, w$:{ itemList2:'w$el' }, isTRec:true },
         iface:{ loc:loc, panel:panel, isTRec:true },
@@ -910,14 +910,14 @@ function BP_GET_WDL (g)
     {
         handleDragStart: {value: function handleDragStart (e)
         {   // CAUTION: 'this' is bound to e.target
-            
+
             //BP_ERROR.loginfo("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
             var data = this.value;
             if (this.fn === fn_pass) {
                 data = decrypt(this.value);
             }
-            
+
             e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
             e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
@@ -948,9 +948,9 @@ function BP_GET_WDL (g)
             }
         }}
     });
-    
+
     function Panel () {}
-    Panel.wdt = function(ctx) 
+    Panel.wdt = function(ctx)
     {
         var loc = ctx.loc || g_loc,
             reload = ctx.reload,
@@ -967,7 +967,7 @@ function BP_GET_WDL (g)
             openPath = ctx.openPath,
             onBlur = ctx.onBlur,
             unloadDB = ctx.unloadDB;
-        
+
         //BP_ERROR.logdebug('In panel.wdt. showRecs = ' + showRecs);
         return {
         cons:Panel,
@@ -1001,8 +1001,8 @@ function BP_GET_WDL (g)
 
         // Post processing steps
         _iface:{ w$:{}, w$ctx:{ itemList:'itemList', itemlist2:'itemlist2' } },
-        _final:{ 
-            appendTo:g_doc.body, 
+        _final:{
+            appendTo:g_doc.body,
             show:true,
             exec: popup ? undefined : Panel.prototype.makeDraggable
             }
@@ -1014,12 +1014,12 @@ function BP_GET_WDL (g)
         {
             // Make sure that postion:fixed is supplied at element level otherwise draggable() overrides it
             // by setting position:relative. Also we can use right:0px here because draggable() does not like it.
-            // Hence we need to calculate the left value :(  
+            // Hence we need to calculate the left value :(
             // var panelW = this.$el.outerWidth() || 300;
             // var winW = g_doc.body.clientWidth || $(g_doc.body).innerWidth();
             // var left = (winW-panelW);
             // left = (left>0)? left: 0;
-            // this.$el.css({position: 'fixed', top: '0px', 'left': left + "px"});               
+            // this.$el.css({position: 'fixed', top: '0px', 'left': left + "px"});
             $(this.el).draggable();
         }},
         close: {value: function()
@@ -1029,13 +1029,13 @@ function BP_GET_WDL (g)
             _onClosed();
         }}
     });
-      
-    var iface = 
+
+    var iface =
     {
        MiniDB: MiniDB,
        cs_panel_wdt: Panel.wdt
     };
-    
+
     BP_ERROR.log("constructed mod_wdl");
     return Object.freeze(iface);
 }

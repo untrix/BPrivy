@@ -594,7 +594,7 @@ bool BPrivyAPI::_appendFile(const bfs::path& db_path, bfs::path& path,
 
 		//bfs::path path(pth);
 		securityCheck(path, allowedExt);
-		path.make_preferred();
+		//path.make_preferred();
 
 		msize32_t siz = data.size();
 		// No need to proceed if there is no data to append. Prefix and suffix are applied only

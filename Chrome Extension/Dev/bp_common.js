@@ -15,7 +15,7 @@ function BP_GET_COMMON(g)
     "use strict";
     
     /** @globals-begin */      
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_win = g.g_win,
         g_doc = g_win.document,
         BP_ERROR = g.BP_ERROR,

@@ -62,6 +62,10 @@ set(FBMAC_USE_INVALIDATINGCOREANIMATION 0)
 # If you want to register per-machine on Windows, uncomment this line
 #set (FB_ATLREG_MACHINEWIDE 1)
 
-# Manually added by Sumeet
+# Manually added by Sumeet. We only require filesystem from boost, but all the
+# others are needed in order to compile successfully.
 add_boost_library(filesystem)
-#add_firebreath_library(log4cplus)
+#add_boost_library(system)
+#add_boost_library(date_time)
+#add_boost_library(regex)
+add_firebreath_library(log4cplus)

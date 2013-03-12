@@ -68,7 +68,7 @@ namespace bp
 				normalized /= *it;
 			}
 		}
-		path = normalized.make_preferred();
+		//path = normalized.make_preferred();
 		return path;
 	}
 

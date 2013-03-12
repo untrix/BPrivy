@@ -25,7 +25,7 @@ function BP_GET_PLAT(gg)
     {
         registerMsgListener: throwException,
         sendRequestToTab: throwException,
-        initScaffolding: throwException,
+        init: throwException,
         bpClick: throwException,
         showPageAction: throwException,
         notifications: throwException,

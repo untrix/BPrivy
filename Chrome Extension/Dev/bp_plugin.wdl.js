@@ -18,7 +18,7 @@
 function BP_GET_WALLET_FORM(g)
 {
     "use strict";
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_doc = g.g_win.document;
 
     var m;

@@ -13,7 +13,7 @@
 function BP_GET_MEMSTORE(g)
 {
     "use strict";
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_doc = g.g_win.document;
 
     /** @import-module-begin Error */
@@ -65,9 +65,9 @@ function BP_GET_MEMSTORE(g)
             // segments.
             HOST:  'NH', // Prefix for URL-hostname
             PATH:  'NP', // Prefix for URL-path
-            ETLD:  'E', // ETLD rule marker. 1=> regular ETLD rule, 2 implies an override
+            ETLD:  'E', // ETLD rule marker (value). 1=> regular ETLD rule, 2=> an override
                        // (e.g. !educ.ar). See ETLDMark and publicsuffix.org for details.
-            DATA:  'D', // Prefix for data - e.g. De for E-Rec, Dp for P-Rec etc.
+            DATA:  'D', // Prefix for ItemHistory data - e.g. De for E-Rec, Dp for P-Rec etc.
             ITER:  "I", // Property used by DNodeIterator to save notes
             URL:   "U", // 'Site': Concatenation of URL segments leading upto the DNode.
             LISTENERS: 'L', // Event Listeners for a given dnode or entire tree (in case of root node only)
@@ -157,16 +157,25 @@ function BP_GET_MEMSTORE(g)
         getTraits: function (dt) {
             var n = this.traits[dt];
             return n;
-        },
-        getDictTraits: function (dt) {
-            return this.getTraits(dt).dict;
         }
+        // ,
+        // getDictTraits: function (dt) {
+            // return this.getTraits(dt).dict;
+        // }
     };
 
     // Most properties defined in DEFAULT_TRAITS are optional for urlMap type dictionaries.
     // Omitting second-level properties (e.g. dict.url_scheme) implies false for
     // boolean properties.
-    var DEFAULT_TRAITS = Object.freeze(    {        // dict: These are traits relevant to the dictionary/trie/URLA. See DICT_TRAITS.        dict: DICT_TRAITS[undefined],        // action: These are traits relevant to the ItemHistory class.        iHistory: { // not needed by dt_etld            // history>0 asserts we're interested in maintaining history.            // Will cause ItemHistory class to keep that many past values in memory            // A value of 0 asserts the opposite. Will            // cause ItemHistory to only keep current value in memory.            history: 0        },
+    var DEFAULT_TRAITS = Object.freeze(    {        // dict: These are traits relevant to the dictionary/trie/URLA. See DICT_TRAITS.        //dict: DICT_TRAITS[undefined],        // action: These are traits relevant to the ItemHistory class.        iHistory: { // not needed by dt_etld            // history>0 asserts we're interested in maintaining history.            // Will cause ItemHistory class to keep that many past values in memory            // A value of 0 asserts the opposite. Will            // cause ItemHistory to only keep current value in memory.            history: 0,            // Returns value converted to a string suitable to be used as a property name
+            valStr: function(actn)
+            {
+                if (actn.a) { // delete action
+                    return this.DELETE_ACTION_VAL;
+                }
+                else {return "V}" + actn.v;}
+            }
+        },
         // file: These are traits relevant to the file-store.
         file: {
             // An assert action is one that re-asserts the existing value. When a record
@@ -181,14 +190,6 @@ function BP_GET_MEMSTORE(g)
             persist_asserts: false
         },        // Returns record key        getKey: function (actn) {return actn.k;},// not needed by dt_etld
         // return true if the record is valid, false otherwise. Only needed for pRecords        isValidCSV: function(actn) {return Boolean(actn.k);}, // only needed for types that import CSVs.
-        // Returns value converted to a string suitable to be used as a property name
-        valStr: function(actn)
-        {
-            if (actn.a) { // delete action
-                return this.DELETE_ACTION_VAL;
-            }
-            else {return "V}" + actn.v;}
-        },
         csvHeader: function ()
         {
             return "key, value";
@@ -209,8 +210,19 @@ function BP_GET_MEMSTORE(g)
     {
         Object.freeze(Object.defineProperties(this,
         {
-            dict: {value:DICT_TRAITS[dt_pRecord]},
-            iHistory: {value:{history:2}},
+            // dict: {value:DICT_TRAITS[dt_pRecord]},
+            iHistory: {value:{
+                history:2,
+                valStr:function(actn)
+                {
+                    if (actn.a) { // Implies a delete action
+                        return this.DELETE_ACTION_VAL;
+                    }
+                    else { // insert action
+                        return "P}" + actn.p;
+                    }
+                }}
+            },
             file: {value:{persist_asserts: true}},
             getKey: {value:function(actn)
             {
@@ -222,15 +234,15 @@ function BP_GET_MEMSTORE(g)
                     (typeof actn.u === "string") &&
                     (typeof actn.p === "string"));
             }},
-            valStr: {value: function(actn)
-            {
-                if (actn.a) { // Implies a delete action
-                    return this.DELETE_ACTION_VAL;
-                }
-                else { // insert action
-                    return "P}" + actn.p;
-                }
-            }},
+            // valStr: {value: function(actn)
+            // {
+                // if (actn.a) { // Implies a delete action
+                    // return this.DELETE_ACTION_VAL;
+                // }
+                // else { // insert action
+                    // return "P}" + actn.p;
+                // }
+            // }},
             csvHeader: {value: function ()
             {
                 return "url,username,password";
@@ -250,8 +262,37 @@ function BP_GET_MEMSTORE(g)
     {
         Object.freeze(Object.defineProperties(this,
         {
-            dict: {value:DICT_TRAITS[dt_eRecord]},
-            iHistory: {value:{history: 0}},
+            // dict: {value:DICT_TRAITS[dt_eRecord]},
+            iHistory: {value:{
+                history: 0,
+                valStr: function(actn)
+                {
+                    if (actn.a) { // Implies a delete action
+                        return this.DELETE_ACTION_VAL;
+                    }
+
+                    var str = "";
+                    if (actn.t) {
+                        str += "T}" + actn.t;
+                    }
+                    if (actn.id) {
+                        str += "I}" + actn.id;
+                    }
+                    if (actn.n) {
+                        str += "N}" + actn.n;
+                    }
+                    if (actn.y) {
+                        str += "Y}" + actn.y;
+                    }
+                    if (actn.fid) { // since 0.5.19
+                        str += "F}" + actn.fid;
+                    }
+                    if (actn.fnm) { // since 0.5.19
+                        str += "G}" + actn.fnm;
+                    }
+                    return str;
+                }
+            }},
             file: {value:{persist_asserts: false}},
             getKey: {value:function(actn)
             {
@@ -263,33 +304,33 @@ function BP_GET_MEMSTORE(g)
                     (typeof actn.f === "string") &&
                     (typeof actn.t === "string"));
             }},
-            valStr: {value: function(actn)
-            {
-                if (actn.a) { // Implies a delete action
-                    return this.DELETE_ACTION_VAL;
-                }
-
-                var str = "";
-                if (actn.t) {
-                    str += "T}" + actn.t;
-                }
-                if (actn.id) {
-                    str += "I}" + actn.id;
-                }
-                if (actn.n) {
-                    str += "N}" + actn.n;
-                }
-                if (actn.y) {
-                    str += "Y}" + actn.y;
-                }
-                if (actn.fid) { // since 0.5.19
-                    str += "F}" + actn.fid;
-                }
-                if (actn.fnm) { // since 0.5.19
-                    str += "G}" + actn.fnm;
-                }
-                return str;
-            }},
+            // valStr: {value: function(actn)
+            // {
+                // if (actn.a) { // Implies a delete action
+                    // return this.DELETE_ACTION_VAL;
+                // }
+//
+                // var str = "";
+                // if (actn.t) {
+                    // str += "T}" + actn.t;
+                // }
+                // if (actn.id) {
+                    // str += "I}" + actn.id;
+                // }
+                // if (actn.n) {
+                    // str += "N}" + actn.n;
+                // }
+                // if (actn.y) {
+                    // str += "Y}" + actn.y;
+                // }
+                // if (actn.fid) { // since 0.5.19
+                    // str += "F}" + actn.fid;
+                // }
+                // if (actn.fnm) { // since 0.5.19
+                    // str += "G}" + actn.fnm;
+                // }
+                // return str;
+            // }},
             csvHeader: {value: function ()
             {
                 return "url,fieldName,tagName,id,name,type,formId,formName";
@@ -314,12 +355,19 @@ function BP_GET_MEMSTORE(g)
     {
         Object.freeze(Object.defineProperties(this,
         {
-            dict: {value:DICT_TRAITS[BP_TRAITS.dt_settings]},
+            // dict: {value:DICT_TRAITS[BP_TRAITS.dt_settings]},
             // everything else is inherited from DEFAULT_TRAITS
         }));
     }
     SStoreTraits.prototype = DEFAULT_TRAITS;// Inherit the rest from DEFAULT_TRAITS
     DT_TRAITS.traits[BP_TRAITS.dt_settings] = new SStoreTraits();
+
+    // ETLD Traits
+    DT_TRAITS.traits[BP_TRAITS.dt_etld] = Object.freeze(Object.create(DEFAULT_TRAITS,
+    {
+        // dict: {value:DICT_TRAITS[BP_TRAITS.dt_etld]},
+        // everything else is inherited from DEFAULT_TRAITS
+    }));
 
     Object.freeze(DT_TRAITS);
     /** @end-static-class-defn DT_TRAITS **/
@@ -369,7 +417,7 @@ function BP_GET_MEMSTORE(g)
     /** Helper function invoked by insertNewVal only
     ItemHistory.prototype.delHelper = function (dItem, i)
     {
-        var valStr = dItem.traits.valStr(dItem);
+        var valStr = dItem.traits.iHistory.valStr(dItem);
         delete this[valStr];
     };*/
 
@@ -432,7 +480,7 @@ function BP_GET_MEMSTORE(g)
                     {
                         dItm = _actions[l-1];
                         _actions.length = max; // remove item from array
-                        delete _actions[dtt.valStr(dItm)]; // remove val-index
+                        delete _actions[dtt.iHistory.valStr(dItm)]; // remove val-index
                         memStats.fluff++; memStats.loaded--;
                         drec.notes.causedOverflow = true;
                     }
@@ -542,7 +590,7 @@ function BP_GET_MEMSTORE(g)
         for (j = i+1; j < len; j++)
         {
             dItm = this.actions[j];                     // action to be removed
-            delete this.actions[drec.dtt.valStr(dItm)]; // remove from val-index
+            delete this.actions[drec.dtt.iHistory.valStr(dItm)]; // remove from val-index
         }
         fluff = (j-i-1);
         this.actions.splice(i+1, fluff);
@@ -591,7 +639,7 @@ function BP_GET_MEMSTORE(g)
     {   // TODO: Make changes to account for GC records
         var actn = drec.actn,
             dtt = drec.dtt,
-            valStr = dtt.valStr(actn),
+            valStr = dtt.iHistory.valStr(actn),
             max = dtt.iHistory.history + 1,
             oActn,
             memStats = MemStats.stats,
@@ -732,10 +780,11 @@ function BP_GET_MEMSTORE(g)
      * first-class citizens by virtue of Unicode. Nothing needs to be done towards
      * i18n and those characters do not need to be treated special.
      */
-    function DURL (l, dt) // throws BPError
+    function DURL (l, dict) // throws BPError
     {
         var ha, pa, pn, urla = [], i, s, //scm,
-        dictTraits = DT_TRAITS.getDictTraits(dt);
+        dictTraits = DICT_TRAITS[dict], //DT_TRAITS.getDictTraits(dt);
+        HOST_TAG, PATH_TAG;
 
         // Note: We need scheme and hostname at a minimum for a valid URL. We also need
         // pathname before we insert into TRIE, hence we'll append a "/" if path is missing.
@@ -780,19 +829,22 @@ function BP_GET_MEMSTORE(g)
         // Construct the url segment array
         // if (dictTraits.url_scheme && scm) {            // switch(scm) {                // case PROTO_HTTP:                    // urla.push(DNODE_TAG.HTTP);                    // break;                // case PROTO_HTTPS:                    // urla.push(DNODE_TAG.HTTPS);                    // break;                // default:                    // urla.push(DNODE_TAG.SCHEME + scm);            // }        // }
 
+
         if (ha)
         {
+            HOST_TAG = dictTraits.url_notags ? "" : DNODE_TAG.HOST;
             for (i=0; i<ha.length; i++)
             {
                 // Host name
-                urla.push(DNODE_TAG.HOST + ha[i].toLowerCase());
+                urla.push(HOST_TAG + ha[i].toLowerCase());
             }
         }
-        //if (pn) {urla.push(DNODE_TAG.PORT + pn);} // Port Number
+        //if (pn) {urla.push(TAGS.PORT + pn);} // Port Number
         if (pa) { // Path
+            PATH_TAG = dictTraits.url_notags ? "" : DNODE_TAG.PATH;
             for (i=0; i<pa.length; i++) {
                 if (pa[i] !== '') {
-                    urla.push(DNODE_TAG.PATH + pa[i]);
+                    urla.push(PATH_TAG + pa[i]);
                 }
             }
         }
@@ -1186,14 +1238,15 @@ function BP_GET_MEMSTORE(g)
      */
     function DRecord(actn, dt, uct, dict)
     {
+        dict = dict || dt;
         // Construct url segment iterator.
         Object.defineProperties(this,
         {
-            urli: {value:new DURL(actn.l, dt), enumerable:false},
+            urli: {value:new DURL(actn.l, dict), enumerable:false},
             actn: {value:actn},
             dt:   {value:dt},
             notes:{value: {}},
-            dict: {value:dict || dt},
+            dict: {value:dict},
             dtt:  {value:DT_TRAITS.getTraits(dt), enumerable:false},
             uct:  {value:uct, enumerable:false},
             dnode:{writable:true, enumerable:false},
@@ -1290,20 +1343,20 @@ function BP_GET_MEMSTORE(g)
         return DNode[dict || dt];
     }
 
-    // _dnode is optional and is only expected to be used at build-time by buildETLD.
-    // At runtime, don't pass _dnode
-    function insertRec (actn, dt, _dnode)
+    // _root is optional and is only expected to be used at build-time by buildETLD.
+    // At runtime, don't pass _root
+    function insertRec (actn, dict, _root)
     {
-        if (!_dnode) {_dnode = DNode[dt];}
-        var dr = new DRecord(actn, dt, null, dt);
-        dr.root = _dnode;
-        return DNProto.insert.apply(_dnode, [dr]) ? dr : undefined;
+        if (!_root) {_root = DNode[dict];}
+        var dr = new DRecord(actn, DICT_TRAITS[dict].dt, null, dict);
+        dr.root = _root;
+        return DNProto.insert.apply(_root, [dr]) ? dr : undefined;
     }
-    function insertDrec (dr, _dnode)
+    function insertDrec (dr, _root)
     {
-        if (!_dnode) {_dnode = DNode[dr.dt];}
-        dr.root = _dnode;
-        return DNProto.insert.apply(_dnode, [dr]) ? dr : undefined;
+        if (!_root) {_root = DNode[dr.dt];}
+        dr.root = _root;
+        return DNProto.insert.apply(_root, [dr]) ? dr : undefined;
     }
     function insertTempRec(actn, dt)
     {
@@ -1357,10 +1410,10 @@ function BP_GET_MEMSTORE(g)
         var resp = xhr.response;        ETLD = JSON.parse(resp);
     }
 
-    function clear (dtl)
+    function clear (dictL)
     {
-        var i, dt,            dtList = dtl || Object.keys(DT_TRAITS.traits),            n = dtList.length;        for (i=0; i<n; i++)        {            dt = dtList[i];            DNode[dt] = newDNode();        }
-        DNode['temp_'+dt_pRecord] = newDNode();
+        var i, dict,            dictList = dictL || Object.keys(DICT_TRAITS /*DT_TRAITS.traits*/),            n = dictList.length;        for (i=0; i<n; i++)        {            dict = dictList[i];            DNode[dict] = newDNode();        }
+        //DNode['temp_'+dt_pRecord] = newDNode();
         MemStats.stats = new MemStats();
     }
 

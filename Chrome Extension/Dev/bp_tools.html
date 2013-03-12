@@ -53,10 +53,11 @@
     var BP_PLUGIN;
     function bpPluginLoaded ()
     {
-      var g = {g_win:window, 
-             g_console:console, 
-             g_chrome:chrome, 
-             webkitNotifications: webkitNotifications};
+      var g = {g_win:window,
+             g_console:console,
+             g_chrome:chrome,
+             webkitNotifications: webkitNotifications,
+             $:$, jQuery:jQuery};
         g.BP_ERROR = BP_GET_ERROR(g);
         g.BP_COMMON = BP_GET_COMMON(g);
         g.BP_TRAITS = BP_GET_TRAITS(g);
@@ -70,10 +71,12 @@
 
       var FILESTORE = IMPORT(g.BP_FILESTORE),
           MEMSTORE  = IMPORT(g.BP_MEMSTORE),
-          dt_etld = IMPORT(g.BP_CONNECT.dt_etld),
+          dt_etld = IMPORT(g.BP_TRAITS.dt_etld),
+          CONNECT = IMPORT(g.BP_CONNECT),
+          DB_FS = IMPORT(g.BP_DBFS),
           ETLDDict;
 
-      BP_PLUGIN = document.getElementById('com-untrix-bpplugin'); 
+      BP_PLUGIN = document.getElementById('com-untrix-bpplugin');
       console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
       g.BP_DBFS.init();
 
@@ -81,11 +84,11 @@
         function DURL2 (l) // host.domain
         {
             var ha;
-        
-            // Split hostname into an array of strings.       
+
+            // Split hostname into an array of strings.
             ha = l.H.split('.');
             ha.reverse();
-            
+
             // Object structure definition
             Object.defineProperties(this,
             {
@@ -95,8 +98,8 @@
                 Object.seal(this);
             }
             DURL2.prototype = MEMSTORE.DURL.prototype;
-              
-         
+
+
             // Pretends to be MEMSTORE.DRecord
         function DRecord2(rec, dt)
         {
@@ -106,45 +109,42 @@
             this.dt = this.dict = dt;
             //DT_TRAITS.imbue(rec, dt);
             Object.defineProperty(this, "notes", {value: {}});//By default, writable, enumerable, configurable = false
-                    
+
             Object.freeze(this);
         }
-        
-        
-        function ETLDMark (str)
-        {
-            if (str.charCodeAt(0)===33) // exclaimation point
-            {
-                str = str.slice(1);
-                Object.defineProperties(this,
-                {
-                    l: {value: {H:str}, configurable:true, enumerable:true},
-                    val: {value: 2, enumerable: true}
-                });
-            }
-            else {
-                Object.defineProperties(this,
-                {
-                    l: {value: {H:str}, configurable:true, enumerable:true},
-                    val: {value: 1, enumerable: true}
-                });            
-            }
-        }
-             
+
+      function ETLDMark (str)
+      {
+          var val;
+          if (str.charCodeAt(0)===33) // exclaimation point
+          {
+              str = str.slice(1); // remove the exclaimation point
+              val = 2;
+          }
+          else { val = 1; }
+
+          CONNECT.Action.apply(this, [dt_etld, {hostname:str}]);
+          Object.defineProperties(this,
+          {
+              val: {value: val, enumerable: true}
+          });
+      }
+      ETLDMark.prototype = Object.create(CONNECT.Action.prototype,{});
+
       function loadETLD(path, dnode)
       {
           var props = ['rule'], csv, etld, i,
               csvf = new FILESTORE.CSVFile(path, props);
-              while ( (csv = csvf.getcsv2()) !== undefined)
-              {
-                  if (!csv) {continue;} // unparsable line
-                  
-                  etld = new ETLDMark(csv[0]);
-                  dnode.insert(new DRecord2(etld, dt_etld));
-                  //MEMSTORE.insertRec(etld, dt_etld, dnode);
-              }
+          while ( (csv = csvf.getcsv2()) !== undefined)
+          {
+              if (!csv) {continue;} // unparsable line
+
+              etld = new ETLDMark(csv[0]);
+              //dnode.insert(new DRecord2(etld, dt_etld));
+              MEMSTORE.insertRec(etld, dt_etld, dnode);
+          }
       }
-      
+
       function buildETLD ()
       {
           // var dir = document.location.pathname;          // dir = dir.slice(1, dir.lastIndexOf("/"));
@@ -156,16 +156,16 @@
             console.log("ChooseFile returned:" + o.path);
             ETLDDict = MEMSTORE.newDNode();
             loadETLD(o.path, ETLDDict);
-            loadETLD('/data/bp_etld_overrides.txt');
+            loadETLD(DB_FS.getDir(o.path) + DB_FS.DB_FS.getPathSep() + 'bp_etld_overrides.txt', ETLDDict);
           }
-          
+
           var i = o.path.lastIndexOf('.txt');
           var path = o.path.slice(0, i) + ".json";
           o={};
           BP_PLUGIN.rm(path, o);
           o={};
           // if (BP_PLUGIN.appendFile(path, "var ETLDDict=JSON.parse('", o) &&          // BP_PLUGIN.appendFile(path, JSON.stringify(ETLDDict), o) &&          // BP_PLUGIN.appendFile(path, "');", o)) {
-          if (BP_PLUGIN.appendFile(null, path, JSON.stringify(ETLDDict), o))
+          if (BP_PLUGIN.appendFile('nul', path, JSON.stringify(ETLDDict), o))
           {
               window.alert("Done");
           }
@@ -173,7 +173,7 @@
             window.alert("Failed");
           }
       }
-      
+
       $('#buildETLD')[0].addEventListener('click', buildETLD);
     }
     $(document).ready(function (e)

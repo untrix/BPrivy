@@ -28,9 +28,9 @@ function BP_GET_TRAITS(g)
     /** @import-module-begin Common */
     var BP_ERROR = IMPORT(g.BP_ERROR);
     /** @import-module-end **/    m = null;
-    
+
     /** @globals-begin */
-    /** 
+    /**
      * @constant Used for multiple purposes. Therefore be careful of what chars
      * you use in the string.
      * 1. As a data-type (class) identifier within in-memory objects.
@@ -50,6 +50,9 @@ function BP_GET_TRAITS(g)
         dt_settings= "s",
         dt_etld    = "m",  // Represents a ETLD (Public Suffix) record. Value is persisted.
         dt_default = "d";
+    // Dictionary tags. All the dt_* tags above also double as dictionary identifiers. But we
+    // need some more in addition.
+    var dict_t_pRecord = 'temp_'+dt_pRecord;
     // 'enumerated' values used internally only. We need these here in order
     // to be able to use the same values consistently across modules.
     /** @constant */
@@ -60,7 +63,7 @@ function BP_GET_TRAITS(g)
         fn_btn = "b",    // submit button for both signin and signup. Currently not saved in eRecs.
                          // usage limited to bp_cs, but included here to ensure no name-clash.
         fn_site = "s";   // Field used to display site (hostname/path) in UI
-        
+
     var eid_pfx = "com-untrix-";
 
     var CT_TEXT_PLAIN = 'text/plain',
@@ -68,7 +71,7 @@ function BP_GET_TRAITS(g)
         CT_BP_FN = CT_BP_PREFIX + 'fn',
         CT_BP_PASS = CT_BP_PREFIX + fn_pass,
         CT_BP_USERID = CT_BP_PREFIX + fn_userid;
-        
+
     var dom_topLevelTags = ['body', 'html', 'head', 'frameset'];
 
     var FT = Object.freeze({
@@ -77,7 +80,7 @@ function BP_GET_TRAITS(g)
     });
     var UI_TRAITS={};
     /** @globals-end **/
-    
+
     function DefaultUiTraits ()
     {
         Object.freeze( Object.defineProperties(this,
@@ -89,7 +92,7 @@ function BP_GET_TRAITS(g)
         }));
     }
     var DEFAULT_UI_TRAITS = new DefaultUiTraits();
-    
+
     function PUiTraits()
     {
         return Object.freeze( Object.defineProperties(this,
@@ -107,9 +110,9 @@ function BP_GET_TRAITS(g)
         }));
     }
     PUiTraits.prototype = DEFAULT_UI_TRAITS;
-    
+
     function EUiTraits () // constructor
-    {    
+    {
         Object.freeze( Object.defineProperties(this,
         {
             dt: {value: dt_eRecord},
@@ -123,7 +126,7 @@ function BP_GET_TRAITS(g)
     EUiTraits.prototype = DEFAULT_UI_TRAITS;
 
     // function SUiTraits ()    // {        // Object.freeze( Object.defineProperties(this,        // {            // dt: {value: dt_settings}        // }));    // }    // SUiTraits.prototype = DEFAULT_UI_TRAITS;
-    
+
     Object.defineProperty(UI_TRAITS, dt_eRecord, {value: new EUiTraits()});
     Object.defineProperty(UI_TRAITS, dt_pRecord, {value: new PUiTraits()});
     Object.defineProperty(UI_TRAITS, dt_default, {value: DEFAULT_UI_TRAITS});
@@ -142,7 +145,7 @@ function BP_GET_TRAITS(g)
         },
         imbue: {
             value: function (rec, dt) {
-                Object.defineProperty(rec, "uiTraits", 
+                Object.defineProperty(rec, "uiTraits",
                 {
                     value: this.getTraits(dt) // enumerable, writable, configurable=false.
                 });
@@ -150,13 +153,14 @@ function BP_GET_TRAITS(g)
             }
         }
     });
-    
+
     var iface = {};
     Object.defineProperties(iface,
     {
         UI_TRAITS: {value: UI_TRAITS},
         dt_eRecord: {value: dt_eRecord},
         dt_pRecord: {value: dt_pRecord},
+        dict_t_pRecord: {value: dict_t_pRecord},
         dt_etld: {value: dt_etld},
         dt_settings:{value: dt_settings},
         dt_default: {value: dt_default},
@@ -175,7 +179,7 @@ function BP_GET_TRAITS(g)
         dom_topLevelTags: {value: dom_topLevelTags},
         isTopLevelTag: {value: function(elName) {return (dom_topLevelTags.indexOf(elName) !== -1);} }
     }); Object.freeze(iface);
-    
+
     BP_ERROR.log("constructed mod_traits");
     return iface;
 }

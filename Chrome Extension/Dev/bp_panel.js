@@ -9,7 +9,7 @@
 /*global $, BP_DLL, BP_GET_CONNECT, BP_GET_CS_PLAT, IMPORT, BP_GET_COMMON, chrome,
   BP_GET_ERROR, BP_GET_MEMSTORE, BP_GET_W$, BP_GET_TRAITS, BP_GET_WDL, BP_GET_PLAT,
   BP_GET_LISTENER */
- 
+
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -20,7 +20,7 @@
 {
     "use strict";
     // g => Global Env.
-    var g = {g_win:window, g_console:console, g_chrome:chrome},
+    var g = {g_win:window, g_console:console, g_chrome:chrome, $:$, jQuery:jQuery},
         DEBUG = DEBUG || false;
     g.BP_CS_PLAT = chrome.extension.getBackgroundPage().BP_GET_CS_PLAT(g);
     var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
@@ -45,7 +45,7 @@
         g.BP_WDL = BP_CS_PLAT.getBackgroundPage().BP_GET_WDL(g);
         g.BP_MEMSTORE = g.BP_MAIN.g.BP_MEMSTORE;
     }
-    
+
     var m;
     /** @import-module-begin */
     var BP_COMMON = IMPORT(g.BP_COMMON);
@@ -115,30 +115,30 @@
     MOD_PANEL = (function()
     {
         var m_panel, m_id_panel, m_bUserClosed = false, m_bAutoFillable;
-        
+
         function close()
         {
-            if (m_id_panel && m_panel /*(panel = w$get('#'+m_id_panel))*/ ) 
+            if (m_id_panel && m_panel /*(panel = w$get('#'+m_id_panel))*/ )
             {
                 m_panel.destroy();
                 m_id_panel = undefined;
                 m_panel = undefined;
                 return true;
             }
-            
-            return false;          
+
+            return false;
         }
-        
+
         function destroy()
         {
-            if (close()) 
+            if (close())
             {
                 // Remember to not keep any data lingering around ! Delete data the moment we're done
                 // using it. Data should not be stored in the CS if it is not visible to the user.
                 MOD_DB.rmData();
                 return true;
             }
-            
+
             return false;
         }
         /**
@@ -175,14 +175,14 @@
                 unloadDB: BP_MAIN.unloadDB
             };
             m_panel = w$exec(cs_panel_wdt, ctx);
-            
+
             m_id_panel = m_panel.id;
             BP_COMMON.delProps(ctx); // Clear DOM refs in the ctx to aid GC
         }
 
         function userClosed()
         {return m_bUserClosed;}
-        
+
         return Object.freeze(
         {
             create: create,
@@ -193,11 +193,11 @@
             isAutoFillable: function () {return Boolean(m_bAutoFillable);}
         });
     }());
-      
+
     MOD_CS = (function()
     {
         var g_tabId, g_frameUrl, g_loc, g_site;
-        
+
         function autoFill(userid, pass)
         {
             BP_PLAT.sendMessage(g_tabId, g_frameUrl, {cm:'cm_autoFill', userid:userid, pass:pass});
@@ -215,33 +215,33 @@
                     //BP_ERROR.loginfo("cbackShowPanel@bp_panel.js received DB-Records\n"/* + JSON.stringify(db)*/);
                     try { // failure here shouldn't block rest of the call-flow
                         MOD_DB.ingest(resp.db, resp.dbInfo, resp.loc);
-                    } 
+                    }
                     catch (err) {
                         BP_ERROR.logwarn(err);
                     }
                 }
-                else 
+                else
                 {
                     MOD_DB.clear(); // Just to be on the safe side
                     (resp && BP_ERROR.logdebug(resp.err));
                 }
             }
-            catch (err) 
+            catch (err)
             {
                 BP_ERROR.logwarn(err);
             }
 
             MOD_PANEL.create();
         }
-        
+
         function heuristicFrameUrl(tabId, tabUrl )
         {
             var lastFocused = BP_MAIN.MOD_WIN.getLastFocused(tabId),
                 frameUrl = lastFocused ? lastFocused.frameUrl : undefined,
                 autoFillable, fillableUrls,
                 fillableUrl, i, j, found;
-            
-            if (frameUrl) 
+
+            if (frameUrl)
             {
                 if (!lastFocused.isTopLevel) {
                     // Is a nested browsing context (i.e. Frame)
@@ -290,7 +290,7 @@
 
                 if (!tabs.length) {
                     BP_ERROR.logdebug('No tabs shown?');
-                    cbackShowPanel(); 
+                    cbackShowPanel();
                     return;
                 }
 
@@ -318,12 +318,12 @@
                     {
                         var loc, bRepaint, bReload, site;
                         //BP_ERROR.logdebug('onLoad@bp_panel.js: received cm_autoFillable response: ' + JSON.stringify(resp2));
-                        if (!resp2) 
+                        if (!resp2)
                         {
                             BP_ERROR.logdebug('onLoad@bp_panel.js: cm_autoFillable returned error');
                             return;
                         }
-                        
+
                         // if (resp2.frameUrl && (resp2.frameUrl !== g_frameUrl))
                         // {
                            // g_frameUrl = resp2.frameUrl;
@@ -338,7 +338,7 @@
 
                         if (!bReload && bRepaint) {
                             //BP_ERROR.logdebug('onLoad@bp_panel.js: reloading');
-                            // TODO: Instead of reload this should simply be 
+                            // TODO: Instead of reload this should simply be
                             // MOD_PANEL.makeAutoFillable(true/false) - but we don't have that
                             // API yet.
                             cbackShowPanel(recsResp);
@@ -389,7 +389,7 @@
             autoFill: autoFill
         });
     }());
-    
+
     MOD_CS.onLoad();
-    BP_ERROR.log("loaded panel.js");    
+    BP_ERROR.log("loaded panel.js");
 }());

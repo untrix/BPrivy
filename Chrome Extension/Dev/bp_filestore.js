@@ -17,7 +17,7 @@
 function BP_GET_FILESTORE(g)
 {
     "use strict";
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_win = g.g_win;
     
     /** @import-module-begin Error */

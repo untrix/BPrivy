@@ -22,7 +22,7 @@
      *       then w$el elements are laid out on a parallel plane, with the same hierarchy
      *       as the DOM elements and with cross-links between each pair of DOM and w$ element.
      * Set of WDL Properties in order of processing:
-     * wdl = 
+     * wdl =
      * {
      *     'tag' or 'html' are mandatory
      *     'cons' or 'proto' maybe be optionally present. But not both.
@@ -59,7 +59,7 @@
                      sense when you're copying into something other than the context itself, like iface
                      or _iface.
      *          e.g. ctx:{ prop1:hard-boundvalue, w$:{ element:'w$el' }, w$ctx:{ prop3:'prop-from-ctx' } }
-     * 
+     *
      *     iface == Set of name:value pairs to insert into the WidgetElement before processing children. This
      *            allows descendants and later elements to take values directly from the WidgetElement instead
      *            of from the context. Value sources are same as described above for ctx.
@@ -75,7 +75,7 @@
      *              i.e. properties are copied rather than moved, from ctx to the w$el.
      *              Used by child elements to save a pointer to an ancestor element.
      *              This directive is processed before creating children.
-     *  
+     *
      *     children == children wdls, inserted in order of appearence.
      *              As a special case, a w$undefined value of a child-wdl is an indication to skip that
      *              child element instead of throwing an exception (exception will be thrown if (!child))
@@ -92,14 +92,14 @@
      *             names will be moved from context to the WidgetElement (w$el) object. In
      *             other words, it transfers named properties from ctx to w$el (interface).
      *             Used to gather children element references created by children using the
-     *             'ref' directive. 
+     *             'ref' directive.
      *     _final: Can have three properties {show:true/false/other, exec:func, appendTo:DOM-element}
-     *     _final.show: true=>show the element, false=>hide the element, other value or absent=> do nothing 
+     *     _final.show: true=>show the element, false=>hide the element, other value or absent=> do nothing
      *     _final.exec: a function to execute. Invoked as _final.exec.apply(w$el, [ctx, w$]);
      *     _final.appendTo: instructs w$exec to append the created element to a DOM element.
      *     _text:   Text (node) to append to the element after all children. Appends a
      *              text node created by document.createTextNode() method.
-     *     
+     *
      * }
      */
 
@@ -107,7 +107,7 @@ function BP_GET_W$(g)
 {   // NOTE: Requires g.g_win to be the target DOM window. Instantiate a fresh module
     // for the DOM window where you want to use this.
     "use strict";
-    var window = null, document = null, console = null,
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_doc = g.g_win.document;
     var m;
     /** @import-module-begin CSPlatform */
@@ -131,7 +131,7 @@ function BP_GET_W$(g)
     {
         this.w$cons($el);
     }
-    WidgetElement.prototype.w$cons = function($el) 
+    WidgetElement.prototype.w$cons = function($el)
     {
         Object.defineProperties(this,
         {   // Properties are kept configurable so that they may be deleted by the
@@ -167,12 +167,12 @@ function BP_GET_W$(g)
     };
     WidgetElement.prototype.appendTo = function(w) {w.append(this);};
     WidgetElement.prototype.prependTo = function(w) {w.prepend(this);};
-    WidgetElement.prototype.insertAfter = function(w) 
+    WidgetElement.prototype.insertAfter = function(w)
     {
         $(this.el).insertAfter(w.el);
         //w.el.after(this.el);
     };
-    WidgetElement.prototype.replaceWith = function(w) 
+    WidgetElement.prototype.replaceWith = function(w)
     {
         $(this.el).replaceWith(w.el);
         //this.el.replace(w.el);
@@ -184,25 +184,25 @@ function BP_GET_W$(g)
             }
             else {
                 this.el.style.removeProperty('display');
-            }    
+            }
         }
     };
     WidgetElement.prototype.hide = function() {
         if (this.el.style.display !== 'none') {
-            this.w$.origDisplay = this.el.style.display; 
+            this.w$.origDisplay = this.el.style.display;
             this.el.style.display = 'none';
         }
     };
     WidgetElement.prototype.toggle = function()
     {
-        if (this.el.style.display) {this.show(); return true;} 
+        if (this.el.style.display) {this.show(); return true;}
         else {this.hide(); return false;}
     };
     WidgetElement.prototype.destroy = function()
     {
         // This is a destructor, but unfortunately a new jQuery object is being created here.
         $(this.el).remove(); // This will hopefully clear data from the entire subtree rooted here.
-        
+
         // Object-props are being deleted below in order to prevent circular references.
         this.clearRefs();
     };
@@ -216,7 +216,7 @@ function BP_GET_W$(g)
     WidgetElement.prototype.addClass = function (className)
     {
         $(this.el).addClass(className);
-        //this.el.classList.add(className);  
+        //this.el.classList.add(className);
     };
     WidgetElement.prototype.removeClass = function (className)
     {
@@ -224,18 +224,18 @@ function BP_GET_W$(g)
         //this.el.classList.remove(className);
     };
     WidgetElement.prototype.$ = function () {return $(this.el); };
-    
+
     //////////// WDL Interpretor's LEXICAL ENVIRONMENT OBJECT ///////////
     /////////////////// Documents all possible properties ///////////////
     function W$LexicalEnv ()
     {
         Object.defineProperties(this,
-        {   
+        {
             w$el: {enumerable:true, configurable:false, writable:true}
         });
         Object.preventExtensions(this);
     }
-    
+
     // Returns an object to be used as a prototype for a widget element.
     function w$defineProto (cons, props, ancestorProto) // props has same syntax as Object.defineProperties
     {
@@ -246,7 +246,7 @@ function BP_GET_W$(g)
         cons.prototype.constructor = cons;
         return cons.prototype;
     }
-    
+
     // Copy properties from src object to destination.
     function copyProps(keys, src, dst)
     {
@@ -254,7 +254,7 @@ function BP_GET_W$(g)
         for (i=0,n=keys.length; i<n; i++)
         {
             k = keys[i];
-            Object.defineProperty(dst, k, 
+            Object.defineProperty(dst, k,
             	{
             		value: src[k],
             		writable: true,
@@ -264,7 +264,7 @@ function BP_GET_W$(g)
             //dst[k] = src[k];
         }
     }
-    
+
     // Transfer properties from src object to destination.
     // Props get deleted from src.
     function moveProps(keys, src, dst)
@@ -273,7 +273,7 @@ function BP_GET_W$(g)
         for (i=0,n=keys.length; i<n; i++)
         {
             k = keys[i];
-            Object.defineProperty(dst, k, 
+            Object.defineProperty(dst, k,
             	{
             		value: src[k],
             		writable: true,
@@ -284,18 +284,18 @@ function BP_GET_W$(g)
             delete src[k];
         }
     }
-    
+
     function copyIndirect (sk, sv, dst)
     {
         // sk = source object of keys for the destination as well as provides keys for the 'sv' object
         // dst = destination object, obtains key p from sk and value = sv[sk[p]]
         // sv = object that provides values to the destination. For prop p, value = sv[sk[p]]
         if (!(sk && sv && dst)) {BP_ERROR.logdebug('invalid args to copyIndirect'); return;}
-        
+
         var ks = Object.keys(sk), i, n;
         for (i=0,n=ks.length; i<n; i++)
         {
-        	Object.defineProperty(dst, ks[i], 
+        	Object.defineProperty(dst, ks[i],
         		{
         			value: sv[sk[ks[i]]],
         			writable: true,
@@ -305,13 +305,13 @@ function BP_GET_W$(g)
             //dst[ks[i]] = sv[sk[ks[i]]];
         }
     }
-       
+
     function w$evalProps (wdl, w$, ctx, dst)
     {
         // wdl = source of keys, dst = destination,
         // w$ = w$ object (optional), ctx = ctx object (optional)
         var k, ks = Object.keys(wdl), i, n;
-        for (i=0,n=ks.length; i<n; i++) 
+        for (i=0,n=ks.length; i<n; i++)
         {
             k = ks[i];
             switch (k)
@@ -325,8 +325,8 @@ function BP_GET_W$(g)
                 default:
                 	Object.defineProperty(dst, k,
                 		{
-                			value: wdl[k], 
-                			writable:true, 
+                			value: wdl[k],
+                			writable:true,
                 			configurable:true,
                 			enumerable: true
                 		});
@@ -334,8 +334,8 @@ function BP_GET_W$(g)
             }
         }
     }
-    
-    function w$get (sel) 
+
+    function w$get (sel)
     {
         return $(sel).data('w$el');
     }
@@ -347,7 +347,7 @@ function BP_GET_W$(g)
         }
         return w$el;
     }
-    
+
     function w$eTargetProxy (e)
     {
         var wel = w$get(e.currentTarget), func, wel2;
@@ -359,7 +359,7 @@ function BP_GET_W$(g)
             func.apply(wel2, [e]);
         }
     }
-    
+
     function w$eventProxy (e)
     {
         var wel = w$get(e.currentTarget), func;
@@ -370,7 +370,7 @@ function BP_GET_W$(g)
             func.apply(wel, [e]);
         }
     }
-    
+
     function w$on (wel, on, proxy)
     {
         if (wel && on) {
@@ -382,17 +382,17 @@ function BP_GET_W$(g)
             addHandlers(wel.el, _on);
         }
     }
-    
+
     function w$exec(wdl, ctx, recursion)
     {
         if (typeof wdl === 'function') {
             wdl = wdl(ctx); // compile wdt to wdl
         }
-        
+
         BPError.push("WDL-" + (wdl ? (wdl.ref || wdl.cons || wdl.tag) : "NULL"));
-        
+
         if (wdl === w$undefined) { return undefined; }
-        
+
         if (!wdl || (typeof wdl !== 'object')) {
             throw new BPError("Bad WDL: not a JS object", 'BadWDL', 'NotJSObject');
         }
@@ -400,8 +400,8 @@ function BP_GET_W$(g)
         {
             throw new BPError("Bad WDL: " + JSON.stringify(wdl), 'BadWDL');
         }
-        
-        var el, $el, i=0, w$el, _final, wcld, keys, key, val, 
+
+        var el, $el, i=0, w$el, _final, wcld, keys, key, val,
             w$ = new W$LexicalEnv(),
             n=0, cwdl, temp_ctx;
 
@@ -411,7 +411,7 @@ function BP_GET_W$(g)
             $el = $(el);
         }
         else { // wdl.html
-            $el = $(wdl.html); 
+            $el = $(wdl.html);
             el = $el[0];
         }
         // Create the widget element
@@ -426,9 +426,9 @@ function BP_GET_W$(g)
         else {
             w$el = new WidgetElement($el);
         }
-        
+
         var txt1 = wdl.text || "";
-        
+
         if (wdl.attr) {$el.attr(wdl.attr);}
         if (wdl.text) {$el.text(wdl.text);}
         if (wdl.prop) {$el.prop(wdl.prop);}
@@ -440,7 +440,7 @@ function BP_GET_W$(g)
 
         // Update w$ - the 'lexical env'.
         w$.w$el = w$el;
-        
+
         // Update the context now that the element is created
         if (!ctx) {temp_ctx = ctx={};} // setup a new context if one is not provided
         // insert w$el into context if requested.
@@ -475,12 +475,12 @@ function BP_GET_W$(g)
         function iterate (it, wdi)
         {
             var rec, isFunc=false, _cwdl, j;
-            
+
             if (!it || !wdi) {return;}
 
             if (typeof wdi === 'function') { isFunc = true; }
 
-            for (j=1,_cwdl=wdi; ((rec = it.next())); _cwdl=wdi) 
+            for (j=1,_cwdl=wdi; ((rec = it.next())); _cwdl=wdi)
             {try {
                 if (isFunc) {
                     ctx.w$rec = rec;
@@ -495,22 +495,22 @@ function BP_GET_W$(g)
                 logwarn(e);
                 BPError.pop();
             }}
-            
+
             it = null;
         }
         // now the iterative children-1
         if (wdl.iterate) {
             iterate(wdl.iterate.it, wdl.iterate.wdi);
-        } 
+        }
         // iterative children-2
         if (wdl.iterate2) {
             iterate(wdl.iterate2.it, wdl.iterate2.wdi);
-        } 
+        }
 
         function walk (walker, wdi)
         {
             var rec, isFunc=false, _cwdl, j;
-            
+
             if (!walker || !wdi) {return;}
 
             if (typeof wdi === 'function') { isFunc = true; }
@@ -547,27 +547,27 @@ function BP_GET_W$(g)
         // Insert text nodes after children
         if (wdl._text) { $el.append(g_doc.createTextNode(wdl._text)); }
         // Finally, post Creation steps
-        if ((_final=wdl._final)) {            
+        if ((_final=wdl._final)) {
             if (_final.show === true) {
                 w$el.show();
             } else if (_final.show === false) {
                 w$el.hide();
             }
-            
+
             if (_final.exec) { // execute functions dictated by wdl
                 _final.exec.apply(w$el, [ctx, w$]);
             }
-            
+
             // Inserting element into DOM should be done last and only for the top
             // level element.
             if ((!recursion) && _final.appendTo) {
-                $el.appendTo(_final.appendTo); 
+                $el.appendTo(_final.appendTo);
             }
         }
-         
+
         // Clear DOM refs inside the temp_ctx to aid GC
         if (temp_ctx) { MOD_COMMON.delProps(temp_ctx); }
-        
+
         BPError.pop();
         return w$el;
     }

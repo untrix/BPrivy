@@ -13,7 +13,7 @@
  */
 function BP_GET_LISTENER(g)
 {   'use strict';
-    var window = null, document = null, console = null;
+    var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery;
 
     /** @import-module-begin */
     var BP_PLAT = IMPORT(g.BP_PLAT),
@@ -24,10 +24,10 @@ function BP_GET_LISTENER(g)
     /** @globals begin */
     // element that will be used for dispatching and receiving events
     //var dispatchEl = g.g_win;
-    
+
     function CallbackInfo (func, tabId, frameUrl)
     {
-        Object.defineProperties(this, 
+        Object.defineProperties(this,
         {
             func: {value: func},
             tabId: {value:tabId},
@@ -60,7 +60,7 @@ function BP_GET_LISTENER(g)
     }
 
     /**
-     * Listener constructor. 
+     * Listener constructor.
      * @param {Scope} scope. Scope to watch.
      */
     function Listeners(scope)
@@ -84,14 +84,14 @@ function BP_GET_LISTENER(g)
             {
                 this.cbacks[eventType].funcs.push(func);
             }
-            // else we already have func            
+            // else we already have func
         }
         else if (tabId) {
             if (!this.cbacks[eventType].tabs) {this.cbacks[eventType].tabs = {};}
             if (!this.cbacks[eventType].tabs[tabId]) {this.cbacks[eventType].tabs[tabId] = {};}
             if (!frameUrl) {frameUrl = 'undefined';}
             this.cbacks[eventType].tabs[tabId][frameUrl] = true;
-        } 
+        }
 
         return;
     };
@@ -107,7 +107,7 @@ function BP_GET_LISTENER(g)
     {
         var tabs;
         var ev = {type:eventType, scope:this.scope, detail:_detail};
-        
+
         if (!this.cbacks[eventType]) { return; }
         if (this.cbacks[eventType].funcs)
         {
@@ -125,7 +125,7 @@ function BP_GET_LISTENER(g)
             });
         }
 
-        if (this.cbacks[eventType].tabs) 
+        if (this.cbacks[eventType].tabs)
         {
             tabs = this.cbacks[eventType].tabs;
             Object.keys(this.cbacks[eventType].tabs).forEach(function(tabId)
@@ -149,7 +149,7 @@ function BP_GET_LISTENER(g)
     {
         var func = cbackInfo.func,
             tabId = cbackInfo.tabId,
-            frameUrl = cbackInfo.frameUrl, 
+            frameUrl = cbackInfo.frameUrl,
             i;
         if (!this.cbacks[eventType]) { return false; }
         if (func) {
@@ -171,9 +171,9 @@ function BP_GET_LISTENER(g)
             return true;
         }
     };
-    
+
     function newListeners(scope)
-    { 
+    {
         return new Listeners(scope);
     }
 
