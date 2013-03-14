@@ -38,7 +38,7 @@ set(MOZILLA_PLUGINID "untrix.com/UntrixPlugin")
 # strings
 set(FBSTRING_CompanyName "Untrix Soft")
 set(FBSTRING_PluginDescription "Untrix Portable Passwords")
-set(FBSTRING_PLUGIN_VERSION "1.1.0.2")
+set(FBSTRING_PLUGIN_VERSION "1.1.0.3")
 set(FBSTRING_LegalCopyright "Copyright 2013 Untrix Soft")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
 set(FBSTRING_ProductName "Untrix Portable Passwords")

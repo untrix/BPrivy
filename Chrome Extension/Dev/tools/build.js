@@ -82,13 +82,14 @@ var fs = require('fs.extra'),
 
 if (argv.length < 2)
 {
-    console.error("Usage: node " + path.basename(__filename) + " <src dir> <build dir>");
+    console.error("Usage: node " + path.basename(__filename) + " <src dir> <build dir> [all] [force]");
     process.exit(1);
 }
 
 var src = abs(argv[0]),
     bld = abs(argv[1]),
     all = (argv[2] === 'all'),
+    force = (argv[2] === 'force') || (argv[3] === 'force'),
     release = abs(bld, 'release'),
     minjs = abs(bld, 'minjs'),
     dist = abs(bld, 'dist'),
@@ -100,20 +101,20 @@ var src = abs(argv[0]),
     'bp_cs_boot.cat.js',
     'bp_panel.cat.js'
     ],
-    release_cs_boot_js = ["bp_cs_boot_head.js", "bp_cs_boot.js"],
+    // Dependency list
+    release_cs_boot_js = ["bp_build.js", "bp_cs_boot_head.js", "bp_cs_boot.js"],
     release_cs_js = [
        "bp_build.js", "bp_error.js", "bp_common.js", "bp_uitraits.js",
        "bp_cs_chrome.js", "bp_connector.js", "bp_w$.js", "bp_panel.wdl.js",
        "bp_cs.js"
     ],
-    release_main_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js',
+    release_main_js=["bp_build.js", 'bp_config.js', 'bp_error.js', 'bp_common.js', 'bp_uitraits.js',
                      "bp_main_chrome.js", "bp_cs_chrome.js",
                      "bp_listener.js", "bp_connector.js", "bp_memstore.js", "bp_db_fs.js",
-                     "bp_filestore.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js" ],
-    release_manage_js=["bp_build.js", "bp_cs_chrome.js", "bp_w$.js", "bp_editor.wdl.js",
-                       "bp_wallet_form.wdl.js", "bp_manage.js"],
-    release_dialog_js=["bp_build.js", "bp_cs_chrome.js", "bp_wallet_form.wdl.js",
-                       "bp_plugin_installer.wdl.js", "bp_dialog.js"],
+                     "bp_filestore.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js",
+                     "bp_wallet_form.wdl.js", "bp_plugin_installer.wdl.js", "bp_editor.wdl.js"],
+    release_manage_js=["bp_build.js", "bp_cs_chrome.js", "bp_manage.js"],
+    release_dialog_js=["bp_build.js", "bp_cs_chrome.js", "bp_dialog.js"],
     release_panel_js=["bp_build.js", "bp_panel.js"],
     release_tools_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js',
                      "bp_main_plat.stub.js", "bp_cs_plat.stub.js",
@@ -132,7 +133,7 @@ var src = abs(argv[0]),
 
 fs.mkdirpSync(bld);
 
-var ch1 = child.fork('buildcss.js', [src,bld]);
+var ch1 = child.fork('buildcss.js', [src, bld, all?'all':undefined, force?'force':undefined]);
 ch1.on('exit', async.track());
 ch1.disconnect();
 
@@ -167,19 +168,22 @@ function mkdirp(dirs)
 // ensure that all internal directories exist
 mkdirp(Object.keys(lsSkel(release, release_others)));
 mkdirp(Object.keys(lsSkel(dist, release_others)));
+if (bp.doBuild([src+path.sep+'bp_build.js'], src+path.sep+'bp_build.min.js', force)) {
+    bp.minify(src+path.sep+'bp_build.js', src+path.sep+'bp_build.min.js', true);
+}
 
-catIfNeeded(qualifyA(src,release_cs_boot_js), src + path.sep + 'bp_cs_boot.cat.js');
-catIfNeeded(qualifyA(src,release_cs_js), src + path.sep + 'bp_cs.cat.js');
-catIfNeeded(qualifyA(src,release_main_js), src + path.sep + 'bp_main.cat.js');
-catIfNeeded(qualifyA(src,release_manage_js), src + path.sep + 'bp_manage.cat.js');
-catIfNeeded(qualifyA(src,release_dialog_js), src + path.sep + 'bp_dialog.cat.js');
-catIfNeeded(qualifyA(src,release_panel_js), src + path.sep + 'bp_panel.cat.js');
-catIfNeeded(qualifyA(src,release_tools_js), src + path.sep + 'bp_tools.cat.js');
-//catIfNeeded(qualifyA(src,release_notification_js), src + path.sep + 'bp_notification.cat.js');
+catIfNeeded(qualifyA(src,release_cs_boot_js), src + path.sep + 'bp_cs_boot.cat.js', force);
+catIfNeeded(qualifyA(src,release_cs_js), src + path.sep + 'bp_cs.cat.js', force);
+catIfNeeded(qualifyA(src,release_main_js), src + path.sep + 'bp_main.cat.js', force);
+catIfNeeded(qualifyA(src,release_manage_js), src + path.sep + 'bp_manage.cat.js', force);
+catIfNeeded(qualifyA(src,release_dialog_js), src + path.sep + 'bp_dialog.cat.js', force);
+catIfNeeded(qualifyA(src,release_panel_js), src + path.sep + 'bp_panel.cat.js', force);
+catIfNeeded(qualifyA(src,release_tools_js), src + path.sep + 'bp_tools.cat.js', force);
+//catIfNeeded(qualifyA(src,release_notification_js), src + path.sep + 'bp_notification.cat.js', force);
 
 if (all)
 {
-    var ch2 = child.fork('buildminify.js', [src, minjs]);
+    var ch2 = child.fork('buildminify.js', [src, minjs, force?'force':undefined]);
     ch2.on('exit', async.runHere(function childExit(code, signal)
     {
         copy(minjs, release, release_js);
@@ -194,9 +198,9 @@ if (all)
 }
 
 // Ensure that (the handwritten) manifest.json is valid.
-bp.processFiles(src+path.sep, release+path.sep, release_json, bp.cleanJson, async);
+bp.processFiles(src+path.sep, release+path.sep, release_json, bp.cleanJson, async, force);
 if (all) {
-    bp.processFiles(src+path.sep, dist+path.sep, release_json, bp.cleanJson, async);
+    bp.processFiles(src+path.sep, dist+path.sep, release_json, bp.cleanJson, async, force);
 }
 
 var async2;

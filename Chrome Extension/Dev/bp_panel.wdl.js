@@ -416,7 +416,7 @@ function BP_GET_WDL (g)
         {
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
             e.preventDefault(); // Causes event to get cancelled if cancellable
-            this.panel.openPath('/bp_dialog.html?action=open');
+            this.panel.openPath('/bp_manage.html?action=open');
         }}
     });
 
@@ -427,7 +427,7 @@ function BP_GET_WDL (g)
     CButton.wdt = function (w$ctx)
     {
         var panel = w$ctx.panel,
-        	unloadDB = w$ctx.unloadDB;
+        	off = w$ctx.off;
 
         return {
         tag: 'a',
@@ -435,7 +435,7 @@ function BP_GET_WDL (g)
         attr:{ 'class':css_class_xButton,
         	   href:'#',
                title:'Close Wallet' },
-        iface:{ panel:panel, unloadDB:unloadDB },
+        iface:{ panel:panel, off:off },
         css:{ width:'20px' },
             children:[
             {tag:"i",
@@ -451,7 +451,7 @@ function BP_GET_WDL (g)
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
             e.preventDefault(); // Causes event to get cancelled if cancellable
             try {
-	            this.unloadDB(true, function ()
+	            this.off(function ()
 	            {
 	                BP_ERROR.success('UWallet has been closed');
 	            });
@@ -966,7 +966,7 @@ function BP_GET_WDL (g)
             popup = ctx.popup,
             openPath = ctx.openPath,
             onBlur = ctx.onBlur,
-            unloadDB = ctx.unloadDB;
+            off = ctx.off;
 
         //BP_ERROR.logdebug('In panel.wdt. showRecs = ' + showRecs);
         return {

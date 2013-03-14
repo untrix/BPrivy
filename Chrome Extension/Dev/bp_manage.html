@@ -20,7 +20,7 @@
   <body>
     <div class="container">
       <div class="row">
-        <div class="span3">
+        <div class="span3"> <!-- class="span3" -->
           <!--Sidebar content-->
           <h3> <i>untrix wallet&trade;</i></h3>
           <ul class="nav nav-list" id="nav-list">
@@ -40,7 +40,7 @@
           </ul>
         </div>
         <!-- <div class="span1"></div> -->
-        <div id="content" class="span9">
+        <div id="content" class="span9"> <!-- class="span9" -->
           <div class="tab-content">
             <!--Body content-->
             <div class="tab-pane" id="settings-pane">
@@ -55,17 +55,17 @@
               <legend>Manage Wallets</legend>
                 <fieldset class='control-group'>
                   <label class="control-label">Open / Close</label>
-                  <div class='controls'>
-                    <button id="btnWalletOpen" type="button" class="btn btn-primary" title="Open/Reopen a Wallet">Open</button>
-                    <button id="btnWalletClose" type="button" class="btn" title="Close the open Wallet">Close</button>
-                    <button id="btnWalletReload" disabled type="button" class="btn btn-info" title="Reload the open Wallet">Reload</button>
+                  <div class='controls btn-group'>
+                    <button id="btnWalletOpen" type="button" class="btn btn-info span1" title="Open/Reopen a Wallet">Open</button>
+                    <button id="btnWalletClose" type="button" class="btn span1" title="Close the open Wallet">Close</button>
+                    <button id="btnWalletReload" disabled type="button" class="btn span1" title="Reload the open Wallet">Reload</button>
                   </div>
                 </fieldset>
                 <fieldset class='control-group'>
                   <label class="control-label">New</label>
-                  <div class='controls'>
-                    <button id="btnWalletCreate" type="button" class="btn btn-success" title="Create a new Wallet">New</button>
-                    <button id="btnWalletDupe" disabled type="button" class="btn btn-info" title="Make a copy of the open Wallet">Duplicate</button>
+                  <div class='controls btn-group'>
+                    <button id="btnWalletCreate" type="button" class="btn span1" title="Create a new Wallet">New</button>
+                    <button id="btnWalletDupe" disabled type="button" class="btn span1" title="Make a copy of the open Wallet">Duplicate</button>
                   </div>
                 </fieldset>
 
@@ -88,8 +88,8 @@
                             title="Sync (i.e. update) wallets <strong>without connecting to the internet</strong> using our patent-pending ActionReplay&trade; technology.">
                         </i>
                   </label>
-                  <div class="controls">
-                    <button data-path-choose id="btnMerge" type="button" class="btn btn-primary"
+                  <div class="controls btn-group">
+                    <button data-path-choose id="btnMerge" type="button" class="btn btn-info span1"
                     title="Click to choose the other Wallet to sync with">
                       Sync</button>
                   </div>
@@ -136,13 +136,13 @@
                         title="Import/Export a comma separated (CSV) password file exported from another password manager">
                     </i>
                   </label>
-                  <div class="controls form-inline">
-                    <button id="csvImport" type="button" class="btn btn-primary" title="Click to choose the file">
+                  <div class="controls btn-group">
+                    <button id="csvImport" type="button" class="btn span1" title="Click to choose the file">
                       <img style="display:none" id="csvImportSpinner" src="icons/ajax-loader-white.gif" />
                       Import
                     </button>
                     <!-- <label class="checkbox" title="Check this if import file is obfuscated">                      <input type="checkbox" name="obfuscated" id="csvImportObfuscated" disabled>                      Obfuscated                    </label> -->
-                    <button id="csvExport" type="button" class="btn btn-inverse" title="Click to choose the file">Export</button>
+                    <button id="csvExport" type="button" class="btn span1" title="Click to choose the file">Export</button>
                     <!-- <label class="checkbox" title="Check this to obfuscate export file">
                       <input type="checkbox" name="obfuscate" disabled>
                       Obfuscate
@@ -155,10 +155,10 @@
                         title="Import or Export password updates from/to another wallet using our patent-pending ActionReplay&trade; technology.">
                       </i>
                   </label>
-                  <div class="controls form-inline">
-                    <button data-path-choose id="btnMergeIn" type="button" class="btn btn-primary" title="Click to select the other Wallet">
+                  <div class="controls btn-group">
+                    <button data-path-choose id="btnMergeIn" type="button" class="btn span1" title="Click to select the other Wallet">
                       Import</button>
-                    <button data-path-choose id="btnMergeOut" type="button" class="btn btn-inverse" title="Click to select the other Wallet">
+                    <button data-path-choose id="btnMergeOut" type="button" class="btn span1" title="Click to select the other Wallet">
                       Export</button>
                   </div>
                 </div>
@@ -176,8 +176,8 @@
                 <div class="form-inline">
                   <div class="control-group">
                     <!-- <label class="control-label">Wallet</label> -->
-                    <div class="controls">
-                      <button id="btnWalletOpen2" type="button" class="btn btn-primary" data-loading-text="Opening..."
+                    <div class="controls btn-group">
+                      <button id="btnWalletOpen2" type="button" class="btn btn-info" data-loading-text="Opening..."
                         title="Open/Re-open <i style='display:inline-block'>Wallet</i> folder">
                          Open Wallet
                       </button>
@@ -203,37 +203,45 @@
               <div class="well form-horizontal">
 
                 <fieldset class="control-group ">
-                  <label class="control-label" title="Clean up duplicate files generated by cloud-sync (e.g. Dropbox&trade;, Microsoft SkyDrive&trade; or Google Drive&trade;)">Cloud Sync Cleanup</label>
+                  <label class="control-label" title="Clean up duplicate files generated by cloud-sync (e.g. Dropbox&trade;,
+                  Microsoft SkyDrive&trade; or Google Drive&trade;)">
+                    Cloud Sync Cleanup
+                  </label>
                   <div class="controls">
-                    <button id="dbClean" type="button" class="btn btn-primary" data-loading-text="Cleaning...">
+                    <button id="dbClean" type="button" class="btn btn-primary span2" data-loading-text="Cleaning...">
                       <!-- <img style="display:none" id="dbCompactSpinner" src="icons/ajax-loader-white.gif" /> -->
-                      Cleanup </button>
-                    <input disabled id="qclean-stats" style="cursor: default" class="uneditable-input input-medium dash-text">
+                      Cleanup
+                    </button>
+                    <span> </span>
+                    <input disabled id="qclean-stats" style="cursor: default" class="uneditable-input input-medium dash-text span2">
                   </div>
                 </fieldset>
 
                 <fieldset class="control-group">
                   <label class="control-label">Full Compaction</label>
                   <div class="controls">
-                    <button id="dbCompact" type="button" class="btn btn-primary" data-loading-text="Compacting...">
-                      Compact</button>
-                    <input disabled id="stats" style="cursor: default" class="uneditable-input input-medium dash-text">
+                    <button id="dbCompact" type="button" class="btn btn-primary span2" data-loading-text="Compacting...">
+                      Compact
+                    </button>
+                    <span> </span>
+                    <input disabled id="stats" style="cursor: default" class="uneditable-input input-medium dash-text span2">
                   </div>
                 </fieldset>
 
                 <fieldset class="control-group">
-                  <label class="control-label">Secure Delete Wallet</label>
+                  <label class="control-label">Delete Wallet</label>
                   <div class="controls">
-                    <button id="dbDelete" type="button" class="btn btn-primary" data-loading-text="Deleting...">
-                      Secure Delete</button>
+                    <button id="dbDelete" type="button" class="btn span2" data-loading-text="Deleting...">
+                      Delete</button>
                   </div>
                 </fieldset>
 
                 <fieldset class="control-group">
                   <label class="control-label">Change Master Password</label>
                   <div class="controls">
-                    <button disabled id="btnChngPass" type="button" class="btn btn-primary" data-loading-text="Working...">
-                      Change Password</button>
+                    <button id="btnChngPass" disabled type="button" class="btn span2" data-loading-text="Working...">
+                      Change Password
+                    </button>
                   </div>
                 </fieldset>
 

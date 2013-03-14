@@ -139,7 +139,7 @@ function BP_GET_WALLET_FORM(g)
           left: 'auto' // Left position relative to parent in px
         };
 
-        var spinner = new Spinner(opts).spin(el);
+        var spinner = new g_win.Spinner(opts).spin(el);
         //el.appendChild(spinner.el);
         return spinner;
     }
@@ -514,7 +514,7 @@ function BP_GET_WALLET_FORM(g)
             tag:'button',
             cons:btnChooseDB,
             attr:{ type:'button' },
-            addClass:'btn btn-small btn-primary',
+            addClass:'btn btn-small btn-info',
             text:'Browse',
             ref:'btnChooseDB',
             on:{ 'click':btnChooseDB.prototype.onClick },
@@ -619,7 +619,7 @@ function BP_GET_WALLET_FORM(g)
             return {
             tag:'button',
             attr:{ type:'button' },
-            addClass:'btn btn-small btn-primary',
+            addClass:'btn btn-small btn-info',
             text:'Browse',
             ref:'btnChooseKey',
             on:{ 'click':btnChooseKey.prototype.onClick },
@@ -733,25 +733,25 @@ function BP_GET_WALLET_FORM(g)
         	cons:radioKeyOptions,
         	_cull:['optionNoKey', 'optionHaveKey', 'optionNewKey'],
         		children:[
-	        	// {tag:'label',
-	        	// _text:'  Do not use a Key (Least Secure Option)',
-	        	 // attr:{ title: 'Not recommended for cloud-drives - use one of the other options for cloud-drives. '+
-	        	 			   // 'If you create multiple Wallets with this option then you\'ll have to separately change '+
-	        	 			   // 'the master-password for each. If you want the convenience of a single master-password '+
-	        	 			   // 'for multiple Wallets then use a Key (following options).' },
-	             // css:{ 'text-align':'left' },
-	                // children:[
-	                // {tag:'input',
-	                 // ref:'optionNoKey',
-	                 // save: ['radioKeyOptions'],
-	                 // attr:{ type:'radio', tabindex:-1, name:'keyOptions' },
-	                 // prop:{ checked:false },
-	                 // on:{'change': function(e) {
-	                 		// if (this.el.checked) { this.radioKeyOptions.onChoose('optionNoKey');}
-	                    // }}
-	                // },
-	                // ]
-	            // },
+	        	{tag:'label',
+	        	_text:'  Do not use a Key (Least Secure Option)',
+	        	 attr:{ title: 'Not recommended for cloud-drives - use one of the other options for cloud-drives. '+
+	        	 			   'If you create multiple Wallets with this option then you\'ll have to separately change '+
+	        	 			   'the master-password for each. If you want the convenience of a single master-password '+
+	        	 			   'for multiple Wallets then use a Key (following options).' },
+	             css:{ 'text-align':'left' },
+	                children:[
+	                {tag:'input',
+	                 ref:'optionNoKey',
+	                 save: ['radioKeyOptions'],
+	                 attr:{ type:'radio', tabindex:-1, name:'keyOptions' },
+	                 prop:{ checked:false },
+	                 on:{'change': function(e) {
+	                 		if (this.el.checked) { this.radioKeyOptions.onChoose('optionNoKey');}
+	                    }}
+	                },
+	                ]
+	            },
 	            {tag:'label',
 	             _text:'  I already have a Key',
 	             attr:{ title:'Use an existing Key to encrypt this Wallet. '+
@@ -807,9 +807,9 @@ function BP_GET_WALLET_FORM(g)
 
         	val: {value: function()
         	{
-        		/*if (this.optionNoKey.el.checked) {
+        		if (this.optionNoKey.el.checked) {
         			return 'optionNoKey'; }
-        		else */if (this.optionHaveKey.el.checked) {
+        		else if (this.optionHaveKey.el.checked) {
         			return 'optionHaveKey';
         		}
         		else if (this.optionNewKey.el.checked) {
@@ -825,7 +825,7 @@ function BP_GET_WALLET_FORM(g)
             return {
             tag:'button',
             attr:{ type:'button' },
-            addClass:'btn btn-small btn-primary',
+            addClass:'btn btn-small btn-info',
             text:'Browse',
             ref:'btnChooseKeyFile',
             on:{ 'click':btnChooseKeyFile.prototype.onClick },
@@ -854,7 +854,7 @@ function BP_GET_WALLET_FORM(g)
             return {
             tag:'button',
             attr:{ type:'button' },
-            addClass:'btn btn-small btn-primary',
+            addClass:'btn btn-small btn-info',
             text:'Browse',
             ref:'btnChooseKeyFolder',
             on:{ 'click':btnChooseKeyFolder.prototype.onClick },
@@ -1135,6 +1135,14 @@ function BP_GET_WALLET_FORM(g)
             if (!this.bPass2) {
                 this.inputPassword.el.focus();
             }
+        }},
+
+        onKeyOptionChosen: {value: function(e)
+        {
+            if (e.detail.option === 'optionNoKey')
+            {
+                this.enable();
+            }
         }}
     }, fieldsetProto);
 
@@ -1158,7 +1166,7 @@ function BP_GET_WALLET_FORM(g)
                 children:[
                 {tag:'button', ref:'btnWalletSubmit', attr:{type:'button'},
                  //prop:{ disabled:true },
-                 addClass:'btn btn-small btn-primary', text:'Submit'
+                 addClass:'btn btn-small btn-info', text:'Submit'
                 },
                 {tag:'button', ref:'btnWalletCancel', attr:{type:'button'},
                  addClass:'btn btn-small', text:'Cancel'
@@ -1197,6 +1205,7 @@ function BP_GET_WALLET_FORM(g)
              'dbChosen':WalletFormWdl.prototype.onDBChosen,
              'keyPathChosen':WalletFormWdl.prototype.onKeyPathChosen,
              'keyFolderChosen':WalletFormWdl.prototype.onKeyFolderChosen,
+             'keyOptionChosen':WalletFormWdl.prototype.onKeyOptionChosen,
              'submit': WalletFormWdl.prototype.onSubmit
         },
             children:[
@@ -1253,6 +1262,13 @@ function BP_GET_WALLET_FORM(g)
         {
             this.fieldsetPassword.onKeyFolderChosen(e);
             this.fieldsetPassword2.onKeyFolderChosen(e);
+            e.preventDefault();
+            e.stopPropagation();
+        }},
+        onKeyOptionChosen: {value: function(e)
+        {
+            this.fieldsetPassword.onKeyOptionChosen(e);
+            this.fieldsetPassword2.onKeyOptionChosen(e);
             e.preventDefault();
             e.stopPropagation();
         }},
@@ -1443,7 +1459,7 @@ function BP_GET_WALLET_FORM(g)
                 text:'Cancel',
                 on:{ 'click': function(e){modalDialog.destroy();}}
                 },
-                {tag:'button', addClass:'btn btn-primary', text:'Submit',
+                {tag:'button', addClass:'btn btn-info', text:'Submit',
                  ref:'btnSubmit',
                  attr:{ 'type':'submit', form:'walletForm' },
                  save:['walletForm']

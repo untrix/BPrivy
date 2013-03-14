@@ -17,20 +17,22 @@ var BP_MANAGE = (function ()
 {
     "use strict";
     /** @globals-begin */
-    var g = {g_win:window, g_console:console, g_chrome:chrome, $:$, jQuery:jQuery};
+    var g = {g_win:window, g_console:console, g_chrome:chrome, $:$, jQuery:jQuery},
+        g_doc = document;
     g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
     g.MAIN_PAGE = g.BP_CS_PLAT.getBackgroundPage();
+    g.BP_CONFIG = g.MAIN_PAGE.BP_CONFIG;
     //var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
     g.BP_MEMSTORE = g.MAIN_PAGE.BP_MAIN.g.BP_MEMSTORE;
     g.BP_ERROR = g.MAIN_PAGE.BP_GET_ERROR(g);
     g.BP_COMMON = g.MAIN_PAGE.BP_GET_COMMON(g);
+    g.BP_PLAT = g.MAIN_PAGE.BP_GET_PLAT(g);
     g.BP_TRAITS = g.MAIN_PAGE.BP_GET_TRAITS(g);
     g.BP_CONNECT = g.MAIN_PAGE.BP_GET_CONNECT(g);
-    //g.BP_W$ = BP_GET_W$(g);
     g.BP_W$ = g.MAIN_PAGE.BP_GET_W$(g);
     g.BP_DBFS = g.MAIN_PAGE.BP_GET_DBFS(g);
-    g.BP_EDITOR = BP_GET_EDITOR(g);
-    g.BP_WALLET_FORM = BP_GET_WALLET_FORM(g);
+    g.BP_EDITOR = g.MAIN_PAGE.BP_GET_EDITOR(g);
+    g.BP_WALLET_FORM = g.MAIN_PAGE.BP_GET_WALLET_FORM(g);
     /** @globals-end */
 
     /** @import-module-begin */
@@ -249,9 +251,9 @@ var BP_MANAGE = (function ()
                 $('#dbClean').removeClass('btn-primary').prop('disabled', true);
             }
 
-            if (resp.dbPath) {
-            	$('#btnChngPass').prop('disabled',false);
-            }
+            // if (resp.dbPath) {
+            	// $('#btnChngPass').prop('disabled',false);
+            // }
         }
         else
         {
@@ -583,12 +585,50 @@ var BP_MANAGE = (function ()
         $('#content *').tooltip();
     }
 
+    function loadPlugin ()
+    {
+        var BP_CONFIG = g.MAIN_PAGE.BP_CONFIG,
+            BP_MAIN = g.MAIN_PAGE.BP_MAIN;
+
+        function launchInstallPlugin(o)
+        {
+            var BP_PLUGIN_INSTALLER = g.MAIN_PAGE.BP_GET_PLUGIN_INSTALLER(g);
+            o = o || {closeWin:true};
+            o.mode = 'installPlugin';
+            BP_PLUGIN_INSTALLER.launch(o);
+        }
+
+        function launchUpgradePlugin(o)
+        {
+            var BP_PLUGIN_INSTALLER = g.MAIN_PAGE.BP_GET_PLUGIN_INSTALLER(g);
+            o = o || {closeWin:true};
+            o.mode = 'upgradePlugin';
+            BP_PLUGIN_INSTALLER.launch(o);
+        }
+
+        BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');
+        if (!BP_PLUGIN.getpid) {
+            launchInstallPlugin();
+            throw new BPError("Plugin Not Loaded");
+        }
+        else {
+            if (BP_MAIN.cmpVersion(BP_PLUGIN.version, BP_CONFIG.pluginVer) < 0) {
+                launchUpgradePlugin();
+                throw new BPError("Plugin Needs Upgrade");
+            }
+            else {
+                BP_ERROR.logdebug("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+            }
+        }
+    }
+
     // Assemble the interface
     var iface = {};
     Object.defineProperties(iface,
     {
         onload: {value: onload},
-        g: {value: g}
+        g: {value: g},
+        loadPlugin: {value: loadPlugin}
     });
     Object.freeze(iface);
 
@@ -596,17 +636,18 @@ var BP_MANAGE = (function ()
     return iface;
 }());
 
-function bpPluginLoaded ()
-{ "use strict";
-  BP_PLUGIN = document.getElementById('com-untrix-bpplugin');
-  console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
-}
+
+// function loadPlugin2 ()
+// { "use strict";
+  // BP_PLUGIN = document.getElementById('com-untrix-bpplugin');
+  // console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+//
+// }
 
 // $(document).ready(function (e)
 BP_MANAGE.g.BP_CS_PLAT.addEventListener(window, 'load', function(e)
 { "use strict";
-  bpPluginLoaded();
-  BP_MANAGE.g.BP_DBFS.init();
+  BP_MANAGE.loadPlugin();
   BP_MANAGE.onload();
   console.log("inited mod_manage");
 });

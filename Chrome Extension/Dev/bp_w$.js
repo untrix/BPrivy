@@ -186,12 +186,14 @@ function BP_GET_W$(g)
                 this.el.style.removeProperty('display');
             }
         }
+        return this;
     };
     WidgetElement.prototype.hide = function() {
         if (this.el.style.display !== 'none') {
             this.w$.origDisplay = this.el.style.display;
             this.el.style.display = 'none';
         }
+        return this;
     };
     WidgetElement.prototype.toggle = function()
     {

@@ -16,7 +16,8 @@
 function BP_GET_DBFS(g)
 {
     "use strict";
-    var window = null, document = null, console = null;
+    var window = null, document = null, console = null,
+        g_win = g.g_win;
     /** @import-module-begin Error */
     var m = IMPORT(g.BP_ERROR),
         BP_ERROR = m,
@@ -109,7 +110,7 @@ function BP_GET_DBFS(g)
                        // For a given dt, we can read multiple files but only write to one - this one.
             csv_dt={}, // Name of csv file to export dt records to. populated below
             valid_dt={},// populated below
-            path_sep = null, // populated below
+            path_sep = (g_win.navigator.platform==='Win32') ? '\\' : '/', // populated below
             dt_settings = IMPORT(BP_TRAITS.dt_settings),
             /*
              * NOTE. The list dtl is in processing order. That is, we want to deliberately
@@ -253,10 +254,10 @@ function BP_GET_DBFS(g)
                     }
                 }
             },
-            putPathSep: function (p_sep)
-            {
-                path_sep = p_sep || BP_PLUGIN.pathSeparator();
-            },
+            // putPathSep: function (p_sep)
+            // {
+                // path_sep = p_sep || BP_PLUGIN.pathSeparator();
+            // },
             getPathSep: function ()
             {
                 return path_sep;
@@ -943,7 +944,7 @@ function BP_GET_DBFS(g)
 
     function init ()
     {
-        DB_FS.putPathSep(BP_PLUGIN.pathSeparator());
+        //DB_FS.putPathSep(BP_PLUGIN.pathSeparator());
     }
 
     BP_ERROR.log("constructed mod_dbfs");

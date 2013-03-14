@@ -1,5 +1,5 @@
 /**
- * @preserve 
+ * @preserve
  * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
@@ -14,7 +14,7 @@
 {
     'use strict';
     var g = {g_win:g_win, g_console:console, g_chrome: chrome};
-    
+
     g.BP_ERROR = BP_GET_ERROR(g);
     g.BP_COMMON = BP_GET_COMMON(g);
     g.BP_TRAITS = BP_GET_TRAITS(g);
@@ -22,7 +22,7 @@
     g.BP_CONNECT = BP_GET_CONNECT(g);
     g.BP_W$ = BP_GET_W$(g);
     g.BP_WDL = BP_GET_WDL(g);
-    
+
     var m;
     /** @import-module-begin Common */
     m = g.BP_COMMON;
@@ -76,7 +76,7 @@
     var BP_ERROR = IMPORT(m),
         BPError = IMPORT(m.BPError);
     /** @import-module-end **/ m = null;
-    
+
     /** @globals-begin */
     var g_loc = IMPORT(g_win.location),
         g_doc = IMPORT(g_win.document),
@@ -97,7 +97,7 @@
         MOD_FILL,
         MOD_PANEL,
         MOD_CS;
-    
+
     /** @globals-end **/
 
     function isTopLevel(win) {
@@ -209,7 +209,7 @@
         {
             BP_ERROR.logdebug("FormInfo.prototype.submit invoked with c = " + c);
             var pair = this.getVals(c);
-            if (pair) 
+            if (pair)
             {
                 if ((!pair.u && pair.p && (!MOD_DB.hasPass(pair.p))) ||
                     (!pair.p && pair.u && (!MOD_DB.has(pair.u))) ||
@@ -258,7 +258,7 @@
             });
         };
         FormInfo.prototype.merge = function (fInfo, rel)
-        {   
+        {
             rel = rel || FormInfo.SUBSET;
             if (rel === FormInfo.SUBSET) {
                 // this is SUBSET of fInfo
@@ -308,7 +308,7 @@
             else if ((!this.cntnr) || (!fInfo.cntnr)) {rval = FormInfo.DISJOINT;}
             else {
                 cmp = fInfo.cntnr.compareDocumentPosition(this.cntnr);
-            
+
                 if (cmp & fInfo.cntnr.DOCUMENT_POSITION_CONTAINS) {
                     rval = FormInfo.SUPERSET;
                 }
@@ -328,7 +328,7 @@
         };
         FormInfo.prototype.count = function ()
         {
-            return ( (this.form && this.form.elements) ? (this.form.elements.length||0) : 
+            return ( (this.form && this.form.elements) ? (this.form.elements.length||0) :
                      ((this.us?(this.us.length||0):0) + (this.ps?(this.ps.length||0):0)) );
         };
         FormInfo.prototype.updtCntnr = function (stage)
@@ -343,7 +343,7 @@
                     tEl = this.getFirstVisibleEl();
                     if (tEl)
                     {
-                        if (isAncestor(this.form, tEl)) 
+                        if (isAncestor(this.form, tEl))
                         {
                             this.cntnr = this.form;
                         }
@@ -357,7 +357,7 @@
                     this.cntnr = this.form; // this.form is a DOM-ancestor of the fields
                     // We should never have reached here...
                 }
-                
+
                 if (!this.cntnr) {
                     BP_ERROR.logwarn("Could not find a form-container");
                     this.cntnr = g_doc.body || g_doc.documentElement || g_doc; // just to prevent referencing errors.
@@ -369,7 +369,7 @@
             var $sub;
             if (!this.form) {return;}
             $(this.form).data(data_finfo, this);
-            
+
             if (this.form.localName === 'form') {
                 addEventListener(this.form, 'submit', FormInfo.onSubmit);
             }
@@ -404,11 +404,11 @@
                 $el.data(data_fn, fn_pass);
                 $el.css({'background-color':'#e3f144'});
                 pair.p.dataset[data_fn] = fn_pass;
-                
+
                 doneFields = true;
                 return true;
             });
-            if (!this.buddys.length && !doneFields) 
+            if (!this.buddys.length && !doneFields)
             {
                 iterArray2(this.us, this, function(u)
                 {   // no Pass case
@@ -418,7 +418,7 @@
                     $el.data(data_fn, fn_userid);
                     $el.css({'background-color':'#e3f1ff'});
                     u.dataset[data_fn] = fn_userid;
-                    doneFields = true;                    
+                    doneFields = true;
                 });
             }
             if (!this.buddys.length && !doneFields)
@@ -431,7 +431,7 @@
                     $el.data(data_fn, fn_pass);
                     $el.css({'background-color':'#e3f144'});
                     p.dataset[data_fn] = fn_pass;
-                });                
+                });
             }
             if (doneFields)
             {
@@ -511,7 +511,7 @@
         FormInfo.prototype.getTabIndex = function ()
         {
             var t, t1, t2, bFocussable, ar;
-                
+
             if (this.tabIndex !== undefined) {
                 return this.tabIndex;
             }
@@ -541,13 +541,13 @@
                     }
                 }
             });
-            
+
             if (!bFocussable) {this.tabIndex = t2 || (-1);}
             else {this.tabIndex = t1 || 0;}
-            
+
             return this.tabIndex;
         };
-        
+
         function Forms()
         {
             Object.defineProperties(this,
@@ -563,23 +563,23 @@
         Forms.prototype.get = function (i) {return this._a[i];};
         /**
          * Be careful when using this method. It won't guarantee tree-order
-         * sort order. It merely pushes the item to the end of the list. 
+         * sort order. It merely pushes the item to the end of the list.
          */
         Forms.prototype.push = function (info) {this._a.push(info);};
         Forms.prototype.getFInfo = function (form)
         {   // returns fInfo or undefined
             var rInfo;
             if (!form) {return;}
-            
+
             this._a.some(function(fInfo)
             {
-                if (fInfo.form===form) 
+                if (fInfo.form===form)
                 {
                     rInfo = fInfo;
                     return true;
                 }
             });
-            
+
             return rInfo;
         };
         Forms.prototype.getFInfoE = function (el, fn)
@@ -592,20 +592,20 @@
                     return true;
                 }
             });
-            
+
             return rInfo;
         };
-        
+
         /**
          * Inserts fInfo in tree order into the collection. Does not check for
          * intersection. Only checks if the form is not already present.
          */
-        /*Forms.prototype.insertForm = function (form) 
+        /*Forms.prototype.insertForm = function (form)
         {
             var i, n, cmp, done=false, rInfo, tInfo;
             if (!form) {return;}
 
-            for (i=0, n=this._a.length-1; i<n; i++) 
+            for (i=0, n=this._a.length-1; i<n; i++)
             {
                 if (this._a[i].form === form) {
                     done = true;
@@ -626,7 +626,7 @@
                 this._a.push(tInfo);
                 rInfo = tInfo;
             }
-            
+
             return rInfo;
         };*/
         /**
@@ -634,13 +634,13 @@
          * already present form, in which case the two will get merged.
          * Returns true if insertion was successful, false otherwise.
          */
-        Forms.prototype.mergeInsert = function (fInfo) 
+        Forms.prototype.mergeInsert = function (fInfo)
         {
             var i, n, cmp, done=false, rInfo;
             if (!fInfo.form) {
                 throw BP_ERROR.BPError("fInfo insert attempted without a form", "Diag", "InternalError");
             }
-            for (i=0, n=this._a.length-1; i<n; i++) 
+            for (i=0, n=this._a.length-1; i<n; i++)
             {
                 cmp = this._a[i].intersect(fInfo);
                 if ((cmp===FormInfo.EQUAL) || (cmp===FormInfo.SUBSET)) {
@@ -671,7 +671,7 @@
                 this._a.push(fInfo);
                 rInfo = fInfo;
             }
-            
+
             return rInfo;
         };
         Forms.prototype.some = function (func)
@@ -682,7 +682,7 @@
             });
         };
         /**
-         * Inserts elements of forms into this collection in tree-order. 
+         * Inserts elements of forms into this collection in tree-order.
          */
         Forms.prototype.merge = function (fInfos)
         {
@@ -723,7 +723,7 @@
                     nu.push(item);
                 }
             });
-            
+
             this._a = nu;
         };
         Forms.prototype.getVisible = function ()
@@ -779,7 +779,7 @@
             var x = ev.clientX,
                 y = ev.clientY,
                 found;
-                
+
             this.some(function()
             {
                 //var x1 = this.left - g_win.scrollX, y1 = this.top - g_win.scrollY, h = this.h, w = this.w;
@@ -789,15 +789,15 @@
                     x1 = off.left - g_win.scrollX,
                     h = $p.outerHeight(),
                     w = $p.outerWidth();
-                            
+
                 if (!h || !w) { return false; }
-                
+
                 if ((x>=x1) && (x<=(x1+w)) && (y>=y1) && (y<=(y1+w))) {
                     found = this;
                     return true; // exit the loop
                 }
             });
-            
+
             return found;
         };
         Forms.prototype.getContainerOf = function(el, fn)
@@ -843,7 +843,7 @@
             // for (i=this._a.length-1; i>=0; i--)
             // {
                 // fInfo = this._a[i];
-                // if (fInfo.ps && fInfo.ps.length) 
+                // if (fInfo.ps && fInfo.ps.length)
                 // {
                     // if (fInfo.ps.length === n) {
                         // out.push(fInfo);
@@ -851,7 +851,7 @@
                     // }
                 // }
             // }
-//             
+//
             // return out;
         // };
         // Forms.prototype.rmSmallest = function ()
@@ -863,10 +863,10 @@
                     // j = i;
                 // }
             // }
-//             
+//
             // return this._a.splice(j,1)[0];
         // };
-        
+
         function FillInfo()
         {
             Object.defineProperties(this,
@@ -989,7 +989,7 @@
 
             if ($el.length)
             {
-                el = $el[0]; 
+                el = $el[0];
             }
             else { return; }
 
@@ -1012,7 +1012,7 @@
             }
 
             var fInfo = $(ev.target).data(data_finfo); // should be an input element.
-            
+
             if (fInfo) {
                 BP_ERROR.logdebug("onEnter invoking fInfo.submit");
                 fInfo.submit(5);
@@ -1024,10 +1024,10 @@
             BP_ERROR.logdebug("onChange entered");
             var $this = $(ev.target),//.closest('input'),
                 fInfo = $this.data(data_finfo),
-                fn, pair, 
+                fn, pair,
                 uid = undefined, pass = undefined, // Default values *must* be undefined, not null.
                 uEl, pEl, bSave;
-            
+
             if (!fInfo) {
                 BP_ERROR.logdebug("onChange discarded event");
                 return;
@@ -1050,7 +1050,7 @@
             if (hasVal(uEl, fn_userid)) {uid = uEl.value;}
             if (hasVal(pEl, fn_pass)) { pass = encrypt(pEl.value); }
 
-            if (pair) 
+            if (pair)
             {
                 if (!uid || !pass) {
                     console.log("partial user input received");
@@ -1090,7 +1090,7 @@
                     }
                 }
             }
-            
+
             if (bSave) {
                 MOD_CS.saveTempRec(newPAction(g_doc.location, Date.now(), uid, pass), dt_pRecord);
             }
@@ -1099,7 +1099,7 @@
         function offsetAncestor(el, maxLevels, numInp, visibleOnly, ctxEl)
         {
             var p, tE = el, tF, $i, levels;
-            while ((!p) && $(tE).is(':visible')) 
+            while ((!p) && $(tE).is(':visible'))
             {
                 // el is visible. Find its positioned ancestor.
                 tF = $(tE).offsetParent()[0];
@@ -1113,7 +1113,7 @@
                     if ((ctxEl && (tF===ctxEl)) || (tF===g_doc.body) || (tF===g_doc.documentElement) || (tF===g_doc)) {
                         break; // exit the loop.
                     }
-                    else 
+                    else
                     {
                         $i = $('input, button, a', tF);
                         if (visibleOnly) {$i = $i.filter(':visible');}
@@ -1135,7 +1135,7 @@
 
             return p;
         }
-        
+
         function getAncestor(el, levels, numInp, visibleOnly, ctxEl)
         {
             var p, i, p2, num;
@@ -1152,10 +1152,10 @@
                     break;
                 }
             }
-            
+
             return p || g_doc.body || g_doc.documentElement || g_doc;
         }
-        
+
         function isUselessForm(form, field, ctxEl)
         {
             var isUseless = false;
@@ -1174,7 +1174,7 @@
             }
 
             return isUseless;
-        }        
+        }
         /**
          *  Returns ancestor of input element that wraps input elements in the neighborhood
          *  of el. The returned element itself may not be a form element (such is the case
@@ -1186,7 +1186,7 @@
                 fInfo = new FormInfo();
 
             if (el.form)
-            {   
+            {
                 tF = el.form;
                 if (!isUselessForm(tF, el, ctxEl)) {
                     fInfo.form = tF;
@@ -1196,7 +1196,7 @@
                 }
             }
 
-            if (!fInfo.cntnr) 
+            if (!fInfo.cntnr)
             {
                 // Return ancestor upto 5 levels above, containing at least 2 visible input elements.
                 fInfo.cntnr = offsetAncestor(el, 5, 2, true, ctxEl) || getAncestor(el, 5, 3, true, ctxEl);
@@ -1204,22 +1204,22 @@
             }
 
             fInfo.pushEl(el, fn);
-            
+
             return fInfo;
         }
         function nameMatch(els, reg)
         {
             var dashes = /[\-_]/g;
-                
-            function elMatch (el) 
+
+            function elMatch (el)
             {
                 return ( reg.test(el.getAttribute('name')?el.getAttribute('name').replace(dashes,""):"") ||
                          reg.test(el.getAttribute('id')?el.getAttribute('id').replace(dashes,""):"") );
             }
-            
+
             return Array.prototype.filter.apply(els, [elMatch]);
         }
-        
+
         function normalize(name)
         {
             return name.toLowerCase().replace(/[\-_]/g,"");
@@ -1262,7 +1262,7 @@
             /*if ((lhs.tabIndex>0) || (rhs.tabIndex>0)) {
                 return (lhs.tabIndex > rhs.tabIndex);
             }*/
-            
+
             return (lhs.compareDocumentPosition(rhs) & lhs.DOCUMENT_POSITION_PRECEDING);
         }
         /**
@@ -1279,12 +1279,12 @@
                     out.push(this);
                 }
             });
-            
+
             return $(out);
         }
 
         /**
-         * Returns first element in tabbing order. 
+         * Returns first element in tabbing order.
          */
         function getFirstEl(els)
         {
@@ -1295,7 +1295,7 @@
                     first = el;
                 }
             });
-            
+
             return first;
         }        /**
          * From the provided collection $el, return elements (as jQuery object) that lie
@@ -1311,12 +1311,12 @@
                     out.push(this);
                 }
             });
-            
+
             return $(out);
         }
-        
+
         /**
-         * Returns last element in tabbing order. 
+         * Returns last element in tabbing order.
          */
         function getLastEl(els)
         {
@@ -1327,13 +1327,13 @@
                     last = el;
                 }
             });
-            
+
             return last;
         }
-        
+
         function hasVal(el, fn)
         {
-            if  (!el || !el.value || 
+            if  (!el || !el.value ||
             // In some cases drag-n-drop doesn't work on some fields because those fields
             // are hidden until the user types something into them. In order to workaround
             // that problem, we ask the user to type one character (e.g. 'x') into the
@@ -1361,7 +1361,7 @@
         {
             return el.offsetWidth && el.offsetHeight;
         }
-        
+
         // Returns a jQuery object containing matching fn_userid elements within cntxt.
         // @param cntxt can be a form element or a container/ancestor element. If it is a
         // non-form element, search will be performed on its descendents. If it is a form
@@ -1377,34 +1377,34 @@
         function uCandidates(cntxt, stage)
         {
             var $el, rval, $el1, fInfo;
-            
+
             cntxt = cntxt || g_doc;
 
             if (cntxt instanceof FormInfo) {
                 fInfo = cntxt;
                 cntxt = fInfo.form || fInfo.cntnr || g_doc;
             }
-            
+
             if ((cntxt instanceof HTMLFormElement) && cntxt.elements.length) { // cntxt is a form element
                 $el1 = $(cntxt.elements).filter(function(){return this.webkitMatchesSelector(g_uSel);}).not('[data-untrix]').filter(':visible');
             }
             else {
                 $el1 = $(g_uSel, $(cntxt)).not('data-untrix').filter(':visible');
             }
-            
+
             if ((!fInfo) || fInfo.isEmpty() || (stage<2)) {
                 // Apply a strict filter.
                 // Note: container may be the entire document itself.
                 $el = $(nameMatch($el1, g_uReg2));
             }
             else // !fInfo.isEmpty()
-            {   
+            {
                 if (fInfo.ps.length) {
                     // Filter out elements that come after the password element in the
                     // form. Username always preceeds password.
                     $el1 = getElsBefore(getFirstEl(fInfo.ps), $el1);
                 }
-                
+
                 // Container form has a password field, therefore we can be more lax
                 // in the comparison. Try varying levels of strictness and pick the strickest
                 // possible one.
@@ -1424,7 +1424,7 @@
                     }
                 }
                 else {
-                    $el = $el1;    
+                    $el = $el1;
                 }
             }
 
@@ -1435,7 +1435,7 @@
             else {
                 fInfo.mergeEls($el, fn_userid);
             }
-            
+
             //return $el;
             return fInfo;
         }
@@ -1450,7 +1450,7 @@
         function pCandidates(cntxt, stage)
         {
             var $candids, $try, fInfo, form, cntnr;
-            
+
             if (!cntxt) {
                 cntxt = g_doc;
             }
@@ -1538,7 +1538,7 @@
 
             fInfo.buddys = [];
             // Sometimes the detected fInfo may encapsulate both the signin as well as
-            // signup forms. This is because offsetAncestor may be too broad a scope. Hence, 
+            // signup forms. This is because offsetAncestor may be too broad a scope. Hence,
             // we cannot assume only one username field per fInfo.
             // There could be one for the signup form and another for the signin form.
             // Will try to fix the offsetAncestor issue sometime later.
@@ -1557,7 +1557,7 @@
          * This function should ensure that it returns a list of unique and non-intersecting
          * forms that do not intersect with m_info as well . Leave m_info untouched though,
          * do not push elements or merge forms into it.
-         * 
+         *
          * Note that since some of the fInfos detected below may not have their cntnr fields
          * populated it is too early to find out whether these forms intersect. Only after
          * their constituent field are discovered can their cntnr field be found and only after
@@ -1594,7 +1594,7 @@
             });
 
             /**
-             * Helper function 
+             * Helper function
              */
             function processField(el, fn)
             {
@@ -1612,7 +1612,7 @@
                     // element into it now.
                     return;
                 }
-                else 
+                else
                 {
                     fInfo = formAncestor(el, fn, 1, ctxEl);
                     if (!m_info.getIntersecting(fInfo)) {
@@ -1622,47 +1622,47 @@
                     return;
                 }
             }
-            
+
             return fInfos;
         }
-        
+
         // // return true if pos1/w1 is above pos2/w2 in the same column
         // function isAbove($el1, $el2)
         // {
-            // var pos1 = $el1.position(), 
-                // w1 = $el1.outerWidth(), 
-                // pos2 = $el2.position(), 
+            // var pos1 = $el1.position(),
+                // w1 = $el1.outerWidth(),
+                // pos2 = $el2.position(),
                 // w2 = $el2.outerWidth();
             // return ((pos1.left===pos2.left) &&
                     // (w1===w2) &&
                     // (pos1.top < pos2.top));
         // }
-//         
+//
         // function isDirectlyAbove($el1, $el2)
         // {
             // var pos1 = $el1.position(),
                 // w1 = $el1.outerWidth(),
-                // h1 = $el1.outerHeight(), 
+                // h1 = $el1.outerHeight(),
                 // pos2 = $el2.position(),
                 // w2 = $el2.outerWidth(),
                 // h2 = $el2.outerHeight(),
                 // h = (h1<h2) ? h1: h2;
             // return ((pos1.left===pos2.left) &&
                     // (w1===w2) &&
-                    // (pos1.top < pos2.top) && 
+                    // (pos1.top < pos2.top) &&
                     // ((pos2.top - (pos1.top + h1)) < h));
         // }
-//         
+//
         // function isBelow($el1, $el2)
         // {
             // return isAbove($el2, $el1);
         // }
-//         
+//
         // function isDirectlyBelow($el1, $el2)
         // {
             // return isDirectlyAbove($el2, $el1);
         // }
-//         
+//
         // function onLeft($el1, $el2)
         // {
             // var pos1 = $el1.position(),
@@ -1673,14 +1673,14 @@
                     // (pos1.left < pos2.left) &&
                     // (h1===h2));
         // }
-//         
+//
         // function isUpLeft($el1, $el2)
         // {
-//             
+//
         // }
-//         
+//
         // function immediateLeft($el1, $el2)
-        // {  
+        // {
             // var pos1 = $el1.position(),
                 // h1 = $el1.outerHeight(),
                 // w1 = $el1.outerWidth(),
@@ -1693,25 +1693,25 @@
                     // (h1===h2) &&
                     // ((pos2.left - (pos1.left + w1)) < w));
         // }
-//         
+//
         // function onRight($el1, $el2)
         // {
             // return onLeft($el2, $el1);
         // }
-//         
+//
         // function immediateRight($el1, $el2)
         // {
             // return immediateLeft($el2, $el1);
         // }
-//         
+//
         // function nearest(fn, el, peersLR, peersUD, peersDiag)
         // {
             // var h = el.outerHeight(),
                 // w = el.outerWidth(),
                 // lr= nearestLR(fn, el, peersLR),
                 // ud= nearestUD(fn, el, peersUD);
-//                 
-// 
+//
+//
             // if (lr) {
                 // // in tree order, lr gets preference over ud.
                 // return lr.el;
@@ -1725,18 +1725,18 @@
             var $ctx = ctxEl ? $(ctxEl) : undefined;
             return $(eRec.t + (eRec.id?('#'+eRec.id):'') + (eRec.n?('[name="'+eRec.n+'"]'):'') + (eRec.y? ('[type='+eRec.y+']') : ''), $ctx)[0];
         }
-        
+
         /**
-         * Find submit buttons and populate fmInfo appropriately. 
+         * Find submit buttons and populate fmInfo appropriately.
          */
         function findSubmitBtns(fmInfo)
         {
             var $sub, $btn, $a, $fin, tEl, lP;
             if (!fmInfo.form || !fmInfo.cntnr) {return;}
             $sub = $btn = $a = $();
-            
+
             // Now parse form/container for a submit button.
-            if (fmInfo.form.localName === 'form') 
+            if (fmInfo.form.localName === 'form')
             {   // Look for submit buttons or just buttons
                 //jQuery filter is case-sensitive, hence prefering :submit over [type=submit]
                 $sub = $(fmInfo.form.elements).filter(':submit:not([data-untrix]):visible');
@@ -1759,7 +1759,7 @@
                 $sub = getElsAfter(lP, $sub);
                 $btn = getElsAfter(lP, $btn);
             }
-            
+
             if ($sub.length)
             {
                 $sub.data(data_btn, 10); // The submit button
@@ -1796,7 +1796,7 @@
             $fin.data(data_finfo, fmInfo);
             fmInfo.btns = $fin.toArray();
         }
-        
+
         function scrapeForms(ctxEl)
         {
             var fInfos,//forms
@@ -1820,16 +1820,16 @@
                 // vice-versa. Therefore we can't let erroneously included invisible
                 // password fields to trump legit visible username fields because the
                 // (illegit) password field happened to be before the username field in
-                // tab-order. 
+                // tab-order.
                 uCandidates(fmInfo, 2);
                 pCandidates(fmInfo, 2);
 
                 if (!fmInfo.ps.length && !fmInfo.us.length) { return; }
-                
+
                 assignBuddys(fmInfo);
                 fmInfo.updtCntnr();
                 findSubmitBtns(fmInfo);
-                
+
                 if (fmInfo.ps.length)
                 {
                     if (fmInfo.buddys.length) {
@@ -1841,9 +1841,9 @@
                         }
                     }
                     else {
-                        noUser.push(fmInfo);                            
+                        noUser.push(fmInfo);
                     }
-                    
+
                     all.push(fmInfo);
                 }
                 else if (fmInfo.us.length)
@@ -1882,7 +1882,7 @@
             else {
                 m_info.scraped.all = all;
             }
-            
+
             return m_info.scraped;
         }
 
@@ -1915,12 +1915,12 @@
                             {
                                 // Try multi-pass now. We risk labelling a sign-up form
                                 // as sign-in, however we expect the user to not hit
-                                // the auto-fill button if this was a signup form. 
+                                // the auto-fill button if this was a signup form.
                                 visible = formScan.multiPass.getVisible();
                             }
                         }
                     }
-                    
+
                     signin = visible.getFirstFocussed();
                     m_info.signin.push(signin);
                 }
@@ -1941,7 +1941,7 @@
         {
             var i, j, l, uEl, uEl2, pEl, pEl2, eRecsMap, uer, per, uer2, per2;
                 //loc = BP_CONNECT.newL(g_loc, dt_eRecord);
-            
+
             if (MOD_DB.eRecsMapArray.length)
             {
                 // Cycle through eRecords starting with the best URL matching node.
@@ -1987,13 +1987,13 @@
             }
 
             var o, tInfo;
-                        
+
             if (uEl || pEl)
             {   // Pick elements only if they are visible. Implication is that corresponding forms will be
                 // visible too. Assumption is made that if the fields are not visible then
                 // their forms are hidden as well and therefore we should ignore those forms - they will
                 // get picked when they become visible.
-                if (uEl && pEl) 
+                if (uEl && pEl)
                 {
                     if (isVisible(uEl)) {
                         tInfo = formAncestor(uEl, fn_userid, 1);
@@ -2021,7 +2021,7 @@
                         uCandidates(tInfo, 2);
                     }
                 }
-                
+
                 if (tInfo)
                 {
                     tInfo.updtCntnr();
@@ -2030,13 +2030,13 @@
                     m_info.k.fmInfo = tInfo;
                 }
             }
-            
+
             // Mutations may cause the page to change, therfore we never set bScanned to true.
             //m_info.k.bScanned = true;
         }
-        
+
         /**
-         * @param ctxEl optional. If present, should be an HTMLElement object. 
+         * @param ctxEl optional. If present, should be an HTMLElement object.
          */
         function scan(ctxEl)
         {
@@ -2058,19 +2058,19 @@
             {
                 m_info.signup.push(m_info.k.fmInfo2);
             }
-            
+
             if ( !m_info.done() )
             {
                 scrape(ctxEl);
             }
-            
+
             m_info.hook();
             autoFillableStatus2 = m_info.autoFillable();
             if (autoFillableStatus !== autoFillableStatus2) {
                 BP_CONNECT.putAutoFillable({autoFillable:autoFillableStatus2, frameUrl: g_myUrl});
             }
         }
-        
+
         // Assumes input element and fills it
         function fill(inp, val)
         {
@@ -2086,7 +2086,7 @@
             //inp.focus(); // refocusing causes the field to clear on some websites.
             // trigger(inp, 'change');
         }
-        
+
         function autoFill(userid, pass)
         {
             var u, p, pRecsMap;
@@ -2095,9 +2095,9 @@
             {
                 //fInfo = m_info.signin.get(0);
                 var fInfo = this;
-                if (fInfo.isVisible()) 
+                if (fInfo.isVisible())
                 {
-                    if (fInfo.buddys.length) 
+                    if (fInfo.buddys.length)
                     {   // userPass and multiPass cases.
                         // We'll try all pairs. Only one pair should be visible
                         // and so only one will get filled eventually. If this was
@@ -2111,8 +2111,8 @@
                             fill(pair.p, decrypt(pass));
                         });
                     }
-                    else 
-                    {   // buddies not identified, but 
+                    else
+                    {   // buddies not identified, but
                         if (fInfo.us.length) {
                             // noPass case
                             fill(fInfo.us[0], userid);
@@ -2140,7 +2140,7 @@
                 BP_ERROR.logwarn(ex);
             }}
         }
-        
+
         return Object.freeze(
         {
             'g_uSel':g_uSel,
@@ -2156,7 +2156,7 @@
     MOD_DND = (function()
     {
         var g_bInited;
-        
+
         /** Intelligently returns true if the input element is a userid/username input field */
         function isUserid(el)
          {
@@ -2169,17 +2169,17 @@
                  else
                      {rval = true;} // text type by default
              }
-             
+
              return rval;
          }
-    
+
         /** Intelligently returns true if the element is a password field */
         function isPassword (el)
          {
              if (el.localName !== 'input') {return false;}
             return (el.type === "password") && (!el.dataset.untrix);
          }
-    
+
         function isField (ft, el)
         {
             switch (ft)
@@ -2189,10 +2189,10 @@
                 default: return;
             }
         }
-        
+
         function matchDTwField(e)
         {
-            var dtMatched = false, isBPDrag = false, 
+            var dtMatched = false, isBPDrag = false,
             items = e.dataTransfer.items,
             w$el=w$get(e.target),
             n, len;
@@ -2208,15 +2208,15 @@
                     //console.info("Matched BP Drag !");
                 }
             }
-            
-            return {dtMatched: dtMatched, isBPDrag: isBPDrag};        
+
+            return {dtMatched: dtMatched, isBPDrag: isBPDrag};
         }
-        
+
         function dragoverHandler(e)
         {
             // console.info("dragoverHandler(type = " + e.type + ") invoked ! effectAllowed/dropEffect = " +
                             // e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
-    
+
             var r = matchDTwField(e);
             if (r.isBPDrag)
             {
@@ -2234,15 +2234,15 @@
             }
             //return true; // return true to signal that we're not cancelling the event (some code out there)
         }
-        
+
         function dropHandler(e)
         {
             //console.info("dropHandler invoked ! effectAllowed/dropEffect = " + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
-     
-            var data, 
+
+            var data,
                 r = matchDTwField(e),
                 el, form;
-            
+
             if (r.isBPDrag) {
 
                 /*if (!r.dtMatched) {
@@ -2256,13 +2256,13 @@
                 else*/
                 if (r.dtMatched) {
                     // Cancel event to tell browser that we've handled it and to prevent it from
-                    // overriding us with a default action.                        
+                    // overriding us with a default action.
                     e.preventDefault();
                     el = e.currentTarget;
                     form = el.form;
                     // Tell browser to set vlaue of 'current drag operation' to 'copy'
                     e.dataTransfer.dropEffect = 'copy';
-    
+
                     //console.log("dropHandler:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
                     // Save an EAction.
                     var eRec = newEAction(e.target.ownerDocument.location,
@@ -2275,9 +2275,9 @@
                                           ((form&&form.getAttribute('id'))? form.getAttribute('id') : undefined),
                                           ((form&&form.getAttribute('name'))? form.getAttribute('name'):undefined));
                     MOD_CS.saveRec(eRec, dt_eRecord);
-    
+
                     data = e.dataTransfer.getData(CT_TEXT_PLAIN);
-                    if (data) 
+                    if (data)
                     {
                         el.focus();
                         el.click();
@@ -2314,7 +2314,7 @@
                     w.ct = CT_BP_USERID;
                     el.dataset[data_ct] = CT_BP_USERID;
                 }
-            }); 
+            });
         }
 
         function onMutation(mutations, observers)
@@ -2324,7 +2324,7 @@
                 setupDNDWatchers($(mutation.addedNodes));
             }]);
         }
-        
+
         function init()
         {
             if (!g_bInited) {try
@@ -2338,7 +2338,7 @@
                 BP_ERROR.logwarn(ex);
             }}
         }
-        
+
         return Object.freeze(
         {
             init: init,
@@ -2349,30 +2349,30 @@
     MOD_PANEL = (function()
     {
         var m_panel, m_id_panel, m_bUserClosed = false;
-        
+
         function close()
         {
-            if (m_id_panel && m_panel /*(panel = w$get('#'+m_id_panel))*/ ) 
+            if (m_id_panel && m_panel /*(panel = w$get('#'+m_id_panel))*/ )
             {
                 m_panel.destroy();
                 m_id_panel = undefined;
                 m_panel = undefined;
                 return true;
             }
-            
-            return false;          
+
+            return false;
         }
-        
+
         function destroy()
         {
-            if (close()) 
+            if (close())
             {
                 // Remember to not keep any data lingering around ! Delete data the moment we're done
                 // using it. Data should not be stored in the CS if it is not visible to the user.
                 MOD_DB.rmData();
                 return true;
             }
-            
+
             return false;
         }
         /**
@@ -2399,11 +2399,11 @@
                 saveRec: MOD_CS.saveRec,
                 delRec: MOD_CS.delRec,
                 delTempRec: MOD_CS.delTempRec,
-                autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined), 
+                autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined),
                 dbName:MOD_DB.dbName,
                 dbPath:MOD_DB.dbPath,
                 openPath: BP_CONNECT.openPath,
-                unloadDB: BP_CONNECT.unloadDB
+                off: BP_CONNECT.off
                 // onBlur: close
             };
             m_panel = w$exec(cs_panel_wdt, ctx);
@@ -2411,21 +2411,21 @@
             //window.setTimeout(close, 30000);
             BP_COMMON.delProps(ctx); // Clear DOM refs in the ctx to aid GC
         }
-        
+
         function get() {return m_panel;}
-        
+
         function getc()
         {
             if (!m_panel) {
                 create();
             }
-            
+
             return m_panel;
         }
-        
+
         function userClosed()
         {return m_bUserClosed;}
-        
+
         return Object.freeze(
         {
             get: get,
@@ -2436,7 +2436,7 @@
             userClosed: userClosed
         });
     }());
-      
+
     MOD_CS = (function()
     {
         /*
@@ -2452,23 +2452,23 @@
                     BP_ERROR.loginfo("onGotRecs@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
                     try { // failure here shouldn't block rest of the call-flow
                         MOD_DB.ingest(resp.db, resp.dbInfo);
-                    } 
+                    }
                     catch (err) {
                         BP_ERROR.logwarn(err);
                     }
                 }
-                else 
+                else
                 {
                     MOD_DB.clear(); // Just to be on the safe side
                     BP_ERROR.logdebug(resp.err);
                 }
 
-                try { 
+                try {
                     // We need to rescan because new e-recs may change the scan results.
                     // Also, if the recs were not received, and MOD_DB was cleared, then we need
                     // to reflect that in the scan results.
                     // Also, we take this opportunity to rescan the page in case a form was
-                    // made visible without triggering a mutation. Such is the case with 
+                    // made visible without triggering a mutation. Such is the case with
                     // Twitter's signing drop-down on the logout page.
                     MOD_FILL.scan();
                 }
@@ -2488,7 +2488,7 @@
         }
 
         /**
-         *  Invoked when a mutation event is received. 
+         *  Invoked when a mutation event is received.
          */
         function onMutation(_/*mutations*/, __/*observer*/)
         {
@@ -2519,7 +2519,7 @@
         {
             MOD_FILL.init(); // init only if not already done
             MOD_DND.init(); // init only if not already done
-            
+
             if (!MOD_PANEL.destroy()) // destroy returns true if a panel existed and was destroyed
             {
                 getRecs(g_loc, function(resp)
@@ -2529,7 +2529,7 @@
                 });
             }
         }
-        
+
         /**
          * Invoked upon receipt of a click message from bp_panel.js.
          */
@@ -2539,12 +2539,12 @@
             onClickComm();
             if (sendResponse) {sendResponse({ack:true, frameUrl:g_myUrl});}
         }
-    
+
         function onGetFrameUrl (req, sender, callback)
-        {   
+        {
             callback({result:true, frameUrl:g_myUrl});
         }
-    
+
         function onAutoFillable(req, sender, sendResp)
         {
             MOD_FILL.init(); // init only if not already done
@@ -2560,7 +2560,7 @@
                 });
             });
         }
-        
+
         function onMessage(req, sender, sendResp)
         {
             switch(req.cm)
@@ -2583,7 +2583,7 @@
         function setupCommand(doc, func)
         {
             var com = doc.getElementById("com-untrix-uwallet-click");
-            if (!com) 
+            if (!com)
             {
                 var head = doc.head || doc.getElementsByTagName( "head" )[0] || doc.documentElement;
                 com = g_doc.createElement('command');
@@ -2594,7 +2594,7 @@
                 com.addEventListener('click', func);
                 com.dataset.untrix = true;
                 head.insertBefore(com, head.firstChild);
-                
+
                 console.log("bp_cs: Instrumented Command");
             }
         }
@@ -2653,9 +2653,9 @@
             delTempRec: function(a,b,c) {delRec(a,b,c,true);},
         });
     }());
-    
+
     MOD_CS.onLoad();
-    console.log("loaded CS");    
+    console.log("loaded CS");
 }(window));
 
 

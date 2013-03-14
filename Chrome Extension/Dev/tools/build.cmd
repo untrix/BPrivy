@@ -1,1 +1,1 @@
-node build.js .. ..\..\build %1
+node build.js .. ..\..\build %1 %2

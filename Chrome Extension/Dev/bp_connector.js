@@ -47,6 +47,7 @@ function BP_GET_CONNECT(g)
         cm_getRecs      = "cm_recs",     // Represents a getDB command
         cm_loadDB       = "cm_load",
         cm_unloadDB     = "cm_unload",
+        cm_off          = "cm_off",
         cm_mergeDB      = "cm_mrgDb",
         cm_mergeInDB    = "cm_mrgIn",
         cm_mergeOutDB   = "cm_mrgOut",
@@ -378,6 +379,11 @@ function BP_GET_CONNECT(g)
 	    {
 	        rpcToMothership({cm: cm_unloadDB}, cback);
 	    }
+
+        function off(cback)
+        {
+            rpcToMothership({cm: cm_off}, cback);
+        }
 
         //Assemble the interface
         var iface = {};

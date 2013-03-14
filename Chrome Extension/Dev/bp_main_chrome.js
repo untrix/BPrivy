@@ -110,6 +110,21 @@ function BP_GET_PLAT(gg)
         chrome.tabs.sendMessage(tabId, req, callback);
     }
 
+    function reload()
+    {
+        gg.g_win.navigator.plugins.refresh(false);
+        chrome.runtime.reload();
+    }
+
+    function closeAll(except)
+    {
+        var wins = chrome.extension.getViews();
+        wins.forEach(function(win)
+        {
+            (win === except) || win.close();
+        });
+    }
+
     var module =
     {
         registerMsgListener: function(foo) {chrome.extension.onRequest.addListener(foo);},
@@ -120,7 +135,9 @@ function BP_GET_PLAT(gg)
         notifications: gg.webkitNotifications,
         showBadge: showBadge,
         removeBadge: removeBadge,
-        sendMessage: sendMessage
+        sendMessage: sendMessage,
+        reload: reload,
+        closeAll: closeAll
     };
 
     Object.seal(module);

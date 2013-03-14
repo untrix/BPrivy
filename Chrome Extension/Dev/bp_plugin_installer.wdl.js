@@ -35,13 +35,15 @@ function BP_GET_PLUGIN_INSTALLER(g)
     m = g.BP_ERROR;
     var BP_ERROR = IMPORT(m),
         BPError = IMPORT(m.BPError);
+    /** @import-module-begin Error */
+    var BP_PLAT = IMPORT(g.BP_PLAT);
+    /** @import-module-begin Error */
+    var BP_CONFIG = IMPORT(g.BP_CONFIG);
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
-    var g_installText = "A plugin (Untrix Plugin) is required in order for this app. to work. Please " +
-            "click the following button, install the plugin and then <strong>restart</strong> the browser.",
-        g_upgradeText = "A plugin upgrade (Untrix Plugin) is required in order for this app. to work. Please " +
-            "click the following button, install the plugin and then <strong>restart</strong> the browser.";
+    var g_installText = "Keys@Untrix&trade; requires a plugin. Please follow these steps to install it:",
+        g_upgradeText = "Please follow these steps to update the plugin:";
     /** @globals-end **/
     function modalBody(){}
     modalBody.wdt = function(ctx)
@@ -52,20 +54,60 @@ function BP_GET_PLUGIN_INSTALLER(g)
         {
             case 'installPlugin':
                 text = g_installText;
-                bText = 'Download Plugin';
+                bText = 'Download';
                 break;
             case 'upgradePlugin':
                 text = g_upgradeText;
-                bText = 'Download Plugin';
+                bText = 'Download';
                 break;
         }
 
-        return {
+        /*return {
         tag:'div', ref:'modalBody',
         addClass:'modal-body',
             children:[
             {html:'<label>' + text + '</label>'},
-            {tag:'div', addClass:'btn-toolbar',
+            {tag:'ol',
+                children:[
+                {tag:'li',
+                    children:[
+                    {tag:'button',
+                     text:bText,
+                     addClass: 'btn btn-info ',
+                     //css:{margin:'5px'},
+                     attr:{type:'button', title:url},
+                     prop:{download:true},
+                     on:{'click':function(e){ g_win.open(url, '_self');}}
+                    }
+                    ]
+                },
+                {tag:'li', text:'Install the plugin you just downloaded. Just double click on it and follow the instructions.'},
+                {tag:'li',
+                    children:[
+                    {tag:'button',
+                     text:'Reload the App',
+                     addClass: 'btn btn-info ',
+                     //css:{margin:'5px'},
+                     attr:{type:'button'},
+                     on:{'click':function(e){
+                         reload();
+                         modalDialog.destroy();
+                         }}
+                    }
+                    ]
+                }
+                ]
+            }
+            ]
+        };*/
+        /*
+         *
+         return {
+        tag:'div', ref:'modalBody',
+        addClass:'modal-body',
+            children:[
+            {html:'<label>' + text + '</label>'},
+            {tag:'div',
                 children:[
                 {tag:'button',
                  text:bText,
@@ -84,6 +126,66 @@ function BP_GET_PLUGIN_INSTALLER(g)
             },
             {tag:'p',
                 children:[
+                ]
+            }
+            ]
+        };
+         *
+         */
+        return {
+        tag:'form', ref:'modalBody',
+        addClass:'modal-body form-horizontal',
+            children:[
+            {html:'<legend><small>' + text + '</small></legend>'},
+            {tag:'fieldset', addClass:'control-group',
+                children:[
+                {tag:'label',
+                 addClass:'control-label',
+                 text:'1. Install Plugin'
+                },
+                {tag:'div', addClass:'controls',
+                    children:[
+                    {tag:'button',
+                     text:bText,
+                     addClass: 'btn btn-info span2',
+                     attr:{type:'button'},
+                     on:{'click':function(e){ g_win.open(url, '_self');}}
+                    }
+                    ]
+                }
+                ]
+            },
+            // {tag:'fieldset', addClass:'control-group',
+                // children:[
+                // {tag:'label',
+                 // addClass:'control-label',
+                 // text:'Install'
+                // },
+                // {tag:'div', addClass:'controls',
+                    // children:[
+                    // {tag:'label',
+                     // text:'Launch the downloaded file and follow the instructions.'
+                    // }
+                    // ]
+                // }
+                // ]
+            // },
+            {tag:'fieldset', addClass:'control-group',
+                children:[
+                {tag:'label',
+                 addClass:'control-label',
+                 text:'2. Refresh App'
+                },
+                {tag:'div', addClass:'controls',
+                    children:[
+                    {tag:'button',
+                     text:'Refresh',
+                     addClass: 'btn btn-info span2',
+                     attr:{type:'button'},
+                     on:{'click':function(e){ BP_PLAT.reload(); modalDialog.destroy();}}
+                    }
+                    ]
+                }
                 ]
             }
             ]
@@ -115,7 +217,7 @@ function BP_GET_PLUGIN_INSTALLER(g)
                  save:['dialog'],
                  on:{ 'click': function(e){modalDialog.destroy();} }
                 },
-                {tag:'h3', ref:'modalHeader',
+                {tag:'h2', ref:'modalHeader',
                  css:{ 'text-align':'center' }
                 }
                 ]

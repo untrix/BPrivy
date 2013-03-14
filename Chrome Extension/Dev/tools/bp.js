@@ -14,11 +14,15 @@
 var events = require('events'),
     path = require('path'),
     abs = path.resolve,
-    fs = require('fs.extra');
+    fs = require('fs.extra'),
+    jsp = require("uglify-js").parser,
+    pro = require("uglify-js").uglify,
+    UglifyJS = require("uglify-js"),
+    global_objects = ['window','document','console','chrome','$','jQuery', 'webkitNotifications'];
 
 
 var ProtoJobTracker = Object.create(events.EventEmitter.prototype,{
-    done: {value: function () 
+    done: {value: function ()
     {   'use strict';
         if ((--this.n)<=0) {
             this.emit('done', this);
@@ -29,7 +33,7 @@ var ProtoJobTracker = Object.create(events.EventEmitter.prototype,{
     {   'use strict';
         this.n++;
         var self = this;
-        return function() 
+        return function()
         {
             if (func) {
                 // invoke func with all passed in arguments as well as ctx if available.
@@ -44,10 +48,10 @@ var ProtoJobTracker = Object.create(events.EventEmitter.prototype,{
     {   'use strict';
         this.n++;
         var self = this;
-        return function() 
+        return function()
         {
             self.done();
-        };        
+        };
     }},
     logEnd: {value: function(self)
     {   'use strict';
@@ -81,7 +85,7 @@ function throwErr(err)
 
 function copy(srcDir, dstDir, files, async)
 {   'use strict';
-    var i, n, 
+    var i, n,
         fsrc, fdst;
     files.forEach(function (f, i, files)
     {
@@ -104,13 +108,13 @@ function buildPackage(src, bld, async)
     copy(src, bld, ['updates.xml'], async);
 }
 
-function processFiles(src, dst, files, callback, async)
+function processFiles(src, dst, files, callback, async, force)
 {   'use strict';
     files.forEach(function (fname, i, files)
     {
         var df = dst+fname,
             sf = src+fname;
-        fs.readFile(src+fname, async.runHere(callback, {sf:sf, df:df, async:async}));
+        fs.readFile(src+fname, async.runHere(callback, {sf:sf, df:df, async:async, force:force}));
     });
 }
 
@@ -121,16 +125,16 @@ function zero(path)
     return path;
 }
 
-function doBuild(files, target)
+function doBuild(files, target, force)
 {   'use strict';
     var srcTime,
         ftime,
         rval;
-        
-    if (!fs.existsSync(target)) {return true;}
+
+    if (force || (!fs.existsSync(target))) {return true;}
 
     ftime = fs.lstatSync(target).mtime;
-    
+
     return files.some(function (f, i, files)
     {
         //var mtime = fs.lstatSync(f).mtime;
@@ -138,22 +142,22 @@ function doBuild(files, target)
         // if (!srcTime) { srcTime = mtime;}
         // else if (mtime>srcTime) {srcTime = mtime;}
     });
-    
+
     //return srcTime > fs.lstatSync(target).mtime;
 }
 
-function catIfNeeded(srcFiles, dest)
+function catIfNeeded(srcFiles, dest, force)
 {   'use strict';
     var i, n, data;
-    
-    if (!doBuild(srcFiles, dest)) {
+
+    if ((!force) && (!doBuild(srcFiles, dest))) {
         return;
     }
-    
+
     if (fs.existsSync(dest)) {
         zero(dest); // truncate the file.
     }
-    
+
     console.log('Cating into ' + dest);
     srcFiles.forEach(function (f, i, srcFiles)
     {
@@ -169,20 +173,62 @@ function catIfNeeded(srcFiles, dest)
 function cleanJson(err, data, ctx)
 {   'use strict';
     if (err) {throw err;}
+
     var o = JSON.parse(data);
-    if (doBuild([ctx.sf], ctx.df)) {
+
+    if (doBuild([ctx.sf], ctx.df, ctx.force)) {
+        // Remove commented out keys
+        Object.keys(o).forEach(function (k)
+        {
+            if (k.charAt(0)==='#') {delete o[k];}
+        });
         console.log("Creating JSON file " + ctx.df);
-        fs.writeFile(ctx.df, JSON.stringify(o), ctx.async.runHere(throwErr));
+        fs.writeFile(ctx.df, JSON.stringify(o, undefined, 4), ctx.async.runHere(throwErr));
     }
 }
 
+function uglify_old(orig_code, defines, beautify)
+{
+
+    var ast = jsp.parse(orig_code); // parse code and get the initial AST
+    ast = pro.ast_lift_variables(ast);
+    ast = pro.ast_mangle(ast, {defines:defines, except:global_objects}); // get a new AST with mangled names
+    //ast = pro.ast_squeeze(ast, {dead_code:false}); // get an AST with compression optimizations
+    ast = pro.ast_squeeze(ast); // trying with dead_code=true. Should remove dead-code.
+    return pro.gen_code(ast, {beautify:beautify}); // compressed code here
+}
+
+function uglify(orig_code, defs, beautify)
+{
+    var toplevel = UglifyJS.parse(orig_code);
+    toplevel.figure_out_scope();
+    var compressor = UglifyJS.Compressor({dead_code:true, global_defs:defs, hoist_vars:true});
+    var compressed_ast = toplevel.transform(compressor);
+    compressed_ast.figure_out_scope();
+    compressed_ast.compute_char_frequency();
+    compressed_ast.mangle_names({reserved:global_objects});
+    var code = compressed_ast.print_to_string({beautify:beautify});
+    return code;
+
+}
+
+function minify(sf, df, beautify, copyright)
+{
+    var data = fs.readFileSync(sf);
+    data = uglify(data.toString(), {RELEASE:false}, true);
+    if (copyright) {fs.writeFileSync(df, copyright);}
+    fs.appendFileSync(df, data);
+}
+
 module.exports = {
-    newAsync:Async, 
-    throwErr:throwErr, 
+    newAsync:Async,
+    throwErr:throwErr,
     buildPackage:buildPackage,
     processFiles:processFiles,
     cleanJson:cleanJson,
     zero:zero,
     doBuild:doBuild,
-    catIfNeeded:catIfNeeded
+    catIfNeeded:catIfNeeded,
+    uglify:uglify,
+    minify:minify
 };

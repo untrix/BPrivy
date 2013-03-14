@@ -1,0 +1,1 @@
+node --debug-brk build.js .. ..\..\build %1 %2
