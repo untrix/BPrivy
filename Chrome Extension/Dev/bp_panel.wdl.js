@@ -564,6 +564,57 @@ function BP_GET_WDL (g)
         }}
     });
 
+    function VButton () {}
+    VButton.wdt = function(w$ctx)
+    {
+        var field = w$ctx.field;
+        return {
+        cons: VButton,
+        html:'<button type="button"></button>',
+        css:{ float:'right', width:'20px' },
+        attr:{ title:'View password' },
+        on:{ mousedown:VButton.prototype.onMouseDown,
+             mouseup:VButton.prototype.onMouseUp },
+        _iface:{ field:field },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle' },
+            addClass:"icon-eye-open",
+            }]
+        };
+    };
+    VButton.prototype = w$defineProto(VButton,
+    {
+        onMouseDown: {value: function(ev)
+        {
+            if (!this.field) {return;}
+            switch (this.field.el.tagName.toLowerCase())
+            {
+                case 'input':
+                    this.field.el.type = 'text';
+                    break;
+                case 'data':
+                    this.field.$().text(this.field.el.value);
+                    break;
+            }
+        }},
+        onMouseUp: {value: function(ev)
+        {
+            if (!this.field) {return;}
+            switch (this.field.el.tagName.toLowerCase())
+            {
+                case 'input':
+                    this.field.el.type = 'password';
+                    break;
+                case 'data':
+                    this.field.$().text(this.field.el.value ? '****' : '');
+                    break;
+            }
+        }}
+    });
+
+    var CButton = VButton;
+
     function isValidInput(str) {return Boolean(str);}
 
     function TButton () {}
@@ -633,13 +684,13 @@ function BP_GET_WDL (g)
              ctx:{ w$:{ u:'w$el' } },
              _iface:{ value: u }
             },
-            {tag:'input',
+            {tag:'input', ref:'field',
              attr:{ type:'password', value:p, placeholder:'Password', 'data-untrix':true },
              addClass:css_class_field+css_class_passIn,
              ctx:{ w$:{p:'w$el'} },
+                children:[CButton.wdt, VButton.wdt],
              _iface:{ value: p },
-             }
-            ],
+            }],
         _iface:{ w$ctx:{ u:'u', p:'p' } },
         //_final:{show:true}
         };
@@ -733,11 +784,12 @@ function BP_GET_WDL (g)
                  ctx:{ w$:{ u:'w$el' } },
                  _iface:{ fn:fn_userid, value:u }
                 },
-                {tag:'data',
+                {tag:'data', ref:'field',
                  attr:{ draggable:true, 'data-untrix':true },
                  addClass:css_class_field+css_class_passOut,
-                 text:'*****',
+                 text: p ? '*****' : '',
                  ctx:{ w$:{p:'w$el' } },
+                    children:[CButton.wdt, VButton.wdt],
                  _iface:{ fn:fn_pass, value:p }
                 }],
             _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } },
@@ -760,6 +812,7 @@ function BP_GET_WDL (g)
             isNewItem = w$ctx.isNewItem,
             itemList = w$ctx.itemList,
             isTRec = w$ctx.isTRec;
+
         return {
         cons: IoItem,
         tag:'div',
@@ -898,9 +951,9 @@ function BP_GET_WDL (g)
         cons: PanelList,
         tag:'div', attr:{ id:eid_panelList },
         onTarget:{ dragstart:PanelList.prototype.handleDragStart,
-        drag:PanelList.prototype.handleDrag,
-        dragend:PanelList.prototype.handleDragEnd },
-        ctx:{ io_bInp:false, w$:{ itemList2:'w$el' }, isTRec:true },
+         drag:PanelList.prototype.handleDrag,
+         dragend:PanelList.prototype.handleDragEnd },
+        ctx:{ io_bInp:true, w$:{ itemList2:'w$el' }, isTRec:true },
         iface:{ loc:loc, panel:panel, isTRec:true },
              iterate:{ it:it2, wdi:IoItem.wdi },
         //_final:{ show:false }

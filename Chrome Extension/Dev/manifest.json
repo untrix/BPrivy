@@ -1,8 +1,8 @@
 {
-  "name": "Untrix Keys",
-  "version": "0.6.23",
+  "name": "untrix KEYS",
+  "version": "0.6.24",
   "manifest_version": 2,
-  "minimum_chrome_version": "7",
+  "minimum_chrome_version": "20",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
   "description":"Personal, Protected and Portable Passwords.",
   "icons": {
@@ -27,6 +27,7 @@
     "exclude_matches": ["*://chrome.google.com/webstore*"],
     "js": ["tp/jquery.js",
            "tp/jquery-ui.js",
+           "bp_build.js",
            "bp_cs_boot_head.js",
            "bp_cs.cat.js",
            "bp_cs_boot_stub.js"],

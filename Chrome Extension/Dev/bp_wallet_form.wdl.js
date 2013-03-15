@@ -719,9 +719,9 @@ function BP_GET_WALLET_FORM(g)
     }, fieldsetProto);
 
 
-    //////////////// Widget: fieldsetChooseKeyFolder //////////////////
-    function fieldsetChooseKeyFolder() {}
-    fieldsetChooseKeyFolder.wdt = function (ctx)
+    //////////////// Widget: fieldsetKeyDirOrPath //////////////////
+    function fieldsetKeyDirOrPath() {}
+    fieldsetKeyDirOrPath.wdt = function (ctx)
     {
         //////////////// Widget: radioKeyOptions //////////////////
         function radioKeyOptions() {}
@@ -858,7 +858,7 @@ function BP_GET_WALLET_FORM(g)
             text:'Browse',
             ref:'btnChooseKeyFolder',
             on:{ 'click':btnChooseKeyFolder.prototype.onClick },
-            save:['controlsKeyFolder','fieldsetChooseKeyFolder']
+            save:['controlsKeyFolder','fieldsetKeyDirOrPath']
             };
         };
         w$defineProto(btnChooseKeyFolder,
@@ -869,7 +869,7 @@ function BP_GET_WALLET_FORM(g)
                     path = chooseKeyFolder(o);
 
                 if (o.err) { BP_ERROR.alert(o.err); }
-                else if (path && this.fieldsetChooseKeyFolder.validateKeyFolder(path))
+                else if (path && this.fieldsetKeyDirOrPath.validateKeyFolder(path))
                 {
                     this.controlsKeyFolder.inputKeyFolder.el.value = path;
                     CS_PLAT.customEvent(this.controlsKeyFolder.inputKeyFolder.el,
@@ -880,12 +880,12 @@ function BP_GET_WALLET_FORM(g)
 
         return {
         tag:'fieldset',
-        cons:fieldsetChooseKeyFolder,
-        ref:'fieldsetChooseKeyFolder',
+        cons:fieldsetKeyDirOrPath,
+        ref:'fieldsetKeyDirOrPath',
         addClass:'control-group',
         prop:{ disabled:true },
         save:['walletForm'],
-        on:{ 'keyOptionChosen':fieldsetChooseKeyFolder.prototype.onOptionChosen },
+        on:{ 'keyOptionChosen':fieldsetKeyDirOrPath.prototype.onOptionChosen },
         _cull:['radioKeyOptions', 'controlsKeyFolder', 'controlsKeyFile'],
         _final:{ exec:function() { this.disable(); } },
             children:[
@@ -920,10 +920,10 @@ function BP_GET_WALLET_FORM(g)
                      attr:{ type:'text', placeholder:"Key Folder Path" },
                      prop:{ required:true },
                      addClass:"input-xlarge",
-                     save:['fieldsetChooseKeyFolder'],
+                     save:['fieldsetKeyDirOrPath'],
                      on:{ 'change': function(e)
                           {
-                              if (this.fieldsetChooseKeyFolder.validateKeyFolder(this.el.value)) {
+                              if (this.fieldsetKeyDirOrPath.validateKeyFolder(this.el.value)) {
                                 CS_PLAT.customEvent(this.el, 'keyFolderChosen',
                                                     {keyFolder:this.el.value});
                               }
@@ -958,10 +958,10 @@ function BP_GET_WALLET_FORM(g)
                      attr:{ type:'text', placeholder:"Key File Path" },
                      prop:{ required:true },
                      addClass:"input-xlarge",
-                     save:['fieldsetChooseKeyFolder'],
+                     save:['fieldsetKeyDirOrPath'],
                      on:{ 'change': function(e)
                           {
-                              //if (this.fieldsetChooseKeyFolder.checkValidity(this)) {
+                              //if (this.fieldsetKeyDirOrPath.checkValidity(this)) {
                                 CS_PLAT.customEvent(this.el, 'keyFileChosen',
                                                     {keyFile:this.el.value});
                               //}
@@ -974,7 +974,7 @@ function BP_GET_WALLET_FORM(g)
             ]
         };
     };
-    fieldsetChooseKeyFolder.prototype = w$defineProto(fieldsetChooseKeyFolder,
+    fieldsetKeyDirOrPath.prototype = w$defineProto(fieldsetKeyDirOrPath,
     {
     	validateKeyFolder: {value: function(path)
     	{
@@ -1024,6 +1024,7 @@ function BP_GET_WALLET_FORM(g)
         		default:
         			this.controlsKeyFolder.disable();
         			this.controlsKeyFile.disable();
+        			CS_PLAT.customEvent(this.el, 'keyFolderChosen', {keyFolder:null});
         			break;
         	}
         }}
@@ -1065,8 +1066,8 @@ function BP_GET_WALLET_FORM(g)
                      }
                  }
                  else {
-	                 if (this.walletForm.mode !== 'create') {
-	                 //if (this.walletForm.fieldsetPassword2.inputPassword.el.disabled) {
+	                 //if (this.walletForm.mode !== 'create') {
+	                 if (this.walletForm.fieldsetPassword2.inputPassword.el.disabled) {
 	                     CS_PLAT.customEvent(this.el, 'passwordChosen');
 	                 }
 	                 else if (this.el.value === this.walletForm.fieldsetPassword2.inputPassword.el.value) {
@@ -1135,14 +1136,6 @@ function BP_GET_WALLET_FORM(g)
             if (!this.bPass2) {
                 this.inputPassword.el.focus();
             }
-        }},
-
-        onKeyOptionChosen: {value: function(e)
-        {
-            if (e.detail.option === 'optionNoKey')
-            {
-                this.enable();
-            }
         }}
     }, fieldsetProto);
 
@@ -1205,21 +1198,20 @@ function BP_GET_WALLET_FORM(g)
              'dbChosen':WalletFormWdl.prototype.onDBChosen,
              'keyPathChosen':WalletFormWdl.prototype.onKeyPathChosen,
              'keyFolderChosen':WalletFormWdl.prototype.onKeyFolderChosen,
-             'keyOptionChosen':WalletFormWdl.prototype.onKeyOptionChosen,
              'submit': WalletFormWdl.prototype.onSubmit
         },
             children:[
             fieldsetDBName.wdt,
             fieldsetChooseDB.wdt,
             fieldsetChooseKey.wdt,
-            fieldsetChooseKeyFolder.wdt,
+            fieldsetKeyDirOrPath.wdt,
             fieldsetPassword.wdt,
             fieldsetPassword2_wdt
             ],
         _cull:['fieldsetDBName',
                'fieldsetChooseDB',
                'fieldsetChooseKey',
-               'fieldsetChooseKeyFolder',
+               'fieldsetKeyDirOrPath',
                'fieldsetPassword',
                'fieldsetPassword2']
         };
@@ -1250,7 +1242,7 @@ function BP_GET_WALLET_FORM(g)
         onDBChosen: {value: function(e)
         {
             this.fieldsetChooseKey.onDBChosen(e.detail.dbPath);
-            this.fieldsetChooseKeyFolder.onDBChosen();
+            this.fieldsetKeyDirOrPath.onDBChosen();
         }},
         onKeyPathChosen: {value: function(e)
         {
@@ -1262,13 +1254,6 @@ function BP_GET_WALLET_FORM(g)
         {
             this.fieldsetPassword.onKeyFolderChosen(e);
             this.fieldsetPassword2.onKeyFolderChosen(e);
-            e.preventDefault();
-            e.stopPropagation();
-        }},
-        onKeyOptionChosen: {value: function(e)
-        {
-            this.fieldsetPassword.onKeyOptionChosen(e);
-            this.fieldsetPassword2.onKeyOptionChosen(e);
             e.preventDefault();
             e.stopPropagation();
         }},
@@ -1317,9 +1302,9 @@ function BP_GET_WALLET_FORM(g)
             {
                 self.createDB2(self.fieldsetDBName.val(),
                                self.fieldsetChooseDB.val(),
-                               self.fieldsetChooseKeyFolder.val(),
+                               self.fieldsetKeyDirOrPath.val(),
                                self.fieldsetPassword.val(),
-                               self.fieldsetChooseKeyFolder.radioKeyOptions.val(),
+                               self.fieldsetKeyDirOrPath.radioKeyOptions.val(),
                                function (resp)
                 {
                     var option, keyFolderOrPath, keyPath;
@@ -1327,8 +1312,8 @@ function BP_GET_WALLET_FORM(g)
 
                     if (resp.result === true)
                     {
-                    	option = self.fieldsetChooseKeyFolder.radioKeyOptions.val();
-                    	keyFolderOrPath = self.fieldsetChooseKeyFolder.val();
+                    	option = self.fieldsetKeyDirOrPath.radioKeyOptions.val();
+                    	keyFolderOrPath = self.fieldsetKeyDirOrPath.val();
 
 						if (option === 'optionHaveKey') {
 							keyPath = keyFolderOrPath;

@@ -10,10 +10,11 @@
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
-(function(g_win)
+(function()
 {
     'use strict';
-    var g = {g_win:g_win, g_console:console, g_chrome: chrome};
+    var g = {g_win:window, g_console:console, g_chrome: chrome, $:$, jQuery:jQuery},
+        g_win = window;
 
     g.BP_ERROR = BP_GET_ERROR(g);
     g.BP_COMMON = BP_GET_COMMON(g);
@@ -2655,7 +2656,7 @@
     }());
 
     MOD_CS.onLoad();
-    console.log("loaded CS");
-}(window));
+    BP_ERROR.logdebug("loaded CS");
+}());
 
 

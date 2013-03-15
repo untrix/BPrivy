@@ -438,7 +438,8 @@ function BP_GET_CONNECT(g)
             panelClosed: {value: panelClosed},
             putAutoFillable: {value: putAutoFillable},
             openPath: {value: openPath},
-            unloadDB: {value: unloadDB}
+            unloadDB: {value: unloadDB},
+            off: {value: off}
         });
         Object.freeze(iface);
 
