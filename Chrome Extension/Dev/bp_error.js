@@ -14,7 +14,11 @@ function BP_GET_ERROR(g)
     'use strict';
     var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_win = g.g_win,
-        g_console = g.g_console;
+        g_console = g.g_console,
+        _log = g_console.log.bind(g_console),
+        debug = g_console.debug.bind(g_console) || _log,
+        info = g_console.info.bind(g_console) || debug,
+        warn = g_console.error.bind(g_console) || info;
 
    /** @begin-class-def BPError
     o: {//Object returned by the plugin
@@ -147,9 +151,9 @@ function BP_GET_ERROR(g)
         {
             dt: {value: dt_Activity},
             name: {value: "unknown", writable: true, enumerable: true},
-            actions: {value: [], writable: true, enumerable: true}    
+            actions: {value: [], writable: true, enumerable: true}
         });
-        
+
         if (arg && (typeof arg === 'string')) {
             this.name = arg;
         }
@@ -157,7 +161,7 @@ function BP_GET_ERROR(g)
             this.name = arg.name;
             this.actions = arg.actions;
         }
-        
+
         Object.freeze(this);
    }
    Activity.prototype.push = function (actn)
@@ -172,13 +176,13 @@ function BP_GET_ERROR(g)
    {
        var str = this.name || "", i,
            n = this.actions.length;
-           
+
        for (i=0; i<n; i++) {
            str += ";" + this.actions[i];
        }
        return str;
    };
-   
+
    // _err is either o.err returned from the plugin or a message string. BPError.atvt is
    // always used to derive the activity when created from a throw statement.
     function BPError(_err, acode, gcode)
@@ -201,7 +205,7 @@ function BP_GET_ERROR(g)
         }
         else if (_err && (typeof _err === "object"))
         {
-            if (_err.name === "PluginDiags") 
+            if (_err.name === "PluginDiags")
             {
                 this.atvt = BPError.atvt;
                 this.err = _err;
@@ -209,7 +213,7 @@ function BP_GET_ERROR(g)
                 this.message = _err.gmsg || msg[_err.acode || _err.gcode] || _err.acode || _err.gcode || _err.smsg || _err.scode;
                 this.message += _err.path1? ' path1='+_err.path1 : '';
             }
-            else if (_err.name === "BPDiags") 
+            else if (_err.name === "BPDiags")
             {
                 // Copy Construct
                 //_err.atvt may be a json object hence need to wrap it with Activity object
@@ -232,26 +236,26 @@ function BP_GET_ERROR(g)
                     break;
                     default:
                         this.message = _err.name + ": " + _err.message;
-                }                
+                }
             }
         }
-        
+
         Object.freeze(this); // turn-off writable, configurable and extensible flags
     }
-    BPError.atvt = undefined; // Global object for storing current activity. 
+    BPError.atvt = undefined; // Global object for storing current activity.
     BPError.prototype.toString = function()
     {
         var msg = (this.message || "Something went wrong :(" ),
             diags =((this.err.acode==='Diag') ? '' :  (
-                   "\n" + this.err.name + "://" + 
+                   "\n" + this.err.name + "://" +
                    (this.atvt? "?activity=" + this.atvt.toString() : "") +
                    (this.err.acode? "&acode="+this.err.acode : "") +
-                   (this.err.gcode? "&gcode="+this.err.gcode : "") + 
+                   (this.err.gcode? "&gcode="+this.err.gcode : "") +
                    (this.err.scode? "&scode="+this.err.scode : "") +
                    (this.err.smsg? "&smsg="+this.err.smsg : "")
                )),
             str = msg+diags;
-        
+
         //var str = this.msg + (this.atvt?"activity="+this.atvt.toString()+"\n":'') + (this.err?JSON.stringify(this.err):'');
         return str.length<=200? str : str.slice(0,200);
     };
@@ -275,34 +279,46 @@ function BP_GET_ERROR(g)
         g_console.log(be.toString());
         g_win.alert(be.message || "Something went wrong :(");
     }
-    
+
     function confirm (str)
     {
         return g_win.confirm(str);
     }
-    
+
     function prompt (msg)
     {
         return g_win.prompt(msg);
     }
-    
+
+    function logdebug (arg)
+    {
+        var be = new BPError(arg);
+        debug(be.toString());
+    }
+
+    function loginfo (arg)
+    {
+        var be = new BPError(arg);
+        info(be.toString());
+    }
+
     function log (arg)
     {
         var be = new BPError(arg);
-        g_console.log(be.toString());
+        log(be.toString());
     }
-    
+
     function logwarn (arg)
     {
         var be = new BPError(arg);
         if (be.err.acode === 'Unsupported') {
-            g_console.error(be.toString());
+            warn(be.toString());
         }
         else {
-            g_console.error(be.toString());
+            warn(be.toString());
         }
     }
-    
+
     var iface = {
         BPError: BPError,
         Activity: Activity,
@@ -311,9 +327,9 @@ function BP_GET_ERROR(g)
         success: alert,
         confirm: confirm,
         prompt: prompt,
-        log: log,
-        loginfo: log,
-        logdebug: log,
+        log: loginfo,
+        loginfo: loginfo,
+        logdebug: logdebug,
         logwarn: logwarn,
         msg: msg
     };

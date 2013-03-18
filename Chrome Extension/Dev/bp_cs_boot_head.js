@@ -34,13 +34,13 @@ var BP_BOOT = (function()
     function nameMatch(els, reg)
     {
         var dashes = /[\-_]/g;
-            
-        function elMatch (el) 
+
+        function elMatch (el)
         {
             return ( reg.test(el.getAttribute('name')?el.getAttribute('name').replace(dashes,""):"") ||
                      reg.test(el.getAttribute('id')?el.getAttribute('id').replace(dashes,""):"") );
         }
-        
+
         if (els && reg) {
             return Array.prototype.filter.apply(els, [elMatch]);
         }
@@ -75,7 +75,7 @@ var BP_BOOT = (function()
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -105,7 +105,7 @@ var BP_BOOT = (function()
 
         // Take over the options object.
         options = Object.freeze(options || {});
-        
+
         observer.observe(doc,
         {
             childList:true,
@@ -127,7 +127,7 @@ var BP_BOOT = (function()
         function onMutation(mutations, observer)
         {
             //console.log("onMutation entered:\n");
-            var i, n, bCall, mutes=[], 
+            var i, n, bCall, mutes=[],
                 now=0;//Used in batch-mode only.
 
             for (i=0, n=mutations.length; i<n; i++)
@@ -144,7 +144,7 @@ var BP_BOOT = (function()
                 }
             }
 
-            if (bCall) 
+            if (bCall)
             {
                 if (options.doBatch)
                 {
@@ -165,12 +165,12 @@ var BP_BOOT = (function()
                     }
                     else {
                         lastBatchTime = now;
-                        console.log("Handling Mutation in batch mode")
+                        //console.log("Handling Mutation in batch mode")
                     }
                 }
                 else
                 {
-                    console.log("Handling Mutation in serial mode");    
+                    //console.log("Handling Mutation in serial mode");
                 }
 
                 callback(options.doBatch ? {} : (options.filterMutes?mutes:mutations), observer);
@@ -181,7 +181,7 @@ var BP_BOOT = (function()
     function amDestFrame(req)
     {
         var activeElement;
-        
+
         if (req.frameUrl)
         {
             if (req.frameUrl !== document.location.href) {return false;}

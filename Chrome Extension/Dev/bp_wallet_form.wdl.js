@@ -962,7 +962,7 @@ function BP_GET_WALLET_FORM(g)
                      on:{ 'change': function(e)
                           {
                               //if (this.fieldsetKeyDirOrPath.checkValidity(this)) {
-                                CS_PLAT.customEvent(this.el, 'keyFileChosen',
+                                CS_PLAT.customEvent(this.el, 'keyPathChosen',
                                                     {keyFile:this.el.value});
                               //}
                           }}
@@ -1040,7 +1040,7 @@ function BP_GET_WALLET_FORM(g)
         inputPassword.wdt = function(ctx)
         {
             return {
-            tag:'input',
+            tag:'input', cons: inputPassword,
             attr:{ type:'password', placeholder:bPass2?"Re-Enter Master Password":"Enter Master Password",
                    title:'10 or more characters required', pattern:'.{10,}' },
             iface:{ 'bPass2':bPass2 },
@@ -1247,6 +1247,7 @@ function BP_GET_WALLET_FORM(g)
         onKeyPathChosen: {value: function(e)
         {
             this.fieldsetPassword.onKeyPathChosen(e);
+            this.fieldsetPassword2.onKeyPathChosen(e);
             e.preventDefault();
             e.stopPropagation();
         }},

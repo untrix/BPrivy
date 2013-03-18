@@ -294,7 +294,7 @@ function BP_GET_EDITOR(g)
          ctx: { w$:{ tButton:'w$el' } },
             children:[
             {tag:"i",
-            addClass:bInp ? "icon-eye-close" : "icon-eye-open",
+            addClass:bInp ? "icon-ok" : "icon-pencil",
             ctx:{ w$:{icon:'w$el'} }
             }],
          _iface:{ w$ctx:{ ioItem:"ioItem", icon:'icon' } }
@@ -315,6 +315,44 @@ function BP_GET_EDITOR(g)
             // }
             e.stopPropagation(); // We don't want the enclosing web-page to interefere
             e.preventDefault(); // Causes event to get cancelled if cancellable
+        }}
+    });
+
+    function VButton () {}
+    VButton.wdt = function(w$ctx)
+    {
+        return {
+        cons: VButton,
+        html:'<button type="button"></button>',
+        //css:{ float:'right', width:'20px' },
+        addClass: "com-untrix-B com-untrix-rB",
+        attr:{ title:'View password' },
+        on:{ click:VButton.prototype.toggleView },
+        iface:{ field:w$ctx.pwdField },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle' },
+            addClass:"icon-eye-open",
+            }]
+        };
+    };
+    VButton.prototype = w$defineProto(VButton,
+    {
+        viewField: {value: function(ev)
+        {
+            if (!this.field) {return;}
+            else this.field.view();
+        }},
+        unViewField: {value: function(ev)
+        {
+            if (!this.field) {return;}
+            else this.field.unView();
+        }},
+        toggleView: {value: function(ev)
+        {
+            if (!this.field) {return;}
+            if (this.field.viewing) { this.field.unView(); }
+            else {this.field.view();}
         }}
     });
 
@@ -383,14 +421,15 @@ function BP_GET_EDITOR(g)
              ctx:{ w$:{u:'w$el' } },
              _iface:{ value: u }
             },
-            {tag:'input',
-             attr:{ type:'text', value:p, placeholder:'Password', name:'p' },
+            {tag:'input', ref:'pwdField',
+             attr:{ type:'password', value:p, placeholder:'Password', name:'p' },
              prop:{ required:true },
              //addClass:css_class_field+css_class_passIn,
              addClass: "input-large",
              ctx:{ w$:{p:'w$el'} },
              _iface:{ value: p },
-            }
+            },
+            VButton.wdt
             //,{tag:'a', attr:{ type:'submit', href:'#' } }
             ],
         _iface:{ w$ctx:{ u:'u', p:'p', tButton:'tButton' } }
@@ -484,7 +523,7 @@ function BP_GET_EDITOR(g)
                  ctx:{ w$:{ u:'w$el' } },
                  _iface:{ fn:fn_userid, value:u }
                 },
-                {tag:'span',
+                {tag:'span', ref:'pwdField',
                  attr:{ draggable:true },
                  //addClass:css_class_field+css_class_passOut,
                  addClass: "input-large uneditable-input com-untrix-oItem",
@@ -495,7 +534,8 @@ function BP_GET_EDITOR(g)
                 {tag:'span',
                  addClass: "input-medium uneditable-input",
                  text:d.toDateString()
-                }
+                },
+                VButton.wdt
                 ],
             _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p', tButton:'tButton' } }
             };

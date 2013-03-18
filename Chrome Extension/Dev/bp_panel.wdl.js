@@ -367,13 +367,13 @@ function BP_GET_WDL (g)
         attr:{ 'class':css_class_xButton,
         	   href:'#',
         	   //href:BP_CS_PLAT.getURL("/bp_manage.html"),
-               target:"_blank", title:'Settings/Options' },
+               target:"_blank", title:'Control Panel' },
         iface:{ panel:panel },
         css:{ width:'20px' },
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle', cursor:'auto' },
-            addClass:'icon-wrench'
+            addClass:'icon-home'
             }]
         };
     };
@@ -567,15 +567,13 @@ function BP_GET_WDL (g)
     function VButton () {}
     VButton.wdt = function(w$ctx)
     {
-        var field = w$ctx.field;
         return {
         cons: VButton,
         html:'<button type="button"></button>',
         css:{ float:'right', width:'20px' },
         attr:{ title:'View password' },
-        on:{ mousedown:VButton.prototype.onMouseDown,
-             mouseup:VButton.prototype.onMouseUp },
-        _iface:{ field:field },
+        on:{ click:VButton.prototype.toggleView },
+        iface:{ field:w$ctx.pwdField },
             children:[
             {tag:"i",
             css:{ 'vertical-align':'middle' },
@@ -585,35 +583,23 @@ function BP_GET_WDL (g)
     };
     VButton.prototype = w$defineProto(VButton,
     {
-        onMouseDown: {value: function(ev)
+        viewField: {value: function(ev)
         {
             if (!this.field) {return;}
-            switch (this.field.el.tagName.toLowerCase())
-            {
-                case 'input':
-                    this.field.el.type = 'text';
-                    break;
-                case 'data':
-                    this.field.$().text(this.field.el.value);
-                    break;
-            }
+            else this.field.view();
         }},
-        onMouseUp: {value: function(ev)
+        unViewField: {value: function(ev)
         {
             if (!this.field) {return;}
-            switch (this.field.el.tagName.toLowerCase())
-            {
-                case 'input':
-                    this.field.el.type = 'password';
-                    break;
-                case 'data':
-                    this.field.$().text(this.field.el.value ? '****' : '');
-                    break;
-            }
+            else this.field.unView();
+        }},
+        toggleView: {value: function(ev)
+        {
+            if (!this.field) {return;}
+            if (this.field.viewing) { this.field.unView(); }
+            else {this.field.view();}
         }}
     });
-
-    var CButton = VButton;
 
     function isValidInput(str) {return Boolean(str);}
 
@@ -684,13 +670,14 @@ function BP_GET_WDL (g)
              ctx:{ w$:{ u:'w$el' } },
              _iface:{ value: u }
             },
-            {tag:'input', ref:'field',
+            {tag:'input', ref:'pwdField',
              attr:{ type:'password', value:p, placeholder:'Password', 'data-untrix':true },
              addClass:css_class_field+css_class_passIn,
              ctx:{ w$:{p:'w$el'} },
-                children:[CButton.wdt, VButton.wdt],
              _iface:{ value: p },
-            }],
+            },
+            VButton.wdt
+            ],
         _iface:{ w$ctx:{ u:'u', p:'p' } },
         //_final:{show:true}
         };
@@ -784,14 +771,15 @@ function BP_GET_WDL (g)
                  ctx:{ w$:{ u:'w$el' } },
                  _iface:{ fn:fn_userid, value:u }
                 },
-                {tag:'data', ref:'field',
+                {tag:'data', ref:'pwdField',
                  attr:{ draggable:true, 'data-untrix':true },
                  addClass:css_class_field+css_class_passOut,
                  text: p ? '*****' : '',
                  ctx:{ w$:{p:'w$el' } },
-                    children:[CButton.wdt, VButton.wdt],
                  _iface:{ fn:fn_pass, value:p }
-                }],
+                },
+                VButton.wdt
+                ],
             _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } },
             //_final:{show:true}
             };
@@ -1066,14 +1054,14 @@ function BP_GET_WDL (g)
         makeDraggable: {value: function(ctx, w$)
         {
             // Make sure that postion:fixed is supplied at element level otherwise draggable() overrides it
-            // by setting position:relative. Also we can use right:0px here because draggable() does not like it.
+            // by setting position:relative. Also we cant use right:0px here because draggable() does not like it.
             // Hence we need to calculate the left value :(
-            // var panelW = this.$el.outerWidth() || 300;
+            // var panelW = this.$().outerWidth() || 300;
             // var winW = g_doc.body.clientWidth || $(g_doc.body).innerWidth();
             // var left = (winW-panelW);
             // left = (left>0)? left: 0;
-            // this.$el.css({position: 'fixed', top: '0px', 'left': left + "px"});
-            $(this.el).draggable();
+            // this.$().css({position: 'fixed', top: '0px', 'left': left + "px"});
+            this.$().draggable();
         }},
         close: {value: function()
         {

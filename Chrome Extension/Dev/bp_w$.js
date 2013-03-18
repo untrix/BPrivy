@@ -226,6 +226,35 @@ function BP_GET_W$(g)
         //this.el.classList.remove(className);
     };
     WidgetElement.prototype.$ = function () {return $(this.el); };
+    WidgetElement.prototype.view = function()
+    {
+        switch (this.el.tagName.toLowerCase())
+        {
+            case 'input':
+                this.el.type = 'text';
+                this.viewing = true;
+                break;
+            default:
+                this.$().text(this.value);
+                this.viewing = true;
+                break;
+        }
+    };
+    WidgetElement.prototype.unView = function ()
+    {
+        if (!this.viewing) { return; }
+        switch (this.el.tagName.toLowerCase())
+        {
+            case 'input':
+                this.el.type = 'password';
+                this.viewing = false;
+                break;
+            default:
+                this.$().text(this.value ? '*****' : '');
+                this.viewing = false;
+                break;
+        }
+    };
 
     //////////// WDL Interpretor's LEXICAL ENVIRONMENT OBJECT ///////////
     /////////////////// Documents all possible properties ///////////////

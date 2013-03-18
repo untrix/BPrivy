@@ -14,7 +14,7 @@
   "background": {"page": "bp_Main.html"},
   "content_scripts": [
     {
-    "matches": ["http://*/*", "https://*/*", "ftp://*/*"],
+    "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     "exclude_matches": ["*://chrome.google.com/webstore*"],
     "js": ["bp_cs_boot.cat.js"],
     "run_at": "document_idle",

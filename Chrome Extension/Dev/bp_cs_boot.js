@@ -31,15 +31,15 @@
     function loadBP_CS(dll_init_func)
     {
         var com;
-        
+
         com = document.getElementById(eidCommand);
         if (com) {head.removeChild(com);}
         chrome.extension.onMessage.removeListener(onMessage);
-        
+
         function loadJS (path)
         {
             var xhr = new XMLHttpRequest();
-            
+
             xhr.open("GET", chrome.extension.getURL(path), false);
             xhr.send();
             var resp = xhr.response;
@@ -48,11 +48,11 @@
             // Filesystem.
             eval(resp);
         }
-        
+
         function loadCSSAsync (path, callback)
         {
             var css = document.getElementById(eidCss);
-                
+
             if (!css) {
                 css = document.createElement('link');
                 css.rel = "stylesheet";
@@ -61,11 +61,11 @@
                 css.href= chrome.extension.getURL(path);
             }
             else {return;}
-    
+
             if (callback) {css.onload = callback;}
             head.insertBefore(css, head.firstChild);
         }
-    
+
         loadJS("tp/jquery.js");
         loadJS("tp/jquery-ui.js");
         loadJS("bp_cs.cat.js");
@@ -74,11 +74,11 @@
             dll_init_func();
         });
     }
-    
+
     function setupCommand(doc, func)
     {
         var com = doc.getElementById(eidCommand);
-        
+
         if (!com) {
             com = document.createElement('command');
             com.type="command";
@@ -88,14 +88,14 @@
             com.addEventListener('click', func);
             com.dataset.untrix = true;
             head.insertBefore(com, head.firstChild);
-            console.log("Instrumented command");
+            //console.log("Instrumented command");
         }
     }
     function onClickComm()
     {
         loadBP_CS(function()
         {
-            if (BP_DLL.onClickComm) 
+            if (BP_DLL.onClickComm)
             {
                 BP_DLL.onClickComm();
             }
@@ -106,7 +106,7 @@
     {
         loadBP_CS(function()
         {
-            if (BP_DLL.onDllLoad) 
+            if (BP_DLL.onDllLoad)
             {
                 BP_DLL.onDllLoad();
             }
@@ -127,17 +127,17 @@
             if (BP_DLL.onAutoFillable) {
                 BP_DLL.onAutoFillable(req, sender, callback);
             }
-            else 
+            else
             {
                callback(
                 {
                     autoFillable:false,
                     frameUrl: g_myUrl
-                }); 
+                });
             }
         });
     }
-    
+
     function onMessage(req, sender, sendResp)
     {
         if (!BP_BOOT.amDestFrame(req)) {return;}
@@ -146,7 +146,7 @@
         {
             case 'cm_clickBP':
                 onClickBP(req, sender, sendResp);
-                break;                    
+                break;
             case 'cm_autoFillable':
                 onAutoFillable(req, sender, sendResp);
                 return true; // allows us to exit without invoking callback.
