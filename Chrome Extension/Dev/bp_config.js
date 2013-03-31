@@ -1,7 +1,7 @@
 /**
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012-2013 Untix Soft
+ * @copyright Copyright (c) 2012-2013 Untix Inc
  * All Rights Reserved
  */
 

@@ -1,8 +1,8 @@
 /**
- * @preserve
+
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
+ * Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 
 /* JSLint directives */
@@ -354,7 +354,7 @@ function BP_GET_WDL (g)
     };
 
     /**
-     * Settings/Options page link
+     * Control Panel/Home page link
      */
     function SButton(){}
     SButton.wdt = function (w$ctx)
@@ -362,7 +362,7 @@ function BP_GET_WDL (g)
         var panel = w$ctx.panel;
 
         return {
-        tag: 'a',
+        tag: 'a', cons:SButton,
         on:{ click:SButton.prototype.onClick },
         attr:{ 'class':css_class_xButton,
         	   href:'#',
@@ -387,6 +387,38 @@ function BP_GET_WDL (g)
         }}
     });
 
+    /**
+     * Edit Passwords link
+     */
+    function EButton(){}
+    EButton.wdt = function (w$ctx)
+    {
+        var panel = w$ctx.panel;
+
+        return {
+        tag: 'a', cons:EButton,
+        on:{ click:EButton.prototype.onClick },
+        attr:{ 'class':css_class_xButton,
+               href:'#',
+               title:'See All Passwords' },
+        iface:{ panel:panel },
+        css:{ width:'20px' },
+            children:[
+            {tag:"i",
+            css:{ 'vertical-align':'middle', cursor:'auto' },
+            addClass:'icon-list'
+            }]
+        };
+    };
+    EButton.prototype = w$defineProto(EButton,
+    {
+        onClick: {value: function (e)
+        {
+            e.stopPropagation(); // We don't want the enclosing web-page to interefere
+            e.preventDefault(); // Causes event to get cancelled if cancellable
+            this.panel.openPath('/bp_manage.html?action=edit');
+        }}
+    });
     /**
      * Open Wallet link
      */
@@ -453,7 +485,7 @@ function BP_GET_WDL (g)
             try {
 	            this.off(function ()
 	            {
-	                BP_ERROR.success('UWallet has been closed');
+	                BP_ERROR.success('Wallet has been closed');
 	            });
             }
             catch (ex) {
@@ -1033,6 +1065,7 @@ function BP_GET_WDL (g)
                 cs_panelTitleText_wdt,
                 XButton.wdt,
                 SButton.wdt,
+                ctx.dbName? EButton.wdt: w$undefined,
                 ctx.dbName? CButton.wdt: w$undefined,                OButton.wdt
                 ]
             },

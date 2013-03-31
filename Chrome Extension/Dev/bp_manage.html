@@ -2,10 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>untrix wallet&trade;</title>
+    <title>untrix KEYS [beta]</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Untrix Wallet&trade;">
-    <meta name="author" content="sumeet@untrix.com">
+    <meta name="description" content="untrix KEYS&trade; [beta]">
+    <meta name="author" content="untrix.com">
     <!-- Stylesheets -->
     <link href="tp/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <style type="text/css">        body {            padding-top: 60px;            padding-bottom: 40px;        }        .sidebar-nav {            padding: 9px 0;        }    </style>
@@ -18,12 +18,21 @@
     <link rel="apple-touch-icon" sizes="16x16" href="icons/icon16.png">
   </head>
   <body>
+    <!-- <div class="navbar navbar-fixed-top" style="background-color: transparent">
+        <div class="container">
+              <img src="icons/fullIcon48.png" alt="untrix KEYS&trade; [beta]"/>
+        </div>
+    </div> -->
     <div class="container">
       <div class="row">
-        <div class="span3"> <!-- class="span3" -->
+        <div class="span2">
           <!--Sidebar content-->
-          <h3> <i>untrix wallet&trade;</i></h3>
+          <!-- <h3> <i>untrix KEYS&trade; [beta]</i></h3> -->
+          <div id="logo">
+            <img src="icons/fullIcon48.png" alt="untrix KEYS&trade; [beta]" id="logo-img">
+          </div>
           <ul class="nav nav-list" id="nav-list">
+
             <li>
               <a data-nav id="nav-settings" href="#settings-pane"><i class="icon-cog"></i> Manage</a>
             </li>
@@ -35,12 +44,12 @@
             <li><a data-nav href="#help-pane"><i class="icon-flag"></i> Help</a></li>
             <li class="divider"></li>
             <li>
-              <a href="mailto:Wallet@untrix.com"><i class="icon-envelope"></i> Contact</a>
+              <a href="mailto:keys@untrix.com"><i class="icon-envelope"></i> Contact</a>
             </li>
           </ul>
         </div>
-        <!-- <div class="span1"></div> -->
-        <div id="content" class="span9"> <!-- class="span9" -->
+        <div class="span1"><p></p></div>
+        <div id="content" class="span9">
           <div class="tab-content">
             <!--Body content-->
             <div class="tab-pane" id="settings-pane">
@@ -109,6 +118,12 @@
                   </label>
                   <div class="controls">
                     <p> Nothing to do !</p>
+                    <p>
+                        Just create or move your <i>Wallet</i> folder into a cloud-drive such as <i>Dropbox&trade;,
+                        Google Drive&trade; or Microsoft Skydrive&trade;</i> on your PC.
+                        However for added security, be sure to <strong> create a Key-file and store it on a
+                        different drive</strong> (e.g. on your computer or in a thumb-drive).
+                    </p>
                     <!-- <p>
                       Just create or move
                       your <em>Wallet</em> folder into a cloud-drive such as
@@ -170,10 +185,9 @@
             </div>
             <div class="tab-pane" id="editor-pane">
               <legend><span data-dbName></span></legend>
-              <!-- <legend><span data-db-path>No Wallet Opened</span></legend> -->
 
               <div id="editorPane">
-                <div class="form-inline">
+                <form class="form-inline">
                   <div class="control-group">
                     <!-- <label class="control-label">Wallet</label> -->
                     <div class="controls btn-group">
@@ -186,12 +200,13 @@
                       </button>
                     </div>
                   </div>
-                </div>
+                </form>
                 <form class="form-inline form-search">
                       <!-- <button id="refreshEditor" type="button" class="btn" title="Reload"><i class="icon-refresh" data-loading-text=" loading..."></i></button> -->
                       <input type="search" id="dnSearch" placeholder="Filter or Add Sites" title="Filter shown sites or add a new one." class="search-query">
                       <button id="newDNode" type="submit" class="btn" title="New Web Site"><i class="icon-plus"></i></button>
                 </form>
+                <div id="editItems"></div>
               </div>
             </div>
 
@@ -253,31 +268,126 @@
             </div>
             <div class="tab-pane" id="license-pane">
               <!-- License and Credits Go Here -->
-              <h6> EULA, Licenses and Credits Go Here</h6>
-              <p><small>
-		          Note: Untrix Wallet&trade; <em>never</em> transfers your passwords to anywhere
-		          other than the file-system folder - of your choosing - and - temporarily -
-		          the memory of the computer/device on which it is running. It certainly does not
-		          transfer them to any internet web-site or server.
+              <section>
+<h3 style="text-align: center">END USER LICENSE AGREEMENT </h3>
 
-		          A network/internet/cloud/sky drive however, *will* transfer your passwords to
-		          locations outside of your control from where they could be lost, stolen, damaged
-		          or otherwise compromised.
-		      </small></p>
+<p style="text-align: justify">
+This copy of Untrix KEYS [beta] ("the Software Product") and accompanying documentation is licensed and not sold. This Software Product is protected by copyright laws and treaties, as well as laws and treaties related to other forms of intellectual property. Untrix Inc or its subsidiaries, affiliates, and suppliers (collectively "Untrix Inc") own intellectual property rights in the Software Product. The Licensee's ("you" or "your") license to download, use, copy, or change the Software Product is subject to these rights and to all the terms and conditions of this End User License Agreement ("Agreement").
+</p>
+<h4>Acceptance</h4>
+<p style="text-align: justify">
+YOU ACCEPT AND AGREE TO BE BOUND BY THE TERMS OF THIS AGREEMENT BY SELECTING THE "ACCEPT" OPTION AND DOWNLOADING THE SOFTWARE PRODUCT OR BY INSTALLING, USING, OR COPYING THE SOFTWARE PRODUCT. YOU MUST AGREE TO ALL OF THE TERMS OF THIS AGREEMENT BEFORE YOU WILL BE ALLOWED TO DOWNLOAD THE SOFTWARE PRODUCT. IF YOU DO NOT AGREE TO ALL OF THE TERMS OF THIS AGREEMENT, YOU MUST SELECT "DECLINE" AND YOU MUST NOT INSTALL, USE, OR COPY THE SOFTWARE PRODUCT.
+</p>
+<h4>License Grant</h4>
+<p style="text-align: justify">
+This Agreement entitles you to install and use one copy of the Software Product. In addition, you may make one archival copy of the Software Product. The archival copy must be on a storage medium other than a hard drive, and may only be used for the reinstallation of the Software Product. This Agreement does not permit the installation or use of multiple copies of the Software Product, or the installation of the Software Product on more than one computer at any given time, on a system that allows shared used of applications, on a multi-user network, or on any configuration or system of computers that allows multiple users. Multiple copy use or installation is only allowed if you obtain an appropriate licensing agreement for each user and each copy of the Software Product.
+</p>
+<h4>Restrictions on Transfer</h4>
+<p style="text-align: justify">
+Without first obtaining the express written consent of Untrix Inc, you may not assign your rights and obligations under this Agreement, or redistribute, encumber, sell, rent, lease, sublicense, or otherwise transfer your rights to the Software Product.
+</p>
+<h4>Restrictions on Use</h4>
+<p style="text-align: justify">
+You may not use, copy, or install the Software Product on any system with more than one computer, or permit the use, copying, or installation of the Software Product by more than one user or on more than one computer. If you hold multiple, validly licensed copies, you may not use, copy, or install the Software Product on any system with more than the number of computers permitted by license, or permit the use, copying, or installation by more users, or on more computers than the number permitted by license.
+</p>
+<p style="text-align: justify">
+You may not decompile, "reverse-engineer", disassemble, or otherwise attempt to derive the source code for the Software Product.
+</p>
+<p style="text-align: justify">
+You may not use the database portion of the Software Product in connection with any software other than the Software Product.
+</p>
+<h4>Restrictions on Alteration</h4>
+<p style="text-align: justify">
+You may not modify the Software Product or create any derivative work of the Software Product or its accompanying documentation. Derivative works include but are not limited to translations. You may not alter any files or libraries in any portion of the Software Product. You may not reproduce the database portion or create any tables or reports relating to the database portion.
+</p>
+<h4>Restrictions on Copying</h4>
+<p style="text-align: justify">
+You may not copy any part of the Software Product except to the extent that licensed use inherently demands the creation of a temporary copy stored in computer memory and not permanently affixed on storage medium. You may make one archival copy which must be stored on a medium other than a computer hard drive.
+</p>
+<h4>Disclaimer of Warranties and Limitation of Liability</h4>
+<p style="text-align: justify">
+UNLESS OTHERWISE EXPLICITLY AGREED TO IN WRITING BY UNTRIX INC, UNTRIX INC MAKES NO OTHER WARRANTIES, EXPRESS OR IMPLIED, IN FACT OR IN LAW, INCLUDING, BUT NOT LIMITED TO, ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE OTHER THAN AS SET FORTH IN THIS AGREEMENT OR IN THE LIMITED WARRANTY DOCUMENTS PROVIDED WITH THE SOFTWARE PRODUCT.
+</p>
+<p style="text-align: justify">
+Untrix Inc makes no warranty that the Software Product will meet your requirements or operate under your specific conditions of use. Untrix Inc makes no warranty that operation of the Software Product will be secure, error free, or free from interruption. YOU MUST DETERMINE WHETHER THE SOFTWARE PRODUCT SUFFICIENTLY MEETS YOUR REQUIREMENTS FOR SECURITY AND UNINTERRUPTABILITY. YOU BEAR SOLE RESPONSIBILITY AND ALL LIABILITY FOR ANY LOSS INCURRED DUE TO FAILURE OF THE SOFTWARE PRODUCT TO MEET YOUR REQUIREMENTS. UNTRIX INC WILL NOT, UNDER ANY CIRCUMSTANCES, BE RESPONSIBLE OR LIABLE FOR THE LOSS OF DATA ON ANY COMPUTER OR INFORMATION STORAGE DEVICE.
+</p>
+<p style="text-align: justify">
+UNDER NO CIRCUMSTANCES SHALL UNTRIX INC, ITS DIRECTORS, OFFICERS, EMPLOYEES OR AGENTS BE LIABLE TO YOU OR ANY OTHER PARTY FOR INDIRECT, CONSEQUENTIAL, SPECIAL, INCIDENTAL, PUNITIVE, OR EXEMPLARY DAMAGES OF ANY KIND (INCLUDING LOST REVENUES OR PROFITS OR LOSS OF BUSINESS) RESULTING FROM THIS AGREEMENT, OR FROM THE FURNISHING, PERFORMANCE, INSTALLATION, OR USE OF THE SOFTWARE PRODUCT, WHETHER DUE TO A BREACH OF CONTRACT, BREACH OF WARRANTY, OR THE NEGLIGENCE OF UNTRIX INC OR ANY OTHER PARTY, EVEN IF UNTRIX INC IS ADVISED BEFOREHAND OF THE POSSIBILITY OF SUCH DAMAGES. TO THE EXTENT THAT THE APPLICABLE JURISDICTION LIMITS UNTRIX INC'S ABILITY TO DISCLAIM ANY IMPLIED WARRANTIES, THIS DISCLAIMER SHALL BE EFFECTIVE TO THE MAXIMUM EXTENT PERMITTED.
+</p>
+<h4>Limitation of Remedies and Damages</h4>
+<p style="text-align: justify">
+Your remedy for a breach of this Agreement or of any warranty included in this Agreement is the correction or replacement of the Software Product. Selection of whether to correct or replace shall be solely at the discretion of Untrix Inc. Untrix Inc reserves the right to substitute a functionally equivalent copy of the Software Product as a replacement. If Untrix Inc is unable to provide a replacement or substitute Software Product or corrections to the Software Product, your sole alternate remedy shall be a refund of the purchase price for the Software Product exclusive of any costs for shipping and handling.
+</p>
+<p style="text-align: justify">
+Any claim must be made within the applicable warranty period. All warranties cover only defects arising under normal use and do not include malfunctions or failure resulting from misuse, abuse, neglect, alteration, problems with electrical power, acts of nature, unusual temperatures or humidity, improper installation, or damage determined by Untrix Inc to have been caused by you. All limited warranties on the Software Product are granted only to you and are non-transferable. You agree to indemnify and hold Untrix Inc harmless from all claims, judgments, liabilities, expenses, or costs arising from your breach of this Agreement and/or acts or omissions.
+</p>
+<h4>Governing Law, Jurisdiction and Costs</h4>
+<p style="text-align: justify">
+This Agreement is governed by the laws of Delaware, without regard to Delaware's conflict or choice of law provisions.
+</p>
+<h4>Severability</h4>
+<p style="text-align: justify">
+If any provision of this Agreement shall be held to be invalid or unenforceable, the remainder of this Agreement shall remain in full force and effect. To the extent any express or implied restrictions are not permitted by applicable laws, these express or implied restrictions shall remain in force and effect to the maximum extent permitted by such applicable laws.
+</p>
+
+              </section>
+              <section>
+                  <h3 style="text-align: center"> Other Software Licenses </h3>
+                  <p>This software uses the following pieces of software under the indicated free licenses.
+                  We are deeply grateful to all the engineers and others who contributed to these software
+                  over years. We are trying our best to give back to the community likewise.
+                  </p>
+                  <table class="table table-bordered table-hover">
+                      <thead>
+                          <tr>
+                              <th>Software name</th>
+                              <th>License</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <!-- <tr>
+                              <td><a href="http://www.firebreath.org/display/documentation/About+FireBreath">Firebreath</a></td>
+                              <td><a href="data/NewBSD_license.html">New BSD License</a></td>
+                          </tr> -->
+                          <tr>
+                              <td><a href="http://jquery.com/" target="jQuery">jQuery</a></td>
+                              <td><a href="data/jQuery_MIT_license.html" target="MITLicense">MIT License</a></td>
+                          </tr>
+                          <tr>
+                              <td><a href="http://jqueryui.com/" target="jQueryUI">jQuery-UI</a></td>
+                              <td><a href="data/jQuery_MIT_license.html" target="MITLicense">MIT License</a></td>
+                          </tr>
+                          <tr>
+                              <td><a href="http://twitter.github.com/bootstrap/" target="bootstrap">twitter/bootstrap</a></td>
+                              <td><a href="data/Apache2_license.html" target="ApacheLicense">Apache License v2.0</a></td>
+                          </tr>
+                      </tbody>
+                  </table>
+              </section>
             </div>
           </div>
         </div>
       </div>
-      <hr>
-      <footer>
-        <p>
-          &copy; Copyright 2012-2013 Untrix Soft LLC (http://www.untrix.com)
-        </p>
-        <p>
-          UntrixWallet&trade; and ActionReplay&trade; are trademarks of Untrix Soft LLC
-        </p>
-      </footer>
     </div>
+    <hr />
+    <footer class="footer">
+        <div class="container">
+            <p>
+              &copy; Copyright 2012-2013 Untrix Inc (http://www.untrix.com).
+              untrix&trade;, untrix keys&trade; and the key icons are trademarks of Untrix Inc
+            </p>
+              <p><small>
+                  Note: untrix KEYS&trade; <bold>never</bold> transfers your passwords to anywhere
+                  other than the wallet folder of your choosing and - temporarily -
+                  into the memory of the computer/device on which it is executing. It certainly does not
+                  transfer them to any internet web-site or server.
+                  <bold> However, please be aware of the following risk regarding cloud/internet/sky drives: </bold>
+                  A network/internet/cloud/sky drive <bold>will</bold> transfer your passwords - although encrypted - to
+                  locations outside of your control from where they could be lost, stolen, damaged
+                  or otherwise compromised.
+              </small></p>
+        </div>
+    </footer>
     <object type="application/x-untrix" style="visibility: none" width="0" height="0"
       id="com-untrix-bpplugin">
     </object>

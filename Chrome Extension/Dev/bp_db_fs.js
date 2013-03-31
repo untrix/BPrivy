@@ -1,8 +1,8 @@
 /**
- * @preserve
+
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
+ * Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 
 /*global $, IMPORT, BP_PLUGIN */
@@ -123,7 +123,6 @@ function BP_GET_DBFS(g)
             DOT = '.',
             ext = {
                 ext_Root: ".3ab", // .3db is taken :(
-                //ext_Root: ".uwallet", // TODO: Change this back to .3ab
                 ext_Dict: ".3ad",
                 ext_Open: ".3ao",
                 ext_Closed:".3ac",
@@ -677,10 +676,10 @@ function BP_GET_DBFS(g)
             switch (dt)
             {
                 case dt_pRecord:
-                    csv_dt[dt] = "UWallet_passwords";
+                    csv_dt[dt] = "keys_passwords";
                     break;
                 default:
-                    csv_dt[dt] = "UWallet_" + dt;
+                    csv_dt[dt] = "keys_" + dt;
             }
         });
         // Setup ext and cat constants

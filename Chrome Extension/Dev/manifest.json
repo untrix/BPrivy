@@ -1,14 +1,15 @@
 {
-  "name": "KEYS @untrix",
-  "version": "0.6.24",
+  "name": "untrix KEYS [beta]",
+  "version": "0.6.25",
   "manifest_version": 2,
   "minimum_chrome_version": "20",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
   "description":"Your Passwords: Local and Portable",
   "icons": {
-         "16": "icons/icon16.png",
+         "19": "icons/icon19.png",
          "48": "icons/icon48.png",
-	     "128": "icons/icon128.png"
+	     "128": "icons/fullIcon48.png",
+	     "340": "icons/fullIcon128.png"
 	   },
   "permissions": ["contextMenus", "tabs", "webRequest", "webNavigation", "notifications"],
   "background": {"page": "bp_Main.html"},

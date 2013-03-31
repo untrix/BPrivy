@@ -1,8 +1,8 @@
 /**
- * @preserve
+
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
+ * @copyright Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 /* Global declaration for JSLint */
 /*global */
@@ -137,9 +137,9 @@ function BP_GET_ERROR(g)
         ETLDLoadFailed: 'ETLD Load Failed',
         ExistingStore: "The selected folder seems to already be part of an existing DB.",
         NotJSObject: "Argument is not a javascript object.",
-        NoDBLoaded: "Please load a uWallet first.",
+        NoDBLoaded: "Please load a Wallet first.",
         DBAlreadyLoaded: "This wallet is already loaded. Please select a different one.",
-        NoDBSelected: "Please choose a uWallet first.",
+        NoDBSelected: "Please choose a Wallet first.",
         InternalError: "InternalError",
         CryptError: 'Encryption/Decryption Error: Perhaps an incorrect password or encryption-key-file.',
         KeyNotLoaded: 'The Key file has not been loaded. Could be an error in the software. Please close the window and retry.'

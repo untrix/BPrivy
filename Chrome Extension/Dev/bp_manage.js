@@ -1,8 +1,8 @@
 /**
- * @preserve
+
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
+ * Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 
 /* JSLint directives */
@@ -18,7 +18,8 @@ var BP_MANAGE = (function ()
     "use strict";
     /** @globals-begin */
     var g = {g_win:window, g_console:console, g_chrome:chrome, $:$, jQuery:jQuery},
-        g_doc = document;
+        g_doc = document,
+        g_win = window;
     g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
     g.MAIN_PAGE = g.BP_CS_PLAT.getBackgroundPage();
     g.BP_CONFIG = g.MAIN_PAGE.BP_CONFIG;
@@ -62,6 +63,31 @@ var BP_MANAGE = (function ()
     /** @globals-begin */
     var g_editor, g_dbName, g_dbPath;
     /** @globals-end **/
+
+    function newSpinner(el)
+    {
+        var opts = {
+          lines: 13, // The number of lines to draw
+          length: 15, // The length of each line
+          width: 4, // The line thickness
+          radius: 20, // The radius of the inner circle
+          corners: 1, // Corner roundness (0..1)
+          rotate: 0, // The rotation offset
+          color: '#000', // #rgb or #rrggbb
+          speed: 2, // Rounds per second
+          trail: 60, // Afterglow percentage
+          shadow: false, // Whether to render a shadow
+          hwaccel: true, // Whether to use hardware acceleration
+          className: 'spinner', // The CSS class to assign to the spinner
+          zIndex: 2e9, // The z-index (defaults to 2000000000)
+          top: 'auto', // Top position relative to parent in px
+          left: 'auto' // Left position relative to parent in px
+        };
+
+        var spinner = new g_win.Spinner(opts).spin(el);
+        //el.appendChild(spinner.el);
+        return spinner;
+    }
 
     function chooseFolder(o)
     {
@@ -281,37 +307,28 @@ var BP_MANAGE = (function ()
 
     function reloadEditor()
     {
-        $('#refreshEditor').button('loading');
-        //getDB(dt_pRecord, function (resp)
-        //{
-            //if (!resp) {
-                //callbackHandleError(resp);
-                // fall-through
-            //}
+        //$('#refreshEditor').button('loading');
+        var spinner = newSpinner($('#editItems')[0]),
+            ctx = {dnIt:MEMSTORE.newDNodeIterator(dt_pRecord), dt:dt_pRecord},
+            editor = g.BP_W$.w$exec(g.BP_EDITOR.EditorWdl_wdt, ctx),
+            temp;
 
-            //var dB = resp.dB;
-            //MEMSTORE.putDB(dB, dt_pRecord);
+        BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
+        if (g_editor) {
+            g_editor.replaceWith(editor);
+            temp = g_editor;
+            temp.clearRefs();
+            g_editor = editor;
+            //g_editor.$el.appendTo($('#editItems'));
+        }
+        else {
+            g_editor = editor;
+            $(g_editor.el).appendTo($('#editItems'));
+        }
 
-            var ctx = {dnIt:MEMSTORE.newDNodeIterator(dt_pRecord), dt:dt_pRecord},
-                editor = g.BP_W$.w$exec(g.BP_EDITOR.EditorWdl_wdt, ctx),
-                temp;
-
-            BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
-            if (g_editor) {
-                g_editor.replaceWith(editor);
-                temp = g_editor;
-                temp.clearRefs();
-                g_editor = editor;
-                //g_editor.$el.appendTo($('#editorPane'));
-            }
-            else {
-                g_editor = editor;
-                $(g_editor.el).appendTo($('#editorPane'));
-            }
-
-            $('#refreshEditor').button('reset');
-            $('#editorPane *').tooltip(); // leaks DOM nodes :(. I wonder what else in bootstrap leaks.
-        //});
+        //$('#refreshEditor').button('reset');
+        spinner.stop();
+        $('#editItems *').tooltip(); // seemed to leak DOM nodes in 2.0.4 :(. I wonder what else in bootstrap leaks.
     }
 
     function getCallbacks()
@@ -330,12 +347,14 @@ var BP_MANAGE = (function ()
 
     function onload()
     {
+        var actionOpt = BP_COMMON.getQueryObj(g.g_win.location)['action'];
+
         BP_CONNECT.getDBPath(function(resp)
         {
             updateDash(resp);
         });
 
-        switch (BP_COMMON.getQueryObj(g.g_win.location)['action'])
+        switch (actionOpt)
         {
             case 'open':
                 launchOpen({closeWin:true});
@@ -358,16 +377,6 @@ var BP_MANAGE = (function ()
             e.preventDefault();
             $(this).tab('show');
         });
-        $("#nav-settings").tab('show');
-
-        //$("#csvPathSubmit").click(function (e)
-        //addEventListeners("#csvPathSubmit", "click", function(e)
-        // addEventListeners("[data-path-submit]", "click", function(e)
-        // {
-            // var path = $("#csvPath").val();
-            // console.log("Import CSV File:" + path);
-            // e.preventDefault();
-        // });
 
         addEventListeners('#csvImport', 'click', function (e)
         {
@@ -432,7 +441,7 @@ var BP_MANAGE = (function ()
                 if (resp.result === true)
                 {
                     updateDash(resp);
-                    BP_ERROR.success('UWallet has been compacted: ' + resp.dbPath);
+                    BP_ERROR.success('Wallet has been compacted: ' + resp.dbPath);
                 }
                 else {
                     callbackHandleError(resp);
@@ -449,7 +458,7 @@ var BP_MANAGE = (function ()
                 if (resp.result === true)
                 {
                     updateDash(resp);
-                    BP_ERROR.success('UWallet has been cleaned: ' + resp.dbPath);
+                    BP_ERROR.success('Wallet has been cleaned: ' + resp.dbPath);
                 }
                 else {
                     callbackHandleError(resp);
@@ -470,7 +479,7 @@ var BP_MANAGE = (function ()
                     if (id === 'dbClose2') {
                         clearEditor();
                     }
-                    BP_ERROR.success('UWallet has been closed');
+                    BP_ERROR.success('Wallet has been closed');
                 }
                 else
                 {
@@ -480,13 +489,17 @@ var BP_MANAGE = (function ()
         }
         addEventListeners('#dbClose, #dbClose2', 'click', closeDB);
 
-        addEventListeners('#editB', 'click',
-        function initEditor(e)
+        // addEventListeners('#editB', 'click', function (e)
+        // {
+            // if (!g_editor) { reloadEditor(); }
+        // });
+
+        $('#editB').on('shown', function ()
         {
-            if (!g_editor) {reloadEditor();}
+            if (!g_editor) { reloadEditor(); }
         });
 
-        addEventListeners('#refreshEditor', 'click', reloadEditor);
+        //addEventListeners('#refreshEditor', 'click', reloadEditor);
 
         addEventListeners('#newDNode', 'click',
         function(e)
@@ -583,6 +596,15 @@ var BP_MANAGE = (function ()
 		addEventListeners('#dbDelete', 'click', deleteDB);
 
         $('#content *').tooltip();
+        switch (actionOpt)
+        {
+            case 'edit':
+                $("#editB").tab('show');
+                break;
+            default:
+                $("#nav-settings").tab('show');
+        }
+
     }
 
     function loadPlugin ()

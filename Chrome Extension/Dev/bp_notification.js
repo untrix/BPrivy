@@ -1,8 +1,8 @@
 /**
- * @preserve
+
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
+ * Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 /*global IMPORT, chrome, webkitNotifications, BP_GET_ERROR, BP_GET_COMMON, BP_GET_TRAITS,
   BP_GET_MEMSTORE, BP_GET_W$, BP_GET_CONNECT, BP_GET_LISTENER */

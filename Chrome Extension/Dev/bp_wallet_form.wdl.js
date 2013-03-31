@@ -1,8 +1,7 @@
 /**
- * @preserve
  * @author Sumeet S Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Rights Reserved, Untrix Soft
+ * Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 
 /* JSLint directives */
@@ -1424,11 +1423,11 @@ function BP_GET_WALLET_FORM(g)
                  save:['dialog'],
                  on:{ 'click': function(e){modalDialog.destroy();} }
                 },
-                { tag:'h4',
+                { tag:'h3',
                  css:{ 'text-align':'center' },
                     children:[
-                    { tag:'span', ref:'modalHeader' },
-                    { tag:'h3', ref:'headerDBName' }
+                    { tag:'i', ref:'modalHeader'},
+                    { tag:'h3', ref:'headerDBName'}
                     ]
                 }
                 ]
