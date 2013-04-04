@@ -1,8 +1,7 @@
 /**
- * @preserve
  * @author Sumeet S Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Rights Reserved, Untrix Soft
+ * Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 
 /* JSLint directives */
@@ -52,8 +51,8 @@ function BP_GET_WALLET_FORM(g)
     var g_counter = 1,
         g_text =
 	    {
-	    	keyOptionsHelpText: 'For more security: Do not store the Key file on the same device as the Wallet. A thief will need three things to steal your data: 1) Wallet, 2) Key and 3) Master Password. '+
-	    	'Therefore, store the Wallet and Key in separate locations. The key could be stored on a memory-stick and carried with you always.'
+	    	keyOptionsHelpText: 'For more security: Do not store the Master Key file on the same device as the keyring. A thief will need three things to steal your data: 1) keyring, 2) Master Key and 3) Master Password. '+
+	    	'Therefore, store the keyring and Master Key in separate locations. The Master Key could be stored on a memory-stick and carried with you always.'
 	    };
     /** @globals-end **/
 
@@ -89,8 +88,8 @@ function BP_GET_WALLET_FORM(g)
     function chooseWalletFolder(o)
     {
         BP_COMMON.clear(o);
-        o.dtitle = "Untrix Wallet: Select Wallet Folder";
-        o.dbutton = "Select Wallet Folder";
+        o.dtitle = "K3YRING: Select keyring Folder";
+        o.dbutton = "Select keyring Folder";
         o.clrHist = true;
 
         return chooseFolder(o);
@@ -99,8 +98,8 @@ function BP_GET_WALLET_FORM(g)
     function chooseKeyFolder(o)
     {
         BP_COMMON.clear(o);
-        o.dtitle  = "Untrix Wallet: Select folder for storing Key File";
-        o.dbutton = "Select Key File Folder";
+        o.dtitle  = "K3YRING: Select folder for storing Master Key File";
+        o.dbutton = "Select Master Key File Folder";
 
         return chooseFolder(o);
     }
@@ -108,8 +107,8 @@ function BP_GET_WALLET_FORM(g)
     function chooseKeyFile(o)
     {
         BP_COMMON.clear(o);
-        o.filter = ['Key File', '*' + DB_FS.ext_Key];
-        o.dtitle = "Untrix Wallet: Select Key File";
+        o.filter = ['Master Key File', '*' + DB_FS.ext_Key];
+        o.dtitle = "K3YRING: Select Master Key File";
         o.dbutton = "Select";
         o.clrHist = true;
 
@@ -313,7 +312,7 @@ function BP_GET_WALLET_FORM(g)
         return {
         tag:'form', addClass:'pull-left',
             children:[
-            {tag:'label', _text:'  Remember Wallet Locations',
+            {tag:'label', _text:'  Remember keyring Locations',
              css:{ 'text-align':'left' },
                 children:[
                 {tag:'input', attr:{ type:'radio', tabindex:-1, name:'dontSaveLocation' },
@@ -474,9 +473,9 @@ function BP_GET_WALLET_FORM(g)
                     children:[
                     {tag:'input',
                      ref:'inputDBName', addClass:"input-medium",
-                     attr:{ type:'text', placeholder:"Enter Wallet Name", pattern:".{1,}",
-                     title:"Please enter a name for the new Wallet that you would like to create. "+
-                           "Example: <i>Tony's Wallet</i>"
+                     attr:{ type:'text', placeholder:"Enter keyring Name", pattern:".{1,}",
+                     title:"Please enter a name for the new keyring that you would like to create. "+
+                           "Example: <i>Work keyring</i>"
                      },
                      prop:{ required: true },
                      on:{ 'change': function(e) {
@@ -544,7 +543,7 @@ function BP_GET_WALLET_FORM(g)
         addClass:'control-group',
         save:['walletForm'],
             children:[
-            {html:'<label class="control-label">Wallet Location</label>'},
+            {html:'<label class="control-label">keyring Location</label>'},
             {tag:'div', addClass:'controls form-inline',
                 children:[
                 {tag:'div', addClass:'input-prepend',
@@ -553,7 +552,7 @@ function BP_GET_WALLET_FORM(g)
                     btnChooseDB.wdt,
                     {tag:'input',
                      ref:'inputDBPath',
-                     attr:{ type:'text', placeholder:"Wallet Folder Location" },
+                     attr:{ type:'text', placeholder:"keyring Folder Location" },
                      prop:{ required:true },
                      addClass:"input-large",
                      save:['fieldsetChooseDB'],
@@ -651,14 +650,14 @@ function BP_GET_WALLET_FORM(g)
         _cull:['inputKeyPath', 'btnChooseKey'],
         _final:{ exec:function() { this.disable(); } },
             children:[
-            {html:'<label class="control-label">Key File</label>'},
+            {html:'<label class="control-label">Master Key File</label>'},
             {tag:'div', addClass:'controls form-inline',
                 children:[
                 {tag:'div', addClass:'input-prepend', ref:'controlsKey',
                     children:[
                     btnChooseKey.wdt,
                     {tag:'input',
-                     attr:{ type:'text', placeholder:"Key File Path" },
+                     attr:{ type:'text', placeholder:"Master Key File Path" },
                      prop:{ required:true },
                      addClass:"input-xlarge",
                      ref:'inputKeyPath',
@@ -734,11 +733,11 @@ function BP_GET_WALLET_FORM(g)
         	_cull:['optionNoKey', 'optionHaveKey', 'optionNewKey'],
         		children:[
 	        	{tag:'label',
-	        	_text:'  Do not use a Key (Least Secure Option)',
+	        	_text:'  Do not use a Master Key (Least Secure Option)',
 	        	 attr:{ title: 'Not recommended for cloud-drives - use one of the other options for cloud-drives. '+
-	        	 			   'If you create multiple Wallets with this option then you\'ll have to separately change '+
+	        	 			   'If you create multiple keyrings with this option then you\'ll have to separately change '+
 	        	 			   'the master-password for each. If you want the convenience of a single master-password '+
-	        	 			   'for multiple Wallets then use a Key (following options).' },
+	        	 			   'for multiple keyrings then use a Master Key (following options).' },
 	             css:{ 'text-align':'left' },
 	                children:[
 	                {tag:'input',
@@ -753,8 +752,8 @@ function BP_GET_WALLET_FORM(g)
 	                ]
 	            },
 	            {tag:'label',
-	             _text:'  I already have a Key',
-	             attr:{ title:'Use an existing Key to encrypt this Wallet. '+
+	             _text:'  I already have a Master Key',
+	             attr:{ title:'Use an existing Master Key to encrypt/decrypt this keyring. '+
 	             			   g_text.keyOptionsHelpText},
 	             css:{ 'text-align':'left' },
 	                children:[
@@ -770,11 +769,11 @@ function BP_GET_WALLET_FORM(g)
 	                ]
 	            },
 	            {tag:'label',
-	             _text:'  I do not have a Key - create one.',
-	        	 attr:{ title: 'Create an encryption Key (file) to encrypt this Wallet. This key may also be used for Wallets created later. ' +
-	        	 			   'For more security advanced users may choose to create a new Key per Wallet, but while doing so be aware that a '+
-	        	 			   'new Key file implies a separate master-password to remember (and to change periodically). If you have too many '+
-	        	 			   'Key files, then keeping track of individual master-passwords can get tricky.'+
+	             _text:'  I do not have a Master Key - create one.',
+	        	 attr:{ title: 'Create an encryption Key (Master Key) to encrypt this keyring. This Master Key may also be used for keyrings created later. ' +
+	        	 			   'For more security advanced users may choose to create a new Master Key per keyring, but while doing so be aware that a '+
+	        	 			   'new Master Key file implies a separate master-password to remember (and to change periodically). If you have too many '+
+	        	 			   'Master Key files, then keeping track of individual master-passwords can get difficult.'+
 	        	 			   g_text.keyOptionsHelpText },
 	             css:{ 'text-align':'left' },
 	                children:[
@@ -889,7 +888,7 @@ function BP_GET_WALLET_FORM(g)
         _cull:['radioKeyOptions', 'controlsKeyFolder', 'controlsKeyFile'],
         _final:{ exec:function() { this.disable(); } },
             children:[
-            {html:'<label class="control-label">Encryption Key</label>'},
+            {html:'<label class="control-label">Master Key</label>'},
             {tag:'div', addClass:'controls',
                 children:[
                 radioKeyOptions.wdt,
@@ -917,7 +916,7 @@ function BP_GET_WALLET_FORM(g)
                     btnChooseKeyFolder.wdt,
                     {tag:'input',
                      ref:'inputKeyFolder',
-                     attr:{ type:'text', placeholder:"Key Folder Path" },
+                     attr:{ type:'text', placeholder:"Master Key Folder Path" },
                      prop:{ required:true },
                      addClass:"input-xlarge",
                      save:['fieldsetKeyDirOrPath'],
@@ -955,7 +954,7 @@ function BP_GET_WALLET_FORM(g)
                     btnChooseKeyFile.wdt,
                     {tag:'input',
                      ref:'inputKeyFile',
-                     attr:{ type:'text', placeholder:"Key File Path" },
+                     attr:{ type:'text', placeholder:"Master Key File Path" },
                      prop:{ required:true },
                      addClass:"input-xlarge",
                      save:['fieldsetKeyDirOrPath'],
@@ -981,9 +980,9 @@ function BP_GET_WALLET_FORM(g)
     		var fName = this.walletForm.fieldsetDBName.val() + DB_FS.ext_Key,
     			keyPath = path + DB_FS.getPathSep() + fName;
     		if (BP_PLUGIN.exists(keyPath, {})) {
-    			this.controlsKeyFolder.inputKeyFolder.el.setCustomValidity('A Key file called ' + fName + ' already exists at this location');
+    			this.controlsKeyFolder.inputKeyFolder.el.setCustomValidity('A Master Key file called ' + fName + ' already exists at this location');
     			this.controlsKeyFolder.inputKeyFolder.el.checkValidity();
-    			BP_ERROR.warn('A Key file called ' + fName + ' already exists at this location. Choose a different folder or a different Wallet name.');
+    			BP_ERROR.warn('A Master Key file called ' + fName + ' already exists at this location. Choose a different folder or a different keyring name.');
     			return false;
     		}
     		else {
@@ -1291,7 +1290,7 @@ function BP_GET_WALLET_FORM(g)
                                             resp.dbPath,
                                             self.fieldsetChooseKey.val());
                         self.updateDash(resp);
-                        BP_ERROR.success('Opened password wallet at ' + resp.dbPath);
+                        BP_ERROR.success('Opened keyring at ' + resp.dbPath);
                         modalDialog.destroy();
                     }
                     else {
@@ -1335,7 +1334,7 @@ function BP_GET_WALLET_FORM(g)
             }
             else if (this.getDBPath() === self.fieldsetChooseDB.val()) {
                 spinner.stop();
-                BP_ERROR.warn('The chosen wallet is already open! Please choose another wallet.');
+                BP_ERROR.warn('The chosen keyring is already open! Please choose another keyring.');
             }
             else if (self.mode === 'merge')
             {
@@ -1349,7 +1348,7 @@ function BP_GET_WALLET_FORM(g)
                                                self.fieldsetChooseDB.val(),
                                                self.fieldsetChooseKey.val());
                         self.updateDash(resp);
-                        BP_ERROR.success('Merged with password wallet at ' + self.fieldsetChooseDB.val());
+                        BP_ERROR.success('Merged with keyring at ' + self.fieldsetChooseDB.val());
                         modalDialog.destroy();
                     }
                     else {
@@ -1369,7 +1368,7 @@ function BP_GET_WALLET_FORM(g)
                                                self.fieldsetChooseDB.val(),
                                                self.fieldsetChooseKey.val());
                         self.updateDash(resp);
-                        BP_ERROR.success('Merged In password wallet at ' + self.fieldsetChooseDB.val());
+                        BP_ERROR.success('Merged In keyring at ' + self.fieldsetChooseDB.val());
                         modalDialog.destroy();
                     }
                     else {
@@ -1389,7 +1388,7 @@ function BP_GET_WALLET_FORM(g)
                                           self.fieldsetChooseDB.val(),
                                           self.fieldsetChooseKey.val());
                         //self.updateDash(resp);
-                        BP_ERROR.success('Merged out to password wallet at ' +
+                        BP_ERROR.success('Merged out to keyring at ' +
                                          self.fieldsetChooseDB.val());
                         modalDialog.destroy();
                     }
@@ -1424,11 +1423,11 @@ function BP_GET_WALLET_FORM(g)
                  save:['dialog'],
                  on:{ 'click': function(e){modalDialog.destroy();} }
                 },
-                { tag:'h4',
+                { tag:'h3',
                  css:{ 'text-align':'center' },
                     children:[
-                    { tag:'span', ref:'modalHeader' },
-                    { tag:'h3', ref:'headerDBName' }
+                    { tag:'i', ref:'modalHeader'},
+                    { tag:'h3', ref:'headerDBName'}
                     ]
                 }
                 ]
@@ -1470,20 +1469,20 @@ function BP_GET_WALLET_FORM(g)
             switch (this.mode)
             {
                 case 'merge':
-                    this.modalHeader.$().text('Sync/Merge Wallet: ');
+                    this.modalHeader.$().text('Sync/Merge keyring: ');
                     break;
                 case 'mergeIn':
-                    this.modalHeader.$().text('Import Wallet:');
+                    this.modalHeader.$().text('Import keyring:');
                     break;
                 case 'mergeOut':
-                    this.modalHeader.$().text('Export to Wallet:');
+                    this.modalHeader.$().text('Export to keyring:');
                     break;
                 case 'create':
-                    this.modalHeader.$().text('Create Wallet:');
+                    this.modalHeader.$().text('Create keyring:');
                     break;
                 case 'open':
                 default:
-                    this.modalHeader.$().text('Open Wallet:');
+                    this.modalHeader.$().text('Open keyring:');
             }
 
             return this;

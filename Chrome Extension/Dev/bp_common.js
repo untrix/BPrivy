@@ -1,33 +1,32 @@
 /**
- * @preserve
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012. All Rights Reserved, Sumeet S Singh
+ * @copyright Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 /* Global declaration for JSLint */
 /*global */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
- 
+
 //////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE ///////////////////
-function BP_GET_COMMON(g) 
+function BP_GET_COMMON(g)
 {
     "use strict";
-    
-    /** @globals-begin */      
+
+    /** @globals-begin */
     var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_win = g.g_win,
         g_doc = g_win.document,
         BP_ERROR = g.BP_ERROR,
         CSS_HIDDEN = "com-bprivy-hidden";
-    /** 
+    /**
      * Tagname for dt_eRecords in the in-memory and file stores.
      * @constant
      * tag_eRecs is a property name that should never clash withe a URL segment. Hence the bracket
      * characters are being used because they are excluded in rfc 3986.
-     */ 
+     */
     //var tag_eRecs = "{E-REC}";
-    /** 
+    /**
      * Tagname for dt_pRecords in the in-memory and file stores.
      * @constant
      * tag_pRecs is a property name that should never clash withe a URL segment. Hence the bracket
@@ -47,17 +46,17 @@ function BP_GET_COMMON(g)
     //var g_url_regexp = /^(?:([A-Za-z]+):)(\/\/)?([0-9.\-A-Za-z]+)(?::(\d+))?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
     var g_url_regexp = /^(?:([A-Za-z\-]+):\/\/)(?:([0-9.\-A-Za-z]+)(?::(\d+))?)?(?:\/([^?#{}]*))?(?:\?([^#]*))?(?:#(.*))?$/;
     /** @globals-end **/
-   
+
     function toJson(o)
     {
         return JSON.stringify(o, null, 2);
     }
-    
+
     function isSupportedScheme(scheme)
     {
         return (PROTO_SUPPORTED.indexOf(scheme) !== -1);
     }
-    
+
   // // URL decomposition IDL attributes
            // attribute DOMString protocol;
            // attribute DOMString hostname;
@@ -70,7 +69,7 @@ function BP_GET_COMMON(g)
     {
         var segs = g_url_regexp.exec(url);
 
-        if (segs) 
+        if (segs)
         {
             var loc = {href:url};
             //['url', 'scheme', 'slash', 'host', 'port', 'path', 'query', 'hash']
@@ -80,7 +79,7 @@ function BP_GET_COMMON(g)
             if (segs[4]) { loc.pathname = segs[4];}
             if (segs[5]) { loc.search = segs[5];}
             if (segs[6]) { loc.hash = segs[6];}
-            
+
             if (loc.protocol && loc.hostname) {
                 // Need to be consistent with browsers.
                 if (!loc.pathname) {loc.pathname = "/";}
@@ -90,12 +89,12 @@ function BP_GET_COMMON(g)
             else {return loc;} // Without protocol and hostname we deem this string a non-URL for our purposes.
         }
     }
-    
+
     function locToURL(loc)
     {
         var url;
         if (loc.href) {return loc.href;}
-        
+
         url = "";
         if (!loc) {return;}
         if (loc.protocol) {
@@ -116,10 +115,10 @@ function BP_GET_COMMON(g)
         if (loc.hash) {
             url += ("#" + loc.hash);
         }
-        
+
         return url;
     }
-    
+
     function parseURL2(url)
     {
         // Create an HTMLElement and make the browser parse the URL for us! Unfortunately
@@ -137,19 +136,19 @@ function BP_GET_COMMON(g)
         loc.hash = el.hash;
         return loc;
     }
-    
+
     function getScheme(url)
     {
         return url.slice(0, url.indexOf("://")+1);
     }
-    
+
     function getQueryObj(loc)
     {
     	if (!loc.search) {return {};}
     	var o = {},
 	    	query = loc.search.slice(1),
 	    	vars = query.split("&"),
-	    	i, 
+	    	i,
 	    	len = vars.length,
 	    	pair;
 
@@ -160,13 +159,13 @@ function BP_GET_COMMON(g)
 
   		return o;
     }
-    
+
     function stripQuotes(s)
     {
         var a = s.match(/^[\s\"\']*([^\s\"\']*)[\s\"\']*$/);
         if (a) {return a[1];}
     }
-       
+
     /** Placeholder password decryptor */
     function decrypt(str) {return str;}
     /** Placeholder password encryptor */
@@ -178,13 +177,13 @@ function BP_GET_COMMON(g)
         ev.preventDefault();
         return false;
     }
-    
+
     function stopPropagation(ev)
     {
         //BP_ERROR.loginfo("stopPropagation invoked");
         ev.stopPropagation();
     }
-    
+
     // Returns a newly created object inherited from the supplied object or constructor
     // argument. If the argument is a constructor, then the o.prototype is set to a new
     // object created using that constructor. Otherwise o.prototype=argument
@@ -203,22 +202,22 @@ function BP_GET_COMMON(g)
     function clear(obj)
     {
         var keys, n;
-        
+
         if (!obj) { return; }
         keys = Object.keys(obj);
         for (n=keys.length-1; n >= 0; n--) {
             delete obj[keys[n]];
-        }        
+        }
     }
-    
+
     function delProps(obj)
     {
         var keys = Object.getOwnPropertyNames(obj), n;
         for (n=keys.length-1; n >= 0; n--) {
             delete obj[keys[n]];
-        }        
+        }
     }
-    
+
     function copy2 (src, dst)
     {
         //clear(dst);
@@ -253,10 +252,10 @@ function BP_GET_COMMON(g)
         }
         return rVal;
     }
-   
+
     /**
      *                  Replaces IterKeys
-     * 
+     *
      * Iterates over keys of an object (as in Object.keys)
      * 'this' is mapped to thisArg
      */
@@ -269,7 +268,7 @@ function BP_GET_COMMON(g)
             if (func.apply(thisArg, [keys[i], o[keys[i]], ctx]) === true) {
                 break;
             }
-        } 
+        }
     }
 
     function bindProto (obj, proto)
@@ -296,9 +295,9 @@ function BP_GET_COMMON(g)
             if (func.apply(thisArg, [a[i], ctx]) === true) {
                 break;
             }
-        } 
+        }
     }
-    
+
     function ArrayIterator (a)
     {
         Object.defineProperties(this,
@@ -312,7 +311,7 @@ function BP_GET_COMMON(g)
     {
         if (this._i < this._n) { return this._a[this._i++]; }
     };
-    
+
     function indexOf (a, item)
     {
         if (!a) {return -1;}
@@ -325,9 +324,9 @@ function BP_GET_COMMON(g)
             // dst.push(item);
         // }, dst);
     // }
-    
+
     var iface = {};
-    Object.defineProperties(iface, 
+    Object.defineProperties(iface,
     {
         CSS_HIDDEN: {value: CSS_HIDDEN},
         PROTO_HTTP: {value: PROTO_HTTP},
@@ -365,5 +364,5 @@ function BP_GET_COMMON(g)
 
     BP_ERROR.log("constructed mod_common");
     return iface;
-        
+
 }

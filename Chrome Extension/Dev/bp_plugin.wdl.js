@@ -1,8 +1,8 @@
 /**
- * @preserve
+
  * @author Sumeet S Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Rights Reserved, Untrix Soft
+ * Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 
 /* JSLint directives */
@@ -46,5 +46,5 @@ function BP_GET_WALLET_FORM(g)
     // var BP_DBFS = IMPORT(g.BP_DBFS);
     // var DB_FS = IMPORT(BP_DBFS.DB_FS);
     /** @import-module-end **/    m = null;
-    
+
 }

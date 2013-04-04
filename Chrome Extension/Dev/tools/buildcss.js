@@ -1,8 +1,8 @@
 /**
- * @preserve
+
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * Copyright (c) 2012. All Right Reserved, Untrix Soft
+ * Copyright (c) 2012-2013. All Rights Reserved, Untrix Inc
  */
 
 /* JSLint directives */

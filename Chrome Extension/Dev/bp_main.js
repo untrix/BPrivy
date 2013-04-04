@@ -1,7 +1,7 @@
 /**
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
- * @copyright Copyright (c) 2012-2013 Untix Soft
+ * @copyright Copyright (c) 2012-2013 Untix Inc
  * All Rights Reserved
  */
 
@@ -734,7 +734,7 @@ var BP_MAIN = (function()
             // that it listens to have been inited.
             BP_NTFN_CNTR.init();
             loadPlugin();
-            // BP_NTFN_CNTR.notify('', 'Click here to open a Wallet', function()
+            // BP_NTFN_CNTR.notify('', 'Click here to open a keyring', function()
             // {
             	// MOD_WIN.openPath('/bp_manage.html?action=open');
             // });
