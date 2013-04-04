@@ -270,7 +270,7 @@ function BP_GET_WDL (g)
         return {
             tag:"div",
             attr:{ id: eid_panelTitleText, title:ctx.dbPath },
-            text:ctx.dbName || "No wallet open"
+            text:ctx.dbName || "No keyring open"
         };
     }
 
@@ -432,7 +432,7 @@ function BP_GET_WDL (g)
         on:{ click:OButton.prototype.onClick },
         attr:{ 'class':css_class_xButton,
         	   href:'#',
-               title:'(Re)Open Wallet' },
+               title:'(Re)Open keyring' },
         iface:{ panel:panel },
         css:{ width:'20px' },
             children:[
@@ -466,7 +466,7 @@ function BP_GET_WDL (g)
         on:{ click:CButton.prototype.onClick },
         attr:{ 'class':css_class_xButton,
         	   href:'#',
-               title:'Close Wallet' },
+               title:'Close keyring' },
         iface:{ panel:panel, off:off },
         css:{ width:'20px' },
             children:[
@@ -485,7 +485,7 @@ function BP_GET_WDL (g)
             try {
 	            this.off(function ()
 	            {
-	                BP_ERROR.success('Wallet has been closed');
+	                BP_ERROR.success('keyring has been closed');
 	            });
             }
             catch (ex) {

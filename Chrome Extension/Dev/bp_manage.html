@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>untrix KEYS [beta]</title>
+    <title>K3YRING [beta]</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="untrix KEYS&trade; [beta]">
+    <meta name="description" content="K3YRING&trade; [beta]">
     <meta name="author" content="untrix.com">
     <!-- Stylesheets -->
     <link href="tp/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -20,16 +20,16 @@
   <body>
     <!-- <div class="navbar navbar-fixed-top" style="background-color: transparent">
         <div class="container">
-              <img src="icons/fullIcon48.png" alt="untrix KEYS&trade; [beta]"/>
+              <img src="icons/fullIcon48.png" alt="K3YRING&trade; [beta]"/>
         </div>
     </div> -->
     <div class="container">
       <div class="row">
         <div class="span2">
           <!--Sidebar content-->
-          <!-- <h3> <i>untrix KEYS&trade; [beta]</i></h3> -->
+          <!-- <h3> <i>K3YRING&trade; [beta]</i></h3> -->
           <div id="logo">
-            <img src="icons/fullIcon48.png" alt="untrix KEYS&trade; [beta]" id="logo-img">
+            <img src="icons/fullIcon48.png" alt="K3YRING&trade; [beta]" id="logo-img">
           </div>
           <ul class="nav nav-list" id="nav-list">
 
@@ -55,26 +55,26 @@
             <div class="tab-pane" id="settings-pane">
               <!-- <h3>Manage Wallets</h3> -->
               <legend>
-                <!-- Currently Open Wallet : -->
+                <!-- Currently Open keyring : -->
                 <!-- <span id="dbPath" data-dbName style="text-align:center"></span> -->
                 <span data-dbName></span>
               </legend>
 
               <div class="well form-horizontal">
-              <legend>Manage Wallets</legend>
+              <legend>Manage keyrings</legend>
                 <fieldset class='control-group'>
                   <label class="control-label">Open / Close</label>
                   <div class='controls btn-group'>
-                    <button id="btnWalletOpen" type="button" class="btn btn-info span1" title="Open/Reopen a Wallet">Open</button>
-                    <button id="btnWalletClose" type="button" class="btn span1" title="Close the open Wallet">Close</button>
-                    <button id="btnWalletReload" disabled type="button" class="btn span1" title="Reload the open Wallet">Reload</button>
+                    <button id="btnWalletOpen" type="button" class="btn btn-info span1" title="Open/Reopen a keyring">Open</button>
+                    <button id="btnWalletClose" type="button" class="btn span1" title="Close the open keyring">Close</button>
+                    <button id="btnWalletReload" disabled type="button" class="btn span1" title="Reload the open keyring">Reload</button>
                   </div>
                 </fieldset>
                 <fieldset class='control-group'>
                   <label class="control-label">New</label>
                   <div class='controls btn-group'>
-                    <button id="btnWalletCreate" type="button" class="btn span1" title="Create a new Wallet">New</button>
-                    <button id="btnWalletDupe" disabled type="button" class="btn span1" title="Make a copy of the open Wallet">Duplicate</button>
+                    <button id="btnWalletCreate" type="button" class="btn span1" title="Create a new keyring">New</button>
+                    <button id="btnWalletDupe" disabled type="button" class="btn span1" title="Make a copy of the open keyring">Duplicate</button>
                   </div>
                 </fieldset>
 
@@ -86,7 +86,7 @@
               <div class="form-horizontal well">
                 <legend>
                     <span>
-                      Sync / Merge Wallets <i class="icon-question-sign" title="Keep all your Wallet copies up-to-date"></i>
+                      Sync / Merge keyrings <i class="icon-question-sign" title="Keep all your keyring copies up-to-date"></i>
                     </span>
                 </legend>
 
@@ -94,13 +94,13 @@
                   <label class="control-label">
                     Home-Sync
                         <i class="icon-question-sign"
-                            title="Sync with another wallet <strong>without connecting to the internet</strong> using our patent-pending ActionReplay&trade; technology.">
+                            title="Sync with another keyring <strong>without connecting to the internet</strong> using our patent-pending ActionReplay&trade; technology.">
                         </i>
                   </label>
                   <div class="controls btn-group">
                     <button data-path-choose id="btnMerge" type="button" class="btn btn-info span1"
-                    title="Click to choose the other Wallet to sync with">
-                      Browse</button>
+                    title="Click to choose the other keyring to sync with">
+                      Sync</button>
                   </div>
 
                 <!-- Do not remove. Anchor for dynamically inserting walletForm -->
@@ -110,27 +110,27 @@
 
                 <fieldset class="control-group">
                   <label class="control-label">Internet Sync
-                    <i class="icon-question-sign" title="Just create or move your <em>Wallet</em> folder into a cloud-drive such as <em>Dropbox&trade;,
+                    <i class="icon-question-sign" title="Just create or move your <em>keyring</em> folder into a cloud-drive such as <em>Dropbox&trade;,
                         Google Drive&trade;
-                        or Microsoft Skydrive&trade;</em> on your PC. However, be sure to <strong> create a Key-file and store it on a
+                        or Microsoft Skydrive&trade;</em> on your PC. However, be sure to <strong> create a Master Key and store it on a
                         different drive (e.g. on your computer or in a thumb-drive).</strong>">
                     </i>
                   </label>
                   <div class="controls">
                     <p> Nothing to do !</p>
                     <p>
-                        Just create or move your <i>Wallet</i> folder into a cloud-drive such as <i>Dropbox&trade;,
+                        Just create or move your <i>keyring</i> folder into a cloud-drive such as <i>Dropbox&trade;,
                         Google Drive&trade; or Microsoft Skydrive&trade;</i> on your PC.
-                        However for added security, be sure to <strong> create a Key-file and store it on a
+                        However for added security, be sure to <strong> create a Master Key and store it on a
                         different drive</strong> (e.g. on your computer or in a thumb-drive).
                     </p>
                     <!-- <p>
                       Just create or move
-                      your <em>Wallet</em> folder into a cloud-drive such as
+                      your <em>keyring</em> folder into a cloud-drive such as
                       <a href="http://www.dropbox.com">Dropbox</a>,
                       <a href="http://drive.google.com">Google Drive</a>,
                       <a href="http://windows.microsoft.com/en-US/skydrive/home">Microsoft Skydrive </a>
-                      on your PC. However, be sure to <strong> create a Key-file and store
+                      on your PC. However, be sure to <strong> create a Master Key and store
                       it on a different drive (e.g. on your computer or in a thumb-drive). This is extremely important.</strong>
                     </p> -->
                   </div>
@@ -167,13 +167,13 @@
                 <div class="control-group">
                   <label class="control-label">Home-Sync
                       <i class="icon-question-sign"
-                        title="Import or Export password updates from/to another wallet using our patent-pending ActionReplay&trade; technology.">
+                        title="Import or Export password updates from/to another keyring using our patent-pending ActionReplay&trade; technology.">
                       </i>
                   </label>
                   <div class="controls btn-group">
-                    <button data-path-choose id="btnMergeIn" type="button" class="btn span1" title="Click to select the other Wallet">
+                    <button data-path-choose id="btnMergeIn" type="button" class="btn span1" title="Click to select the other keyring">
                       Import</button>
-                    <button data-path-choose id="btnMergeOut" type="button" class="btn span1" title="Click to select the other Wallet">
+                    <button data-path-choose id="btnMergeOut" type="button" class="btn span1" title="Click to select the other keyring">
                       Export</button>
                   </div>
                 </div>
@@ -189,14 +189,14 @@
               <div id="editorPane">
                 <form class="form-inline">
                   <div class="control-group">
-                    <!-- <label class="control-label">Wallet</label> -->
+                    <!-- <label class="control-label">keyring</label> -->
                     <div class="controls btn-group">
                       <button id="btnWalletOpen2" type="button" class="btn btn-info" data-loading-text="Opening..."
-                        title="Open/Re-open <i style='display:inline-block'>Wallet</i> folder">
-                         Open Wallet
+                        title="Open/Re-open <i style='display:inline-block'>keyring</i> folder">
+                         Open keyring
                       </button>
-                      <button id="btnWalletClose2" type="button" class="btn" title="Close the password Wallet">
-                        Close Wallet
+                      <button id="btnWalletClose2" type="button" class="btn" title="Close the keyring">
+                        Close keyring
                       </button>
                     </div>
                   </div>
@@ -244,7 +244,7 @@
                 </fieldset>
 
                 <fieldset class="control-group">
-                  <label class="control-label">Delete Wallet</label>
+                  <label class="control-label">Delete keyring</label>
                   <div class="controls">
                     <button id="dbDelete" type="button" class="btn span2" data-loading-text="Deleting...">
                       Delete</button>
@@ -272,7 +272,7 @@
 <h3 style="text-align: center">END USER LICENSE AGREEMENT </h3>
 
 <p style="text-align: justify">
-This copy of Untrix KEYS [beta] ("the Software Product") and accompanying documentation is licensed and not sold. This Software Product is protected by copyright laws and treaties, as well as laws and treaties related to other forms of intellectual property. Untrix Inc or its subsidiaries, affiliates, and suppliers (collectively "Untrix Inc") own intellectual property rights in the Software Product. The Licensee's ("you" or "your") license to download, use, copy, or change the Software Product is subject to these rights and to all the terms and conditions of this End User License Agreement ("Agreement").
+This copy of K3YRING [beta] ("the Software Product") and accompanying documentation is licensed and not sold. This Software Product is protected by copyright laws and treaties, as well as laws and treaties related to other forms of intellectual property. Untrix Inc or its subsidiaries, affiliates, and suppliers (collectively "Untrix Inc") own intellectual property rights in the Software Product. The Licensee's ("you" or "your") license to download, use, copy, or change the Software Product is subject to these rights and to all the terms and conditions of this End User License Agreement ("Agreement").
 </p>
 <h4>Acceptance</h4>
 <p style="text-align: justify">
@@ -374,11 +374,11 @@ If any provision of this Agreement shall be held to be invalid or unenforceable,
         <div class="container">
             <p>
               &copy; Copyright 2012-2013 Untrix Inc (http://www.untrix.com).
-              untrix&trade;, untrix keys&trade; and the key icons are trademarks of Untrix Inc
+              untrix&trade;, K3YRING&trade; and the key icons are trademarks of Untrix Inc
             </p>
               <p><small>
-                  Note: untrix KEYS&trade; <bold>never</bold> transfers your passwords to anywhere
-                  other than the wallet folder of your choosing and - temporarily -
+                  Note: K3YRING&trade; [beta] <bold>never</bold> transfers your passwords to anywhere
+                  other than the keyring folder of your choosing and - temporarily -
                   into the memory of the computer/device on which it is executing. It certainly does not
                   transfer them to any internet web-site or server.
                   <bold> However, please be aware of the following risk regarding cloud/internet/sky drives: </bold>

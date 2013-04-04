@@ -126,7 +126,7 @@ function BP_GET_ERROR(g)
     {
         /***********Action Codes and Corresponding Messages ****************/
         BadPathArgument:"Bad Path Argument.",
-        BadDBPath:"The selected folder is not a Wallet folder",
+        BadDBPath:"The selected folder is not a keyring",
         Unsupported:'Unsupported Feature.', //Unsupported URL etc.
         Diag:'', // Diagnostic Message
         BadWDL: 'Bad WDL argument.',
@@ -137,9 +137,9 @@ function BP_GET_ERROR(g)
         ETLDLoadFailed: 'ETLD Load Failed',
         ExistingStore: "The selected folder seems to already be part of an existing DB.",
         NotJSObject: "Argument is not a javascript object.",
-        NoDBLoaded: "Please load a Wallet first.",
-        DBAlreadyLoaded: "This wallet is already loaded. Please select a different one.",
-        NoDBSelected: "Please choose a Wallet first.",
+        NoDBLoaded: "Please open a keyring first.",
+        DBAlreadyLoaded: "This keyring is already opened. Please select a different one.",
+        NoDBSelected: "Please choose a keyring first.",
         InternalError: "InternalError",
         CryptError: 'Encryption/Decryption Error: Perhaps an incorrect password or encryption-key-file.',
         KeyNotLoaded: 'The Key file has not been loaded. Could be an error in the software. Please close the window and retry.'

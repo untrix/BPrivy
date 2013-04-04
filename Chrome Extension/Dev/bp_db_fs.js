@@ -347,7 +347,7 @@ function BP_GET_DBFS(g)
                 }
 
                 if (!path) {
-                    throw new BPError("Key File not found inside the Wallet. Is it stored outside?");
+                    throw new BPError("Master Key file not found.");
                 }
 
                 return path;

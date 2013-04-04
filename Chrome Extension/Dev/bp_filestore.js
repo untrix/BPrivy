@@ -7,7 +7,7 @@
 
 /* JSLint directives */
 /*global $, BP_PLUGIN, IMPORT */
- 
+
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true, white:true */
 
@@ -19,7 +19,7 @@ function BP_GET_FILESTORE(g)
     "use strict";
     var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_win = g.g_win;
-    
+
     /** @import-module-begin Error */
     var m = IMPORT(g.BP_ERROR),
         BPError = IMPORT(m.BPError),
@@ -42,7 +42,7 @@ function BP_GET_FILESTORE(g)
         dt_pRecord = IMPORT(m.dt_pRecord);
     var eid_pfx = IMPORT(g.BP_TRAITS.eid_pfx);
     /** @import-module-begin connector **/
-    m = g.BP_CONNECT; 
+    m = g.BP_CONNECT;
     var newPAction = IMPORT(m.newPAction);
     /** @import-module-begin MemStore **/
     var MEMSTORE = IMPORT(g.BP_MEMSTORE);
@@ -58,7 +58,7 @@ function BP_GET_FILESTORE(g)
         rec_sep = '\r\n\r\n,',
         dtl_null = null,
         this_null = null;
-               
+
     var UC_TRAITS = Object.freeze(
     {
         csvImport: {
@@ -83,14 +83,14 @@ function BP_GET_FILESTORE(g)
                     return (notes.isRecentUnique || notes.isRecentRepeat);
                 }
         },
-        insertNewRec: { 
+        insertNewRec: {
             toPersist: function (notes) // Should be same as importFile
             {
                 return (notes.isRecentUnique || notes.isRecentRepeat);
             }
         }
     });
-    
+
     function unloadDB(clearCrypt)
     {
         var dbPath = DB_FS.getDBPath(),
@@ -106,7 +106,7 @@ function BP_GET_FILESTORE(g)
         MEMSTORE.clear(); // unload the previous DB.
         DB_FS.setDBPath(null);
     }
-    
+
     /**
      * @parm  {Object} dbStats  Output pram. dbStats is updated based on loading activity.
      * @param {Object} dirEnt   Directory entry object (for dbStats) to be updated. May or may not
@@ -134,20 +134,20 @@ function BP_GET_FILESTORE(g)
             recs,
             filePath = dtDirPath+fname,
             fname2, dirEnt2 = {}, bAccounted = false;
-            
+
         if (!BP_PLUGIN.readFile(dbPath, filePath, o))
         {
         	BP_ERROR.logwarn(o.err);
             dbStats.putBad(dt, fname, dirEnt);
 
-            if (o.err) 
+            if (o.err)
             {
                 if ((o.err.acode === 'BadPasswordOrCryptInfo') || (o.err.acode === 'BadCryptInfo'))
                 {
                     throw new BPError(o.err);
                 }
             }
-            
+
             return false;
         }
 
@@ -156,18 +156,18 @@ function BP_GET_FILESTORE(g)
             recs = JSON.parse(o.dat);
         }
         catch (e)
-        { 
+        {
             BP_ERROR.logwarn("loadFile@filestore: Corrupted file: " + filePath);
             //DB_FS.quarantineFile(fname, filePath);
             dbStats.putBad(dt, fname, dirEnt);
             return false;
         }
-        
+
         if (recs && (typeof recs === 'object') && recs.constructor === Array)
         {
             // Loading records in reverse chronological order for faster insertion into
             // MEMSTORE.
-            
+
             // Remove the first entry that we artifically inserted above.
             delete recs[0];
             // Update how many recs this file holds - needed in the importFile scenario.
@@ -181,20 +181,20 @@ function BP_GET_FILESTORE(g)
                     // to the local DB. Such records are merely saved to buf here - not
                     // actually written to file (that's done later). But we need to check with
                     // both DT and UC traits whether the record should be persisted.
-                    if (buf && MEMSTORE.DT_TRAITS.getTraits(dt).toPersist(dr.notes) && 
+                    if (buf && MEMSTORE.DT_TRAITS.getTraits(dt).toPersist(dr.notes) &&
                         UC_TRAITS.importFile.toPersist(dr.notes))
                     {
                         buf.pushRec(rec);
                     }
-                } 
-                catch (e) 
+                }
+                catch (e)
                 {
                     var bpe = new BPError(e);
                     BP_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
                     MEMSTORE.getStats().bad++;
                 }
             },0);
-            
+
             BP_ERROR.log("Loaded file " + filePath);
 
 	        if (o.inf && (o.inf.gcode === 'EncryptionCorrupted'))
@@ -216,29 +216,29 @@ function BP_GET_FILESTORE(g)
                 	}
                	}
 	        }
-	        
+
 			if (!bAccounted) {
 				dbStats.put(dt, cat, fname, dirEnt);
-			}	
+			}
 
             return true;
         }
-        else 
+        else
         {
             BP_ERROR.log("loadFile@filestore: Empty file?: " + filePath);
         }
     }
-    
+
     function requestKey(dbPath)
     {
         if (!dbPath) {return;}
-        
-        return BP_ERROR.prompt("Please enter password for wallet at: " + dbPath);
+
+        return BP_ERROR.prompt("Please enter password for keyring at: " + dbPath);
     }
-    
+
     function ensureKeyLoaded(dbPath, cryptInfoPath, k)
     {
-        var o; 
+        var o;
 
         o ={};
         if (!BP_PLUGIN.cryptCtxLoaded(dbPath, o)) {throw new BPError(o.err);}
@@ -253,8 +253,8 @@ function BP_GET_FILESTORE(g)
 
                 if (!k)
                 {
-                    if (!BP_PLUGIN.dupeCryptCtx(cryptInfoPath, dbPath, o)) { 
-                        throw new BPError(o.err); 
+                    if (!BP_PLUGIN.dupeCryptCtx(cryptInfoPath, dbPath, o)) {
+                        throw new BPError(o.err);
                     }
                     else if (!o.cryptCtx) {
 	            		throw new BPError('','KeyNotLoaded');
@@ -269,14 +269,14 @@ function BP_GET_FILESTORE(g)
             }
         }
     }
-    
+
     /**
      * @param dbPath
      * @return          returns the root of the DB-folder that was read/loaded. Should be
      *                  equal to the dbPath if it was the root of the DB. If DB path was a
      *                  path inside an existing DB, then the system backtracks up to the root
      *                  of the DB and loads that. That's the path which is returned.
-     * @param {Object}  dbStats is created if not present. io.dbStats.fs and io.dbStats.recs 
+     * @param {Object}  dbStats is created if not present. io.dbStats.fs and io.dbStats.recs
      *                  are populated per the loaded DB. If an existing dbStats object was supplied
      *                  then the impact of calling loadDBInt is additive - i.e. the existing values
      *                  in the collection will stay and existing counts will simply be incremented.
@@ -286,7 +286,7 @@ function BP_GET_FILESTORE(g)
         /**
          * Helper function to loadDBInt. Loads files of given DB.
          * @returns Nothing
-         * @param   {Object}io  dbStats is created if not present. dbStats 
+         * @param   {Object}io  dbStats is created if not present. dbStats
          *                  are populated per the loaded DB. If an existing dbStats object was supplied
          *                  then the impact of calling loadDBInt is additive - i.e. the existing values
          *                  in the collection will stay and existing counts will simply be incremented.
@@ -304,20 +304,20 @@ function BP_GET_FILESTORE(g)
                 {
                     f = o.lsd.f;
                     file_names = Object.keys(f);
-    
+
                     // Load files in reverse chronological order for faster insertion into
                     // MEMSTORE.
                     file_names.sort(function (x,y)
                     {
                         return DB_FS.mtmCmp(dt, f[y], f[x]);
                     });
-                    
+
                     for (j=0; j < file_names.length; j++)
                     {
                         name = file_names[j];
                         if ((cat=DB_FS.toLoad(f[name])) && !(exclude && exclude.getFileEnt(cat, dt, name)))
                         {
-                            try 
+                            try
                             {
                                 loadFile(dbPath, cat, dt, dtDirPath, name, f[name], dbStats);
                             }
@@ -331,20 +331,20 @@ function BP_GET_FILESTORE(g)
                                 dbStats.putBad(dt, name, f[name]);
                             }
                         }
-                        else if (DB_FS.isBad(name)) 
+                        else if (DB_FS.isBad(name))
                         {
                             dbStats.putBad(dt, name, f[name]);
                         }
                     }
                 }
             });
-            
+
             return dbStats;
         }
 
         var memStats,
             cryptInfoPath;
-            
+
         dbStats = dbStats || newDBMap(dbPath);
 
         // EXPERIMENTAL: The following line was moved to loadDB.
@@ -353,23 +353,23 @@ function BP_GET_FILESTORE(g)
         BP_ERROR.log("loadingDB " + dbPath);
        	MEMSTORE.clear(); // unload the previous DB.
        	DB_FS.setDBPath(null); // EXPERIMENTAL
-        
+
         ensureKeyLoaded(dbPath, keyPath, k);
 
         loadDBFiles(dbPath, dbStats, exclude);
         memStats = MEMSTORE.getStats();
         DB_FS.setDBPath(dbPath, dbStats);
-                
+
         BP_ERROR.log("Loaded DB " + dbPath + ". files loaded: "+dbStats.numLoaded()+
                       ", files bad: "+dbStats.numBad()+
                       ", recs loaded: "+memStats.loaded + ", recs bad: " +memStats.bad +
                       ", recs fluff: " +memStats.fluff);
         return dbPath;
     }
-    
+
     /**
      *  Wrapper around loadDBInt. Unloads the previous DB which causes removal of the crypt
-     *  ctx of the currently loaded DB from within the plugin (unless it was same as 
+     *  ctx of the currently loaded DB from within the plugin (unless it was same as
      *  dbPath). The internal loadDBInt function won't unload the crypt-ctx and hence the
      *  same DB maybe loaded multiple times - for operations such as mergeDB - without
      *  asking the user for password everytime.
@@ -393,7 +393,7 @@ function BP_GET_FILESTORE(g)
 
         return loadDBInt(dbPath, undefined, undefined, keyPath, k);
     }
-    
+
     /**
      *  Constructor. Inherits from Array
      * @param   {string} sep    Separator. If not supplied, defaults to rec_sep.
@@ -409,7 +409,7 @@ function BP_GET_FILESTORE(g)
     RecsBuf.prototype.flush = function (dbPath, fpath, count, bRev)
     {
         var o, array;
-        
+
         if (!this.length) {
             return;
         }
@@ -426,7 +426,7 @@ function BP_GET_FILESTORE(g)
             count = undefined;
             array = this;
         }
-        
+
         // Need to perform append in one-shot. Hence am providing this.sep as prefix
         // to appendFile. AppendFile will write both prefix+payload in one shot.
         o={prefix:this.sep};
@@ -465,14 +465,14 @@ function BP_GET_FILESTORE(g)
                 throw new BPError(o.err);
             }
         }
-        
+
         return result;
     }
-    
+
     function compactDB()    {
         /**
          * Renames open files (<dt>.3ao) to temporary files (extension <rand>.<dt>.3at). Used
-         * by CompactDB to enable it to close the open files. 
+         * by CompactDB to enable it to close the open files.
          */
         function tempDTFiles(dbStats)
         {
@@ -486,7 +486,7 @@ function BP_GET_FILESTORE(g)
         {
             var fname,
                 buf = ctx.buf,
-                dt = ctx.dt, 
+                dt = ctx.dt,
                 dbStats = ctx.dbStats;
             buf.pushRec(actn);
             if (buf.length>=DB_FS.fileCap)
@@ -496,19 +496,19 @@ function BP_GET_FILESTORE(g)
                 dbStats.put(dt, DB_FS.cat_Closed, fname);
             }
         }
-        
+
         var dbPath = DB_FS.getDBPath(),
-            dt, 
+            dt,
             dnIt, dn, recs, rIt, acoll, aIt, actn,
             buf, o,
             i, dtPath,
             temp,
             dbStatsCompacted,
-            dbStats = newDBMap(DB_FS.getDBPath());        
+            dbStats = newDBMap(DB_FS.getDBPath());
         if (!dbPath) {
             throw new BPError ("No DB loaded");
         }
-        
+
         // Rename open files to temp-closed status. This will ensure that we won't need
         // to delete open files in the last step (because we renamed them to temp). This
         // is necessary in order to allow for the possibility that some new changes may
@@ -524,22 +524,22 @@ function BP_GET_FILESTORE(g)
             dt = DB_FS.dtl[i];
             dnIt = MEMSTORE.newDNodeIterator(dt);
             buf = new RecsBuf();
-            
+
             // TODO: turning off doGC for collecting data for a rarely occuring issue. Turn it
             // back on afterwards.
             dnIt.walk(writeAction, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted}, {doGC:false});
-            
+
             if (buf.length)
             {
                 buf.flush(dbPath, DB_FS.getDTFilePath(dt));
             }
         }
-        
+
         // Remove files that we had earlier loaded. Their records have all been incorporated
         // into the newly created files. Skip the main DT files if encountered because
         // those would've been surely created after step 1.
         DB_FS.rmFiles(dbStats, true);
-                // We have to reload again just to populate accurate mem-stats :(
+        // We have to reload again just to populate accurate mem-stats :(
         loadDBInt(dbPath);
         return dbPath;    }
 
@@ -565,9 +565,9 @@ function BP_GET_FILESTORE(g)
             var dtDirPath = DB_FS.makeDTDirPath(dt, dbSSrc.dbPath),
                 dtOpenEnt = dtFilesDst.getDTFileEnt(dt),
                 numOpenRecs = dtOpenEnt ? (dtOpenEnt.numRecs || 0): 0;// dt-file (.3ao) may not exist
-                
+
             if (!bufs[dt]) {bufs[dt] = new RecsBuf();}
-            
+
             loadFile(dbSSrc.dbPath, cat, dt, dtDirPath, fname, dirEnt, dbSRead, bufs[dt]);
             while (numOpenRecs + bufs[dt].length >= DB_FS.fileCap)
             {
@@ -579,7 +579,7 @@ function BP_GET_FILESTORE(g)
                 numOpenRecs = 0; dtOpenEnt = undefined;
             }
         });
-        
+
         BP_COMMON.iterKeys(bufs, function finalBufFlush(dt, buf)
         {
             if (buf.length)
@@ -627,27 +627,27 @@ function BP_GET_FILESTORE(g)
         // Done.
         return retStats;
     }
-    
+
     function cleanLoadDB()
     {
         cleanLoadInternal(DB_FS.getDBPath());
-    }        
+    }
 
     function deleteDB(db)
     {
-        var o, keyFiles=[], 
+        var o, keyFiles=[],
         	rVal = true;
 
 		db = DB_FS.verifyDBForLoad(db);
 		if (db === DB_FS.getDBPath()) {
-			throw new BPError('This Wallet is currently open. Please close the Wallet and retry');
+			throw new BPError('This keyring is currently open. Please close it and retry');
 		}
-		else if (!BP_ERROR.confirm('Are you sure you want to delete all contents of the Wallet at: ' + db + "?")) {
+		else if (!BP_ERROR.confirm('Are you sure you want to delete all contents of the keyring at: ' + db + "?")) {
 			return;
 		}
 
         DB_FS.rmFiles(DB_FS.lsFiles(db)) || (rVal = false);
-        
+
         keyFiles = DB_FS.findCryptInfoFile2(db, true);
 
         o = {secureDelete:true};
@@ -659,10 +659,10 @@ function BP_GET_FILESTORE(g)
         }
 
         BP_PLUGIN.rm(db, o) || (rVal = false);
-        
+
         return rVal;
     }
-    
+
     function merge (db1, db2, oneWay)
     {
         var dbStats1 = newDBMap(db1),
@@ -671,7 +671,7 @@ function BP_GET_FILESTORE(g)
             dbStats1_diff,
             dbStatsMods = newDBMap(db1); // to track newly created files
                                           // that will need to be copied over to db2
-        
+
         dbStats1 = cleanLoadInternal(db1);
         dbStats2 = DB_FS.lsFiles(db2);
         dbStats2_diff = dbStats2.diff([DB_FS.cat_Closed, DB_FS.cat_Temp], dbStats1);
@@ -681,7 +681,7 @@ function BP_GET_FILESTORE(g)
         dbStats2_diff.merge(dbStats2, [DB_FS.cat_Open]);
         // importFiles([DB_FS.cat_Open], dbStats2, dbStatsMods, dbStatsImported);
         // Import closed/temp files next. While doing that, save names of new/modified files
-        
+
         /** NOTE: ImportFiles should be invoked only once with all files, because it ensures
          *  that the files are walked in reverse chronological order, thereby ensuring maximum
          *  fluff-removal from the imported data.
@@ -690,7 +690,7 @@ function BP_GET_FILESTORE(g)
 
         if (!oneWay)
         {   // Merge-Out. Copy the missing files to db2
-            
+
             // List the files that are missing in db2.
             dbStats1 = DB_FS.lsFiles(db1);
             dbStats1_diff = dbStats1.diff(DB_FS.cats_Load, dbStats2);
@@ -701,7 +701,7 @@ function BP_GET_FILESTORE(g)
             dbStats1_diff.merge(dbStats1, [DB_FS.cat_Open]);
             DB_FS.copy(dbStats1_diff, db2, true); // clobber = true.
             // dbStats1_diff.walkCats(DB_FS.cats_Load, copy, newDBMap(db2));
-            
+
             // Delete the files in db2 that were imported from there. Their recs. were
             // incorporated into dbStatsMods. However, since DT-filenames are the same,
             // we don't want to delete files that were just copied to db2. Hence remove
@@ -714,11 +714,11 @@ function BP_GET_FILESTORE(g)
     function mergeMain(db2, bIn, keyPath, k)
     {
         var db1 = DB_FS.getDBPath();
-        
+
         // First determine if the DBs exists and are good.
         db1 = DB_FS.verifyDBForLoad(db1);
         db2 = DB_FS.verifyDBForLoad(db2);
-        
+
         // if (!db1) {
             // throw new BPError ("","UserError", "NoDBLoaded");
         // }
@@ -728,9 +728,9 @@ function BP_GET_FILESTORE(g)
         if (db2===db1) {
             throw new BPError ("", "UserError", "DBAlreadyLoaded");
         }
-        
+
         ensureKeyLoaded(db2, keyPath, k);
-        
+
         if (bIn === true ) {
             merge(db1, db2, true);
         }
@@ -740,37 +740,37 @@ function BP_GET_FILESTORE(g)
         }
         else if (bIn === undefined) {
             merge(db1, db2, false);
-        }        
+        }
         BP_PLUGIN.destroyCryptCtx(db2, {});
-        
+
         return true;
     }
-   
+
     function mergeInDB(db2, keyPath, k)
     {
         return mergeMain(db2, true, keyPath, k);
     }
-    
+
     function mergeOutDB(db2, keyPath, k)
     {
         return mergeMain(db2, false, keyPath, k);
     }
-    
+
     function mergeDB(db2, keyPath, k)
     {
         return mergeMain(db2, undefined, keyPath, k);
     }
-    
+
     function writeCSV(actn, ctx)
     {
         var buf=ctx.buf;
-        
+
         buf.push(ctx.traits.toCSV(actn));
         if (buf.length>=1000) {
             buf.flush("nul", ctx.fpath);
         }
     }
-    
+
     function exportCsvDT(dt, fpath)
     {
         var dbPath = DB_FS.getDBPath(),
@@ -782,37 +782,37 @@ function BP_GET_FILESTORE(g)
         if (!traits) {
             throw new BPError("", "InternalError", "BadArgument");
         }
-        
+
         buf = new RecsBuf("\n");
         buf.push(traits.csvHeader());
         MEMSTORE.newDNodeIterator(dt).walkCurr(writeCSV, {'buf':buf, 'fpath':fpath, 'traits':traits});
         buf.flush("nul", fpath);
     }
-    
+
     function exportCSV(dirPath, obfuscated)
     {
         var dtl=[dt_pRecord, dt_eRecord],
             i, fpath, fnames=[];
-            
+
         for (i=dtl.length-1; i>=0; i--) // would rather use foEach, but that is reportedly slower
         {
             fpath = DB_FS.makeCsvFilePath(dtl[i], dirPath);
             exportCsvDT(dtl[i], fpath);
             fnames.push(fpath);
         }
-        
+
         return fnames;
     }
-    
+
     function createDB(name, dir, keyDirOrPath, k, option) // throws
     {
         var dbPath, i, keyPath,
             o = {};
-            
+
         if (DB_FS.insideDB(dir)) {
             throw new BPError(BP_ERROR.msg.ExistingStore, 'BadPathArgument', 'ExistingStore');
         }
-        
+
         dbPath = DB_FS.makeDBPath(name, dir);
         switch (option)
         {
@@ -852,7 +852,7 @@ function BP_GET_FILESTORE(g)
         		break;
         	default:
         }
-        
+
         try
         {
             // Create the directories.
@@ -860,18 +860,18 @@ function BP_GET_FILESTORE(g)
             if (BP_PLUGIN.createDir(dbPath,o))
             {
                 // Create the cryptInfo file and context
-                if (option === 'optionNoKey') 
+                if (option === 'optionNoKey')
                 {
                 	o={};
 	                if (!BP_PLUGIN.createCryptCtx(k,keyPath,dbPath,o)) {
 	                    throw new BPError(o.err);
 	                }
                 }
-    
+
                 DB_FS.dtl.forEach(function (dt, j)
                 {
                     var p = DB_FS.makeDTDirPath(dt, dbPath);
-                    if (!BP_PLUGIN.createDir(p,o)) 
+                    if (!BP_PLUGIN.createDir(p,o))
                     {
                         throw new BPError(o.err);
                     }
@@ -893,7 +893,7 @@ function BP_GET_FILESTORE(g)
             BP_PLUGIN.rm(dbPath, o);
             throw exp;
         }
-        
+
         return dbPath; // same as return DB_FS.getDBPath();
     }
 
@@ -902,8 +902,8 @@ function BP_GET_FILESTORE(g)
         var rval = {}, i, j, n, k,
             //keys,
             bN = false, bP = false, bU = false;
-            
-            for (j=0, n=keys.length; j<n; j++) 
+
+            for (j=0, n=keys.length; j<n; j++)
             {
                 k = keys[j];
                 if ((!bN) && (uid_aliases.indexOf(k) !== (-1))) {
@@ -919,11 +919,11 @@ function BP_GET_FILESTORE(g)
                     bU = true; continue;
                 }
             }
-        
+
         // We'll return rval only if we got all property names
         if (bN && bP && bU) {return rval;}
     }
-    
+
     /**
      * @begin-class-def TextFileStream
     */
@@ -956,10 +956,10 @@ function BP_GET_FILESTORE(g)
             return rval[1];
         }
     };
-    
+
     /** @end-class-def **/
-   
-    /** 
+
+    /**
      * @begin-class-def CSVFile
      * @param props Optional. An array of property names to be provided only when the props are
      *              not embedded within the csv file.
@@ -967,7 +967,7 @@ function BP_GET_FILESTORE(g)
      *              mapped, then an exception is thrown. Providing a props array from outside
      *              will prevent such a mapping attempt and subsequent exception. That also
      *              means, that this.pidx will stay undefined.
-     *  
+     *
      */
     function CSVFile(path, _props) // throws BPError
     {
@@ -984,20 +984,20 @@ function BP_GET_FILESTORE(g)
             pidx: {writable:true, enumerable:false, configurable:false}
         });
         // Load and Initialize.
-        if (!_props) 
+        if (!_props)
         {
             var line = this.fstrm.getDataLine();
             if (!line)
             {throw new BPError(err);}// line is undefined || null || !empty
-            
+
             // Parse the first data-line for property names
            this.props = line.split(this.csvex);// split by space-comma-space
         } else { // Props array was provided.
-            this.props = _props;            
+            this.props = _props;
         }
-        
+
         if (!this.props || !this.props.length) { throw new BPError(err);}
-        else 
+        else
         { // Remove leading quotes
             for (n = this.props.length; n; n--)
             {
@@ -1015,7 +1015,7 @@ function BP_GET_FILESTORE(g)
         // Finally, generate a regular expression for data parsing
         // Make a regexp with props.length capture groups
         var field = "[\\s\"\']*([^\\s\"\']*)[\\s\"\']*",
-            separator = '\\s*,\\s*', 
+            separator = '\\s*,\\s*',
             i,
             regex = '^' + field;
 
@@ -1066,13 +1066,13 @@ function BP_GET_FILESTORE(g)
             // Catch the last field. It has no comma at the end.
             array = lastex.exec(line.slice(idx));
             vals.push(array[1] || (array[2] || array[3]));
-            
+
             if (vals.length === this.props.length) {return vals;}
             else {return null;}
         }
     };
     /** @end-class-def CSVFile **/
-   
+
     function importCSV(path, obfuscated)
     {
         var o={}, rval, i, prec, drec, pidx, csv, line, url, dr;
@@ -1091,8 +1091,8 @@ function BP_GET_FILESTORE(g)
                         else {BP_ERROR.loginfo("Importing " + JSON.stringify(csv));}
                         pidx = csvf.pidx;
                         url = parseURL(csv[pidx.url]);
-                        prec = newPAction(url || {}, 
-                                          Date.now(), 
+                        prec = newPAction(url || {},
+                                          Date.now(),
                                           csv[pidx.userid],
                                           csv[pidx.pass]);
                         if (!MEMSTORE.PREC_TRAITS.isValidCSV(prec))
@@ -1104,7 +1104,7 @@ function BP_GET_FILESTORE(g)
                         {
                             drec = new MEMSTORE.DRecord(prec, dt_pRecord, uct);
                         }
-                        
+
                         if ((dr=MEMSTORE.insertDrec(drec)))
                         {
                             try {
@@ -1119,7 +1119,7 @@ function BP_GET_FILESTORE(g)
                     }
                     return true;
                 default:
-                    return false;              
+                    return false;
             }
         }
         else
@@ -1127,10 +1127,10 @@ function BP_GET_FILESTORE(g)
             throw new BPError(o.err);
         }
     }
-       
-    //Assemble the interface    
+
+    //Assemble the interface
     var iface = {};
-    Object.defineProperties(iface, 
+    Object.defineProperties(iface,
     {
         importCSV: {value: importCSV},
         exportCSV: {value: exportCSV},
@@ -1142,7 +1142,7 @@ function BP_GET_FILESTORE(g)
         cleanLoadDB:{value: cleanLoadDB},
         compactDB:  {value: compactDB},
         mergeDB:    {value: mergeDB},
-        mergeInDB:  {value: mergeInDB},        
+        mergeInDB:  {value: mergeInDB},
         mergeOutDB: {value: mergeOutDB},
         insertRec:  {value: insertRec},
         UC_TRAITS: {value: UC_TRAITS}
