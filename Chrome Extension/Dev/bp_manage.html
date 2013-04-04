@@ -55,7 +55,7 @@
             <div class="tab-pane" id="settings-pane">
               <!-- <h3>Manage Wallets</h3> -->
               <legend>
-                <!-- Currently Open keyring : -->
+                <!-- Currently Loaded keyring : -->
                 <!-- <span id="dbPath" data-dbName style="text-align:center"></span> -->
                 <span data-dbName></span>
               </legend>
@@ -63,18 +63,18 @@
               <div class="well form-horizontal">
               <legend>Manage keyrings</legend>
                 <fieldset class='control-group'>
-                  <label class="control-label">Open / Close</label>
+                  <label class="control-label">Load / Unload</label>
                   <div class='controls btn-group'>
-                    <button id="btnWalletOpen" type="button" class="btn btn-info span1" title="Open/Reopen a keyring">Open</button>
-                    <button id="btnWalletClose" type="button" class="btn span1" title="Close the open keyring">Close</button>
-                    <button id="btnWalletReload" disabled type="button" class="btn span1" title="Reload the open keyring">Reload</button>
+                    <button id="btnWalletOpen" type="button" class="btn btn-info span1" title="Load/Reload a keyring">Load</button>
+                    <button id="btnWalletClose" type="button" class="btn span1" title="Unload keyring">Unload</button>
+                    <button id="btnWalletReload" disabled type="button" class="btn span1" title="Reload the loaded keyring">Reload</button>
                   </div>
                 </fieldset>
                 <fieldset class='control-group'>
                   <label class="control-label">New</label>
                   <div class='controls btn-group'>
                     <button id="btnWalletCreate" type="button" class="btn span1" title="Create a new keyring">New</button>
-                    <button id="btnWalletDupe" disabled type="button" class="btn span1" title="Make a copy of the open keyring">Duplicate</button>
+                    <button id="btnWalletDupe" disabled type="button" class="btn span1" title="Make a copy of the loaded keyring">Duplicate</button>
                   </div>
                 </fieldset>
 
@@ -191,12 +191,12 @@
                   <div class="control-group">
                     <!-- <label class="control-label">keyring</label> -->
                     <div class="controls btn-group">
-                      <button id="btnWalletOpen2" type="button" class="btn btn-info" data-loading-text="Opening..."
-                        title="Open/Re-open <i style='display:inline-block'>keyring</i> folder">
-                         Open keyring
+                      <button id="btnWalletOpen2" type="button" class="btn btn-info" data-loading-text="Loading..."
+                        title="Load/Reload <i style='display:inline-block'>keyring</i> folder">
+                         Load keyring
                       </button>
-                      <button id="btnWalletClose2" type="button" class="btn" title="Close the keyring">
-                        Close keyring
+                      <button id="btnWalletClose2" type="button" class="btn" title="Unload the keyring">
+                        Unload keyring
                       </button>
                     </div>
                   </div>

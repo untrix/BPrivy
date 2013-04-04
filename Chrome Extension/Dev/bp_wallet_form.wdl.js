@@ -1482,7 +1482,7 @@ function BP_GET_WALLET_FORM(g)
                     break;
                 case 'open':
                 default:
-                    this.modalHeader.$().text('Open keyring:');
+                    this.modalHeader.$().text('Load keyring:');
             }
 
             return this;
