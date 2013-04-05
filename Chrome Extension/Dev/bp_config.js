@@ -10,5 +10,5 @@
  * This module manages end-user notifications UI.
  */
 var BP_CONFIG = Object.freeze({
-    pluginVer: [1,1,0,3]
+    pluginVer: [1,1,0,4]
 });

@@ -48,7 +48,7 @@ function BP_GET_PLUGIN_INSTALLER(g)
     modalBody.wdt = function(ctx)
     {
         var text, bText,
-            url = 'https://commondatastorage.googleapis.com/www.untrix.com/downloads/UntrixPlugin.msi';
+            url = 'https://commondatastorage.googleapis.com/www.untrix.com/downloads/K3YRING.msi';
         switch (ctx.mode)
         {
             case 'installPlugin':

@@ -67,7 +67,7 @@ function BP_GET_TRAITS(g)
     var eid_pfx = "com-untrix-";
 
     var CT_TEXT_PLAIN = 'text/plain',
-        CT_BP_PREFIX = 'application/x-untrix-',
+        CT_BP_PREFIX = 'application/x-k3yring-',
         CT_BP_FN = CT_BP_PREFIX + 'fn',
         CT_BP_PASS = CT_BP_PREFIX + fn_pass,
         CT_BP_USERID = CT_BP_PREFIX + fn_userid;
