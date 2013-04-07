@@ -8,7 +8,7 @@
 #\**********************************************************/
 
 set(PLUGIN_NAME "K3YRING")
-set(PLUGIN_PREFIX "K3YB")
+set(PLUGIN_PREFIX "K3Y")
 set(COMPANY_NAME "Untrix")
 
 # ActiveX constants:
@@ -28,8 +28,14 @@ set(FBControl_GUID 0b95d359-b708-576c-b705-de2eac81ca1a)
 set(IFBComJavascriptObject_GUID 3c2dee3d-d04e-5367-94d9-5946747e1d8f)
 set(FBComJavascriptObject_GUID 85b7a40f-4a56-5daf-b63f-4b9c1cf85d4b)
 set(IFBComEventSource_GUID 0f8ba12f-b626-5759-870d-70b77f2a2c45)
+# FBControl_WixUpgradeCode_GUID was manually added later and BPrivyInstaller.wxs
+# modified accordingly by hand. The old GUID value was re-used for 32 bit archs.
+# i.e. 7de7ad6c-3b99-513c-81ae-4cfc439e969f is the original value before the
+# if/else condition was added. More changes maybe needed in other files, in order
+# to make this logic truly correct, but it should work for 32 bit arch since we've
+# reused the old GUID value.
 if ( FB_PLATFORM_ARCH_32 )
-    set(FBControl_WixUpgradeCode_GUID 1f55aa6d-ca55-5fcc-97dd-c1cc4782e12e)
+    set(FBControl_WixUpgradeCode_GUID 7de7ad6c-3b99-513c-81ae-4cfc439e969f)
 else ( FB_PLATFORM_ARCH_32 )
     set(FBControl_WixUpgradeCode_GUID 54d05202-1981-5cd2-9ce1-07076b16ef63)
 endif ( FB_PLATFORM_ARCH_32 )
@@ -42,16 +48,16 @@ set(MOZILLA_PLUGINID "untrix.com/K3YRING")
 
 # strings
 set(FBSTRING_CompanyName "Untrix Inc")
-set(FBSTRING_PluginDescription "K3YRING Plugin")
+set(FBSTRING_PluginDescription "K3YRING Plugin [beta]")
 set(FBSTRING_PLUGIN_VERSION "1.1.0.4")
 set(FBSTRING_LegalCopyright "Copyright 2013 Untrix Inc")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
-set(FBSTRING_ProductName "K3YRING [beta]")
+set(FBSTRING_ProductName "K3YRING Plugin [beta]")
 set(FBSTRING_FileExtents "3ab|3ac|3ad|3ak|3am|3ao|3at")
 if ( FB_PLATFORM_ARCH_32 )
-    set(FBSTRING_PluginName "K3YRING [beta]")  # No 32bit postfix to maintain backward compatability.
+    set(FBSTRING_PluginName "K3YRING Plugin [beta]")  # No 32bit postfix to maintain backward compatability.
 else ( FB_PLATFORM_ARCH_32 )
-    set(FBSTRING_PluginName "K3YRING [beta]_${FB_PLATFORM_ARCH_NAME}")
+    set(FBSTRING_PluginName "K3YRING Plugin [beta]_${FB_PLATFORM_ARCH_NAME}")
 endif ( FB_PLATFORM_ARCH_32 )
 set(FBSTRING_MIMEType "application/x-k3yring")
 

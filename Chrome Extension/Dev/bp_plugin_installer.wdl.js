@@ -53,11 +53,11 @@ function BP_GET_PLUGIN_INSTALLER(g)
         {
             case 'installPlugin':
                 text = g_installText;
-                bText = 'Download';
+                bText = 'Install';
                 break;
             case 'upgradePlugin':
                 text = g_upgradeText;
-                bText = 'Download';
+                bText = 'Upgrade';
                 break;
         }
 
