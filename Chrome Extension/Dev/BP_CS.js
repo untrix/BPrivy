@@ -171,7 +171,7 @@
         {
             BP_ERROR.logdebug("FormInfo.onSubmit invoked");
             if (ev.currentTarget!==ev.target) {
-                BP_ERROR.log("FormInfo.onSubmit: current target and target are different");
+                BP_ERROR.logdebug("FormInfo.onSubmit: current target and target are different");
             }
             var fInfo = $(ev.target).data(data_finfo);
             if (fInfo) {
@@ -180,9 +180,9 @@
         };
         FormInfo.onClick = function(ev)
         {
-            BP_ERROR.log("FormInfo.onClick event received");
+            //BP_ERROR.logdebug("FormInfo.onClick event received");
             if (ev.currentTarget!==ev.target) {
-                BP_ERROR.log("onClick: current target and target are different");
+                BP_ERROR.logdebug("onClick: current target and target are different");
             }
         };
         FormInfo.onMousedown = function(ev)
@@ -190,9 +190,9 @@
             if (ev.button!==0) {
                 return;
             }
-            BP_ERROR.log("FormInfo.onMousedown: Primary Mouse Button Depressed");
+            //BP_ERROR.logdebug("FormInfo.onMousedown: Primary Mouse Button Depressed");
             if (ev.currentTarget!==ev.target) {
-                BP_ERROR.log("onMousedown: current target and target are different");
+                BP_ERROR.logdebug("onMousedown: current target and target are different");
             }
         };
         FormInfo.isSubmitEl = function (el)
@@ -1054,17 +1054,17 @@
             if (pair)
             {
                 if (!uid || !pass) {
-                    console.log("partial user input received");
+                    BP_ERROR.logdebug("partial user input received");
                     return;
                 }
                 else // both uid and pass are available
                 {
                     if (MOD_DB.matches(uid, pass)) {
-                        console.log("Exiting password was input " + uid);
+                        BP_ERROR.logdebug("Exiting password was input " + uid);
                     }
                     else {
                         bSave = true;
-                        console.log("New password was input: " + uid + "/" + pass);
+                        BP_ERROR.logdebug("New password was input: " + uid + "/" + pass);
                     }
                 }
             }
@@ -1073,21 +1073,21 @@
                 if (uEl)
                 {
                     if (!MOD_DB.has(uid)) {
-                        console.log("New userid was input without password: " + uid);
+                        BP_ERROR.logdebug("New userid was input without password: " + uid);
                         bSave = true;
                     }
                     else {
-                        console.log("Existing userid was input without password: " + uid);
+                        BP_ERROR.logdebug("Existing userid was input without password: " + uid);
                     }
                 }
                 else if (pEl)
                 {
                     if (!MOD_DB.hasPass(pass)) {
-                        console.log("A new password was entered without userid. Saving it: " + encrypt(pass));
+                        BP_ERROR.logdebug("A new password was entered without userid. Saving it: " + encrypt(pass));
                         bSave = true;
                     }
                     else {
-                        console.log("Existing password was input without password: " + uid);
+                        BP_ERROR.logdebug("Existing password was input without password: " + uid);
                     }
                 }
             }
@@ -2264,7 +2264,7 @@
                     // Tell browser to set vlaue of 'current drag operation' to 'copy'
                     e.dataTransfer.dropEffect = 'copy';
 
-                    //console.log("dropHandler:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+                    //BP_ERROR.logdebug("dropHandler:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
                     // Save an EAction.
                     var eRec = newEAction(e.target.ownerDocument.location,
                                           Date.now(),
@@ -2305,8 +2305,8 @@
                 addEventListener(el, "dragenter", dragoverHandler);
                 addEventListener(el, "dragover", dragoverHandler);
                 addEventListener(el, "drop", dropHandler);
-                //addEventListener(el, "input", function(e){console.log("Watching Input event");});
-                //addEventListener(el, "change", function(e){console.log("Waching Change event");});
+                //addEventListener(el, "input", function(e){BP_ERROR.logdebug("Watching Input event");});
+                //addEventListener(el, "change", function(e){BP_ERROR.logdebug("Waching Change event");});
                 if (this.type==='password') {
                     w.ct = CT_BP_PASS;
                     el.dataset[data_ct] = CT_BP_PASS;
@@ -2596,7 +2596,7 @@
                 com.dataset.untrix = true;
                 head.insertBefore(com, head.firstChild);
 
-                console.log("bp_cs: Instrumented Command");
+                BP_ERROR.logdebug("bp_cs: Instrumented Command");
             }
         }
 

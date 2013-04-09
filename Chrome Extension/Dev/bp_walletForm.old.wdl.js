@@ -54,7 +54,7 @@ function BP_GET_WALLET_FORM(g)
         callbackHandleError,
         destroyWalletForm;
     /** @globals-end **/
-    
+
     function initCheckDBSaveLocation()
     {
         if (localStorage.dbDontSaveLocation) {
@@ -62,7 +62,7 @@ function BP_GET_WALLET_FORM(g)
         }
         else {
             $('#dbSaveLocation')[0].checked = true;
-        }    
+        }
     }
 
     function chooseWalletFolder(o)
@@ -73,7 +73,7 @@ function BP_GET_WALLET_FORM(g)
         o.dbutton = "Select Wallet Folder";
         o.clrHist = true;
 
-        if (!BP_PLUGIN.chooseFolder(o)) 
+        if (!BP_PLUGIN.chooseFolder(o))
         {
             BP_ERROR.loginfo(o.err);
         }
@@ -89,21 +89,21 @@ function BP_GET_WALLET_FORM(g)
         o.dtitle = "Untrix Wallet: Select Key File";
         o.dbutton = "Select";
         o.clrHist = true;
-       
+
         if (!BP_PLUGIN.chooseFile(o)) {BP_ERROR.loginfo(o.err);}
         else {return o.path;}
     }
-    
+
     function chooseKeyFolder(o)
     {
         BP_COMMON.clear(o);
         o.dtitle  = "Untrix Wallet: Select folder for storing Key File";
         o.dbutton = "Select Key File Folder";
-            
+
         if (!BP_PLUGIN.chooseFolder(o)) { BPError.loginfo(o.err); }
         else { return o.path; }
     }
-    
+
     function initFieldsetChooseKey(enable)
     {
         if (enable) {
@@ -116,7 +116,7 @@ function BP_GET_WALLET_FORM(g)
             $('#fieldsetChooseKey').prop('disabled', true).removeClass('error').hide();
         }
     }
-    
+
     function initFieldsetChooseKeyFolder(enable)
     {
         if (enable) {
@@ -146,9 +146,9 @@ function BP_GET_WALLET_FORM(g)
 
         addEventListeners('#btnWalletCancel', 'click', function(e)
         {
-            destroyWalletForm();           
+            destroyWalletForm();
         });
-        
+
         addEventListeners('#btnWalletSubmit', 'click', function(e)
         {
             var $el,
@@ -166,7 +166,7 @@ function BP_GET_WALLET_FORM(g)
                 $el = $('#inputKeyFolder');
                 $el[0].validity.valid || $('#fieldsetChooseKeyFolder').addClass('error');
 
-                $el = $('#inputPassword');             
+                $el = $('#inputPassword');
                 $el[0].validity.valid || $('#fieldsetPassword').addClass('error');
 
                 $el = $('#inputPassword2');
@@ -204,7 +204,7 @@ function BP_GET_WALLET_FORM(g)
                     else {
                         callbackHandleError(resp);
                     }
-                    
+
                     destroyWalletForm();
                 });
                 }
@@ -264,7 +264,7 @@ function BP_GET_WALLET_FORM(g)
             }
             else {
                 $('#btnChooseKey').prop('disabled', false).show();
-                $('#inputKeyPath').prop('disabled', false).show();                
+                $('#inputKeyPath').prop('disabled', false).show();
             }
         });
 
@@ -276,7 +276,7 @@ function BP_GET_WALLET_FORM(g)
             }
             else {
                 $('#btnChooseKeyFolder').prop('disabled', false).show();
-                $('#inputKeyFolder').prop('disabled', false).show();                
+                $('#inputKeyFolder').prop('disabled', false).show();
             }
         });
 
@@ -284,18 +284,18 @@ function BP_GET_WALLET_FORM(g)
         {
             var o = {},
                 path = chooseWalletFolder(o);
-                
+
             if (o.err) { BP_ERROR.alert(o.err); }
             else if (path) {
                 $('#inputDBPath').val(path);
             }
         });
-        
+
         addEventListeners('#btnChooseKey', 'click', function(e)
         {
             var o = {},
                 path = chooseKeyFile(o);
-                
+
             if (o.err) { BP_ERROR.alert(o.err); }
             else if (path) {
                 $('#inputKeyPath').val(path);
@@ -306,7 +306,7 @@ function BP_GET_WALLET_FORM(g)
         {
             var o = {},
                 path = chooseKeyFolder(o);
-                
+
             if (o.err) { BP_ERROR.alert(o.err); }
             else if (path) {
                 $('#inputKeyFolder').val(path);
@@ -394,7 +394,7 @@ function BP_GET_WALLET_FORM(g)
         updateDash = ctx.updateDash;
         callbackHandleError = ctx.callbackHandleError;
         destroyWalletForm = ctx.destroyWalletForm;
-        
+
         return {
         cons: WalletFormWdl,
         html: WalletFormWdl.html
@@ -419,20 +419,20 @@ function BP_GET_WALLET_FORM(g)
             initCheckDBSaveLocation();
             onInsert();
         }},
-        
+
         initMerge: {value: function()
         {
            this.initOpen('merge', 'Details of Wallet to Merge');
         }},
-        
+
         initMergeIn: {value: function()
         {
-           this.initOpen('mergeIn', 'Details of Wallet to Import from'); 
+           this.initOpen('mergeIn', 'Details of Wallet to Import from');
         }},
 
         initMergeOut: {value: function()
         {
-           this.initOpen('mergeOut', 'Details of Wallet to Export to'); 
+           this.initOpen('mergeOut', 'Details of Wallet to Export to');
         }},
 
         initCreate: {value: function(e)
@@ -453,8 +453,8 @@ function BP_GET_WALLET_FORM(g)
             onInsert();
         }}
     });
-    
-    BP_ERROR.loginfo("constructed mod_wallet_form");
+
+    BP_ERROR.logdebug("constructed mod_wallet_form");
     return Object.freeze(
     {
         WalletFormWdl_wdt: WalletFormWdl.wdt

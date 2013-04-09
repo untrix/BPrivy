@@ -1,6 +1,6 @@
 {
   "name": "K3YRING [beta]",
-  "version": "0.6.29",
+  "version": "0.6.30",
   "manifest_version": 2,
   "minimum_chrome_version": "20",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",

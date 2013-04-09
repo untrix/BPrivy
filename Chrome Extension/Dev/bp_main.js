@@ -351,7 +351,7 @@ var BP_MAIN = (function()
             //delete g_forms[details.url];
         }
         // else {
-            // console.log("onBefReq: " + details.url);
+            // BP_ERROR.logdebug("onBefReq: " + details.url);
         // }
     }
 
@@ -482,14 +482,14 @@ var BP_MAIN = (function()
                     break;
                 case "form":
                     BPError.push("FormSubmit");
-                    console.log("Form Submitted: " + JSON.stringify(rq.form));
+                    BP_ERROR.logdebug("Form Submitted: " + JSON.stringify(rq.form));
                     try
                     {
                         // Needed because the page would've reloaded by now and therefore
                         // we'll get a invalid-port exception.
                         funcSendResponse({result:true});
                     }
-                    catch (err) {BP_ERROR.log(err);}
+                    catch (err) {BP_ERROR.logwarn(err);}
                     break;
                 // case "watchF":
                     // BPError.push("WatchForm");

@@ -331,7 +331,7 @@ function BP_GET_PLUGIN_INSTALLER(g)
         }
     };
 
-    BP_ERROR.loginfo("constructed mod_wallet_form");
+    BP_ERROR.logdebug("constructed mod_wallet_form");
     return Object.freeze(
     {
         launch: modalDialog.create

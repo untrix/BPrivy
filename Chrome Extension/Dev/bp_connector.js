@@ -446,7 +446,7 @@ function BP_GET_CONNECT(g)
         return iface;
     }
 
-    BP_ERROR.log("constructed mod_connector");
+    BP_ERROR.logdebug("constructed mod_connector");
     return getModuleInterface();
 
 }

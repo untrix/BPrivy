@@ -15,9 +15,10 @@ function BP_GET_ERROR(g)
     var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_win = g.g_win,
         g_console = g.g_console,
+        NO_OP = function(){},
         _log = g_console.log.bind(g_console),
-        debug = g_console.debug.bind(g_console) || _log,
-        info = g_console.info.bind(g_console) || debug,
+        debug = RELEASE ? NO_OP : (g_console.debug.bind(g_console) || _log),
+        info = RELEASE ? NO_OP : (g_console.info.bind(g_console) || debug),
         warn = g_console.error.bind(g_console) || info;
 
    /** @begin-class-def BPError
@@ -276,7 +277,7 @@ function BP_GET_ERROR(g)
     function alert (arg)
     {
         var be = new BPError(arg);
-        g_console.log(be.toString());
+        logwarn(be.toString());
         g_win.alert(be.message || "Something went wrong :(");
     }
 
@@ -334,7 +335,7 @@ function BP_GET_ERROR(g)
         msg: msg
     };
     Object.freeze(iface);
-    g_console.log("constructed mod_error");
+    debug("constructed mod_error");
     return iface;
     /** @end-class-def BPError **/
 }

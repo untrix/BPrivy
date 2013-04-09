@@ -19,14 +19,20 @@
 
 (function()
 {   "use strict";
-    var eidCommand = "com-untrix-uwallet-click",
+    var g_console = console,
+        NO_OP = function(){},
+        eidCommand = "com-untrix-uwallet-click",
         eidCss = 'com_untrix_uwallet_css',
         cm_form= "form",
         dt_eRecord = "e",
         DICT_TRAITS,
         head = (document.head || document.getElementsByTagName( "head" )[0] || document.documentElement),
         g_bTopLevel = (window.top === window.self),
-        g_myUrl = window.location.href;
+        g_myUrl = window.location.href,
+        log = g_console.log.bind(g_console),
+        debug = RELEASE ?  NO_OP : (g_console.debug.bind(g_console) || log),
+        info = RELEASE ? NO_OP : (g_console.info.bind(g_console) || debug),
+        warn = g_console.error.bind(g_console) || info;
 
     function loadBP_CS(dll_init_func)
     {
@@ -43,11 +49,21 @@
             xhr.open("GET", chrome.extension.getURL(path), false);
             xhr.send();
             var resp = xhr.response;
-            // Only place where eval is used. Is okay becuase we're loading files from our
-            // extension only. These files are picked from the extension's folder on the
-            // Filesystem.
+            // This is the only place where eval is used. Is okay because we're loading
+            // files from our extension only. These files are picked from the extension's
+            // folder on the file system.
             eval(resp);
         }
+
+        // function loadJSAsync (path, callback)
+        // {
+            // var js = document.createElement('script');
+            // js.src = chrome.extension.getURL(path);
+            // js.type = "text/javascript";
+//
+            // if (callback) {js.onload = callback;}
+            // head.appendChild(js);
+        // }
 
         function loadCSSAsync (path, callback)
         {
@@ -88,7 +104,7 @@
             com.addEventListener('click', func);
             com.dataset.untrix = true;
             head.insertBefore(com, head.firstChild);
-            //console.log("Instrumented command");
+            //debug("Instrumented command");
         }
     }
     function onClickComm()
@@ -115,7 +131,7 @@
 
     function onClickBP(req, sender, sendResp)
     {
-        console.log("onMessage@bp_cs_boot: Handling received message in document " + document.location.href);
+        debug("onMessage@bp_cs_boot: Handling received message in document " + document.location.href);
         sendResp({result:true, frameUrl:g_myUrl});
         loadBP_CS(function(){if (BP_DLL.onClickBP) {BP_DLL.onClickBP();}});
     }

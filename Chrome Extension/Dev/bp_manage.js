@@ -25,6 +25,7 @@ var BP_MANAGE = (function ()
     g.BP_CONFIG = g.MAIN_PAGE.BP_CONFIG;
     //var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
     g.BP_MEMSTORE = g.MAIN_PAGE.BP_MAIN.g.BP_MEMSTORE;
+    // Construct MODS
     g.BP_ERROR = g.MAIN_PAGE.BP_GET_ERROR(g);
     g.BP_COMMON = g.MAIN_PAGE.BP_GET_COMMON(g);
     g.BP_PLAT = g.MAIN_PAGE.BP_GET_PLAT(g);
@@ -402,7 +403,7 @@ var BP_MANAGE = (function ()
             }
             else {
                 $('#csvImportSpinner').hide();
-                console.log("ChooseFile Failed");
+                BP_ERROR.logwarn("ChooseFile Failed");
             }
         });
 
@@ -413,7 +414,7 @@ var BP_MANAGE = (function ()
                    clrHist: true};
             $('#csvExportSpinner').show();
             if (BP_PLUGIN.chooseFolder(o)) {
-                console.log("ChooseFolder returned:" + o.path);
+                BP_ERROR.logdebug("ChooseFolder returned:" + o.path);
                 exportCSV(o.path, false, function (resp)
                 {
                     var msg;
@@ -429,7 +430,7 @@ var BP_MANAGE = (function ()
             }
             else {
                 $('#csvExportSpinner').hide();
-                console.log("ChooseFolder returned false");
+                BP_ERROR.logdebug("ChooseFolder returned false");
             }
         });
 
@@ -539,7 +540,7 @@ var BP_MANAGE = (function ()
 
         addEventListeners('#dnSearch', 'input', function(e)
         {
-            //console.log("#dnSearch: oninput invoked");
+            //BP_ERROR.logdebug("#dnSearch: oninput invoked");
             if (g_editor) {
                 g_editor.filter(this.value);
             }
@@ -654,7 +655,7 @@ var BP_MANAGE = (function ()
     });
     Object.freeze(iface);
 
-    console.log("constructed mod_manage");
+    BP_ERROR.logdebug("constructed mod_manage");
     return iface;
 }());
 
@@ -662,7 +663,7 @@ var BP_MANAGE = (function ()
 // function loadPlugin2 ()
 // { "use strict";
   // BP_PLUGIN = document.getElementById('com-untrix-bpplugin');
-  // console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+  // BP_ERROR.logdebug("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
 //
 // }
 
@@ -671,5 +672,5 @@ BP_MANAGE.g.BP_CS_PLAT.addEventListener(window, 'load', function(e)
 { "use strict";
   BP_MANAGE.loadPlugin();
   BP_MANAGE.onload();
-  console.log("inited mod_manage");
+  BP_MANAGE.g.BP_ERROR.logdebug("inited mod_manage");
 });

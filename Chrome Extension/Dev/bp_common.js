@@ -173,7 +173,7 @@ function BP_GET_COMMON(g)
 
     function preventDefault (ev)
     {
-        BP_ERROR.log("pd invoked");
+        //BP_ERROR.logdebug("pd invoked");
         ev.preventDefault();
         return false;
     }
@@ -362,7 +362,7 @@ function BP_GET_COMMON(g)
     });
     Object.freeze(iface);
 
-    BP_ERROR.log("constructed mod_common");
+    BP_ERROR.logdebug("constructed mod_common");
     return iface;
 
 }

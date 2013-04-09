@@ -13,13 +13,18 @@
 var BP_DLL = {};
 var BP_BOOT = (function()
 {   "use strict";
-    var g_uSel = 'input[type="text"],input:not([type]),input[type="email"],input[type="tel"],input[type="number"]',
+    var g_console = console, NO_OP = function(){},
+        g_uSel = 'input[type="text"],input:not([type]),input[type="email"],input[type="tel"],input[type="number"]',
         g_uReg2= /(log|sign)(in|on)|signup|(user|account)(id|name|number|email)|^(id|user|uid|uname)$|identity|authentication/i,
         g_fReg2 = /(log|sign)(in|on)|^(auth)$|register|registration|authentication|enroll|join|ssoform|regform|(create)(user|account)/i,
         g_bTopLevel = (window.top === window.self),
         g_browsingContextContainers = ['iframe', 'object', 'embed'],
         g_mediaElements = ['img', 'audio', 'video'],
-        g_autoFillable = false;
+        g_autoFillable = false,
+        log = g_console.log.bind(g_console),
+        debug = RELEASE ?  NO_OP : (g_console.debug.bind(g_console) || log),
+        info = RELEASE ? NO_OP : (g_console.info.bind(g_console) || debug),
+        warn = g_console.error.bind(g_console) || info;
 
     function filterUntrix(els)
     {
@@ -117,7 +122,7 @@ var BP_BOOT = (function()
 
         function onTimeout()
         {
-            console.log('onTimeout@bp_cs_boot.js: numMutationEvents='+numMutationEvents);
+            debug('onTimeout@bp_cs_boot.js: numMutationEvents='+numMutationEvents);
             lastBatchTime = Date.now();
             timerHandle = 0;
             numMutationEvents = 0;
@@ -126,7 +131,7 @@ var BP_BOOT = (function()
 
         function onMutation(mutations, observer)
         {
-            //console.log("onMutation entered:\n");
+            //debug("onMutation entered:\n");
             var i, n, bCall, mutes=[],
                 now=0;//Used in batch-mode only.
 
@@ -165,12 +170,12 @@ var BP_BOOT = (function()
                     }
                     else {
                         lastBatchTime = now;
-                        //console.log("Handling Mutation in batch mode")
+                        //debug("Handling Mutation in batch mode")
                     }
                 }
                 else
                 {
-                    //console.log("Handling Mutation in serial mode");
+                    //debug("Handling Mutation in serial mode");
                 }
 
                 callback(options.doBatch ? {} : (options.filterMutes?mutes:mutations), observer);

@@ -996,7 +996,7 @@ function BP_GET_WDL (g)
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
             e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon48.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
-            //BP_ERROR.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+            //BP_ERROR.logdebug("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
             //return true;
         }},
         handleDrag: {value: function handleDrag(e)
@@ -1110,6 +1110,6 @@ function BP_GET_WDL (g)
        cs_panel_wdt: Panel.wdt
     };
 
-    BP_ERROR.log("constructed mod_wdl");
+    BP_ERROR.logdebug("constructed mod_wdl");
     return Object.freeze(iface);
 }

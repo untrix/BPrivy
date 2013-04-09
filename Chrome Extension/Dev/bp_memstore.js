@@ -1667,6 +1667,6 @@ function BP_GET_MEMSTORE(g)
         }
     });
 
-    BP_ERROR.log("constructed mod_memstore");
+    BP_ERROR.logdebug("constructed mod_memstore");
     return iface;
 }

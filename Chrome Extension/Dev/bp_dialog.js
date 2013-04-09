@@ -236,7 +236,7 @@ var BP_DIALOG = (function ()
     });
     Object.freeze(iface);
 
-    console.log("constructed mod_dialog");
+    BP_ERROR.logdebug("constructed mod_dialog");
     return iface;
 })();
 

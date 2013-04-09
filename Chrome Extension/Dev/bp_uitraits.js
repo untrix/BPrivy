@@ -180,6 +180,6 @@ function BP_GET_TRAITS(g)
         isTopLevelTag: {value: function(elName) {return (dom_topLevelTags.indexOf(elName) !== -1);} }
     }); Object.freeze(iface);
 
-    BP_ERROR.log("constructed mod_traits");
+    BP_ERROR.logdebug("constructed mod_traits");
     return iface;
 }

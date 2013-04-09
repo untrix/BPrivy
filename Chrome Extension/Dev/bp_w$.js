@@ -613,6 +613,6 @@ function BP_GET_W$(g)
        Widget: WidgetElement,
        WidgetElement: WidgetElement
    });
-   BP_ERROR.log("constructed mod_w$");
+   BP_ERROR.logdebug("constructed mod_w$");
    return iface;
 }

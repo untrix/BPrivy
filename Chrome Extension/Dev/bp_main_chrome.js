@@ -141,6 +141,6 @@ function BP_GET_PLAT(gg)
     };
 
     Object.seal(module);
-    BP_ERROR.log("constructed mod_main_plat");
+    BP_ERROR.logdebug("constructed mod_main_plat");
     return module;
 }

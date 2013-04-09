@@ -123,6 +123,6 @@ var BP_WALLET_FORM = (function ()
     });
     Object.freeze(iface);
 
-    console.log("constructed mod_wallet_form");
+    BP_ERROR.logdebug("constructed mod_wallet_form");
     return iface;
 }());

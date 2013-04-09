@@ -946,7 +946,7 @@ function BP_GET_DBFS(g)
         //DB_FS.putPathSep(BP_PLUGIN.pathSeparator());
     }
 
-    BP_ERROR.log("constructed mod_dbfs");
+    BP_ERROR.logdebug("constructed mod_dbfs");
     return Object.freeze(
     {
         init: init,

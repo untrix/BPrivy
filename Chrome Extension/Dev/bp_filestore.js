@@ -190,12 +190,12 @@ function BP_GET_FILESTORE(g)
                 catch (e)
                 {
                     var bpe = new BPError(e);
-                    BP_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
+                    BP_ERROR.logdebug("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
                     MEMSTORE.getStats().bad++;
                 }
             },0);
 
-            BP_ERROR.log("Loaded file " + filePath);
+            BP_ERROR.logdebug("Loaded file " + filePath);
 
 	        if (o.inf && (o.inf.gcode === 'EncryptionCorrupted'))
 	        {
@@ -225,7 +225,7 @@ function BP_GET_FILESTORE(g)
         }
         else
         {
-            BP_ERROR.log("loadFile@filestore: Empty file?: " + filePath);
+            BP_ERROR.logdebug("loadFile@filestore: Empty file?: " + filePath);
         }
     }
 
@@ -350,7 +350,7 @@ function BP_GET_FILESTORE(g)
         // EXPERIMENTAL: The following line was moved to loadDB.
         // dbPath = DB_FS.verifyDBForLoad(dbPath);
 
-        BP_ERROR.log("loadingDB " + dbPath);
+        BP_ERROR.loginfo("loadingDB " + dbPath);
        	MEMSTORE.clear(); // unload the previous DB.
        	DB_FS.setDBPath(null); // EXPERIMENTAL
 
@@ -360,7 +360,7 @@ function BP_GET_FILESTORE(g)
         memStats = MEMSTORE.getStats();
         DB_FS.setDBPath(dbPath, dbStats);
 
-        BP_ERROR.log("Loaded DB " + dbPath + ". files loaded: "+dbStats.numLoaded()+
+        BP_ERROR.loginfo("Loaded DB " + dbPath + ". files loaded: "+dbStats.numLoaded()+
                       ", files bad: "+dbStats.numBad()+
                       ", recs loaded: "+memStats.loaded + ", recs bad: " +memStats.bad +
                       ", recs fluff: " +memStats.fluff);
@@ -952,7 +952,7 @@ function BP_GET_FILESTORE(g)
         }
         var rval = this.regex.exec(this.buf);
         if (rval!==null) {
-            //BP_ERROR.log("getDataLine-->" + rval[1]);
+            //BP_ERROR.logdebug("getDataLine-->" + rval[1]);
             return rval[1];
         }
     };
@@ -1097,7 +1097,7 @@ function BP_GET_FILESTORE(g)
                                           csv[pidx.pass]);
                         if (!MEMSTORE.PREC_TRAITS.isValidCSV(prec))
                         {
-                            BP_ERROR.log("Discarding invalid csv record - " + JSON.stringify(csv));
+                            BP_ERROR.logwarn("Discarding invalid csv record - " + JSON.stringify(csv));
                             prec = null; continue;
                         }
                         else
@@ -1113,7 +1113,7 @@ function BP_GET_FILESTORE(g)
                                 }
                             } catch (e) {
                                 var bpe = new BPError(e);
-                                BP_ERROR.log("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());
+                                BP_ERROR.logwarn("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());
                             }
                         }
                     }
@@ -1149,6 +1149,6 @@ function BP_GET_FILESTORE(g)
     });
     Object.freeze(iface);
 
-    BP_ERROR.log("constructed mod_filestore");
+    BP_ERROR.logdebug("constructed mod_filestore");
     return iface;
 }

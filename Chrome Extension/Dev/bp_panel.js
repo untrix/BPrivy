@@ -391,5 +391,5 @@
     }());
 
     MOD_CS.onLoad();
-    BP_ERROR.log("loaded panel.js");
+    BP_ERROR.logdebug("loaded panel.js");
 }());

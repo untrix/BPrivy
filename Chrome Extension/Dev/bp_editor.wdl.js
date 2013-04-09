@@ -361,9 +361,9 @@ function BP_GET_EDITOR(g)
     {
         onsubmit: {value: function(e)
         {
-            BP_ERROR.log("NewRecord.onsubmit invoked");
+            //BP_ERROR.logdebug("NewRecord.onsubmit invoked");
             var loc = MOD_COMMON.parseURL($(this.urlF.el).val());
-            BP_ERROR.log("NewRecord.onsubmit: url=" + JSON.stringify(loc));
+            //BP_ERROR.logdebug("NewRecord.onsubmit: url=" + JSON.stringify(loc));
             e.stopPropagation();
             e.preventDefault();// Prevents default action and causes event to get cancelled if cancellable
             this.destroy();
@@ -484,7 +484,7 @@ function BP_GET_EDITOR(g)
         }},
         onSubmit: {value: function(e)
         {
-            BP_ERROR.log("IITemP.onSubmit invoked");
+            //BP_ERROR.logdebug("IITemP.onSubmit invoked");
             this.tButton.toggle.apply(this.tButton,[e]);
             e.stopPropagation();
             e.preventDefault();
@@ -545,7 +545,7 @@ function BP_GET_EDITOR(g)
     {
         onDblClick: {value: function(e)
         {
-            BP_ERROR.log("OITemP.onDblClick invoked");
+            //BP_ERROR.logdebug("OITemP.onDblClick invoked");
             this.tButton.toggle.apply(this.tButton,[e]);
             e.stopPropagation();
             e.preventDefault();
@@ -781,7 +781,7 @@ function BP_GET_EDITOR(g)
                     }
                     self.destroy();
             });
-            BP_ERROR.log("DNode->reload invoked");
+            //BP_ERROR.logdebug("DNode->reload invoked");
         }},
         createList: {value: function()
         {
@@ -867,7 +867,7 @@ function BP_GET_EDITOR(g)
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
             e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon48.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
-            //BP_ERROR.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+            //BP_ERROR.logdebug("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
             //return true;
         }},
         handleDrag: {value: function handleDrag(e)
@@ -915,7 +915,7 @@ function BP_GET_EDITOR(g)
         }},
         filter: {value: function(site)
         {
-            //BP_ERROR.log("g_editor: filter invoked on " + site);
+            //BP_ERROR.logdebug("g_editor: filter invoked on " + site);
             var $coll = $('.com-untrix-dnode', this.el),
                 $show = site ? $coll.filter('[id*="'+site.toLowerCase()+'"]') : $coll,
                 $hide = site ? $coll.not($show) : $();
@@ -927,7 +927,7 @@ function BP_GET_EDITOR(g)
         }}
     });
 
-    BP_ERROR.log("constructed mod_editor");
+    BP_ERROR.logdebug("constructed mod_editor");
     return Object.freeze(
     {
         EditorWdl_wdt: EditorWdl.wdt
