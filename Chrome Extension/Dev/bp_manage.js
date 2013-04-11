@@ -104,8 +104,8 @@ var BP_MANAGE = (function ()
     function chooseWalletFolder(o)
     {
         BP_COMMON.clear(o);
-        o.dtitle = "K3YRING: Select keyring Folder";
-        o.dbutton = "Select keyring Folder";
+        o.dtitle = "K3YRING: Select Keyring Folder";
+        o.dbutton = "Select Keyring Folder";
         o.clrHist = true;
 
         return chooseFolder(o);
@@ -126,10 +126,10 @@ var BP_MANAGE = (function ()
     	rpcToMothership({cm:BP_CONNECT.cm_deleteDB, dbPath:db}, function(resp)
     	{
     		if (resp.result === true) {
-    			BP_ERROR.success('Deleted keyring at: ' + db);
+    			BP_ERROR.success('Deleted Keyring at: ' + db);
     		}
     		else {
-    			BP_ERROR.warn(resp.err || 'Some problems were encountered. The keyring may not have been completely removed. Please try again.');
+    			BP_ERROR.warn(resp.err || 'Some problems were encountered. The Keyring may not have been completely removed. Please try again.');
     		}
     	});
     }
@@ -227,8 +227,8 @@ var BP_MANAGE = (function ()
                 clearEditor();
             }
 
-            $('[data-dbName]').text(g_dbName||"No Keyring Opened").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
-            $('[data-db-path]').text(resp.dbPath||"No Keyring Opened").attr('data-path', resp.dbPath);
+            $('[data-dbName]').text(g_dbName||"No Keyring Loaded").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+            $('[data-db-path]').text(resp.dbPath||"No Keyring Loaded").attr('data-path', resp.dbPath);
 
             if (resp.memStats && resp.dbPath)
             {
@@ -286,7 +286,7 @@ var BP_MANAGE = (function ()
         {
             g_dbName = resp ? cullDBName(resp.dbPath) : null;
             g_dbPath = resp ? resp.dbPath : null;
-            $('[data-dbName]').text("No Keyring Opened").attr('data-original-title', '').attr('data-path', null);
+            $('[data-dbName]').text("No Keyring Loaded").attr('data-original-title', '').attr('data-path', null);
             $('[data-db-path]').text(null).attr('data-original-title', '').attr('data-path', null);
             $('#stats').val('');
             $('#dbCompact').removeClass('btn-warning').removeClass('btn-primary').prop('disabled', true);
@@ -442,7 +442,7 @@ var BP_MANAGE = (function ()
                 if (resp.result === true)
                 {
                     updateDash(resp);
-                    BP_ERROR.success('keyring has been compacted: ' + resp.dbPath);
+                    BP_ERROR.success('Keyring has been compacted: ' + resp.dbPath);
                 }
                 else {
                     callbackHandleError(resp);
@@ -459,7 +459,7 @@ var BP_MANAGE = (function ()
                 if (resp.result === true)
                 {
                     updateDash(resp);
-                    BP_ERROR.success('keyring has been cleaned: ' + resp.dbPath);
+                    BP_ERROR.success('Keyring has been cleaned: ' + resp.dbPath);
                 }
                 else {
                     callbackHandleError(resp);
@@ -480,7 +480,7 @@ var BP_MANAGE = (function ()
                     if (id === 'dbClose2') {
                         clearEditor();
                     }
-                    BP_ERROR.success('keyring has been closed');
+                    BP_ERROR.success('Keyring has been closed');
                 }
                 else
                 {
@@ -534,7 +534,7 @@ var BP_MANAGE = (function ()
                 }
             }
             else {
-                BP_ERROR.alert("Please open a keyring first");
+                BP_ERROR.alert("Please open a Keyring first");
             }
         });
 
@@ -597,6 +597,7 @@ var BP_MANAGE = (function ()
 		addEventListeners('#dbDelete', 'click', deleteDB);
 
         $('#content *').tooltip();
+        //$('#nav-list').affix();
         switch (actionOpt)
         {
             case 'edit':

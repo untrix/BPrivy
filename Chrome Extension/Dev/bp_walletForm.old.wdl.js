@@ -179,7 +179,7 @@ function BP_GET_WALLET_FORM(g)
                 {
                     if (resp.result === true) {
                         updateDash(resp);
-                        BP_ERROR.success('Opened password wallet at ' + resp.dbPath);
+                        BP_ERROR.success('Loaded Keyring at ' + resp.dbPath);
                     }
                     else {
                         callbackHandleError(resp);

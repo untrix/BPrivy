@@ -233,7 +233,7 @@ function BP_GET_FILESTORE(g)
     {
         if (!dbPath) {return;}
 
-        return BP_ERROR.prompt("Please enter password for keyring at: " + dbPath);
+        return BP_ERROR.prompt("Please enter password for Keyring at: " + dbPath);
     }
 
     function ensureKeyLoaded(dbPath, cryptInfoPath, k)
@@ -640,9 +640,9 @@ function BP_GET_FILESTORE(g)
 
 		db = DB_FS.verifyDBForLoad(db);
 		if (db === DB_FS.getDBPath()) {
-			throw new BPError('This keyring is currently open. Please close it and retry');
+			throw new BPError('This Keyring is currently open. Please close it and retry');
 		}
-		else if (!BP_ERROR.confirm('Are you sure you want to delete all contents of the keyring at: ' + db + "?")) {
+		else if (!BP_ERROR.confirm('Are you sure you want to delete all contents of the Keyring at: ' + db + "?")) {
 			return;
 		}
 

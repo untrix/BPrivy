@@ -270,7 +270,7 @@ function BP_GET_WDL (g)
         return {
             tag:"div",
             attr:{ id: eid_panelTitleText, title:ctx.dbPath },
-            text:ctx.dbName || "No keyring loaded"
+            text:ctx.dbName || "No Keyring loaded"
         };
     }
 
@@ -432,7 +432,7 @@ function BP_GET_WDL (g)
         on:{ click:OButton.prototype.onClick },
         attr:{ 'class':css_class_xButton,
         	   href:'#',
-               title:'(Re)Load keyring' },
+               title:'(Re)Load Keyring' },
         iface:{ panel:panel },
         css:{ width:'20px' },
             children:[
@@ -466,7 +466,7 @@ function BP_GET_WDL (g)
         on:{ click:CButton.prototype.onClick },
         attr:{ 'class':css_class_xButton,
         	   href:'#',
-               title:'Unload keyring' },
+               title:'Unload Keyring' },
         iface:{ panel:panel, off:off },
         css:{ width:'20px' },
             children:[
@@ -485,7 +485,7 @@ function BP_GET_WDL (g)
             try {
 	            this.off(function ()
 	            {
-	                BP_ERROR.success('keyring has been closed');
+	                BP_ERROR.success('Keyring has been closed');
 	            });
             }
             catch (ex) {
@@ -1064,9 +1064,9 @@ function BP_GET_WDL (g)
                 showRecs ? NButton.wdt : w$undefined,
                 cs_panelTitleText_wdt,
                 XButton.wdt,
-                SButton.wdt,
                 ctx.dbName? EButton.wdt: w$undefined,
-                ctx.dbName? CButton.wdt: w$undefined,                OButton.wdt
+                ctx.dbName? CButton.wdt: w$undefined,                OButton.wdt,
+                SButton.wdt
                 ]
             },
             showRecs ? PanelList.wdt : w$undefined,

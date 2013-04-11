@@ -734,7 +734,7 @@ var BP_MAIN = (function()
             // that it listens to have been inited.
             BP_NTFN_CNTR.init();
             loadPlugin();
-            // BP_NTFN_CNTR.notify('', 'Click here to open a keyring', function()
+            // BP_NTFN_CNTR.notify('', 'Click here to open a Keyring', function()
             // {
             	// MOD_WIN.openPath('/bp_manage.html?action=open');
             // });

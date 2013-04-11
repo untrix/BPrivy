@@ -8,7 +8,7 @@
     <meta name="author" content="untrix.com">
     <!-- Stylesheets -->
     <link href="tp/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <style type="text/css">        body {            padding-top: 60px;            padding-bottom: 40px;        }        .sidebar-nav {            padding: 9px 0;        }    </style>
+    <style type="text/css">        body {            padding-top: 100px;            padding-bottom: 40px;        }        .sidebar-nav {            padding: 9px 0;        }    </style>
     <link href="tp/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
     <link href="bp_manage.css" rel="stylesheet">
     <!-- Icons -->
@@ -18,20 +18,20 @@
     <link rel="apple-touch-icon" sizes="16x16" href="icons/icon16.png">
   </head>
   <body>
-    <!-- <div class="navbar navbar-fixed-top" style="background-color: transparent">
-        <div class="container">
-              <img src="icons/fullIcon48.png" alt="K3YRING&trade; [beta]"/>
+    <div class="navbar navbar-fixed-top" style="background-image: linear-gradient(to right, #5bc0de, #2f96b4)">
+        <div class="container" style="height: 60px">
+              <img src="icons/Banner White.213x40png.png" alt="K3YRING&trade; [beta]" style="margin: 10px auto 10px auto"/>
         </div>
-    </div> -->
+    </div>
     <div class="container">
       <div class="row">
-        <div class="span2">
+        <div class="span3">
           <!--Sidebar content-->
           <!-- <h3> <i>K3YRING&trade; [beta]</i></h3> -->
-          <div id="logo">
+          <!-- <div id="logo">
             <img src="icons/fullIcon48.png" alt="K3YRING&trade; [beta]" id="logo-img">
-          </div>
-          <ul class="nav nav-list" id="nav-list">
+          </div> -->
+          <ul class="nav nav-list" id="nav-list" data-spy="affix" data-offset-top="200">
 
             <li>
               <a data-nav id="nav-settings" href="#settings-pane"><i class="icon-cog"></i> Manage</a>
@@ -44,37 +44,37 @@
             <li><a data-nav href="#help-pane"><i class="icon-flag"></i> Help</a></li>
             <li class="divider"></li>
             <li>
-              <a href="mailto:keys@untrix.com"><i class="icon-envelope"></i> Contact</a>
+              <a href="mailto:support@k3yring.com"><i class="icon-envelope"></i> Contact</a>
             </li>
           </ul>
         </div>
-        <div class="span1"><p></p></div>
+        <!-- <div class="span1"><p></p></div> -->
         <div id="content" class="span9">
           <div class="tab-content">
             <!--Body content-->
             <div class="tab-pane" id="settings-pane">
               <!-- <h3>Manage Wallets</h3> -->
               <legend>
-                <!-- Currently Loaded keyring : -->
+                <!-- Currently Loaded Keyring : -->
                 <!-- <span id="dbPath" data-dbName style="text-align:center"></span> -->
                 <span data-dbName></span>
               </legend>
 
               <div class="well form-horizontal">
-              <legend>Manage keyrings</legend>
+              <legend>Manage Keyrings</legend>
                 <fieldset class='control-group'>
                   <label class="control-label">Load / Unload</label>
                   <div class='controls btn-group'>
-                    <button id="btnWalletOpen" type="button" class="btn btn-info span1" title="Load/Reload a keyring">Load</button>
-                    <button id="btnWalletClose" type="button" class="btn span1" title="Unload keyring">Unload</button>
-                    <button id="btnWalletReload" disabled type="button" class="btn span1" title="Reload the loaded keyring">Reload</button>
+                    <button id="btnWalletOpen" type="button" class="btn btn-info span1" title="Load/Reload a Keyring">Load</button>
+                    <button id="btnWalletClose" type="button" class="btn span1" title="Unload Keyring">Unload</button>
+                    <button id="btnWalletReload" disabled type="button" class="btn span1" title="Reload the loaded Keyring">Reload</button>
                   </div>
                 </fieldset>
                 <fieldset class='control-group'>
                   <label class="control-label">New</label>
                   <div class='controls btn-group'>
-                    <button id="btnWalletCreate" type="button" class="btn span1" title="Create a new keyring">New</button>
-                    <button id="btnWalletDupe" disabled type="button" class="btn span1" title="Make a copy of the loaded keyring">Duplicate</button>
+                    <button id="btnWalletCreate" type="button" class="btn span1" title="Create a new Keyring">New</button>
+                    <button id="btnWalletDupe" disabled type="button" class="btn span1" title="Make a copy of the loaded Keyring">Duplicate</button>
                   </div>
                 </fieldset>
 
@@ -86,7 +86,7 @@
               <div class="form-horizontal well">
                 <legend>
                     <span>
-                      Sync / Merge keyrings <i class="icon-question-sign" title="Keep all your keyring copies up-to-date"></i>
+                      Sync / Merge Keyrings <i class="icon-question-sign" title="Keep all your Keyring copies up-to-date"></i>
                     </span>
                 </legend>
 
@@ -94,12 +94,12 @@
                   <label class="control-label">
                     Home-Sync
                         <i class="icon-question-sign"
-                            title="Sync with another keyring <strong>without connecting to the internet</strong> using our patent-pending ActionReplay&trade; technology.">
+                            title="Sync with another Keyring <strong>without connecting to the internet</strong> using our patent-pending ActionReplay&trade; technology.">
                         </i>
                   </label>
                   <div class="controls btn-group">
                     <button data-path-choose id="btnMerge" type="button" class="btn btn-info span1"
-                    title="Click to choose the other keyring to sync with">
+                    title="Click to choose the other Keyring to sync with">
                       Sync</button>
                   </div>
 
@@ -110,7 +110,7 @@
 
                 <fieldset class="control-group">
                   <label class="control-label">Internet Sync
-                    <i class="icon-question-sign" title="Just create or move your <em>keyring</em> folder into a cloud-drive such as <em>Dropbox&trade;
+                    <i class="icon-question-sign" title="Just create or move your <em>Keyring</em> folder into a cloud-drive such as <em>Dropbox&trade;
                         or Microsoft Skydrive&trade;</em> on your PC. However, be sure to <strong> create a Master Key and store it on a
                         different drive (e.g. on your computer or in a thumb-drive).</strong>">
                     </i>
@@ -118,14 +118,14 @@
                   <div class="controls">
                     <p> Nothing to do !</p>
                     <p>
-                        Just create or move your <i>keyring</i> folder into a cloud-drive such as <i>Dropbox&trade;,
+                        Just create or move your <i>Keyring</i> folder into a cloud-drive such as <i>Dropbox&trade;,
                         or Microsoft Skydrive&trade;</i> on your PC.
                         However for added security, be sure to <strong> create a Master Key and store it on a
                         different drive</strong> (e.g. on your computer or in a thumb-drive).
                     </p>
                     <!-- <p>
                       Just create or move
-                      your <em>keyring</em> folder into a cloud-drive such as
+                      your <em>Keyring</em> folder into a cloud-drive such as
                       <a href="http://www.dropbox.com">Dropbox</a>,
                       <a href="http://windows.microsoft.com/en-US/skydrive/home">Microsoft Skydrive </a>
                       on your PC. However, be sure to <strong> create a Master Key and store
@@ -165,13 +165,13 @@
                 <div class="control-group">
                   <label class="control-label">Home-Sync
                       <i class="icon-question-sign"
-                        title="Import or Export password updates from/to another keyring using our patent-pending ActionReplay&trade; technology.">
+                        title="Import or Export password updates from/to another Keyring using our patent-pending ActionReplay&trade; technology.">
                       </i>
                   </label>
                   <div class="controls btn-group">
-                    <button data-path-choose id="btnMergeIn" type="button" class="btn span1" title="Click to select the other keyring">
+                    <button data-path-choose id="btnMergeIn" type="button" class="btn span1" title="Click to select the other Keyring">
                       Import</button>
-                    <button data-path-choose id="btnMergeOut" type="button" class="btn span1" title="Click to select the other keyring">
+                    <button data-path-choose id="btnMergeOut" type="button" class="btn span1" title="Click to select the other Keyring">
                       Export</button>
                   </div>
                 </div>
@@ -187,14 +187,14 @@
               <div id="editorPane">
                 <form class="form-inline">
                   <div class="control-group">
-                    <!-- <label class="control-label">keyring</label> -->
+                    <!-- <label class="control-label">Keyring</label> -->
                     <div class="controls btn-group">
                       <button id="btnWalletOpen2" type="button" class="btn btn-info" data-loading-text="Loading..."
-                        title="Load/Reload <i style='display:inline-block'>keyring</i> folder">
-                         Load keyring
+                        title="Load/Reload <i style='display:inline-block'>Keyring</i> folder">
+                         Load Keyring
                       </button>
-                      <button id="btnWalletClose2" type="button" class="btn" title="Unload the keyring">
-                        Unload keyring
+                      <button id="btnWalletClose2" type="button" class="btn" title="Unload the Keyring">
+                        Unload Keyring
                       </button>
                     </div>
                   </div>
@@ -242,7 +242,7 @@
                 </fieldset>
 
                 <fieldset class="control-group">
-                  <label class="control-label">Delete keyring</label>
+                  <label class="control-label">Delete Keyring</label>
                   <div class="controls">
                     <button id="dbDelete" type="button" class="btn span2" data-loading-text="Deleting...">
                       Delete</button>
@@ -267,70 +267,12 @@
             <div class="tab-pane" id="license-pane">
               <!-- License and Credits Go Here -->
               <section>
-<h3 style="text-align: center">END USER LICENSE AGREEMENT </h3>
-
-<p style="text-align: justify">
-This copy of K3YRING [beta] ("the Software Product") and accompanying documentation is licensed and not sold. This Software Product is protected by copyright laws and treaties, as well as laws and treaties related to other forms of intellectual property. Untrix Inc or its subsidiaries, affiliates, and suppliers (collectively "Untrix Inc") own intellectual property rights in the Software Product. The Licensee's ("you" or "your") license to download, use, copy, or change the Software Product is subject to these rights and to all the terms and conditions of this End User License Agreement ("Agreement").
-</p>
-<h4>Acceptance</h4>
-<p style="text-align: justify">
-YOU ACCEPT AND AGREE TO BE BOUND BY THE TERMS OF THIS AGREEMENT BY SELECTING THE "ACCEPT" OPTION AND DOWNLOADING THE SOFTWARE PRODUCT OR BY INSTALLING, USING, OR COPYING THE SOFTWARE PRODUCT. YOU MUST AGREE TO ALL OF THE TERMS OF THIS AGREEMENT BEFORE YOU WILL BE ALLOWED TO DOWNLOAD THE SOFTWARE PRODUCT. IF YOU DO NOT AGREE TO ALL OF THE TERMS OF THIS AGREEMENT, YOU MUST SELECT "DECLINE" AND YOU MUST NOT INSTALL, USE, OR COPY THE SOFTWARE PRODUCT.
-</p>
-<h4>License Grant</h4>
-<p style="text-align: justify">
-This Agreement entitles you to install and use one copy of the Software Product. In addition, you may make one archival copy of the Software Product. The archival copy must be on a storage medium other than a hard drive, and may only be used for the reinstallation of the Software Product. This Agreement does not permit the installation or use of multiple copies of the Software Product, or the installation of the Software Product on more than one computer at any given time, on a system that allows shared used of applications, on a multi-user network, or on any configuration or system of computers that allows multiple users. Multiple copy use or installation is only allowed if you obtain an appropriate licensing agreement for each user and each copy of the Software Product.
-</p>
-<h4>Restrictions on Transfer</h4>
-<p style="text-align: justify">
-Without first obtaining the express written consent of Untrix Inc, you may not assign your rights and obligations under this Agreement, or redistribute, encumber, sell, rent, lease, sublicense, or otherwise transfer your rights to the Software Product.
-</p>
-<h4>Restrictions on Use</h4>
-<p style="text-align: justify">
-You may not use, copy, or install the Software Product on any system with more than one computer, or permit the use, copying, or installation of the Software Product by more than one user or on more than one computer. If you hold multiple, validly licensed copies, you may not use, copy, or install the Software Product on any system with more than the number of computers permitted by license, or permit the use, copying, or installation by more users, or on more computers than the number permitted by license.
-</p>
-<p style="text-align: justify">
-You may not decompile, "reverse-engineer", disassemble, or otherwise attempt to derive the source code for the Software Product.
-</p>
-<p style="text-align: justify">
-You may not use the database portion of the Software Product in connection with any software other than the Software Product.
-</p>
-<h4>Restrictions on Alteration</h4>
-<p style="text-align: justify">
-You may not modify the Software Product or create any derivative work of the Software Product or its accompanying documentation. Derivative works include but are not limited to translations. You may not alter any files or libraries in any portion of the Software Product. You may not reproduce the database portion or create any tables or reports relating to the database portion.
-</p>
-<h4>Restrictions on Copying</h4>
-<p style="text-align: justify">
-You may not copy any part of the Software Product except to the extent that licensed use inherently demands the creation of a temporary copy stored in computer memory and not permanently affixed on storage medium. You may make one archival copy which must be stored on a medium other than a computer hard drive.
-</p>
-<h4>Disclaimer of Warranties and Limitation of Liability</h4>
-<p style="text-align: justify">
-UNLESS OTHERWISE EXPLICITLY AGREED TO IN WRITING BY UNTRIX INC, UNTRIX INC MAKES NO OTHER WARRANTIES, EXPRESS OR IMPLIED, IN FACT OR IN LAW, INCLUDING, BUT NOT LIMITED TO, ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE OTHER THAN AS SET FORTH IN THIS AGREEMENT OR IN THE LIMITED WARRANTY DOCUMENTS PROVIDED WITH THE SOFTWARE PRODUCT.
-</p>
-<p style="text-align: justify">
-Untrix Inc makes no warranty that the Software Product will meet your requirements or operate under your specific conditions of use. Untrix Inc makes no warranty that operation of the Software Product will be secure, error free, or free from interruption. YOU MUST DETERMINE WHETHER THE SOFTWARE PRODUCT SUFFICIENTLY MEETS YOUR REQUIREMENTS FOR SECURITY AND UNINTERRUPTABILITY. YOU BEAR SOLE RESPONSIBILITY AND ALL LIABILITY FOR ANY LOSS INCURRED DUE TO FAILURE OF THE SOFTWARE PRODUCT TO MEET YOUR REQUIREMENTS. UNTRIX INC WILL NOT, UNDER ANY CIRCUMSTANCES, BE RESPONSIBLE OR LIABLE FOR THE LOSS OF DATA ON ANY COMPUTER OR INFORMATION STORAGE DEVICE.
-</p>
-<p style="text-align: justify">
-UNDER NO CIRCUMSTANCES SHALL UNTRIX INC, ITS DIRECTORS, OFFICERS, EMPLOYEES OR AGENTS BE LIABLE TO YOU OR ANY OTHER PARTY FOR INDIRECT, CONSEQUENTIAL, SPECIAL, INCIDENTAL, PUNITIVE, OR EXEMPLARY DAMAGES OF ANY KIND (INCLUDING LOST REVENUES OR PROFITS OR LOSS OF BUSINESS) RESULTING FROM THIS AGREEMENT, OR FROM THE FURNISHING, PERFORMANCE, INSTALLATION, OR USE OF THE SOFTWARE PRODUCT, WHETHER DUE TO A BREACH OF CONTRACT, BREACH OF WARRANTY, OR THE NEGLIGENCE OF UNTRIX INC OR ANY OTHER PARTY, EVEN IF UNTRIX INC IS ADVISED BEFOREHAND OF THE POSSIBILITY OF SUCH DAMAGES. TO THE EXTENT THAT THE APPLICABLE JURISDICTION LIMITS UNTRIX INC'S ABILITY TO DISCLAIM ANY IMPLIED WARRANTIES, THIS DISCLAIMER SHALL BE EFFECTIVE TO THE MAXIMUM EXTENT PERMITTED.
-</p>
-<h4>Limitation of Remedies and Damages</h4>
-<p style="text-align: justify">
-Your remedy for a breach of this Agreement or of any warranty included in this Agreement is the correction or replacement of the Software Product. Selection of whether to correct or replace shall be solely at the discretion of Untrix Inc. Untrix Inc reserves the right to substitute a functionally equivalent copy of the Software Product as a replacement. If Untrix Inc is unable to provide a replacement or substitute Software Product or corrections to the Software Product, your sole alternate remedy shall be a refund of the purchase price for the Software Product exclusive of any costs for shipping and handling.
-</p>
-<p style="text-align: justify">
-Any claim must be made within the applicable warranty period. All warranties cover only defects arising under normal use and do not include malfunctions or failure resulting from misuse, abuse, neglect, alteration, problems with electrical power, acts of nature, unusual temperatures or humidity, improper installation, or damage determined by Untrix Inc to have been caused by you. All limited warranties on the Software Product are granted only to you and are non-transferable. You agree to indemnify and hold Untrix Inc harmless from all claims, judgments, liabilities, expenses, or costs arising from your breach of this Agreement and/or acts or omissions.
-</p>
-<h4>Governing Law, Jurisdiction and Costs</h4>
-<p style="text-align: justify">
-This Agreement is governed by the laws of Delaware, without regard to Delaware's conflict or choice of law provisions.
-</p>
-<h4>Severability</h4>
-<p style="text-align: justify">
-If any provision of this Agreement shall be held to be invalid or unenforceable, the remainder of this Agreement shall remain in full force and effect. To the extent any express or implied restrictions are not permitted by applicable laws, these express or implied restrictions shall remain in force and effect to the maximum extent permitted by such applicable laws.
-</p>
+                <h3 style="text-align: center"> K3YRING [beta] End User License Agreement </h3>
+                <embed src="data/EULA.txt" style="width:100%"></iframe>
 
               </section>
               <section>
-                  <h3 style="text-align: center"> Other Software Licenses </h3>
+                  <h3 style="text-align: center"> Other (Thirdparty) Licenses </h3>
                   <p>This software uses the following pieces of software under the indicated free licenses.
                   We are deeply grateful to all the engineers and others who contributed to these software
                   over years. We are trying our best to give back to the community likewise.
@@ -349,7 +291,7 @@ If any provision of this Agreement shall be held to be invalid or unenforceable,
                           </tr> -->
                           <tr>
                               <td><a href="http://jquery.com/" target="jQuery">jQuery</a></td>
-                              <td><a href="data/jQuery_MIT_license.html" target="MITLicense">MIT License</a></td>
+                              <td><a rel="license" href="data/jQuery_MIT_license.html" target="MITLicense">MIT License</a></td>
                           </tr>
                           <tr>
                               <td><a href="http://jqueryui.com/" target="jQueryUI">jQuery-UI</a></td>
@@ -359,6 +301,11 @@ If any provision of this Agreement shall be held to be invalid or unenforceable,
                               <td><a href="http://twitter.github.com/bootstrap/" target="bootstrap">twitter/bootstrap</a></td>
                               <td><a href="data/Apache2_license.html" target="ApacheLicense">Apache License v2.0</a></td>
                           </tr>
+                          <tr>
+                              <td><a href="http://glyphicons.com/" target="glyphicons">Glyphicons Free</a></td>
+                              <td><a href="http://creativecommons.org/licenses/by/3.0/" target="CCBY">CC-BY 3.0</a></td>
+                          </tr>
+
                       </tbody>
                   </table>
               </section>
@@ -376,7 +323,7 @@ If any provision of this Agreement shall be held to be invalid or unenforceable,
             </p>
               <p><small>
                   Note: K3YRING&trade; [beta] <bold>never</bold> transfers your passwords to anywhere
-                  other than the keyring folder of your choosing and - temporarily -
+                  other than the Keyring folder of your choosing and - temporarily -
                   into the memory of the computer/device on which it is executing. It certainly does not
                   transfer them to any internet web-site or server.
                   <bold> However, please be aware of the following risk regarding cloud/internet/sky drives: </bold>
@@ -384,6 +331,7 @@ If any provision of this Agreement shall be held to be invalid or unenforceable,
                   locations outside of your control from where they could be lost, stolen, damaged
                   or otherwise compromised.
               </small></p>
+              <p><a href="http://glyphicons.com" target="glyphicons">Glyphicons Free </a> licensed under <a href="http://creativecommons.org/licenses/by/3.0/" target="CCBY">CC-BY 3.0</a> </p>
         </div>
     </footer>
     <object type="application/x-k3yring" style="visibility: none" width="0" height="0"
