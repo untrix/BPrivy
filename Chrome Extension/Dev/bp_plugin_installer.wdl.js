@@ -282,7 +282,7 @@ function BP_GET_PLUGIN_INSTALLER(g)
     {
         var dialog = BP_W$.w$get('#modalDialog');
         if (!dialog) { return; }
-        $('#modalDialog *').tooltip(); // used to leak DOM nodes in version 2.0.4.
+        $('#modalDialog *').tooltip({container:'body'}); // used to leak DOM nodes in version 2.0.4.
     };
     modalDialog.onHidden = function(e)
     {

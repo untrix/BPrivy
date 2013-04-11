@@ -329,7 +329,7 @@ var BP_MANAGE = (function ()
 
         //$('#refreshEditor').button('reset');
         spinner.stop();
-        $('#editItems *').tooltip(); // seemed to leak DOM nodes in 2.0.4 :(. I wonder what else in bootstrap leaks.
+        $('#editItems *').tooltip({container:'body'}); // seemed to leak DOM nodes in 2.0.4 :(. I wonder what else in bootstrap leaks.
     }
 
     function getCallbacks()
@@ -596,8 +596,8 @@ var BP_MANAGE = (function ()
 
 		addEventListeners('#dbDelete', 'click', deleteDB);
 
-        $('#content *').tooltip();
-        //$('#nav-list').affix();
+        $('#content *').tooltip({container:'body'});
+        //$('#nav-list').affix({y: 100});
         switch (actionOpt)
         {
             case 'edit':
@@ -628,6 +628,19 @@ var BP_MANAGE = (function ()
             o = o || {closeWin:true};
             o.mode = 'upgradePlugin';
             BP_PLUGIN_INSTALLER.launch(o);
+        }
+
+        function launchUpgradePlugin(o)
+        {
+            var BP_PLUGIN_INSTALLER = g.MAIN_PAGE.BP_GET_PLUGIN_INSTALLER(g);
+            o = o || {closeWin:true};
+            o.mode = 'unsupportedOS';
+            BP_PLUGIN_INSTALLER.launch(o);
+        }
+
+        if (!BP_MAIN.isWindows()) {
+            launchUnsupportedOS();
+            throw new BPError("Unsupported Operating System");
         }
 
         BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');

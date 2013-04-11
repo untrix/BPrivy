@@ -109,7 +109,7 @@ var BP_WALLET_FORM = (function ()
         g_walletForm = walletForm;
         $(g_walletForm.el).appendTo('#'+options.containerID);
 
-        $('#'+options.containerID).tooltip(); // used to leak DOM nodes in version 2.0.4.
+        $('#'+options.containerID).tooltip({container:'body'}); // used to leak DOM nodes in version 2.0.4.
 
         return g_walletForm;
     }

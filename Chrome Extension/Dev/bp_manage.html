@@ -25,14 +25,15 @@
     </div>
     <div class="container">
       <div class="row">
-        <div class="span3">
+        <div class="span2">
           <!--Sidebar content-->
           <!-- <h3> <i>K3YRING&trade; [beta]</i></h3> -->
           <!-- <div id="logo">
             <img src="icons/fullIcon48.png" alt="K3YRING&trade; [beta]" id="logo-img">
           </div> -->
-          <ul class="nav nav-list" id="nav-list" data-spy="affix" data-offset-top="200">
-
+          <!-- <p> </p> --> <!-- <p></p> element with whitespace is needed with postion:fixed below -->
+          <!-- <ul class="nav nav-list" id="nav-list" style="position: fixed; top: 100px"> -->
+          <ul class="nav nav-list" id="nav-list">
             <li>
               <a data-nav id="nav-settings" href="#settings-pane"><i class="icon-cog"></i> Manage</a>
             </li>
@@ -48,7 +49,7 @@
             </li>
           </ul>
         </div>
-        <!-- <div class="span1"><p></p></div> -->
+        <div class="span1"><p></p></div>
         <div id="content" class="span9">
           <div class="tab-content">
             <!--Body content-->
@@ -341,6 +342,7 @@
 <!--     <script src="tp/json2.js"></script> -->
     <script src="tp/jquery.js"></script>
     <script src="tp/bootstrap/js/bootstrap.min.js"></script>
+    <script src="tp/bootstrap/js/bootstrap.affix.min.js"></script>
     <script src="tp/spin.min.js"></script>
     <script src="bp_manage.cat.js"></script>
   </body>

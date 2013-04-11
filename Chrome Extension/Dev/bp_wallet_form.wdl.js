@@ -1552,7 +1552,7 @@ function BP_GET_WALLET_FORM(g)
                 }
         }
 
-        $('#modalDialog *').tooltip(); // used to leak DOM nodes in version 2.0.4.
+        $('#modalDialog *').tooltip({container:'body'}); // used to leak DOM nodes in version 2.0.4.
     };
     modalDialog.onHidden = function(e)
     {
