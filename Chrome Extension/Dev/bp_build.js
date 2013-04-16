@@ -1,6 +1,6 @@
 /**
  * @preserve
- * Copyright (c) 2013. All Rights Reserved, Untrix Inc
+ * Copyright (c) 2012-2013. All Rights Reserved, Untrix Inc (www.untrix.com)
  */
 
 //////////// DO NOT HAVE DEPENDENCIES ON ANY BP MODULE OR GLOBAL ///////////////////

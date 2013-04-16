@@ -49,7 +49,7 @@ set(MOZILLA_PLUGINID "untrix.com/K3YRING")
 # strings
 set(FBSTRING_CompanyName "Untrix Inc")
 set(FBSTRING_PluginDescription "K3YRING Plugin [beta]")
-set(FBSTRING_PLUGIN_VERSION "1.1.0.4")
+set(FBSTRING_PLUGIN_VERSION "1.1.0.5")
 set(FBSTRING_LegalCopyright "Copyright 2013 Untrix Inc")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
 set(FBSTRING_ProductName "K3YRING Plugin [beta]")

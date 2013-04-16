@@ -701,27 +701,36 @@ var BP_MAIN = (function()
                cmp(ver1[2], ver2[2]) || cmp(ver1[3], ver2[3]);
     }
 
+    function isWindows()
+    {
+        return (g_win.navigator.appVersion.indexOf("Win")!=-1);
+    }
+
     function init()
     {
         var dbPath;
 
         function loadPlugin ()
         {
-          BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');
-          if (!BP_PLUGIN.getpid) {
-              MOD_WIN.openPath('/bp_dialog.html?action=installPlugin');
-              BP_ERROR.logwarn("Plugin Not Loaded");
-          }
-          else {
-            if (cmpVersion(BP_PLUGIN.version, BP_CONFIG.pluginVer) < 0) {
-                MOD_WIN.openPath('/bp_dialog.html?action=upgradePlugin');
-                BP_ERROR.logwarn("Plugin Needs Upgrade");
+            BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');
+            if (!BP_MAIN.isWindows()) {
+                //MOD_WIN.openPath('/bp_dialog.html?action=unsupportedOS');
+                BP_ERROR.logwarn("Unsupported Operating System");
+            }
+            else if (!BP_PLUGIN.getpid) {
+                MOD_WIN.openPath('/bp_dialog.html?action=installPlugin');
+                BP_ERROR.logwarn("Plugin Not Loaded");
             }
             else {
-                BP_ERROR.logdebug("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+                if (cmpVersion(BP_PLUGIN.version, BP_CONFIG.pluginVer) < 0) {
+                    MOD_WIN.openPath('/bp_dialog.html?action=upgradePlugin');
+                    BP_ERROR.logwarn("Plugin Needs Upgrade");
+                }
+                else {
+                    BP_ERROR.logdebug("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+                }
             }
-          }
-          //BP_PLUGIN.clearCryptCtx();
+            //BP_PLUGIN.clearCryptCtx();
         }
 
         try
@@ -761,6 +770,7 @@ var BP_MAIN = (function()
         unloadDB: unloadDB,
         off: off,
         cmpVersion: cmpVersion,
+        isWindows: isWindows,
         MOD_WIN: MOD_WIN,
         EVENTS: EVENTS
     });

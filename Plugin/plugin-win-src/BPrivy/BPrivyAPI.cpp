@@ -674,7 +674,7 @@ bool BPrivyAPI::_keyLoaded(const bfs::path& key_path, bp::JSObject* out)
 }
 
 bool
-BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out)
+BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject& in_out)
 {
 	try
 	{
@@ -692,17 +692,17 @@ BPrivyAPI::_createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath
             // an existing key file !! That would cause encryption of all new records using
             // the new key, causing all old records to be corrupted and unrecoverable !!
             // Also, we don't want this data to be encrypted !
-			createFileNE(cryptInfoFilePath, outBuf, in_out);
+			createFileNE(cryptInfoFilePath, outBuf, &in_out);
 		}
 		catch (...) {
 			// cleanup
 			crypt::CryptCtx::Destroy(ctxHandle);
 			throw;
 		}
-		in_out->SetProperty(PROP_CRYPT_CTX, ctxHandle);
+		in_out.SetProperty(PROP_CRYPT_CTX, ctxHandle);
 		return true;
 	}
-	CATCH_FILESYSTEM_EXCEPTIONS(in_out)
+	CATCH_FILESYSTEM_EXCEPTIONS((&in_out))
 	return false;
 }
 

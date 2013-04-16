@@ -630,7 +630,7 @@ var BP_MANAGE = (function ()
             BP_PLUGIN_INSTALLER.launch(o);
         }
 
-        function launchUpgradePlugin(o)
+        function launchUnsupportedOS(o)
         {
             var BP_PLUGIN_INSTALLER = g.MAIN_PAGE.BP_GET_PLUGIN_INSTALLER(g);
             o = o || {closeWin:true};

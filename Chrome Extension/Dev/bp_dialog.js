@@ -197,6 +197,19 @@ var BP_DIALOG = (function ()
         BP_PLUGIN_INSTALLER.launch(o);
     }
 
+    function launchUnsupportedOS(o)
+    {
+        var BP_PLUGIN_INSTALLER = g.MAIN_PAGE.BP_GET_PLUGIN_INSTALLER(g);
+        o = o || {};
+        o.mode = 'unsupportedOS';
+        BP_PLUGIN_INSTALLER.launch(o);
+    }
+
+    function launchLicense(o)
+    {
+
+    }
+
     function onload()
     {
         switch (BP_COMMON.getQueryObj(g.g_win.location)['action'])
@@ -222,6 +235,12 @@ var BP_DIALOG = (function ()
                 return;
             case 'upgradePlugin':
                 launchUpgradePlugin({closeWin:true});
+                return;
+            case 'unsupportedOS':
+                launchUnsupportedOS({closeWin:true});
+                return;
+            case 'license':
+                launchLicense({closeWin:true});
                 return;
             default:
         }

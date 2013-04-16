@@ -1041,7 +1041,7 @@ function BP_GET_WALLET_FORM(g)
             return {
             tag:'input', cons: inputPassword,
             attr:{ type:'password', placeholder:bPass2?"Re-Enter Master Password":"Enter Master Password",
-                   title:'10 or more characters required', pattern:'.{10,}' },
+                   pattern:'.{10,}' },
             iface:{ 'bPass2':bPass2 },
             prop:{ required:true },
             ref:'inputPassword',
@@ -1086,7 +1086,10 @@ function BP_GET_WALLET_FORM(g)
         save:['walletForm'],
             children:[
             {tag:'label', addClass:'control-label',
-             text:bPass2?'Re-Enter Master Password':'Master Password'
+             text:bPass2?'Re-Enter Master Password ':'Master Password ',
+                children:[
+                {tag:'i', addClass:'icon-question-sign', attr:{title:'10 or more characters required'}}
+                ]
             },
             {tag:'div', addClass:'controls',
                 children:[inputPassword.wdt]

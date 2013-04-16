@@ -143,7 +143,7 @@ private:
 	bool _destroyCryptCtx(const bfs::path& dbPath, bp::JSObject* out);
 	bool _cryptCtxLoaded(const bfs::path& dbPath, bp::JSObject* out);
 	bool _keyLoaded(const bfs::path& keyPath, bp::JSObject* out);
-	bool _createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
+	bool _createCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject& in_out);
 	bool _loadCryptCtx(const bp::utf8& $, const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
 	bool _dupeCryptCtx(const bfs::path& cryptInfoFilePath, const bfs::path& dbPath, bp::JSObject* in_out);
 	//bool _isNullCrypt(const bfs::path& cryptInfoFilePath, bp::JSObject* out);
