@@ -109,7 +109,8 @@
         sel_ct_p = "[data-"+data_ct+"="+CT_BP_PASS+']',
         MOD_DB = new MiniDB(true), // create a read-only db.
         MOD_PANEL,
-        MOD_CS;
+        MOD_CS,
+        g_win = g.g_win;
     /** @globals-end **/
 
     MOD_PANEL = (function()
@@ -281,8 +282,20 @@
             }
         }
 
+        function checkEula ()
+        {
+            // Check EULA accepted. If not, then don't allow any functionality.
+            if (!BP_MAIN.eulaAccepted()) {
+                g_win.open('bp_license.html', 'bp_license', null, true);
+                g_win.close();
+                throw new BPError("EULA not accepted yet");
+            }
+        }
+
         function onLoad()
         {
+            checkEula();
+
             document.body.style.margin = '2px';
             chrome.tabs.query({currentWindow:true, highlighted:!DEBUG, index:DEBUG?0:undefined}, function(tabs)
             {

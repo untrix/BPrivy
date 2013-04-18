@@ -701,9 +701,48 @@ var BP_MAIN = (function()
                cmp(ver1[2], ver2[2]) || cmp(ver1[3], ver2[3]);
     }
 
+    function makeVerStr(arr)
+    {
+        var i, n, str="";
+        if (arr && (typeof arr === "object") && (arr.constructor===Array))
+        {
+            n = (arr.length < 4) ? arr.length : 4;
+            for (i=0; i<n; i++) {
+                if (i>0) str += ".";
+                str += arr[i];
+            }
+        }
+        else {
+            str = "0";
+        }
+
+        return str;
+    }
+
     function isWindows()
     {
         return (g_win.navigator.appVersion.indexOf("Win")!=-1);
+    }
+
+    function eulaAccepted()
+    {
+        var eula = localStorage['l.v'] || "0",
+            tpl  = localStorage['tpl.v'] || "0",
+            eulaCurr= BP_CONFIG.eulaVer,
+            tplCurr = BP_CONFIG.tplVer;
+
+        // Check EULA accepted.
+        if ((cmpVersion(eula,eulaCurr) < 0) || (cmpVersion(tpl,tplCurr) < 0)) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+    function acceptEula()
+    {
+        localStorage['l.v'] = makeVerStr(BP_CONFIG.eulaVer);
+        localStorage['tpl.v'] = makeVerStr(BP_CONFIG.tplVer);
     }
 
     function init()
@@ -733,8 +772,17 @@ var BP_MAIN = (function()
             //BP_PLUGIN.clearCryptCtx();
         }
 
+        function checkEula()
+        {
+            if (!eulaAccepted()) {
+                g_win.open('bp_license.html', 'bp_license', null, false);
+                throw new BPError("EULA not accepted yet");
+            }
+        }
+
         try
         {
+            checkEula(); // throws.
             BP_PLAT.init(g_doc, MOD_WIN);
             registerMsgListener(onRequest);
             MEMSTORE.loadETLD();
@@ -771,6 +819,8 @@ var BP_MAIN = (function()
         off: off,
         cmpVersion: cmpVersion,
         isWindows: isWindows,
+        eulaAccepted: eulaAccepted,
+        acceptEula: acceptEula,
         MOD_WIN: MOD_WIN,
         EVENTS: EVENTS
     });

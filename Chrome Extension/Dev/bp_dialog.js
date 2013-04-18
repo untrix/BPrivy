@@ -205,31 +205,36 @@ var BP_DIALOG = (function ()
         BP_PLUGIN_INSTALLER.launch(o);
     }
 
-    function launchLicense(o)
-    {
-
-    }
+    // function checkEula ()
+    // {
+        // // Check EULA accepted. If not, then don't allow any functionality.
+        // if (!BP_MAIN.eulaAccepted()) {
+            // g_win.open('bp_license.html', '_self', null, true);
+            // throw new BPError("EULA not accepted yet");
+        // }
+    // }
 
     function onload()
     {
+        //checkEula();
         switch (BP_COMMON.getQueryObj(g.g_win.location)['action'])
         {
-            case 'open':
-                launchOpen({closeWin:true});
-                return;
-            case 'close':
-                closeDB();
-                g.g_win.close();
-                return;
-            case 'merge':
-                launchMerge({closeWin:true});
-                return;
-            case 'mergeIn':
-                launchMergeIn({closeWin:true});
-                return;
-            case 'mergeOut':
-                launchMergeOut({closeWin:true});
-                return;
+            // case 'open':
+                // launchOpen({closeWin:true});
+                // return;
+            // case 'close':
+                // closeDB();
+                // g.g_win.close();
+                // return;
+            // case 'merge':
+                // launchMerge({closeWin:true});
+                // return;
+            // case 'mergeIn':
+                // launchMergeIn({closeWin:true});
+                // return;
+            // case 'mergeOut':
+                // launchMergeOut({closeWin:true});
+                // return;
             case 'installPlugin':
                 launchInstallPlugin({closeWin:true});
                 return;
@@ -238,9 +243,6 @@ var BP_DIALOG = (function ()
                 return;
             case 'unsupportedOS':
                 launchUnsupportedOS({closeWin:true});
-                return;
-            case 'license':
-                launchLicense({closeWin:true});
                 return;
             default:
         }

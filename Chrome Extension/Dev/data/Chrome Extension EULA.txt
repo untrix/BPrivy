@@ -1,55 +1,62 @@
-K3YRING [beta] END USER LICENSE AGREEMENT v1
-  
+ï»¿K3YRING [beta] END USER LICENSE AGREEMENT v1
+Â  
 This copy of K3YRING [beta] ("the Software Application") and accompanying documentation is licensed and not sold. This Software Application is protected by copyright laws and treaties, as well as laws and treaties related to other forms of intellectual property. Untrix Inc or its subsidiaries, affiliates, and suppliers (collectively "Untrix") own intellectual property rights in the Software Application. The Licensee's ("you" or "your") license to download, use, copy, or change the Software Application is subject to these rights and to all the terms and conditions of this End User License Agreement ("Agreement"). 
 
 Entire Agreement
 This Agreement constitutes the entire agreement between you and Untrix with respect to its subject matter and constitutes and supersedes all prior agreements, representations and understandings of the parties, written or oral.
-  
+Â  
 Acceptance 
 YOU ACCEPT AND AGREE TO BE BOUND BY THE TERMS OF THIS AGREEMENT BY INSTALLING, USING, OR COPYING THE SOFTWARE APPLICATION. IF YOU DO NOT AGREE TO ALL OF THE TERMS OF THIS AGREEMENT, YOU MUST NOT INSTALL, USE, OR COPY THE SOFTWARE APPLICATION. 
-  
+Â  
 License Grant 
 This Agreement entitles you to install and use the Software Application on any Google Chrome web browser. This Agreement does not permit you to make this Software Application available to anyone other than yourself.
-  
+Â  
 Restrictions on Transfer 
 You may not assign your rights and obligations under this Agreement, or redistribute, encumber, sell, rent, lease, sublicense, or otherwise transfer your rights to the Software Application. 
-  
+Â  
 Restrictions on Use 
 You may not make the Software Application available to anyone other than yourself.
 
 You may not distribute the Software Application. You may not make the Software Application available over a network where it could be used by multiple computers or devices at the same time.
 
 You may not decompile, "reverse-engineer", disassemble, or otherwise attempt to derive the source code for the Software Application.
-  
+Â  
 You may not use the database portion of the Software Application in connection with any software other than the Software Application. 
-  
+Â  
 Restrictions on Alteration 
 You may not modify the Software Application or create any derivative work of the Software Application or its accompanying documentation. Derivative works include but are not limited to translations. You may not alter any files or libraries in any portion of the Software Application. You may not reproduce the database portion or create any tables or reports relating to the database portion. 
-  
+Â  
 Restrictions on Copying 
 You may not copy any part of the Software Application except to the extent that licensed installation and use inherently demands the creation of a computer files on the computer drive and a temporary copy stored in computer memory.
-  
+Â  
 Disclaimer of Warranties and Limitation of Liability 
 UNTRIX MAKES NO OTHER WARRANTIES, EXPRESS OR IMPLIED, IN FACT OR IN LAW, INCLUDING, BUT NOT LIMITED TO, ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE OTHER THAN AS SET FORTH IN THIS AGREEMENT. 
-  
+Â  
 Untrix makes no warranty that the Software Application will meet your requirements or operate under your specific conditions of use. Untrix makes no warranty that operation of the Software Application will be secure, error free, or free from interruption. YOU MUST DETERMINE WHETHER THE SOFTWARE APPLICATION SUFFICIENTLY MEETS YOUR REQUIREMENTS FOR SECURITY AND UNINTERRUPTABILITY. YOU BEAR SOLE RESPONSIBILITY AND ALL LIABILITY FOR ANY LOSS INCURRED DUE TO FAILURE OF THE SOFTWARE APPLICATION TO MEET YOUR REQUIREMENTS. UNTRIX WILL NOT, UNDER ANY CIRCUMSTANCES, BE RESPONSIBLE OR LIABLE FOR THE LOSS OF DATA ON ANY COMPUTER OR INFORMATION STORAGE DEVICE. 
-  
+Â  
 UNDER NO CIRCUMSTANCES SHALL UNTRIX, ITS DIRECTORS, OFFICERS, EMPLOYEES OR AGENTS BE LIABLE TO YOU OR ANY OTHER PARTY FOR INDIRECT, CONSEQUENTIAL, SPECIAL, INCIDENTAL, PUNITIVE, OR EXEMPLARY DAMAGES OF ANY KIND (INCLUDING LOST REVENUES OR PROFITS OR LOSS OF BUSINESS) RESULTING FROM THIS AGREEMENT, OR FROM THE FURNISHING, PERFORMANCE, INSTALLATION, OR USE OF THE SOFTWARE APPLICATION, WHETHER DUE TO A BREACH OF CONTRACT, BREACH OF WARRANTY, OR THE NEGLIGENCE OF UNTRIX OR ANY OTHER PARTY, EVEN IF UNTRIX IS ADVISED BEFOREHAND OF THE POSSIBILITY OF SUCH DAMAGES. TO THE EXTENT THAT THE APPLICABLE JURISDICTION LIMITS UNTRIX'S ABILITY TO DISCLAIM ANY IMPLIED WARRANTIES, THIS DISCLAIMER SHALL BE EFFECTIVE TO THE MAXIMUM EXTENT PERMITTED. 
-  
+Â  
 Limitation of Remedies and Damages 
 Your remedy for a breach of this Agreement or of any warranty included in this Agreement is the correction or replacement of the Software Application. Selection of whether to correct or replace shall be solely at the discretion of Untrix. Untrix reserves the right to substitute a functionally equivalent copy of the Software Application as a replacement. If Untrix is unable to provide a replacement or substitute Software Application or corrections to the Software Application, your sole alternate remedy shall be a refund of the purchase price for the Software Application exclusive of any costs for shipping and handling. 
-  
+Â  
 Any claim must be made within the applicable warranty period. All warranties cover only defects arising under normal use and do not include malfunctions or failure resulting from misuse, abuse, neglect, alteration, problems with electrical power, acts of nature, unusual temperatures or humidity, improper installation, or damage determined by Untrix to have been caused by you. All limited warranties on the Software Application are granted only to you and are non-transferable. You agree to indemnify and hold Untrix harmless from all claims, judgments, liabilities, expenses, or costs arising from your breach of this Agreement and/or acts or omissions. 
 
 Software Updates
-A Software Update means, any patch, update or new version of the Software Application delivered to you as part of this agreement. Untrix, in its sole discretion, may provide you with Software Updates as part of this Agreement. These updates will be automatically applied without seeking your permission. Nothing herein shall be construed or interpreted as requiring Untrix to provide Software Updates.
+A Software Update means, any patch, update or new version of the Software Application delivered to you as part of this agreement. Untrix, in its sole discretion, may provide you with Software Updates as part of this Agreement. Software Updates may be automatically applied without seeking your permission or you may be required to install them, failing which the Software Application may cease to function correctly or may stop functioning altogether. In such event and in any event, Untrix shall not be obligated to reinstate or provide an older version of the Software Application.
+
+Along with a Software Update, Untrix, in its sole discretion, may require you to accept a new or revised license agreement and failure to do so may cause or require the Software Application to be uninstalled leaving you with neither the old nor the new version of the Software Application. In such event and in any event, Untrix shall not be obligated to reinstate or provide an older version of the Software Application.
+
+Nothing herein shall be construed or interpreted as requiring Untrix to provide Software Updates.
+
+Changes to this Agreement
+Untrix, in its sole discretion, may require you to accept a new or revised license agreement in order to allow you to continue using the Software Application. Failure to accept the latest license agreement may cause the Software Application to be automatically uninstalled or may cause you to be required to uninstall the Software Application, thus rendering you without the use of the Software Application. In such event and in any event, Untrix shall not be obligated to reinstate or provide an older version of the Software Application.
 
 Support and Maintenance
 Untrix has no obligation under this Agreement to provide you any support, maintenance, or other services.
-  
+Â  
 Governing Law, Jurisdiction and Costs 
 This Agreement is governed by the laws of Delaware, without regard to Delaware's conflict or choice of law provisions. 
-  
+Â  
 Severability 
 If any provision of this Agreement shall be held to be invalid or unenforceable, the remainder of this Agreement shall remain in full force and effect. To the extent any express or implied restrictions are not permitted by applicable laws, these express or implied restrictions shall remain in force and effect to the maximum extent permitted by such applicable laws. 
-  
+Â  

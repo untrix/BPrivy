@@ -59,6 +59,8 @@ var BP_MANAGE = (function ()
     m = IMPORT(g.BP_ERROR);
     var BP_ERROR = IMPORT(m),
         BPError = IMPORT(m.BPError);
+    var BP_MAIN = IMPORT(g.MAIN_PAGE.BP_MAIN);
+    var BP_CONFIG = IMPORT(g.MAIN_PAGE.BP_CONFIG);
     /** @import-module-end **/ m = null;
 
     /** @globals-begin */
@@ -129,7 +131,7 @@ var BP_MANAGE = (function ()
     			BP_ERROR.success('Deleted Keyring at: ' + db);
     		}
     		else {
-    			BP_ERROR.warn(resp.err || 'Some problems were encountered. The Keyring may not have been completely removed. Please try again.');
+    			BP_ERROR.warn(resp.err || 'Some problems were encountered. The Keyring may not have been completely removed. Please check and try again if needed.');
     		}
     	});
     }
@@ -210,12 +212,12 @@ var BP_MANAGE = (function ()
         if (resp && resp.result)
         {
             resp.dbPath = resp.dbPath || "";
-            if ($('#dbSaveLocation:checked').length)
-            {
-                if (localStorage['db.path'] !== resp.dbPath) {
-                    localStorage['db.path'] = resp.dbPath;
-                }
-            }
+            // if ($('#dbSaveLocation:checked').length)
+            // {
+                // if (localStorage['db.path'] !== resp.dbPath) {
+                    // localStorage['db.path'] = resp.dbPath;
+                // }
+            // }
 
             g_dbName = cullDBName(resp.dbPath);
             g_dbPath = resp.dbPath;
@@ -278,9 +280,22 @@ var BP_MANAGE = (function ()
                 $('#dbClean').removeClass('btn-primary').prop('disabled', true);
             }
 
-            // if (resp.dbPath) {
+            if (resp.dbPath) {
             	// $('#btnChngPass').prop('disabled',false);
-            // }
+            	$('#csvImport').prop('disabled', false);
+            	$('#csvExport').prop('disabled', false);
+            	$('#btnMergeIn').prop('disabled', false);
+            	$('#btnMergeOut').prop('disabled', false);
+            	$('#btnMerge').prop('disabled', false);
+            }
+            else {
+                // $('#btnChngPass').prop('disabled',true);
+                $('#csvImport').prop('disabled', true);
+                $('#csvExport').prop('disabled', true);
+                $('#btnMergeIn').prop('disabled', true);
+                $('#btnMergeOut').prop('disabled', true);
+                $('#btnMerge').prop('disabled', true);
+            }
         }
         else
         {
@@ -611,9 +626,6 @@ var BP_MANAGE = (function ()
 
     function loadPlugin ()
     {
-        var BP_CONFIG = g.MAIN_PAGE.BP_CONFIG,
-            BP_MAIN = g.MAIN_PAGE.BP_MAIN;
-
         function launchInstallPlugin(o)
         {
             var BP_PLUGIN_INSTALLER = g.MAIN_PAGE.BP_GET_PLUGIN_INSTALLER(g);
@@ -659,13 +671,23 @@ var BP_MANAGE = (function ()
         }
     }
 
+    function checkEula ()
+    {
+        // Check EULA accepted. If not, then don't allow any functionality.
+        if (!BP_MAIN.eulaAccepted()) {
+            g_win.open('bp_license.html', '_self', null, true);
+            throw new BPError("EULA not accepted yet");
+        }
+    }
+
     // Assemble the interface
     var iface = {};
     Object.defineProperties(iface,
     {
         onload: {value: onload},
         g: {value: g},
-        loadPlugin: {value: loadPlugin}
+        loadPlugin: {value: loadPlugin},
+        checkEula: {value: checkEula}
     });
     Object.freeze(iface);
 
@@ -684,6 +706,7 @@ var BP_MANAGE = (function ()
 // $(document).ready(function (e)
 BP_MANAGE.g.BP_CS_PLAT.addEventListener(window, 'load', function(e)
 { "use strict";
+  BP_MANAGE.checkEula();
   BP_MANAGE.loadPlugin();
   BP_MANAGE.onload();
   BP_MANAGE.g.BP_ERROR.logdebug("inited mod_manage");

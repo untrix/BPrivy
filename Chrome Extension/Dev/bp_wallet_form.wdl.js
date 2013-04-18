@@ -215,7 +215,7 @@ function BP_GET_WALLET_FORM(g)
             },
             getKeyPaths : function ()
             {
-                if (!keyPaths) { keyPaths = construct('db.key.'); }
+                if (!keyPaths) { keyPaths = construct('db.masterkey.'); }
                 return keyPaths;
             },
             getKeyPath : function (dbPath)
@@ -240,7 +240,7 @@ function BP_GET_WALLET_FORM(g)
                 mod.getDBPaths()[dbName] = dbPath;
 
                 if (keyPath) {
-                    localStorage['db.key.' + dbPath] = keyPath;
+                    localStorage['db.masterkey.' + dbPath] = keyPath;
                     mod.getKeyPaths()[dbPath] = keyPath;
                 }
             },

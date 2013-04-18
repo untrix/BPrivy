@@ -125,6 +125,11 @@ function BP_GET_PLAT(gg)
         });
     }
 
+    function uninstall()
+    {
+        chrome.management.uninstallSelf({showConfirmDialog:false});
+    }
+
     var module =
     {
         registerMsgListener: function(foo) {chrome.extension.onRequest.addListener(foo);},
@@ -137,7 +142,8 @@ function BP_GET_PLAT(gg)
         removeBadge: removeBadge,
         sendMessage: sendMessage,
         reload: reload,
-        closeAll: closeAll
+        closeAll: closeAll,
+        uninstall: uninstall
     };
 
     Object.seal(module);

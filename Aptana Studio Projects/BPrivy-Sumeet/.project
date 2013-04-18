@@ -20,11 +20,6 @@
 			<type>2</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Chrome%20Extension/Dev</locationURI>
 		</link>
-		<link>
-			<name>Dev/data/Apache2_license.html</name>
-			<type>1</type>
-			<location>D:/Dev/BPrivy/Chrome Extension/Dev/data/Apache2_license.html</location>
-		</link>
 	</linkedResources>
 	<filteredResources>
 		<filter>
@@ -133,33 +128,6 @@
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-*.out.js</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1363911018497</id>
-			<name>Dev/data</name>
-			<type>5</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-Readme.txt</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1363911018501</id>
-			<name>Dev/data</name>
-			<type>5</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-bp_etld_overrides.txt</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1363911018505</id>
-			<name>Dev/data</name>
-			<type>5</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-*_license.*</arguments>
 			</matcher>
 		</filter>
 		<filter>

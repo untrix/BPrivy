@@ -6,5 +6,5 @@
 * Note, if there are any additions to make to the downloaded etld list, then put those into bp_etld_overrides.txt
   before you execute the next step.
 * Load ../tools.html and press the button Build ETLD, select the file (etld.txt).
-  It will create and write a file called etld.json which will eventually get loaded into the extension
-  at runtime.
+  It will create and write a file called etld.json.
+* Copy etld.json into the ../data folder. It will eventually get loaded into the extension at runtime.

@@ -10,7 +10,7 @@
  * This module manages end-user notifications UI.
  */
 var BP_CONFIG = Object.freeze({
-    pluginVer: [1,1,0,4],
-    licenseVer: [1,0,0,0],
-    tpLicenseVer: [1,0,0,0]
+    pluginVer: [1,1,0,5],
+    eulaVer: [1,0,0,0], // EULA version for this software-version
+    tplVer: [1,0,0,0] // third party license version for this software-version
 });

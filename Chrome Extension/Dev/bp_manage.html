@@ -12,15 +12,16 @@
     <link href="tp/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
     <link href="bp_manage.css" rel="stylesheet">
     <!-- Icons -->
-    <link rel="shortcut icon" href="icons/icon16.png">
-    <link rel="apple-touch-icon" sizes="128x128" href="icons/icon128.png">
+    <link rel="shortcut icon" href="icons/icon19.png">
     <link rel="apple-touch-icon" sizes="48x48" href="icons/icon48.png">
-    <link rel="apple-touch-icon" sizes="16x16" href="icons/icon16.png">
+    <link rel="apple-touch-icon" sizes="19x19" href="icons/icon19.png">
   </head>
   <body>
     <div class="navbar navbar-fixed-top" style="background-image: linear-gradient(to right, #5bc0de, #2f96b4)">
         <div class="container" style="height: 60px">
-              <img src="icons/Banner White.213x40png.png" alt="K3YRING&trade; [beta]" style="margin: 10px auto 10px auto"/>
+            <a href="http://k3yring.untrix.com" target="bp_k3yring_com">
+              <img src="icons/Banner White.219x40png.png" alt="K3YRING&trade; [beta]" style="margin: 10px auto 10px auto"/>
+            </a>
         </div>
     </div>
     <div class="container">
@@ -35,15 +36,15 @@
           <!-- <ul class="nav nav-list" id="nav-list" style="position: fixed; top: 100px"> -->
           <ul class="nav nav-list" id="nav-list">
             <li>
-              <a data-nav id="nav-settings" href="#settings-pane"><i class="icon-cog"></i> Manage</a>
+              <a data-nav id="nav-settings" href="#settings-pane"><i class="icon-cog"></i> My Keyrings</a>
             </li>
             <li>
-              <a data-nav id="editB" href="#editor-pane"><i class="icon-pencil"></i> Edit Passwords</a>
+              <a data-nav id="editB" href="#editor-pane"><i class="icon-pencil"></i> My Passwords</a>
             </li>
-            <li><a data-nav href="#advanced-pane"><i class="icon-wrench"></i> Advanced</a></li>
-            <li><a data-nav href="#license-pane"><i class="icon-certificate"></i> Legal</a></li>
-            <li><a data-nav href="#help-pane"><i class="icon-flag"></i> Help</a></li>
+            <li><a data-nav href="#advanced-pane"><i class="icon-wrench"></i> Advanced Stuff</a></li>
             <li class="divider"></li>
+            <li><a href="bp_license.html" target="bp_license"><i class="icon-certificate"></i> License Agreements</a></li>
+            <li><a href="http://k3yring.untrix.com/help" target="bp_help"><i class="icon-flag"></i> Help</a></li>
             <li>
               <a href="mailto:support@k3yring.com"><i class="icon-envelope"></i> Contact</a>
             </li>
@@ -261,55 +262,6 @@
 
               </div>
             </div>
-            <div class="tab-pane" id="help-pane">
-              <!-- Help Content Goes Here -->
-              <h6> Sorry, no help content yet</h6>
-            </div>
-            <div class="tab-pane" id="license-pane">
-              <!-- License and Credits Go Here -->
-              <section>
-                <h3 style="text-align: center"> K3YRING [beta] End User License Agreement </h3>
-                <embed src="data/EULA.txt" style="width:100%"></iframe>
-
-              </section>
-              <section>
-                  <h3 style="text-align: center"> Other (Thirdparty) Licenses </h3>
-                  <p>This software uses the following pieces of software under the indicated free licenses.
-                  We are deeply grateful to all those who have contributed towards the thirdparty software.
-                  </p>
-                  <table class="table table-bordered table-hover">
-                      <thead>
-                          <tr>
-                              <th>Software name</th>
-                              <th>License</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <!-- <tr>
-                              <td><a href="http://www.firebreath.org/display/documentation/About+FireBreath">Firebreath</a></td>
-                              <td><a href="data/NewBSD_license.html">New BSD License</a></td>
-                          </tr> -->
-                          <tr>
-                              <td><a href="http://jquery.com/" target="jQuery">jQuery</a></td>
-                              <td><a rel="license" href="data/jQuery_MIT_license.html" target="MITLicense">MIT License</a></td>
-                          </tr>
-                          <tr>
-                              <td><a href="http://jqueryui.com/" target="jQueryUI">jQuery-UI</a></td>
-                              <td><a href="data/jQuery_MIT_license.html" target="MITLicense">MIT License</a></td>
-                          </tr>
-                          <tr>
-                              <td><a href="http://twitter.github.com/bootstrap/" target="bootstrap">twitter/bootstrap</a></td>
-                              <td><a href="data/Apache2_license.html" target="ApacheLicense">Apache License v2.0</a></td>
-                          </tr>
-                          <tr>
-                              <td><a href="http://glyphicons.com/" target="glyphicons">Glyphicons Halflings</a></td>
-                              <td><a href="data/Apache2_license.html" target="ApacheLicense">Part of twitter/bootstrap</a></td>
-                              <!-- <td><a href="http://creativecommons.org/licenses/by/3.0/" target="CCBY">CC-BY 3.0</a></td> -->
-                          </tr>
-                      </tbody>
-                  </table>
-              </section>
-            </div>
           </div>
         </div>
       </div>
@@ -319,9 +271,11 @@
         <div class="container">
             <p>
               &copy; Copyright 2012-2013 Untrix Inc (http://www.untrix.com).
+            </p>
+            <p>
               untrix&trade;, K3YRING&trade; and the key icons are trademarks of Untrix Inc
             </p>
-              <p><small>
+              <!-- <p><small>
                   Note: K3YRING&trade; [beta] <bold>never</bold> transfers your passwords to anywhere
                   other than the Keyring folder of your choosing and - temporarily -
                   into the memory of the computer/device on which it is executing. It certainly does not
@@ -330,8 +284,8 @@
                   A network/internet/cloud/sky drive <bold>will</bold> transfer your passwords - although encrypted - to
                   locations outside of your control from where they could be lost, stolen, damaged
                   or otherwise compromised.
-              </small></p>
-              <!-- <p><a href="http://glyphicons.com" target="glyphicons">Glyphicons Free </a> licensed under <a href="http://creativecommons.org/licenses/by/3.0/" target="CCBY">CC-BY 3.0</a> </p> -->
+              </small></p> -->
+              <p><a href="http://glyphicons.com" target="glyphicons">Icons provided by Glyphicons</a> </p>
         </div>
     </footer>
     <object type="application/x-k3yring" style="visibility: none" width="0" height="0"
