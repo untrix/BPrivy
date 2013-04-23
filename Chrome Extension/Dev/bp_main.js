@@ -826,7 +826,7 @@ var BP_MAIN = (function()
     });
 }());
 
-BP_MAIN.g.BP_CS_PLAT.addEventListener(window, 'load', function(e)
+BP_MAIN.g.BP_COMMON.addEventListener(window, 'load', function(e)
 { "use strict";
   BP_MAIN.init();
   BP_MAIN.g.BP_ERROR.logdebug("inited main");

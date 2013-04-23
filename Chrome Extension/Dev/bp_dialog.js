@@ -37,12 +37,12 @@ var BP_DIALOG = (function ()
     var BP_MAIN = IMPORT(g.MAIN_PAGE.BP_MAIN);
     /** @import-module-begin */
     var BP_COMMON = IMPORT(g.BP_COMMON);
+    var addEventListeners = IMPORT(BP_COMMON.addEventListeners);
+    var addEventListener = IMPORT(BP_COMMON.addEventListener);
     /** @import-module-begin CSPlatform */
     var m = IMPORT(g.BP_CS_PLAT);
     var CS_PLAT = IMPORT(g.BP_CS_PLAT),
         rpcToMothership = IMPORT(CS_PLAT.rpcToMothership);
-    var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
-    var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     /** @import-module-begin */
     var DBFS = IMPORT(g.BP_DBFS);
     var cullDBName = IMPORT(DBFS.cullDBName);
@@ -262,7 +262,7 @@ var BP_DIALOG = (function ()
 })();
 
 // $(document).ready(function (e)
-BP_DIALOG.g.BP_CS_PLAT.addEventListener(window, 'load', function(e)
+BP_DIALOG.g.BP_COMMON.addEventListener(window, 'load', function(e)
 { "use strict";
   BP_DIALOG.onload();
   BP_DIALOG.g.BP_ERROR.logdebug("inited mod_dialog");

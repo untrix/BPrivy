@@ -85,44 +85,6 @@ function BP_GET_CS_PLAT(g)
         getBackgroundPage: function ()
         {
             return chrome.extension.getBackgroundPage();
-        },
-
-        addEventListener: function(el, ev, fn)
-        {
-            el.addEventListener(ev, fn);
-        },
-
-        addEventListeners: function(selector, ev, fn)
-        {
-            var j = $(selector), i = j.length;
-            for (--i; i>=0; --i) {
-                var el = j[i];
-                if (el) {el.addEventListener(ev, fn);}
-            }
-        },
-
-        addHandlers: function (el, on)
-        {
-            if (!el || !on || (typeof on !== 'object')) {return;}
-
-            var ks = Object.keys(on), k, i, n;
-            for (i=0, n=ks.length, k=ks[0]; i<n ; k=ks[++i])
-            {
-                el.addEventListener(k, on[k]);
-            }
-        },
-
-        trigger: function (el, eventType, eventInterface, detail)
-        {
-            var ev = g_doc.createEvent(eventInterface || 'HTMLEvents');
-            ev.initEvent(eventType, true, true);
-            el.dispatchEvent(ev);
-        },
-
-        customEvent: function (el, eventType, detail)
-        {
-            var ev = new CustomEvent(eventType, {cancelable:true, bubbles:true, detail:detail});
-            el.dispatchEvent(ev);
         }
     };
 

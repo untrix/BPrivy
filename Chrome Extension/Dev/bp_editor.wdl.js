@@ -29,6 +29,7 @@ function BP_GET_EDITOR(g)
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
         preventDefault = IMPORT(m.preventDefault),
+        addHandlers = IMPORT(m.addHandlers),
         newInherited = IMPORT(m.newInherited);
     /** @import-module-begin W$ */
     m = IMPORT(g.BP_W$);
@@ -39,7 +40,6 @@ function BP_GET_EDITOR(g)
     /** @import-module-begin CSPlatform */
     m = g.BP_CS_PLAT;
     var getURL = IMPORT(m.getURL),
-        addHandlers = IMPORT(m.addHandlers), // Compatibility function
         rpcToMothership = IMPORT(m.rpcToMothership);
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;

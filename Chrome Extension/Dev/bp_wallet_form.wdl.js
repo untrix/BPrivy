@@ -24,13 +24,13 @@ function BP_GET_WALLET_FORM(g)
     var m;
     /** @import-module-begin Common */
     m = g.BP_COMMON;
-    var BP_COMMON = IMPORT(m);
+    var BP_COMMON = IMPORT(m),
+        addEventListeners = IMPORT(m.addEventListeners),
+        addEventListener = IMPORT(m.addEventListener),
+        customEvent = IMPORT(m.customEvent);
     /** @import-module-begin CSPlatform */
         m = IMPORT(g.BP_CS_PLAT);
-    var CS_PLAT = IMPORT(g.BP_CS_PLAT),
-        //rpcToMothership = IMPORT(CS_PLAT.rpcToMothership),
-        addEventListeners = IMPORT(m.addEventListeners), // Compatibility function
-        addEventListener = IMPORT(m.addEventListener); // Compatibility function
+    var CS_PLAT = IMPORT(g.BP_CS_PLAT);
     /** @import-module-begin W$ */
     m = IMPORT(g.BP_W$);
     var BP_W$ = m,
@@ -401,7 +401,7 @@ function BP_GET_WALLET_FORM(g)
                         if (this.fieldsetDBName) {
                             this.fieldsetDBName.inputDBName.el.value = this.dbName;
                         }
-                        CS_PLAT.customEvent(this.el, 'dbNameChosen', {dbName:this.dbName});
+                        customEvent(this.el, 'dbNameChosen', {dbName:this.dbName});
                     }}
             }
             ]
@@ -479,7 +479,7 @@ function BP_GET_WALLET_FORM(g)
                      },
                      prop:{ required: true },
                      on:{ 'change': function(e) {
-                                    CS_PLAT.customEvent(this.el, 'dbNameChosen', {dbName:this.el.value});
+                                    customEvent(this.el, 'dbNameChosen', {dbName:this.el.value});
                                     }}
                     }
                     ]
@@ -530,7 +530,7 @@ function BP_GET_WALLET_FORM(g)
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
                     this.fieldsetChooseDB.inputDBPath.el.value = path;
-                    CS_PLAT.customEvent(this.fieldsetChooseDB.inputDBPath.el, 'dbChosen',
+                    customEvent(this.fieldsetChooseDB.inputDBPath.el, 'dbChosen',
                         {dbPath:path});
                 }
             }}
@@ -559,7 +559,7 @@ function BP_GET_WALLET_FORM(g)
                      on:{'change':function(e)
                          {
                             //if (this.fieldsetChooseDB.checkValidity(this)) {
-                                CS_PLAT.customEvent(this.el, 'dbChosen', {dbPath:this.el.value});
+                                customEvent(this.el, 'dbChosen', {dbPath:this.el.value});
                             //}
                          }
                      }
@@ -598,7 +598,7 @@ function BP_GET_WALLET_FORM(g)
 	            path = SETTINGS.getDBPath(dbName);
 	            if (path) {
 	                this.inputDBPath.el.value = path;
-	                CS_PLAT.customEvent(this.inputDBPath.el, 'dbChosen', {dbPath:path});
+	                customEvent(this.inputDBPath.el, 'dbChosen', {dbPath:path});
 	            }
            	}
 
@@ -635,7 +635,7 @@ function BP_GET_WALLET_FORM(g)
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
                     this.fieldsetChooseKey.inputKeyPath.el.value = path;
-                    CS_PLAT.customEvent(this.fieldsetChooseKey.inputKeyPath.el, 'keyPathChosen', {keyPath:path});
+                    customEvent(this.fieldsetChooseKey.inputKeyPath.el, 'keyPathChosen', {keyPath:path});
                 }
             }}
         });
@@ -664,7 +664,7 @@ function BP_GET_WALLET_FORM(g)
                      save:['fieldsetChooseKey'],
                      on:{ 'change': function(e) {
                          //if (this.fieldsetChooseKey.checkValidity(this)) {
-                            CS_PLAT.customEvent(this.el, 'keyPathChosen', {keyPath:this.el.value});
+                            customEvent(this.el, 'keyPathChosen', {keyPath:this.el.value});
                          //}
                          }
                         }
@@ -696,7 +696,7 @@ function BP_GET_WALLET_FORM(g)
             if (keyPath) {
                 this.inputKeyPath.el.value = null;
                 this.disable();
-                CS_PLAT.customEvent(this.inputKeyPath.el, 'keyPathChosen', {keyPath:keyPath});
+                customEvent(this.inputKeyPath.el, 'keyPathChosen', {keyPath:keyPath});
             }
             else
             {
@@ -704,7 +704,7 @@ function BP_GET_WALLET_FORM(g)
                 keyPath = SETTINGS.getKeyPath(dbPath);
                 if (keyPath) {
                     this.inputKeyPath.el.value = keyPath;
-                    CS_PLAT.customEvent(this.inputKeyPath.el, 'keyPathChosen', {keyPath:keyPath});
+                    customEvent(this.inputKeyPath.el, 'keyPathChosen', {keyPath:keyPath});
                 }
                 else {
                 	this.enable();
@@ -795,7 +795,7 @@ function BP_GET_WALLET_FORM(g)
         {
         	onChoose: {value: function(option)
         	{
-        		CS_PLAT.customEvent(this.el, 'keyOptionChosen', {option:option});
+        		customEvent(this.el, 'keyOptionChosen', {option:option});
         	}},
 
         	reset: {value: function()
@@ -841,7 +841,7 @@ function BP_GET_WALLET_FORM(g)
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
                     this.controlsKeyFile.inputKeyFile.el.value = path;
-                    CS_PLAT.customEvent(this.controlsKeyFile.inputKeyFile.el, 'keyPathChosen', {keyPath:path});
+                    customEvent(this.controlsKeyFile.inputKeyFile.el, 'keyPathChosen', {keyPath:path});
                 }
             }}
         }, fieldsetProto);
@@ -871,7 +871,7 @@ function BP_GET_WALLET_FORM(g)
                 else if (path && this.fieldsetKeyDirOrPath.validateKeyFolder(path))
                 {
                     this.controlsKeyFolder.inputKeyFolder.el.value = path;
-                    CS_PLAT.customEvent(this.controlsKeyFolder.inputKeyFolder.el,
+                    customEvent(this.controlsKeyFolder.inputKeyFolder.el,
                         'keyFolderChosen', {keyFolder:path});
                 }
             }}
@@ -923,7 +923,7 @@ function BP_GET_WALLET_FORM(g)
                      on:{ 'change': function(e)
                           {
                               if (this.fieldsetKeyDirOrPath.validateKeyFolder(this.el.value)) {
-                                CS_PLAT.customEvent(this.el, 'keyFolderChosen',
+                                customEvent(this.el, 'keyFolderChosen',
                                                     {keyFolder:this.el.value});
                               }
                           }}
@@ -961,7 +961,7 @@ function BP_GET_WALLET_FORM(g)
                      on:{ 'change': function(e)
                           {
                               //if (this.fieldsetKeyDirOrPath.checkValidity(this)) {
-                                CS_PLAT.customEvent(this.el, 'keyPathChosen',
+                                customEvent(this.el, 'keyPathChosen',
                                                     {keyFile:this.el.value});
                               //}
                           }}
@@ -1023,7 +1023,7 @@ function BP_GET_WALLET_FORM(g)
         		default:
         			this.controlsKeyFolder.disable();
         			this.controlsKeyFile.disable();
-        			CS_PLAT.customEvent(this.el, 'keyFolderChosen', {keyFolder:null});
+        			customEvent(this.el, 'keyFolderChosen', {keyFolder:null});
         			break;
         	}
         }}
@@ -1040,7 +1040,7 @@ function BP_GET_WALLET_FORM(g)
         {
             return {
             tag:'input', cons: inputPassword,
-            attr:{ type:'password', placeholder:bPass2?"Re-Enter Master Password":"Enter Master Password",
+            attr:{ type:'password', placeholder:"10 characters or more",
                    pattern:'.{10,}' },
             iface:{ 'bPass2':bPass2 },
             prop:{ required:true },
@@ -1061,13 +1061,13 @@ function BP_GET_WALLET_FORM(g)
                      }
                      else {
                      	 this.el.setCustomValidity('');
-                         CS_PLAT.customEvent(this.el, 'passwordChosen');
+                         customEvent(this.el, 'passwordChosen');
                      }
                  }
                  else {
 	                 //if (this.walletForm.mode !== 'create') {
 	                 if (this.walletForm.fieldsetPassword2.inputPassword.el.disabled) {
-	                     CS_PLAT.customEvent(this.el, 'passwordChosen');
+	                     customEvent(this.el, 'passwordChosen');
 	                 }
 	                 else if (this.el.value === this.walletForm.fieldsetPassword2.inputPassword.el.value) {
 	                 	this.walletForm.fieldsetPassword2.inputPassword.el.setCustomValidity('');
@@ -1123,7 +1123,7 @@ function BP_GET_WALLET_FORM(g)
             		// CryptContext is loaded, therefore do not
             		// ask for password.
             		this.disable();
-            		CS_PLAT.customEvent(this.el, 'passwordChosen');
+            		customEvent(this.el, 'passwordChosen');
             	}
            	}
            	else {

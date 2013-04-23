@@ -1,8 +1,8 @@
 {
   "name": "K3YRING [beta]",
-  "version": "0.6.32",
+  "version": "0.6.33",
   "manifest_version": 2,
-  "minimum_chrome_version": "20",
+  "minimum_chrome_version": "22",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
   "description":"Your Passwords: Local and Portable",
   "icons": {

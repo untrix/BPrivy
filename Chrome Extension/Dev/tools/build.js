@@ -109,6 +109,7 @@ var src = abs(argv[0]),
        "bp_cs_chrome.js", "bp_connector.js", "bp_w$.js", "bp_panel.wdl.js",
        "bp_cs.js"
     ],
+    lib_wdl_js = ["bp_build.js", "bp_error.js", "bp_common.js", "bp_cs_plat.stub.js", "bp_w$.js"],
     release_main_js=["bp_build.js", 'bp_config.js', 'bp_error.js', 'bp_common.js', 'bp_uitraits.js',
                      "bp_main_chrome.js", "bp_cs_chrome.js",
                      "bp_listener.js", "bp_connector.js", "bp_memstore.js", "bp_db_fs.js",
@@ -184,6 +185,7 @@ catIfNeeded(qualifyA(src,release_license_js), src + path.sep + 'bp_license.cat.j
 catIfNeeded(qualifyA(src,release_panel_js), src + path.sep + 'bp_panel.cat.js', force);
 catIfNeeded(qualifyA(src,release_tools_js), src + path.sep + 'bp_tools.cat.js', force);
 //catIfNeeded(qualifyA(src,release_notification_js), src + path.sep + 'bp_notification.cat.js', force);
+catIfNeeded(qualifyA(src,lib_wdl_js), src + path.sep + 'bp_wdl.lib.js', force);
 
 if (all)
 {

@@ -22,6 +22,8 @@ function BP_GET_CS_PLAT(g)
         throw "BP_CS_PLAT_STUB: This is a stub function - not intended to be ever invoked."
     }
 
+    function noop() {}
+
     var module =
     {
         postMsgToMothership: throwException,
@@ -30,7 +32,7 @@ function BP_GET_CS_PLAT(g)
 
         registerMsgListener: throwException,
 
-        getURL: throwException,
+        getURL: noop,
 
         /*getAbsPath: function(path)
         {

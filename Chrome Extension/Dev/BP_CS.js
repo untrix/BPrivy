@@ -33,13 +33,13 @@
         encrypt = IMPORT(m.encrypt),
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
-        preventDefault = IMPORT(m.preventDefault);
-    /** @import-module-begin CSPlatform */
-    m = g.BP_CS_PLAT;
-    var registerMsgListener = IMPORT(m.registerMsgListener),
-        addEventListener = IMPORT(m.addEventListener), // Compatibility function
+        preventDefault = IMPORT(m.preventDefault),
+        addEventListener = IMPORT(m.addEventListener),
         addEventListeners = IMPORT(m.addEventListeners),
         trigger = IMPORT(m.trigger);
+    /** @import-module-begin CSPlatform */
+    m = g.BP_CS_PLAT;
+    var registerMsgListener = IMPORT(m.registerMsgListener);
     /** @import-module-begin Traits */
     m = IMPORT(g.BP_TRAITS);
     var dt_eRecord = IMPORT(m.dt_eRecord),

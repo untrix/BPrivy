@@ -46,7 +46,7 @@ function BP_GET_PLAT(gg)
                     case "file:":
                         chrome.browserAction.setBadgeText({text:"oops", tabId:tab.id});
                         chrome.browserAction.setTitle({title:"User Blocked", tabId:tab.id});
-                        BP_ERROR.alert("You have blocked BPrivy from accessing files. "+
+                        BP_ERROR.alert("You have blocked K3YRING from accessing files. "+
                         "Please 1) change the setting on 'Manage Extensions' page, then 2) reload the page");
                         break;
                     default:
@@ -76,7 +76,7 @@ function BP_GET_PLAT(gg)
 
     function init(doc, mod_win)
     {
-        var menuProperties = {"type": "normal", "title": "BPrivy", "contexts": ["all"],
+        var menuProperties = {"type": "normal", "title": "K3YRING [beta]", "contexts": ["all"],
                               "onclick": bpMenuClick/*, "documentUrlPatterns": document.url*/};
         var menu_id = chrome.contextMenus.create(menuProperties);
         //BP_ERROR.loginfo("Menu Item ID " + menu_id + " Created");

@@ -29,7 +29,8 @@ function BP_GET_WDL (g)
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
         preventDefault = IMPORT(m.preventDefault),
-        newInherited = IMPORT(m.newInherited);
+        newInherited = IMPORT(m.newInherited),
+        addHandlers = IMPORT(m.addHandlers);
     /** @import-module-begin W$ */
     m = IMPORT(g.BP_W$);
     var w$exec = IMPORT(m.w$exec),
@@ -39,8 +40,7 @@ function BP_GET_WDL (g)
     /** @import-module-begin CSPlatform */
     m = g.BP_CS_PLAT;
     var BP_CS_PLAT = IMPORT(m),
-        getURL = IMPORT(m.getURL),
-        addHandlers = IMPORT(m.addHandlers); // Compatibility function
+        getURL = IMPORT(m.getURL);
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;
     var newPAction = IMPORT(m.newPAction),

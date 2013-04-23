@@ -113,7 +113,6 @@ function BP_GET_W$(g)
     /** @import-module-begin CSPlatform */
     m = g.BP_CS_PLAT;
     var getURL = IMPORT(m.getURL);
-    var addHandlers = IMPORT(m.addHandlers); // Compatibility function
     /** @import-module-begin Error */
     m = g.BP_ERROR;
     var BP_ERROR = IMPORT(m),
@@ -121,8 +120,8 @@ function BP_GET_W$(g)
         logwarn = IMPORT(m.logwarn);
     /** @import-module-begin */
     m = g.BP_COMMON;
-    var MOD_COMMON = IMPORT(m);
-    var newInherited = IMPORT(m.newInherited);
+    var MOD_COMMON = IMPORT(m),
+        addHandlers = IMPORT(m.addHandlers);
     /** @import-module-end **/    m = null;
 
     /********************** WDL Interpretor ************************/

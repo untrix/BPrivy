@@ -324,6 +324,43 @@ function BP_GET_COMMON(g)
             // dst.push(item);
         // }, dst);
     // }
+    function addEventListener(el, ev, fn)
+    {
+        el.addEventListener(ev, fn);
+    }
+
+    function addEventListeners(selector, ev, fn)
+    {
+        var j = $(selector), i = j.length;
+        for (--i; i>=0; --i) {
+            var el = j[i];
+            if (el) {el.addEventListener(ev, fn);}
+        }
+    }
+
+    function addHandlers(el, on)
+    {
+        if (!el || !on || (typeof on !== 'object')) {return;}
+
+        var ks = Object.keys(on), k, i, n;
+        for (i=0, n=ks.length, k=ks[0]; i<n ; k=ks[++i])
+        {
+            el.addEventListener(k, on[k]);
+        }
+    }
+
+    function trigger(el, eventType, eventInterface, detail)
+    {
+        var ev = g_doc.createEvent(eventInterface || 'HTMLEvents');
+        ev.initEvent(eventType, true, true);
+        el.dispatchEvent(ev);
+    }
+
+    function customEvent(el, eventType, detail)
+    {
+        var ev = new CustomEvent(eventType, {cancelable:true, bubbles:true, detail:detail});
+        el.dispatchEvent(ev);
+    }
 
     var iface = {};
     Object.defineProperties(iface,
@@ -357,6 +394,11 @@ function BP_GET_COMMON(g)
         iterObj: {value:iterObj},
         bindProto:{value:bindProto},
         //concatArray: {value: concatArray},
+        addEventListener: {value:addEventListener},
+        addEventListeners: {value: addEventListeners},
+        addHandlers: {value: addHandlers},
+        trigger: {value: trigger},
+        customEvent: {value: customEvent},
         EMPTY_OBJECT: {value: EMPTY_OBJECT},
         EMPTY_ARRAY: {value: EMPTY_ARRAY}
     });

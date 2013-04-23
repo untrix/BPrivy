@@ -41,7 +41,7 @@ function BP_GET_PLUGIN_INSTALLER(g)
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
-    var g_installText = "Keys@Untrix&trade; requires a plugin. Please follow these steps to install it:",
+    var g_installText = "K3YRING [beta] requires a plugin. Please follow these steps to install it:",
         g_upgradeText = "Please follow these steps to update the plugin:",
         g_unsupportedOSText = "We're terribly sorry, at this time we only support Windows operating system :( "+
             "We're working on supporting other operating systems and the software will automatically update.";

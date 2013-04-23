@@ -2,11 +2,11 @@
   
 This copy of K3YRING [beta] ("the Software Application") and accompanying documentation is licensed and not sold. This Software Application is protected by copyright laws and treaties, as well as laws and treaties related to other forms of intellectual property. Untrix Inc or its subsidiaries, affiliates, and suppliers (collectively "Untrix") own intellectual property rights in the Software Application. The Licensee's ("you" or "your") license to download, use, copy, or change the Software Application is subject to these rights and to all the terms and conditions of this End User License Agreement ("Agreement"). 
 
-Entire Agreement
-This Agreement constitutes the entire agreement between you and Untrix with respect to its subject matter and constitutes and supersedes all prior agreements, representations and understandings of the parties, written or oral.
-  
 Acceptance 
 YOU ACCEPT AND AGREE TO BE BOUND BY THE TERMS OF THIS AGREEMENT BY INSTALLING, USING, OR COPYING THE SOFTWARE APPLICATION. IF YOU DO NOT AGREE TO ALL OF THE TERMS OF THIS AGREEMENT, YOU MUST NOT INSTALL, USE, OR COPY THE SOFTWARE APPLICATION. 
+  
+Entire Agreement
+This Agreement constitutes the entire agreement between you and Untrix with respect to its subject matter and constitutes and supersedes all prior agreements, representations and understandings of the parties, written or oral.
   
 License Grant 
 This Agreement entitles you to install and use the Software Application on any Google Chrome web browser. This Agreement does not permit you to make this Software Application available to anyone other than yourself.
@@ -41,8 +41,8 @@ Your remedy for a breach of this Agreement or of any warranty included in this A
   
 Any claim must be made within the applicable warranty period. All warranties cover only defects arising under normal use and do not include malfunctions or failure resulting from misuse, abuse, neglect, alteration, problems with electrical power, acts of nature, unusual temperatures or humidity, improper installation, or damage determined by Untrix to have been caused by you. All limited warranties on the Software Application are granted only to you and are non-transferable. You agree to indemnify and hold Untrix harmless from all claims, judgments, liabilities, expenses, or costs arising from your breach of this Agreement and/or acts or omissions. 
 
-Software Updates
-A Software Update means, any patch, update or new version of the Software Application delivered to you as part of this agreement. Untrix, in its sole discretion, may provide you with Software Updates as part of this Agreement. Software Updates may be automatically applied without seeking your permission or you may be required to install them, failing which the Software Application may cease to function correctly or may stop functioning altogether. In such event and in any event, Untrix shall not be obligated to reinstate or provide an older version of the Software Application.
+Software Updates and Changes to Functionality
+A Software Update means, any patch, update or new version of the Software Application delivered to you as part of this agreement. Untrix, in its sole discretion, may provide you with Software Updates as part of this Agreement. Software Updates may be automatically applied without seeking your permission or you may be required to install them, failing which the Software Application may cease to function correctly or may stop functioning altogether. If installed correctly, the Software Application may obtain better or new functionality (enhancements), have malfunctions (bugs) removed, may discontinue hitherto existing unintended functionality (unsupported features). While Untrix will make reasonable efforts to never discontinue existing intended functionality (supported features) of the Software Application, in certain events a Software Update may cause discontinuation of existing intended functionality (supported feature) of the Software Application. In all of the above mentioned events as well as in any other event, Untrix shall not be obligated to reinstate or provide an older version of the Software Application.
 
 Along with a Software Update, Untrix, in its sole discretion, may require you to accept a new or revised license agreement and failure to do so may cause or require the Software Application to be uninstalled leaving you with neither the old nor the new version of the Software Application. In such event and in any event, Untrix shall not be obligated to reinstate or provide an older version of the Software Application.
 

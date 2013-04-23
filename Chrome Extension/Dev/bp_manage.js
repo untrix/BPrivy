@@ -38,13 +38,13 @@ var BP_MANAGE = (function ()
     /** @globals-end */
 
     /** @import-module-begin */
-    var BP_COMMON = IMPORT(g.BP_COMMON);
+    var BP_COMMON = IMPORT(g.BP_COMMON),
+        addEventListeners = IMPORT(BP_COMMON.addEventListeners),
+        addEventListener = IMPORT(BP_COMMON.addEventListener);
     /** @import-module-begin CSPlatform */
     var m = IMPORT(g.BP_CS_PLAT);
     var CS_PLAT = IMPORT(g.BP_CS_PLAT),
         rpcToMothership = IMPORT(CS_PLAT.rpcToMothership);
-    var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
-    var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     /** @import-module-begin */
     var DBFS = IMPORT(g.BP_DBFS);
     var cullDBName = IMPORT(DBFS.cullDBName);
@@ -267,7 +267,7 @@ var BP_MANAGE = (function ()
                 }
                 else {
                     if (resp.dbStats.dbPath) {
-                        $('#qclean-stats').val("sparkling clean!");
+                        $('#qclean-stats').val("is already clean!");
                     }
                     else {
                         $('#qclean-stats').val("");
@@ -397,7 +397,7 @@ var BP_MANAGE = (function ()
         addEventListeners('#csvImport', 'click', function (e)
         {
             var o={filter:['CSV File','*.csv'],
-                   dtitle: "BPrivy: Import CSV File",
+                   dtitle: "K3YRING [beta]: Import CSV File",
                    dbutton: "Import"};
             $('#csvImportSpinner').show();
             if (BP_PLUGIN.chooseFile(o)) {
@@ -424,7 +424,7 @@ var BP_MANAGE = (function ()
 
         addEventListeners('#csvExport', 'click', function (e)
         {
-            var o={dtitle:"BPrivy: CSV Export",
+            var o={dtitle:"K3YRING [beta]: CSV Export",
                    dbutton: "Select Folder",
                    clrHist: true};
             $('#csvExportSpinner').show();
@@ -704,7 +704,7 @@ var BP_MANAGE = (function ()
 // }
 
 // $(document).ready(function (e)
-BP_MANAGE.g.BP_CS_PLAT.addEventListener(window, 'load', function(e)
+BP_MANAGE.g.BP_COMMON.addEventListener(window, 'load', function(e)
 { "use strict";
   BP_MANAGE.checkEula();
   BP_MANAGE.loadPlugin();
