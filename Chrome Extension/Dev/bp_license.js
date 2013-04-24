@@ -29,7 +29,8 @@
     /** @import-module-begin */
     var BP_MAIN = IMPORT(g.MAIN_PAGE.BP_MAIN);
     /** @import-module-begin */
-    var BP_COMMON = IMPORT(g.BP_COMMON);
+    var BP_COMMON = IMPORT(g.BP_COMMON),
+        addEventListeners = IMPORT(BP_COMMON.addEventListeners);
     /** @import-module-begin CSPlatform */
     var m = IMPORT(g.BP_CS_PLAT);
     var CS_PLAT = IMPORT(g.BP_CS_PLAT);
@@ -42,12 +43,12 @@
 
     if (!BP_MAIN.eulaAccepted())
     {
-        CS_PLAT.addEventListeners('#btnEulaAccept', 'click', function(e)
+        addEventListeners('#btnEulaAccept', 'click', function(e)
         {
             BP_MAIN.acceptEula();
             BP_PLAT.reload();
         });
-        CS_PLAT.addEventListeners('#btnEulaDecline', 'click', function(e)
+        addEventListeners('#btnEulaDecline', 'click', function(e)
         {
             BP_PLAT.uninstall();
         });
