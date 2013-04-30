@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 /* Global declaration for JSLint */
-/*global */
+/*global  RELEASE */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 

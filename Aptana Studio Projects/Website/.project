@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Website</name>
+	<name>Web</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -16,9 +16,25 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Website</name>
+			<name>CMS</name>
 			<type>2</type>
-			<location>D:/Dev/marketing-master/Website</location>
+			<location>D:/Dev/marketing-master/CMS</location>
+		</link>
+		<link>
+			<name>tools</name>
+			<type>2</type>
+			<location>D:/Dev/marketing-master/tools</location>
 		</link>
 	</linkedResources>
+	<filteredResources>
+		<filter>
+			<id>0</id>
+			<name>tools</name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-node_modules</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>

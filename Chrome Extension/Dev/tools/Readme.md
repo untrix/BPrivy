@@ -1,4 +1,5 @@
-Following thirdparty software is needed:
+## Following thirdparty software is needed:
+
 1. nodejs (get from nodejs.org)
 2. npm (package manager for node)
 3. Recess node-module should be locally installed in this directory (npm install recess).
@@ -8,9 +9,8 @@ Following thirdparty software is needed:
 6. npm install rimraf
 7. npm install uglify-js
 
-Run buildcss.js as follows:
-a. Run buildcss.cmd on windows
-    OR
-b. node buildcss.js ..
+### Run build.js on Windows as follows:
 
-buildcss.js will build bp.css in both Dev and Prod folders. 
+	build.cmd [all] [force]
+
+buildcss.js will build bp.css in Dev as well as build folders. 

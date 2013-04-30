@@ -7,9 +7,8 @@
 
 /* JSLint directives */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
-  undef:false, vars:true, white:true, continue: true, nomen:true,
-  stupid:true,
-  sloppy:true */
+  undef:false, vars:true, white:true, continue: true, nomen:true, stupid:true, sloppy:true */
+
 /*global require, process, __filename */
 
 var fs = require('fs.extra'),
@@ -132,7 +131,8 @@ var src = abs(argv[0]),
     'bp_dialog.html',
     'bp_license.html'].
     concat(lsDir(abs(src,'data'), src)).
-    concat(lsDir(abs(src,'icons'), src)).    concat(lsDir(abs(src,'tp'), src)),
+    concat(lsDir(abs(src,'icons'), src)).
+    concat(lsDir(abs(src,'tp'), src)),
     release_json = ['manifest.json'];
 
 fs.mkdirpSync(bld);
