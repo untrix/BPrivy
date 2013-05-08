@@ -51,7 +51,7 @@ function BP_GET_PLUGIN_INSTALLER(g)
     Installer.wdt = function(ctx)
     {
         var text, bText,
-            url = 'https://commondatastorage.googleapis.com/www.untrix.com/downloads/K3YRING.msi';
+            url = 'https://commondatastorage.googleapis.com/download.untrix.com/K3YRING.msi';
         switch (ctx.mode)
         {
             case 'installPlugin':

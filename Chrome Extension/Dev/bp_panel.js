@@ -265,7 +265,7 @@
                             fillableUrls = Object.keys(autoFillable);
 
                             if (fillableUrls.length) {
-                                //BP_ERROR.logdebug('heuristicFrameUrl: force returning first autoFillable frameUrl = ' + fillableUrl);
+                                //BP_ERROR.logdebug('heuristicFrameUrl: force returning first autoFillable frameUrl = ' + fillableUrls[0]);
                                 return fillableUrls[0];
                             }
                             else {

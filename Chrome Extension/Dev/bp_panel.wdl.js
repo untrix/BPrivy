@@ -354,7 +354,7 @@ function BP_GET_WDL (g)
     };
 
     /**
-     * Control Panel/Home page link
+     * Home page link
      */
     function SButton(){}
     SButton.wdt = function (w$ctx)
@@ -367,7 +367,7 @@ function BP_GET_WDL (g)
         attr:{ 'class':css_class_xButton,
         	   href:'#',
         	   //href:BP_CS_PLAT.getURL("/bp_manage.html"),
-               target:"_blank", title:'Control Panel' },
+               target:"_blank", title:'Home / Settings' },
         iface:{ panel:panel },
         css:{ width:'20px' },
             children:[
