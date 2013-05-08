@@ -13,8 +13,14 @@
 	</buildSpec>
 	<natures>
 		<nature>com.aptana.projects.webnature</nature>
+		<nature>com.aptana.ruby.core.rubynature</nature>
 	</natures>
 	<linkedResources>
+		<link>
+			<name>k3yring.untrix.com</name>
+			<type>2</type>
+			<location>D:/Dev/marketing-master/k3yring.untrix.com</location>
+		</link>
 		<link>
 			<name>tools</name>
 			<type>2</type>
