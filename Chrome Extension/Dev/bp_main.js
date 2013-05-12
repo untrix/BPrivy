@@ -749,29 +749,38 @@ var BP_MAIN = (function()
 
     function init()
     {
-        var dbPath;
+        var dbPath, pluginLoaded;
 
+        /**
+         * Returns true if plugin is setup correctly.
+         */
         function loadPlugin ()
         {
+            var retVal = false;
             BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');
             if (!BP_MAIN.isWindows()) {
                 //MOD_WIN.openPath('/bp_dialog.html?action=unsupportedOS');
                 BP_ERROR.logwarn("Unsupported Operating System");
+                retVal = false;
             }
             else if (!BP_PLUGIN.getpid) {
                 MOD_WIN.openPath('/bp_dialog.html?action=installPlugin');
                 BP_ERROR.logwarn("Plugin Not Loaded");
+                retVal = false;
             }
             else {
                 if (cmpVersion(BP_PLUGIN.version, BP_CONFIG.pluginVer) < 0) {
                     MOD_WIN.openPath('/bp_dialog.html?action=upgradePlugin');
                     BP_ERROR.logwarn("Plugin Needs Upgrade");
+                    retVal = false;
                 }
                 else {
                     BP_ERROR.logdebug("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+                    retVal = true;
                 }
             }
             //BP_PLUGIN.clearCryptCtx();
+            return retVal;
         }
 
         function checkEula()
@@ -792,13 +801,13 @@ var BP_MAIN = (function()
             // Initialize notifications only after all modules
             // that it listens to have been inited.
             BP_NTFN_CNTR.init();
-            loadPlugin();
+            pluginLoaded = loadPlugin();
             // BP_NTFN_CNTR.notify('', 'Click here to open a Keyring', function()
             // {
             	// MOD_WIN.openPath('/bp_manage.html?action=open');
             // });
 
-            if (!BP_SETTINGS.getInited()) {
+            if (pluginLoaded && (!BP_SETTINGS.getInited())) {
                 if (!BP_SETTINGS.hasDBPaths()) {
                     MOD_WIN.openPath('/bp_manage.html');
                 }

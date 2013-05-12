@@ -62,18 +62,27 @@
               <div class="well form-horizontal">
               <legend>Manage Keyrings</legend>
                 <fieldset class='control-group'>
-                  <label class="control-label">Load / Unload</label>
+                  <label class="control-label">Create Keyring
+                    <i class="icon-question-sign"
+                          title="Create a new Keyring to store your passwords. This is the first step after installation.">
+                    </i>
+                  </label>
                   <div class='controls btn-group'>
-                    <button id="btnWalletOpen" type="button" class="btn btn-info span1" title="Load/Reload a Keyring">Load</button>
-                    <button id="btnWalletClose" type="button" class="btn span1" title="Unload Keyring">Unload</button>
-                    <button id="btnWalletReload" disabled type="button" class="btn span1" title="Reload the loaded Keyring">Reload</button>
+                    <button id="btnWalletCreate" type="button" class="btn btn-success " title="Create a new Keyring">New</button>
+                    <!-- <button id="btnWalletDupe" disabled type="button" class="btn " title="Make a copy of the loaded Keyring">Duplicate</button> -->
                   </div>
                 </fieldset>
+
                 <fieldset class='control-group'>
-                  <label class="control-label">New</label>
+                  <label class="control-label">My Keyrings
+                    <i class="icon-question-sign"
+                          title="Load an existing Keyring in order to start using it. Unload it before you hand over your computer to someone.">
+                    </i>
+                  </label>
                   <div class='controls btn-group'>
-                    <button id="btnWalletCreate" type="button" class="btn span1" title="Create a new Keyring">New</button>
-                    <button id="btnWalletDupe" disabled type="button" class="btn span1" title="Make a copy of the loaded Keyring">Duplicate</button>
+                    <button id="btnWalletOpen" type="button" class="btn btn-info " title="Load / Reload a Keyring">Load</button>
+                    <button id="btnWalletClose" type="button" class="btn " title="Unload Keyring">Unload</button>
+                    <!-- <button id="btnWalletReload" disabled type="button" class="btn " title="Reload the loaded Keyring">Reload</button> -->
                   </div>
                 </fieldset>
 
@@ -97,7 +106,7 @@
                         </i>
                   </label>
                   <div class="controls btn-group">
-                    <button data-path-choose id="btnMerge" type="button" class="btn btn-info span1"
+                    <button data-path-choose id="btnMerge" type="button" class="btn btn-info "
                     title="Click to choose the other Keyring to sync with">
                       Sync</button>
                   </div>
@@ -146,12 +155,12 @@
                     </i>
                   </label>
                   <div class="controls btn-group">
-                    <button id="csvImport" type="button" class="btn span1" title="Click to choose the file">
+                    <button id="csvImport" type="button" class="btn " title="Click to choose the file">
                       <img style="display:none" id="csvImportSpinner" src="icons/ajax-loader-white.gif" />
                       Import
                     </button>
                     <!-- <label class="checkbox" title="Check this if import file is obfuscated">                      <input type="checkbox" name="obfuscated" id="csvImportObfuscated" disabled>                      Obfuscated                    </label> -->
-                    <button id="csvExport" type="button" class="btn span1" title="Click to choose the file">Export</button>
+                    <button id="csvExport" type="button" class="btn " title="Click to choose the file">Export</button>
                     <!-- <label class="checkbox" title="Check this to obfuscate export file">
                       <input type="checkbox" name="obfuscate" disabled>
                       Obfuscate
@@ -165,9 +174,9 @@
                       </i>
                   </label>
                   <div class="controls btn-group">
-                    <button data-path-choose id="btnMergeIn" type="button" class="btn span1" title="Click to select the other Keyring">
+                    <button data-path-choose id="btnMergeIn" type="button" class="btn " title="Click to select the other Keyring">
                       Import</button>
-                    <button data-path-choose id="btnMergeOut" type="button" class="btn span1" title="Click to select the other Keyring">
+                    <button data-path-choose id="btnMergeOut" type="button" class="btn " title="Click to select the other Keyring">
                       Export</button>
                   </div>
                 </div>
@@ -185,7 +194,7 @@
                     <!-- <label class="control-label">Keyring</label> -->
                     <div class="controls btn-group">
                       <button id="btnWalletOpen2" type="button" class="btn btn-info" data-loading-text="Loading..."
-                        title="Load/Reload <i style='display:inline-block'>Keyring</i> folder">
+                        title="Load / Reload <i style='display:inline-block'>Keyring</i>">
                          Load Keyring
                       </button>
                       <button id="btnWalletClose2" type="button" class="btn" title="Unload the Keyring">
@@ -245,7 +254,15 @@
                 </fieldset>
 
                 <fieldset class="control-group">
-                  <label class="control-label">Change Master Password</label>
+                  <label class="control-label">Change Master Password
+                    <i class="icon-question-sign"
+                          title="Sorry, this function is coming soon. In the meantime here's a workaround:
+                          Create a new Keyring with the new master-password and a new master-key.
+                          Then import into it (using Home Sync) the Keyring whose master-password you want to change.
+                          The new Keyring will now have all your passwords.
+                          Delete the old Keyring.">
+                    </i>
+                  </label>
                   <div class="controls">
                     <button id="btnChngPass" disabled type="button" class="btn span2" data-loading-text="Working...">
                       Change Password
