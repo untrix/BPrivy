@@ -363,7 +363,10 @@ var BP_MANAGE = (function ()
 
     function onload()
     {
-        var actionOpt = BP_COMMON.getQueryObj(g.g_win.location)['action'];
+        var queryObj = BP_COMMON.getQueryObj(g.g_win.location),
+            actionOpt = queryObj['action'],
+            showOpt = queryObj['show'];
+
 
         BP_CONNECT.getDBPath(function(resp)
         {
@@ -613,6 +616,9 @@ var BP_MANAGE = (function ()
 
         $('#content *').tooltip({container:'body'});
         //$('#nav-list').affix({y: 100});
+
+        // NOTE: These should've been showOpts because they allow the page to fully
+        // initialize and then set its state
         switch (actionOpt)
         {
             case 'edit':
@@ -620,6 +626,13 @@ var BP_MANAGE = (function ()
                 break;
             default:
                 $("#nav-settings").tab('show');
+        }
+
+        switch (showOpt)
+        {
+            case 'create':
+                launchCreate({closeWin:false});
+                break;
         }
 
     }

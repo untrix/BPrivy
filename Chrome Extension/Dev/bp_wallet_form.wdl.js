@@ -200,6 +200,7 @@ function BP_GET_WALLET_FORM(g)
         }
 
         var mod = {
+            // NOTE: getDBPaths has been copied to bp_settings as well.
             getDBPaths : function ()
             {
                 if (!dbPaths) { dbPaths = construct('db.path.'); }

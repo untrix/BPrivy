@@ -7,7 +7,7 @@
 
 /**
  * @ModuleBegin BP_CONFIG
- * This module manages end-user notifications UI.
+ * Put all global configuration settings here. Treat this as a JSON object.
  */
 var BP_CONFIG = Object.freeze({
     pluginVer: [1,1,0,5],

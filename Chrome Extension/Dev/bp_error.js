@@ -19,7 +19,7 @@ function BP_GET_ERROR(g)
         _log = g_console.log.bind(g_console),
         debug = RELEASE ? NO_OP : (g_console.debug.bind(g_console) || _log),
         info = RELEASE ? NO_OP : (g_console.info.bind(g_console) || debug),
-        warn = g_console.error.bind(g_console) || info;
+        warn = g_console.error.bind(g_console) || _log;
 
    /** @begin-class-def BPError
     o: {//Object returned by the plugin

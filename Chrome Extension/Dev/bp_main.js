@@ -174,6 +174,7 @@ var BP_MAIN = (function()
     g.BP_CONFIG = BP_CONFIG;
     g.BP_ERROR = BP_GET_ERROR(g);
     g.BP_COMMON = BP_GET_COMMON(g);
+    g.BP_SETTINGS = BP_GET_SETTINGS(g);
     g.BP_TRAITS = BP_GET_TRAITS(g);
     g.BP_PLAT = BP_GET_PLAT(g);
     g.BP_LISTENER = BP_GET_LISTENER(g);
@@ -220,10 +221,11 @@ var BP_MAIN = (function()
     /** @import-module-begin */
     var DBFS = IMPORT(g.BP_DBFS);
     var BP_LISTENER = IMPORT(g.BP_LISTENER);
-    var BP_NTFN_CNTR = IMPORT(g.BP_NTFN_CNTR);
+    var BP_NTFN_CNTR = IMPORT(g.BP_NTFN_CNTR),
+        BP_SETTINGS = IMPORT(g.BP_SETTINGS);
     /** @import-module-end **/    m = null;
 
-    var MOD_WIN,    // defined later.
+    var MOD_WIN,    // defined further down
         EVENTS = BP_LISTENER.newListeners(),
         g_forms = {}; // Form submissions to watch for
 
@@ -795,6 +797,14 @@ var BP_MAIN = (function()
             // {
             	// MOD_WIN.openPath('/bp_manage.html?action=open');
             // });
+
+            if (!BP_SETTINGS.getInited()) {
+                if (!BP_SETTINGS.hasDBPaths()) {
+                    MOD_WIN.openPath('/bp_manage.html');
+                }
+
+                BP_SETTINGS.setInited();
+            }
         }
         catch (e)
         {

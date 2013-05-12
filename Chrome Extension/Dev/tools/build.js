@@ -109,7 +109,7 @@ var src = abs(argv[0]),
        "bp_cs.js"
     ],
     lib_wdl_js = ["bp_build.js", "bp_error.js", "bp_common.js", "bp_cs_plat.stub.js", "bp_w$.js"],
-    release_main_js=["bp_build.js", 'bp_config.js', 'bp_error.js', 'bp_common.js', 'bp_uitraits.js',
+    release_main_js=["bp_build.js", 'bp_config.js', 'bp_error.js', 'bp_common.js', 'bp_settings.js', 'bp_uitraits.js',
                      "bp_main_chrome.js", "bp_cs_chrome.js",
                      "bp_listener.js", "bp_connector.js", "bp_memstore.js", "bp_db_fs.js",
                      "bp_filestore.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js",
