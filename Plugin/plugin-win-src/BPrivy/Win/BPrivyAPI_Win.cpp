@@ -444,14 +444,6 @@ HANDLE HANDLEGuard::OpenFileForAppend(const bfs::path& path, bp::JSObject* inOut
 		0,// Exclusive/Write Lock
 		NULL,
 		OPEN_ALWAYS,
-		// We maybe creating a file here and we prefer to keep it un-hidden unless overridden. Note that,
-		// as per Windows documentation, (on XP and Win 2003) if you specify CREATE_ALWAYS
-		// on an already existing file (even if only for reading) you'll need to supply
-		// FILE_ATTRIBUTE_HIDDEN along with that, otherwise the call will fail with
-		// ERROR_ACCESS_DENIED. This maybe a problem (not sure) if the file is created on - say
-		// Linux or MacOS and won't have the hidden attribute.
-		// Update: Keeping FILE_ATTRIBUTE_HIDDEN anyway. Will use filenames starting
-		// with a dot (.) so that files stay hidden on Linux and OSX.
 		attrib_hidden | FILE_FLAG_WRITE_THROUGH,
 		NULL);
 		
