@@ -95,8 +95,8 @@
         </Feature>
       
       <WixVariable Id="WixUILicenseRtf" Value="${CMAKE_CURRENT_SOURCE_DIR}/Win/WiX/Plugin EULA.rtf" />
-      <WixVariable Id="WixUIDialogBmp" Value="${CMAKE_CURRENT_SOURCE_DIR}/Win/WiX/Webstore Main.493x308.bmp" />
-      <WixVariable Id="WixUIBannerBmp" Value="${CMAKE_CURRENT_SOURCE_DIR}/Win/WiX/K3YSRING2.236x58.bmp" />
+      <WixVariable Id="WixUIDialogBmp" Value="${CMAKE_CURRENT_SOURCE_DIR}/Win/WiX/Webstore Main 493x312.bmp" />
+      <WixVariable Id="WixUIBannerBmp" Value="${CMAKE_CURRENT_SOURCE_DIR}/Win/WiX/Webstore Main 493x58.bmp" />
       <UI>
         <UIRef Id="WixUI_Minimal" />
       </UI>
