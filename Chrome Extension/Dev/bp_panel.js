@@ -159,8 +159,8 @@
             close();
             m_bUserClosed = false;
             var ctx = {
-                it: new ItemIterator(MOD_DB.pRecsMap, true),
-                it2: new ItemIterator(MOD_DB.tRecsMap, true),
+                it: new ItemIterator(MOD_DB.pRecsMap, true, true),
+                it2: new ItemIterator(MOD_DB.tRecsMap, true, true),
                 reload:MOD_PANEL.create, // this function
                 onClosed:onClosed,
                 saveRec: MOD_CS.saveRec,
@@ -172,6 +172,7 @@
                 dbPath:MOD_DB.dbPath,
                 popup:true,
                 loc:MOD_DB.loc,
+                site:MOD_DB.site,
                 openPath: BP_MAIN.MOD_WIN.openPath,
                 off: BP_MAIN.off
             };
@@ -215,7 +216,7 @@
                     var db = resp.db;
                     //BP_ERROR.loginfo("cbackShowPanel@bp_panel.js received DB-Records\n"/* + JSON.stringify(db)*/);
                     try { // failure here shouldn't block rest of the call-flow
-                        MOD_DB.ingest(resp.db, resp.dbInfo, resp.loc);
+                        MOD_DB.ingest(resp.db, resp.dbInfo, resp.loc, resp.site);
                     }
                     catch (err) {
                         BP_ERROR.logwarn(err);

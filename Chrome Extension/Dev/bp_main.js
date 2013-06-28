@@ -280,6 +280,7 @@ var BP_MAIN = (function()
             dbPath : DBFS.getDBPath()
         };
         resp.db = recs;
+        resp.site = MEMSTORE.getSite(loc, dt_pRecord);
         resp.result = true;
         if (callback) {
             callback(resp);

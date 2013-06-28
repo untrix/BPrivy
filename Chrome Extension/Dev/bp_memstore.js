@@ -206,6 +206,7 @@ function BP_GET_MEMSTORE(g)
         DELETE_ACTION_VAL: "D}" // to be used as part of prototype
     });
 
+    // Memstore and Filestore related P-Traits
     function PStoreTraits()
     {
         Object.freeze(Object.defineProperties(this,
@@ -258,6 +259,7 @@ function BP_GET_MEMSTORE(g)
     PStoreTraits.prototype = DEFAULT_TRAITS; // Inherit the rest from DEFAULT_TRAITS
     var PREC_TRAITS = DT_TRAITS.traits[dt_pRecord] = new PStoreTraits();
 
+    // Memstore and Filestore related E-Traits
     function EStoreTraits()
     {
         Object.freeze(Object.defineProperties(this,
@@ -351,6 +353,7 @@ function BP_GET_MEMSTORE(g)
     EStoreTraits.prototype = DEFAULT_TRAITS;// Inherit the rest from DEFAULT_TRAITS
     var EREC_TRAITS = DT_TRAITS.traits[dt_eRecord] = new EStoreTraits();
 
+    // Memstore and Filestore related S-Traits
     function SStoreTraits()
     {
         Object.freeze(Object.defineProperties(this,
@@ -362,7 +365,7 @@ function BP_GET_MEMSTORE(g)
     SStoreTraits.prototype = DEFAULT_TRAITS;// Inherit the rest from DEFAULT_TRAITS
     DT_TRAITS.traits[BP_TRAITS.dt_settings] = new SStoreTraits();
 
-    // ETLD Traits
+    // Memstore and Filestore related ETLD Traits
     DT_TRAITS.traits[BP_TRAITS.dt_etld] = Object.freeze(Object.create(DEFAULT_TRAITS,
     {
         // dict: {value:DICT_TRAITS[BP_TRAITS.dt_etld]},

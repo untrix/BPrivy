@@ -119,14 +119,15 @@ function BP_GET_WDL (g)
     {
         this.clear();
         // property 'readOnly' is enumerable:false, writable:false, configurable:false
-        Object.defineProperty(this, readOnly, {value:readOnly});
+        Object.defineProperty(this, 'readOnly', {value:readOnly}); //enumerable:false, writable:false, configurable:false
+        //Object.defineProperty(this, 'site', {value:undefined, enumerable:true, writable:true, configurable:true});
         if (!readOnly) {
             BP_COMMON.bindProto(this, MiniDB.wProto);
         }
     }
     MiniDB.prototype = Object.freeze(
     {
-        ingest: function(db, dbInfo, loc)
+        ingest: function(db, dbInfo, loc, site)
         {
             if (db)
             {
@@ -142,6 +143,7 @@ function BP_GET_WDL (g)
                     if (dbInfo.dbName) {this.dbName = dbInfo.dbName;}
                     if (dbInfo.dbPath) {this.dbPath = dbInfo.dbPath;}
                 }
+                this.site = site;
             }
             else
             {
@@ -270,7 +272,8 @@ function BP_GET_WDL (g)
         return {
             tag:"div",
             attr:{ id: eid_panelTitleText, title:ctx.dbPath },
-            text:ctx.dbName || "No Keyring loaded"
+            text: ctx.dbName || "No Keyring loaded",
+            children: (ctx.dbName && ctx.site) ? [{tag:'div', text:('('+ctx.site+')'), css:{'font-weight':'normal'}}] : w$undefined
         };
     }
 
@@ -280,7 +283,7 @@ function BP_GET_WDL (g)
             tag:"div",
             attr:{ id: eid_panelTitleText },
             css:{ display: 'block'},
-            text: "Unsaved Passwords"
+            text: "Unsaved Passwords (Verify then Save)"
         };
     }
 
@@ -341,7 +344,7 @@ function BP_GET_WDL (g)
         return {
         cons: NButton,
         html:'<button type="button"></button>',
-        attr:{ class:css_class_nButton},
+        attr:{ class:css_class_nButton, title:'New entry'},
         on:{ click:NButton.prototype.newItem },
         css:{ width:'20px', float:'left' },
             children:[
@@ -603,33 +606,46 @@ function BP_GET_WDL (g)
         cons: VButton,
         html:'<button type="button"></button>',
         css:{ float:'right', width:'20px' },
-        attr:{ title:'View password' },
+        attr:{ title:VButton.prototype.titleView },
         on:{ click:VButton.prototype.toggleView },
         iface:{ field:w$ctx.pwdField },
             children:[
-            {tag:"i",
+            {tag:"i", ref:'icon',
             css:{ 'vertical-align':'middle' },
-            addClass:"icon-eye-open",
-            }]
+            addClass:"icon-eye-open"
+            }],
+        _cull:['icon']
         };
     };
     VButton.prototype = w$defineProto(VButton,
     {
+        titleView: {value:'View password'},
+        titleUnview: {value:'Hide password'},
         viewField: {value: function(ev)
         {
             if (!this.field) {return;}
-            else this.field.view();
+            else {
+                this.field.view();
+                this.icon.removeClass('icon-eye-open');
+                this.icon.addClass('icon-eye-close');
+                this.el.title = this.titleUnview;
+            }
         }},
         unViewField: {value: function(ev)
         {
             if (!this.field) {return;}
-            else this.field.unView();
+            else {
+                this.field.unView();
+                this.icon.removeClass('icon-eye-close');
+                this.icon.addClass('icon-eye-open');
+                this.el.title = this.titleView;
+            }
         }},
         toggleView: {value: function(ev)
         {
             if (!this.field) {return;}
-            if (this.field.viewing) { this.field.unView(); }
-            else {this.field.view();}
+            if (this.field.viewing) { this.unViewField(); }
+            else {this.viewField();}
         }}
     });
 
@@ -641,8 +657,8 @@ function BP_GET_WDL (g)
         var bInp = w$ctx.io_bInp;
         return {
          cons: TButton,
-         html:'<button type="button">',
-         attr:{ class:css_class_tButton, title:'Edit/Submit' },
+         html:'<button type="submit">',
+         attr:{ class:css_class_tButton, title:(bInp ? 'Submit' : 'Edit') },
          on:{ click:TButton.prototype.toggleIO2 },
          css:{ width:'20px' },
             children:[
@@ -662,10 +678,12 @@ function BP_GET_WDL (g)
             if (bInp) {
                 this.icon.removeClass('icon-pencil');
                 this.icon.addClass('icon-ok');
+                this.el.title = 'Submit';
             }
             else {
                 this.icon.removeClass('icon-ok');
                 this.icon.addClass('icon-pencil');
+                this.el.title = 'Edit';
             }
         }}
     });
@@ -673,7 +691,7 @@ function BP_GET_WDL (g)
     function IItemP () {}
     IItemP.wdt = function (w$ctx)
     {
-        var u, p,
+        var u, p, disableU,
         ioItem = w$ctx.ioItem,
         pRec = ioItem.rec,
         isTRec = ioItem.isTRec;
@@ -687,28 +705,35 @@ function BP_GET_WDL (g)
             pRec = newPAction(ioItem.loc);
             ioItem.rec = pRec; // Save this back to ioItem.
         }*/
+
+        disableU = Boolean(u&&(!isTRec));
+
         return {
         cons: IItemP,
-        tag:'div', addClass:css_class_ioFields,
-        attr:{ 'data-untrix':true },
+        tag:'form',
+        addClass:css_class_ioFields,
+        attr:{ 'data-untrix':true, action:"#" },
         ctx:{ w$:{iItem:'w$el'} },
-        //on:{ 'submit':ioItem.toggleIO },
-        iface:{ ioItem:ioItem },
+        on:{ 'submit':IItemP.prototype.onSubmit },
+        save:[ 'ioItem' ],
             children: [
             {tag:'input',
-             attr:{ type:'text', value:u, placeholder:'Username', 'data-untrix':true },
-             prop:{ disabled:(u&&(!isTRec))?true:false },
+             attr:{ type:'text', value:u, placeholder:'Username', 'data-untrix':true, tabindex:1 },
+             prop:{ disabled:disableU, required:true, autofocus:(!disableU) },
              addClass:css_class_field+css_class_userIn,
              ctx:{ w$:{ u:'w$el' } },
              _iface:{ value: u }
             },
-            {tag:'input', ref:'pwdField',
-             attr:{ type:'password', value:p, placeholder:'Password', 'data-untrix':true },
+            {tag:'input', ref:'pwdField', save:['ioItem'],
+             attr:{ type:'password', value:p, placeholder:'Password', 'data-untrix':true, tabindex:2 },
+             prop:{ required:true, autofocus:disableU },
              addClass:css_class_field+css_class_passIn,
              ctx:{ w$:{p:'w$el'} },
+             //on:{ 'change':function(){this.ioItem.toggleIO();} },
              _iface:{ value: p },
             },
-            VButton.wdt
+            VButton.wdt,
+            TButton.wdt // submit button
             ],
         _iface:{ w$ctx:{ u:'u', p:'p' } },
         //_final:{show:true}
@@ -716,6 +741,11 @@ function BP_GET_WDL (g)
     };
     IItemP.prototype = w$defineProto (IItemP,
     {
+        onSubmit: {value: function(e){
+            this.ioItem.toggleIO();
+            e.stopPropagation();
+            e.preventDefault();
+        }},
         checkInput: {value: function()
         {
             var ioItem = this.ioItem,
@@ -794,6 +824,7 @@ function BP_GET_WDL (g)
             tag:'div',
             attr:{ 'data-untrix':true },
             addClass:css_class_ioFields,
+            on:{ dblclick:OItemP.prototype.onDblClick },
             ctx:{ w$:{ oItem:'w$el' } },
                 children:[
                 {tag:'data',
@@ -810,14 +841,25 @@ function BP_GET_WDL (g)
                  ctx:{ w$:{p:'w$el' } },
                  _iface:{ fn:fn_pass, value:p }
                 },
-                VButton.wdt
+                VButton.wdt,
+                TButton.wdt
                 ],
-            _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } },
+            _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } }
             //_final:{show:true}
             };
         }
     };
-    OItemP.prototype = w$defineProto (OItemP, {});
+    OItemP.prototype = w$defineProto (OItemP,
+    {
+        onDblClick: {value: function(e)
+        {
+            //BP_ERROR.logdebug("OITemP.onDblClick invoked");
+            this.ioItem.toggleIO();
+            e.stopPropagation();
+            e.preventDefault();
+        }}
+
+    });
 
     function IoItem () {}
     IoItem.wdi = function (w$ctx)
@@ -843,7 +885,7 @@ function BP_GET_WDL (g)
         on: {mousedown:stopPropagation}, // Needed to allow dragging.
             children:[
             FButton.wdt,
-            TButton.wdt,
+            //TButton.wdt,
             bInp ? IItemP.wdt : OItemP.wdt,
             DButton.wdt
             ],
@@ -863,6 +905,7 @@ function BP_GET_WDL (g)
                 panel = this.panel;
             if (iI)
             { // Create output element
+                ctx.io_bInp = false;
                 res = iI.checkInput();
                 if (res===undefined)
                 {
@@ -896,6 +939,7 @@ function BP_GET_WDL (g)
             }
             else if (oI)
             { // Create input element, destroy output element
+                ctx.io_bInp = true;
                 this.iItem = w$exec(IItemP.wdt, ctx);
                 BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                 if (this.iItem) {

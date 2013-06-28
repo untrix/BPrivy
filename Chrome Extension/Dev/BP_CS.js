@@ -286,6 +286,18 @@
                 return (this.btns.indexOf(el) !== -1);
             }
         };
+        FormInfo.prototype.filter = function(els, fn)
+        {
+            var rels = [];
+            iterArray2(els, this, function(el, fn2)
+            {
+                if (!this.hasEl(el, fn2)) {
+                    rels.push(el);
+                }
+            }, fn);
+
+            return rels;
+        };
         FormInfo.prototype.isContainerOf = function (el, fn)
         {
             if (!this.form) { return false; }
@@ -1390,7 +1402,7 @@
                 $el1 = $(cntxt.elements).filter(function(){return this.webkitMatchesSelector(g_uSel);}).not('[data-untrix]').filter(':visible');
             }
             else {
-                $el1 = $(g_uSel, $(cntxt)).not('data-untrix').filter(':visible');
+                $el1 = $(g_uSel, $(cntxt)).not('[data-untrix]').filter(':visible');
             }
 
             if ((!fInfo) || fInfo.isEmpty() || (stage<2)) {
@@ -1428,6 +1440,13 @@
                     $el = $el1;
                 }
             }
+
+            // if (m_info.k.fmInfo) {
+                // $el = $(m_info.k.fmInfo.filter($el, fn_pass));
+            // }
+            // if (m_info.k.fmInfo2) {
+                // $el = $(m_info.k.fmInfo2.filter($el, fn_pass));
+            // }
 
             if (!fInfo) {
                 fInfo = new FormInfo(cntxt);
@@ -1508,6 +1527,12 @@
                         // we'll just have to include them now.
                     }
                 }
+            }
+
+            // input[type=password] fields may actually be overridden to be userid fields by the
+            // knowledge-db. e.g. ingplans.com. Therefore check in the knowledge fmInfo.
+            if (m_info.k.fmInfo) {
+                $candids = $(m_info.k.fmInfo.filter($candids, fn_userid));
             }
 
             if (!fInfo) {
@@ -2158,7 +2183,8 @@
     {
         var g_bInited;
 
-        /** Intelligently returns true if the input element is a userid/username input field */
+        /** Probably not being used.
+         * Intelligently returns true if the input element is a userid/username input field */
         function isUserid(el)
          {
              var tagName = el.localName, rval = false;
@@ -2174,13 +2200,15 @@
              return rval;
          }
 
-        /** Intelligently returns true if the element is a password field */
+        /** Probably not being used.
+         * Intelligently returns true if the element is a password field */
         function isPassword (el)
          {
              if (el.localName !== 'input') {return false;}
             return (el.type === "password") && (!el.dataset.untrix);
          }
 
+        /** Probably not being used. */
         function isField (ft, el)
         {
             switch (ft)
@@ -2196,13 +2224,17 @@
             var dtMatched = false, isBPDrag = false,
             items = e.dataTransfer.items,
             w$el=w$get(e.target),
-            n, len;
+            n, len, iType;
             for (n=0, len=items.length; n<len; n++)
             {
                 if (items[n] && items[n].type === w$el.ct) {
                     dtMatched = true; isBPDrag = true;
                     //console.info("Matched BP Drag w/ Field !");
                     break;
+                }
+                // Handle the case when userid field is type=password (ingplans.com)
+                else if (items[n] && (items[n].type === CT_BP_USERID) && (w$el.ct === CT_BP_PASS)) {
+                    dtMatched = true; isBPDrag = true;
                 }
                 else if ((!isBPDrag) && items[n] && items[n].type === CT_BP_FN) {
                     isBPDrag = true;
@@ -2264,18 +2296,29 @@
                     // Tell browser to set vlaue of 'current drag operation' to 'copy'
                     e.dataTransfer.dropEffect = 'copy';
 
-                    //BP_ERROR.logdebug("dropHandler:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
-                    // Save an EAction.
-                    var eRec = newEAction(e.target.ownerDocument.location,
-                                          Date.now(),
-                                          e.dataTransfer.getData(CT_BP_FN), // fieldName
-                                          el.tagName,
-                                          el.id,
-                                          el.name,
-                                          el.type,
-                                          ((form&&form.getAttribute('id'))? form.getAttribute('id') : undefined),
-                                          ((form&&form.getAttribute('name'))? form.getAttribute('name'):undefined));
-                    MOD_CS.saveRec(eRec, dt_eRecord);
+                    // Save and E-Rec if the ctrl or alt key was pressed
+                    if (e.ctrlKey || e.altKey)
+                    {
+                        //BP_ERROR.logdebug("dropHandler:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+                        // Save an EAction.
+                        var eRec = newEAction(e.target.ownerDocument.location,
+                                              Date.now(),
+                                              e.dataTransfer.getData(CT_BP_FN), // fieldName
+                                              el.tagName,
+                                              el.id,
+                                              el.name,
+                                              el.type,
+                                              ((form&&form.getAttribute('id'))? form.getAttribute('id') : undefined),
+                                              ((form&&form.getAttribute('name'))? form.getAttribute('name'):undefined));
+
+                        // Generate a delete action if the alt key is pressed
+                        if (e.altKey) {
+                            MOD_CS.delRec(eRec, dt_eRecord);
+                        }
+                        else {
+                            MOD_CS.saveRec(eRec, dt_eRecord);
+                        }
+                    }
 
                     data = e.dataTransfer.getData(CT_TEXT_PLAIN);
                     if (data)
@@ -2393,8 +2436,8 @@
             close();
             m_bUserClosed = false;
             var ctx = {
-                it: new ItemIterator(MOD_DB.pRecsMap, true),
-                it2: new ItemIterator(MOD_DB.tRecsMap, true),
+                it: new ItemIterator(MOD_DB.pRecsMap, true, true),
+                it2: new ItemIterator(MOD_DB.tRecsMap, true, true),
                 reload:MOD_PANEL.create, // this function
                 onClosed:onClosed,
                 saveRec: MOD_CS.saveRec,
@@ -2403,6 +2446,7 @@
                 autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined),
                 dbName:MOD_DB.dbName,
                 dbPath:MOD_DB.dbPath,
+                site:MOD_DB.site,
                 openPath: BP_CONNECT.openPath,
                 off: BP_CONNECT.off
                 // onBlur: close
@@ -2452,7 +2496,7 @@
                     var db = resp.db;
                     BP_ERROR.loginfo("onGotRecs@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
                     try { // failure here shouldn't block rest of the call-flow
-                        MOD_DB.ingest(resp.db, resp.dbInfo);
+                        MOD_DB.ingest(resp.db, resp.dbInfo, resp.loc, resp.site);
                     }
                     catch (err) {
                         BP_ERROR.logwarn(err);

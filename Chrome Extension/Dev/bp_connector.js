@@ -187,7 +187,7 @@ function BP_GET_CONNECT(g)
             // ingest thousands of records (ETLD has about 7K records)
             l: {value: newL(loc, dt), enumerable: true},
             // Type of action. Can have one of the following enumerated values:
-            // 1. undefined: insert action
+            // 1. undefined: insert/assert action
             // 2. 'd': delete action
             // 3. 'pd': Permanent delete (empty recycle-bin) action.
             a: {value:type, enumerable: true}

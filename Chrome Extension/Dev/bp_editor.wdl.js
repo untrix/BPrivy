@@ -415,7 +415,7 @@ function BP_GET_EDITOR(g)
             TButton.wdt,
             {tag:'input',
              attr:{ type:'text', value:u, placeholder:'Username', name:'u' },
-             prop:{ required:true /*,disabled:(u?true:false)*/},
+             prop:{ required:true, autofocus:true },
              //addClass:css_class_field+css_class_userIn,
              addClass: "input-large",
              ctx:{ w$:{u:'w$el' } },

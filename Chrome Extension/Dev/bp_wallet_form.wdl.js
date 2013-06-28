@@ -316,31 +316,29 @@ function BP_GET_WALLET_FORM(g)
             {tag:'label', _text:'  Remember Keyring Locations',
              css:{ 'text-align':'left' },
                 children:[
-                {tag:'input', attr:{ type:'radio', tabindex:-1, name:'dontSaveLocation' },
+                {tag:'input', attr:{ type:'checkbox', tabindex:-1, name:'doSaveLocation' },
                  prop:{ checked:Boolean(!SETTINGS.dontSaveLocation()) },
                  save:['walletForm'],
                  on:{'change': function(e) {
                         SETTINGS.dontSaveLocation(!this.el.checked);
-                        if (!this.el.checked) {
-                            SETTINGS.clear();
-                            this.walletForm.clearDBPaths();
-                        }
+                        // if (!this.el.checked) {
+                            // SETTINGS.clear();
+                            // this.walletForm.clearDBPaths();
+                        // }
                       }}
                 },
                 ]
             },
-            {tag:'label', _text:'  Forget Wallet Locations',
+            {tag:'label', _text:'  Erase Keyring Locations',
              css:{ 'text-align':'left' },
                 children:[
-                {tag:'input', attr:{ type:'radio', tabindex:-1, name:'dontSaveLocation' },
-                 prop:{ checked:Boolean(SETTINGS.dontSaveLocation()) },
+                {tag:'i', attr:{ type:'button', tabindex:-1, name:'eraseLocations' },
                  save:['walletForm'],
-                 on:{'change': function(e) {
-                        SETTINGS.dontSaveLocation(this.el.checked);
-                        if (this.el.checked) {
-                            SETTINGS.clear();
-                            this.walletForm.clearDBPaths();
-                        }
+                 addClass:'icon-trash',
+                 css: {cursor:'pointer'},
+                 on:{'click': function(e) {
+                        SETTINGS.clear();
+                        this.walletForm.clearDBPaths();
                       }}
                 },
                 ]
