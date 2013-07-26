@@ -224,13 +224,13 @@ var BP_BOOT = (function()
 
         if (elName !== 'iframe')
         {
-            chrome.extension.sendRequest({cm:'cm_onFocus', isTopLevel:g_bTopLevel, elName:elName, frameUrl:document.location.href});
+            chrome.runtime.sendMessage({cm:'cm_onFocus', isTopLevel:g_bTopLevel, elName:elName, frameUrl:document.location.href});
         }
     }
 
     function onUnload(ev)
     {
-        chrome.extension.sendRequest({cm:'cm_onUnload', isTopLevel:g_bTopLevel, frameUrl:document.location.href});
+        chrome.runtime.sendMessage({cm:'cm_onUnload', isTopLevel:g_bTopLevel, frameUrl:document.location.href});
     }
 
     return Object.freeze(

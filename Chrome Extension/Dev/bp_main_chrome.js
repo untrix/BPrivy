@@ -93,6 +93,9 @@ function BP_GET_PLAT(gg)
     {
         try {
             chrome.browserAction.setBadgeText({text:details.text || "", tabId:details.tabId});
+            if (details.color) {
+                chrome.browserAction.setBadgeBackgroundColor({color:details.color, tabId:details.tabId});
+            }
         } catch (e) {}
         try {
             chrome.browserAction.setTitle({title:details.title || "", tabId:details.tabId});
@@ -101,7 +104,19 @@ function BP_GET_PLAT(gg)
 
     function removeBadge(details)
     {
-        showBadge({tabId:details.tabId, title:"", color:[0,0,0,0]});
+        details = details || {};
+        var text = details.text;
+        if (!text) {
+            showBadge({tabId:details.tabId, title:"", color:[0,0,0,0]});
+        }
+        else {
+            chrome.browserAction.getBadgeText({tabId:details.tabId}, function(txt)
+            {
+                if (txt === text) {
+                    showBadge({tabId:details.tabId, title:"", color:[0,0,0,0]});
+                }
+            });
+        }
     }
 
     function sendMessage(tabId, frameUrl, req, callback)
@@ -130,10 +145,20 @@ function BP_GET_PLAT(gg)
         chrome.management.uninstallSelf({showConfirmDialog:false});
     }
 
+    function setButton(path)
+    {
+        chrome.browserAction.setIcon({'path':path});
+    }
+
+    function getTabUrl(tabId, func)
+    {
+        chrome.tabs.get(tabId, func);
+    }
+
     var module =
     {
-        registerMsgListener: function(foo) {chrome.extension.onRequest.addListener(foo);},
-        sendRequestToTab: function(tabID, obj) {chrome.tabs.sendRequest(tabID, obj);},
+        registerMsgListener: function(foo) {chrome.runtime.onMessage.addListener(foo);},
+        sendRequestToTab: function(tabID, obj) {chrome.tabs.sendMessage(tabID, obj);},
         init: init,
         bpClick: bpClick,
         showPageAction: function(tabId) {chrome.pageAction.show(tabId);},
@@ -143,7 +168,9 @@ function BP_GET_PLAT(gg)
         sendMessage: sendMessage,
         reload: reload,
         closeAll: closeAll,
-        uninstall: uninstall
+        uninstall: uninstall,
+        setButton: setButton,
+        getTabUrl: getTabUrl
     };
 
     Object.seal(module);

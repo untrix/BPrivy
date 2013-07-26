@@ -1,6 +1,6 @@
 {
   "name": "K3YRING [beta]",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "manifest_version": 2,
   "minimum_chrome_version": "22",
   "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
@@ -38,7 +38,7 @@
     }
   ],
   "browser_action": {
-    "default_icon": "icons/icon48.png",
+    "default_icon": "icons/greyIcon48.png",
     "default_popup": "bp_panel.html"
   },
   "options_page": "bp_manage.html",

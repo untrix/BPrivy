@@ -35,7 +35,6 @@ function BP_GET_FILESTORE(g)
         stripQuotes = IMPORT(m.stripQuotes),
         iterObj     = IMPORT(m.iterObj),
         iterArray2  = IMPORT(m.iterArray2);
-    /** @import-module-begin **/
     /** @import-module-begin UI Traits **/
     m = g.BP_TRAITS;
     var dt_eRecord = IMPORT(m.dt_eRecord),
@@ -49,15 +48,19 @@ function BP_GET_FILESTORE(g)
     /** @import-module-begin **/
     m = g.BP_DBFS;
     var newDBMap = IMPORT(m.newDBMap),
-        DB_FS = IMPORT(m.DB_FS);
+        DB_FS = IMPORT(m.DB_FS),
+        DB_EVENTS = IMPORT(m.EVENTS);
+    /** @import-module-begin **/
+    var BP_LISTENER = IMPORT(g.BP_LISTENER);
     /** @import-module-end **/    m = null;
 
-    /** @constant ID of BP-Plugin HtmlEmbedElement*/
+    /** @constant ID of BP-Plugin HtmlEmbedElement */
     var eid_bp = eid_pfx + "bpplugin",
         /** Record Separator in the files */
         rec_sep = '\r\n\r\n,',
         dtl_null = null,
-        this_null = null;
+        this_null = null,
+        EVENTS = BP_LISTENER.newListeners();
 
     var UC_TRAITS = Object.freeze(
     {
@@ -105,6 +108,7 @@ function BP_GET_FILESTORE(g)
         }
         MEMSTORE.clear(); // unload the previous DB.
         DB_FS.setDBPath(null);
+        EVENTS.dispatch('unloadDB', {'dbPath':(dbPath||'')});
     }
 
     /**
@@ -356,7 +360,13 @@ function BP_GET_FILESTORE(g)
 
         ensureKeyLoaded(dbPath, keyPath, k);
 
-        loadDBFiles(dbPath, dbStats, exclude);
+        try {
+            loadDBFiles(dbPath, dbStats, exclude);
+        }
+        catch (e) {
+            MEMSTORE.clear(); // unload the previous DB.
+        }
+
         memStats = MEMSTORE.getStats();
         DB_FS.setDBPath(dbPath, dbStats);
 
@@ -391,7 +401,11 @@ function BP_GET_FILESTORE(g)
       		// DB_FS.setDBPath(null);
       	// }
 
-        return loadDBInt(dbPath, undefined, undefined, keyPath, k);
+        dbPath = loadDBInt(dbPath, undefined, undefined, keyPath, k);
+        if (dbPath) {
+            EVENTS.dispatch('loadDB', {'dbPath':dbPath});
+        }
+        return dbPath;
     }
 
     /**
@@ -525,9 +539,9 @@ function BP_GET_FILESTORE(g)
             dnIt = MEMSTORE.newDNodeIterator(dt);
             buf = new RecsBuf();
 
-            // TODO: turning off doGC for collecting data for a rarely occuring issue. Turn it
+            // TODO: turning off doGC for collecting data for a rarely occurring issue. Turn it
             // back on afterwards.
-            dnIt.walk(writeAction, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted}, {doGC:false});
+            dnIt.walk(writeAction, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted}, {doGC:true});
 
             if (buf.length)
             {
@@ -542,6 +556,22 @@ function BP_GET_FILESTORE(g)
         // We have to reload again just to populate accurate mem-stats :(
         loadDBInt(dbPath);
         return dbPath;    }
+
+    function compactDBEx()
+    {
+        try {
+            compactDB();
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+        }
+        catch (exp) {
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+            throw exp;
+        }
+    }
 
     /**
      * Import records from files supplied in dbStats of categories specified in cats
@@ -630,7 +660,19 @@ function BP_GET_FILESTORE(g)
 
     function cleanLoadDB()
     {
-        cleanLoadInternal(DB_FS.getDBPath());
+        try {
+            cleanLoadInternal(DB_FS.getDBPath());
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+        }
+        catch (exp)
+        {
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+            throw exp;
+        }
     }
 
     function deleteDB(db)
@@ -748,17 +790,52 @@ function BP_GET_FILESTORE(g)
 
     function mergeInDB(db2, keyPath, k)
     {
-        return mergeMain(db2, true, keyPath, k);
+        var rVal;
+        try {
+            rVal = mergeMain(db2, true, keyPath, k);
+        }
+        catch (exp) {
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+            throw exp;
+        }
+        return rVal;
+        if (!DB_FS.getDBPath()) {
+            EVENTS.dispatch('unloadDB', {'dbPath':''});
+        }
     }
 
     function mergeOutDB(db2, keyPath, k)
     {
-        return mergeMain(db2, false, keyPath, k);
+        var rVal;
+        try {
+            rVal = mergeMain(db2, false, keyPath, k);
+        }
+        catch (exp) {
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+            throw exp;
+        }
+
+        return rVal;
     }
 
     function mergeDB(db2, keyPath, k)
     {
-        return mergeMain(db2, undefined, keyPath, k);
+        var rVal;
+        try {
+            rVal = mergeMain(db2, undefined, keyPath, k);
+        }
+        catch (exp) {
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+            throw exp;
+        }
+
+        return rVal;
     }
 
     function writeCSV(actn, ctx)
@@ -883,6 +960,9 @@ function BP_GET_FILESTORE(g)
 
             unloadDB(); //MEMSTORE.clear(); // unload the previous DB.
             DB_FS.setDBPath(dbPath); // The DB is deemed loaded (though it is empty)
+            if (dbPath) {
+                EVENTS.dispatch('createDB', {'dbPath':dbPath});
+            }
         }
         catch (exp) {
             o = {};
@@ -1132,20 +1212,22 @@ function BP_GET_FILESTORE(g)
     var iface = {};
     Object.defineProperties(iface,
     {
-        importCSV: {value: importCSV},
-        exportCSV: {value: exportCSV},
-        CSVFile: {value: CSVFile},
-        createDB: {value: createDB},
-        loadDB: {value: loadDB},
+        importCSV:  {value: importCSV},
+        exportCSV:  {value: exportCSV},
+        CSVFile:    {value: CSVFile},
+        createDB:   {value: createDB},
+        loadDB:     {value: loadDB},
         unloadDB:   {value: unloadDB},
-        deleteDB: {value: deleteDB},
+        deleteDB:   {value: deleteDB},
         cleanLoadDB:{value: cleanLoadDB},
-        compactDB:  {value: compactDB},
+        compactDB:  {value: compactDBEx},
         mergeDB:    {value: mergeDB},
         mergeInDB:  {value: mergeInDB},
         mergeOutDB: {value: mergeOutDB},
         insertRec:  {value: insertRec},
-        UC_TRAITS: {value: UC_TRAITS}
+        UC_TRAITS:  {value: UC_TRAITS},
+        EVENTS:     {value: EVENTS},
+        DB_EVENTS:  {value: DB_EVENTS}
     });
     Object.freeze(iface);
 

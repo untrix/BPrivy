@@ -347,7 +347,7 @@
                         // }
                         if (MOD_PANEL.isAutoFillable() !== Boolean(resp2.autoFillable)) {
                             MOD_PANEL.putAutoFillable(Boolean(resp2.autoFillable));
-                            bRepaint = true;;
+                            bRepaint = true;
                         }
 
                         if (!bReload && bRepaint) {

@@ -44,12 +44,12 @@ function BP_GET_CS_PLAT(g)
                     warn(rsp.err);
                 }
             }
-            chrome.extension.sendRequest(o, rcvAck);
+            chrome.runtime.sendMessage(o, rcvAck);
         },
 
         rpcToMothership: function (req, respCallback)
         {
-            chrome.extension.sendRequest(req, function (resp)
+            chrome.runtime.sendMessage(req, function (resp)
             {
                 respCallback(resp); // respCallback exists in function closure
             });
@@ -57,7 +57,7 @@ function BP_GET_CS_PLAT(g)
 
         registerMsgListener: function(foo)
         {
-            chrome.extension.onMessage.addListener(function(req, sender, callback)
+            chrome.runtime.onMessage.addListener(function(req, sender, callback)
             {
                 if (BP_BOOT.amDestFrame(req))
                 {

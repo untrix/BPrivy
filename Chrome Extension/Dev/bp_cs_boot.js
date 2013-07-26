@@ -174,7 +174,7 @@
 
     chrome.extension.onMessage.addListener(onMessage);
     setupCommand(document, onClickComm);
-    chrome.extension.sendRequest({cm:'cm_bootLoaded', loc:document.location}, function(resp)
+    chrome.runtime.sendMessage({cm:'cm_bootLoaded', loc:document.location}, function(resp)
     {
         // if (resp.result && resp.cm && (resp.cm === 'cm_loadDll')) {
             // loadDll();
