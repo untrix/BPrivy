@@ -1383,7 +1383,8 @@
         // element is found. This is useful in cases where there was only one text field
         // besides the password field in a form (e.g. type===email) in which case, that
         // is probably the username field.
-        // @param stage Unused for now.
+        // @param stage Stage of execution. 1 or 2. In stage 1 strict filters are used,
+        //      in stage 2, lax filters are used.
         // IMPORTANT: Results must be sorted in tree-order.
         //
         //function uCandidates(cntxt, passEl, form)
@@ -1913,7 +1914,7 @@
         }
 
         // Scans the document to heuristically detect signin/signup forms as needed.
-        // ctxEl argument binds the extent of the search to a single element. Used for
+        // ctxEl argument bounds the extent of the search to a single element. Used for
         // incremental scans when an element is dynamically added into a page.
         function scrape(ctxEl)
         {

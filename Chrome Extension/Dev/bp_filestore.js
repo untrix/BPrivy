@@ -571,6 +571,8 @@ function BP_GET_FILESTORE(g)
             }
             throw exp;
         }
+
+        return DB_FS.getDBPath();
     }
 
     /**
