@@ -516,7 +516,7 @@ function BP_GET_EDITOR(g)
                 //autoFill ? FButton.wdt : w$undefined,
                 TButton.wdt,
                 {tag:'span',
-                 attr:{ draggable:true },
+                 attr:{ draggable:'true' },
                  //addClass:css_class_field+css_class_userOut,
                  addClass: "input-large uneditable-input com-untrix-oItem",
                  text:u,
@@ -524,7 +524,7 @@ function BP_GET_EDITOR(g)
                  _iface:{ fn:fn_userid, value:u }
                 },
                 {tag:'span', ref:'pwdField',
-                 attr:{ draggable:true },
+                 attr:{ draggable:'true' },
                  //addClass:css_class_field+css_class_passOut,
                  addClass: "input-large uneditable-input com-untrix-oItem",
                  text:'*****',
@@ -855,7 +855,7 @@ function BP_GET_EDITOR(g)
             if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
                 return;
             }
-            //BP_ERROR.loginfo("DragStartHandler entered");
+            BP_ERROR.loginfo("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
             var data = this.value;
             if (this.fn === fn_pass) {
@@ -865,7 +865,6 @@ function BP_GET_EDITOR(g)
             e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
             e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
-            e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon48.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //BP_ERROR.logdebug("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
             //return true;
@@ -875,7 +874,7 @@ function BP_GET_EDITOR(g)
             if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
                 return;
             }
-            //BP_ERROR.loginfo("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            BP_ERROR.loginfo("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
             e.stopImmediatePropagation();
         }},
@@ -884,7 +883,7 @@ function BP_GET_EDITOR(g)
             if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
                 return;
             }
-            //BP_ERROR.loginfo("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            BP_ERROR.loginfo("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //return true;
         }},

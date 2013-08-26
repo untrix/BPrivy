@@ -1,5 +1,4 @@
 /**
-
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
  * Copyright (c) 2012-2013. All Rights Reserved, Untrix Inc
@@ -112,8 +111,8 @@ var src = abs(argv[0]),
     release_main_js=["bp_build.js", 'bp_config.js', 'bp_error.js', 'bp_common.js', 'bp_settings.js', 'bp_uitraits.js',
                      "bp_main_chrome.js", "bp_cs_chrome.js",
                      "bp_listener.js", "bp_connector.js", "bp_memstore.js", "bp_db_fs.js",
-                     "bp_filestore.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js",
-                     "bp_wallet_form.wdl.js", "bp_plugin_installer.wdl.js", "bp_editor.wdl.js", "bp_ntfncntr.js"],
+                     "bp_filestore.js", "bp_ntfncntr.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js",
+                     "bp_wallet_form.wdl.js", "bp_plugin_installer.wdl.js", "bp_editor.wdl.js"],
     release_manage_js=["bp_build.js", "bp_cs_chrome.js", "bp_manage.js"],
     release_dialog_js=["bp_build.js", "bp_cs_chrome.js", "bp_dialog.js"],
     release_license_js=["bp_build.js", "bp_cs_chrome.js", "bp_license.js"],

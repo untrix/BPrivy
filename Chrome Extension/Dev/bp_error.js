@@ -19,7 +19,8 @@ function BP_GET_ERROR(g)
         _log = g_console.log.bind(g_console),
         debug = RELEASE ? NO_OP : (g_console.debug.bind(g_console) || _log),
         info = RELEASE ? NO_OP : (g_console.info.bind(g_console) || debug),
-        warn = g_console.error.bind(g_console) || _log;
+        warn = g_console.error.bind(g_console) || _log,
+        BP_NTFN_CNTR = g.BP_NTFN_CNTR;//Maybe undefined
 
    /** @begin-class-def BPError
     o: {//Object returned by the plugin
@@ -281,14 +282,34 @@ function BP_GET_ERROR(g)
         g_win.alert(be.message || "Something went wrong :(");
     }
 
+    function success (str)
+    {
+        if (BP_NTFN_CNTR) {
+            return BP_NTFN_CNTR.success(str);
+        }
+        else {
+            alert(str);
+        }
+    }
+
     function confirm (str)
     {
-        return g_win.confirm(str);
+        if (BP_NTFN_CNTR) {
+            return BP_NTFN_CNTR.confirm(str);
+        }
+        else {
+            return g_win.confirm(str);
+        }
     }
 
     function prompt (msg)
     {
-        return g_win.prompt(msg);
+        if (BP_NTFN_CNTR) {
+            return BP_NTFN_CNTR.prompt(str);
+        }
+        else {
+            return g_win.prompt(msg);
+        }
     }
 
     function logdebug (arg)
@@ -325,7 +346,7 @@ function BP_GET_ERROR(g)
         Activity: Activity,
         alert: alert,
         warn: alert,
-        success: alert,
+        success: success,
         confirm: confirm,
         prompt: prompt,
         log: loginfo,

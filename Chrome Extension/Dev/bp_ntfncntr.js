@@ -19,7 +19,8 @@
  */
 function BP_GET_NTNF_CNTR(g)
 {   'use strict';
-    var window = null, document = null, console = null;
+    var window = null, document = null, console = null,
+        g_win = g.g_win;
 
     /** @import-module-begin */
     var BP_ERROR    = IMPORT(g.BP_ERROR),
@@ -80,7 +81,7 @@ function BP_GET_NTNF_CNTR(g)
         g_notification.ondisplay = function(ev)
         {   // close after a few seconds
             if (timeout) {
-                g.g_win.setTimeout(close, 30000);
+                g.g_win.setTimeout(close, timeout*1000);
             }
         };
         g_notification.onclose = onClose;
@@ -200,6 +201,21 @@ function BP_GET_NTNF_CNTR(g)
         });
     }
 
+    function alert (str)
+    {
+        g_win.alert(str || "Something went wrong :(");
+    }
+
+    function confirm (str)
+    {
+        return g_win.confirm(str);
+    }
+
+    function prompt (msg)
+    {
+        return g_win.prompt(msg);
+    }
+
     function init()
     {
         MAIN_EVENTS = IMPORT(BP_MAIN.EVENTS); // Delayed bind.
@@ -216,11 +232,16 @@ function BP_GET_NTNF_CNTR(g)
         DB_EVENTS.listen('unloadDB', new BP_LISTENER.CallbackInfo(onUnloadDB));
         MAIN_EVENTS.listen('unloadDB', new BP_LISTENER.CallbackInfo(onUnloadDB));
         //MAIN_EVENTS.listen('bp_on_focus', new BP_LISTENER.CallbackInfo(onFocus));
+        BPError.pop();
     }
 
     return Object.freeze(
     {
         init: init,
-        notify: notify
+        notify: notify,
+        // User Prompts emitted from the background window so as to keep Google Chrome happy
+        success: alert,
+        confirm: confirm,
+        prompt: prompt
     });
 }

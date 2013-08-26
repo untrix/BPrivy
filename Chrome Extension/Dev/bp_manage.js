@@ -21,10 +21,11 @@ var BP_MANAGE = (function ()
         g_doc = document,
         g_win = window;
     g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
+    // Reference existing mods
     g.MAIN_PAGE = g.BP_CS_PLAT.getBackgroundPage();
     g.BP_CONFIG = g.MAIN_PAGE.BP_CONFIG;
-    //var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
     g.BP_MEMSTORE = g.MAIN_PAGE.BP_MAIN.g.BP_MEMSTORE;
+    g.BP_NTFN_CNTR= g.MAIN_PAGE.BP_MAIN.g.BP_NTFN_CNTR;
     // Construct MODS
     g.BP_ERROR = g.MAIN_PAGE.BP_GET_ERROR(g);
     g.BP_COMMON = g.MAIN_PAGE.BP_GET_COMMON(g);
@@ -367,7 +368,6 @@ var BP_MANAGE = (function ()
         var queryObj = BP_COMMON.getQueryObj(g.g_win.location),
             actionOpt = queryObj['action'],
             showOpt = queryObj['show'];
-
 
         BP_CONNECT.getDBPath(function(resp)
         {

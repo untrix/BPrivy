@@ -23,7 +23,7 @@
 	</linkedResources>
 	<filteredResources>
 		<filter>
-			<id>1363253541957</id>
+			<id>1377472012774</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -32,7 +32,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541959</id>
+			<id>1377472012789</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -41,7 +41,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541962</id>
+			<id>1377472012791</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -50,7 +50,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541965</id>
+			<id>1377472012793</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -59,7 +59,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541967</id>
+			<id>1377472012795</id>
 			<name>Dev</name>
 			<type>9</type>
 			<matcher>
@@ -68,7 +68,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541970</id>
+			<id>1377472012797</id>
 			<name>Dev</name>
 			<type>21</type>
 			<matcher>
@@ -77,7 +77,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541973</id>
+			<id>1377472012798</id>
 			<name>Dev</name>
 			<type>21</type>
 			<matcher>
@@ -86,7 +86,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541975</id>
+			<id>1377472012800</id>
 			<name>Dev</name>
 			<type>5</type>
 			<matcher>
@@ -95,7 +95,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541978</id>
+			<id>1377472012802</id>
 			<name>Dev</name>
 			<type>6</type>
 			<matcher>
@@ -104,7 +104,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541980</id>
+			<id>1377472012804</id>
 			<name>Dev</name>
 			<type>9</type>
 			<matcher>
@@ -113,7 +113,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541983</id>
+			<id>1377472012805</id>
 			<name>Dev</name>
 			<type>6</type>
 			<matcher>
@@ -122,12 +122,21 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1363253541985</id>
+			<id>1377472012807</id>
 			<name>Dev</name>
 			<type>6</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-*.out.js</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1377472012809</id>
+			<name>Dev</name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.lib.js</arguments>
 			</matcher>
 		</filter>
 		<filter>

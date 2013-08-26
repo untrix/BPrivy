@@ -2249,7 +2249,7 @@
         function dragoverHandler(e)
         {
             // console.info("dragoverHandler(type = " + e.type + ") invoked ! effectAllowed/dropEffect = " +
-                            // e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //                e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
 
             var r = matchDTwField(e);
             if (r.isBPDrag)

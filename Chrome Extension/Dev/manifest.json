@@ -1,9 +1,9 @@
 {
   "name": "K3YRING [beta]",
-  "version": "1.0.9",
+  "version": "1.0.11",
   "manifest_version": 2,
   "minimum_chrome_version": "22",
-  "content_security_policy": "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
+  "content_security_policy": "default-src 'self'; script-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'",
   "description":"Password Manager: Auto fill, auto save. Store locally. Synchronize and share without Internet. 2-Factor security.",
   "icons": {
          "19": "icons/icon19.png",
@@ -46,6 +46,7 @@
   "web_accessible_resources": [
     "icons/icon128.png",
     "icons/icon48.png",
+    "icons/greyIcon48.png",
     "icons/icon16.png",
     "tp/bootstrap/img/glyphicons-halflings.png",
     "tp/bootstrap/img/glyphicons-halflings-white.png",

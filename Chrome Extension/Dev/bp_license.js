@@ -17,8 +17,11 @@
     var g = {g_win:window, g_console:console, g_chrome:chrome, $:$, jQuery:jQuery},
         g_doc = document;
     g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
+    // Reference existing mods
     g.MAIN_PAGE = g.BP_CS_PLAT.getBackgroundPage();
     g.BP_CONFIG = g.MAIN_PAGE.BP_CONFIG;
+    g.BP_NTFN_CNTR= g.MAIN_PAGE.BP_MAIN.g.BP_NTFN_CNTR;
+    // Instantiate mods
     g.BP_ERROR = g.MAIN_PAGE.BP_GET_ERROR(g);
     g.BP_COMMON = g.MAIN_PAGE.BP_GET_COMMON(g);
     g.BP_PLAT = g.MAIN_PAGE.BP_GET_PLAT(g);

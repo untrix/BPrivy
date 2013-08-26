@@ -30,6 +30,7 @@
     if (false) {
         g.BP_ERROR = BP_GET_ERROR(g);
         g.BP_COMMON = BP_GET_COMMON(g);
+        g.BP_NTFN_CNTR = g.BP_MAIN.g.BP_NTFN_CNTR;
         g.BP_TRAITS = BP_GET_TRAITS(g);
         g.BP_CONNECT = BP_GET_CONNECT(g);
         g.BP_W$ = BP_GET_W$(g);
@@ -37,13 +38,16 @@
         g.BP_MEMSTORE = g.BP_MAIN.g.BP_MEMSTORE;
     }
     else {
+        // Reference existing modules
         g.BP_ERROR = g.BP_MAIN.g.BP_ERROR;
         g.BP_COMMON = g.BP_MAIN.g.BP_COMMON;
+        g.BP_NTFN_CNTR = g.BP_MAIN.g.BP_NTFN_CNTR;
         g.BP_TRAITS = g.BP_MAIN.g.BP_TRAITS;
         g.BP_CONNECT = g.BP_MAIN.g.BP_CONNECT;
+        g.BP_MEMSTORE = g.BP_MAIN.g.BP_MEMSTORE;
+        // Instantiate modules
         g.BP_W$ = BP_CS_PLAT.getBackgroundPage().BP_GET_W$(g);
         g.BP_WDL = BP_CS_PLAT.getBackgroundPage().BP_GET_WDL(g);
-        g.BP_MEMSTORE = g.BP_MAIN.g.BP_MEMSTORE;
     }
 
     var m;

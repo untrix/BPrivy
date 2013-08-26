@@ -63,7 +63,7 @@ function BP_GET_WDL (g)
         CT_BP_USERID = IMPORT(m.CT_BP_USERID),
         CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN),
         CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX);
-        /** @import-module-end **/    m = null;
+    /** @import-module-end **/    m = null;
 
     /** @globals-begin */
     // Names used in the code. A mapping is being defined here because
@@ -712,20 +712,20 @@ function BP_GET_WDL (g)
         cons: IItemP,
         tag:'form',
         addClass:css_class_ioFields,
-        attr:{ 'data-untrix':true, action:"#" },
+        attr:{ 'data-untrix':'true', action:"#" },
         ctx:{ w$:{iItem:'w$el'} },
         on:{ 'submit':IItemP.prototype.onSubmit },
         save:[ 'ioItem' ],
             children: [
             {tag:'input',
-             attr:{ type:'text', value:u, placeholder:'Username', 'data-untrix':true, tabindex:1 },
+             attr:{ type:'text', value:u, placeholder:'Username', 'data-untrix':'true', tabindex:1 },
              prop:{ disabled:disableU, required:true, autofocus:(!disableU) },
              addClass:css_class_field+css_class_userIn,
              ctx:{ w$:{ u:'w$el' } },
              _iface:{ value: u }
             },
             {tag:'input', ref:'pwdField', save:['ioItem'],
-             attr:{ type:'password', value:p, placeholder:'Password', 'data-untrix':true, tabindex:2 },
+             attr:{ type:'password', value:p, placeholder:'Password', 'data-untrix':'true', tabindex:2 },
              prop:{ required:true, autofocus:disableU },
              addClass:css_class_field+css_class_passIn,
              ctx:{ w$:{p:'w$el'} },
@@ -822,20 +822,20 @@ function BP_GET_WDL (g)
             return {
             cons: OItemP,
             tag:'div',
-            attr:{ 'data-untrix':true },
+            attr:{ 'data-untrix':'true' },
             addClass:css_class_ioFields,
             on:{ dblclick:OItemP.prototype.onDblClick },
             ctx:{ w$:{ oItem:'w$el' } },
                 children:[
                 {tag:'data',
-                 attr:{ draggable:true, 'data-untrix':true },
+                 attr:{ draggable:'true', 'data-untrix':'true' },
                  addClass:css_class_field+css_class_userOut,
                  text:u,
                  ctx:{ w$:{ u:'w$el' } },
                  _iface:{ fn:fn_userid, value:u }
                 },
                 {tag:'data', ref:'pwdField',
-                 attr:{ draggable:true, 'data-untrix':true },
+                 attr:{ draggable:'true', 'data-untrix':'true' },
                  addClass:css_class_field+css_class_passOut,
                  text: p ? '*****' : '',
                  ctx:{ w$:{p:'w$el' } },
@@ -878,7 +878,7 @@ function BP_GET_WDL (g)
         return {
         cons: IoItem,
         tag:'div',
-        attr:{ class:css_class_li, 'data-untrix':true },
+        attr:{ class:css_class_li, 'data-untrix':'true' },
         ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.prototype.toggleIO },
         iface: { rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec,
                  isNewItem:isNewItem, itemList:itemList },
@@ -1038,7 +1038,6 @@ function BP_GET_WDL (g)
             e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
             e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
-            e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon48.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //BP_ERROR.logdebug("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
             //return true;
@@ -1089,7 +1088,7 @@ function BP_GET_WDL (g)
         return {
         cons:Panel,
         tag:"article",
-        attr:{ id:eid_panel, 'data-untrix':true/*, tabindex:-1*/ },
+        attr:{ id:eid_panel, 'data-untrix':'true'/*, tabindex:-1*/ },
         css: popup ? {border:"none"} : { position:'fixed', top:'0px', right:'0px', padding:'4px', 'border-radius':'4px'},
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:loc },

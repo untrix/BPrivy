@@ -45,6 +45,8 @@ function BP_GET_WALLET_FORM(g)
     /** @import-module-begin */
     var BP_DBFS = IMPORT(g.BP_DBFS);
     var DB_FS = IMPORT(BP_DBFS.DB_FS);
+    /** @import-module-begin */
+    var BP_NTFN_CNTR = IMPORT(g.BP_NTFN_CNTR);
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
