@@ -185,7 +185,7 @@ function BP_GET_NTNF_CNTR(g)
 
     function onLoadDB(ev)
     {
-        BP_PLAT.setButton("icons/icon48.png")
+        BP_PLAT.setButton("icons/icon48.png");
         BP_PLAT.removeBadge();
         BP_WIN.iterTabs(function(tabInfo){
             BP_PLAT.removeBadge({tabId:tabInfo.tabId});
@@ -240,6 +240,7 @@ function BP_GET_NTNF_CNTR(g)
         init: init,
         notify: notify,
         // User Prompts emitted from the background window so as to keep Google Chrome happy
+        alert: alert,
         success: alert,
         confirm: confirm,
         prompt: prompt

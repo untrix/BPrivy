@@ -517,6 +517,7 @@ function BP_GET_EDITOR(g)
                 TButton.wdt,
                 {tag:'span',
                  attr:{ draggable:'true' },
+                 //css:{'-webkit-user-drag': 'element'},
                  //addClass:css_class_field+css_class_userOut,
                  addClass: "input-large uneditable-input com-untrix-oItem",
                  text:u,
@@ -525,6 +526,7 @@ function BP_GET_EDITOR(g)
                 },
                 {tag:'span', ref:'pwdField',
                  attr:{ draggable:'true' },
+                 //css:{'-webkit-user-drag': 'element'},
                  //addClass:css_class_field+css_class_passOut,
                  addClass: "input-large uneditable-input com-untrix-oItem",
                  text:'*****',
@@ -555,10 +557,30 @@ function BP_GET_EDITOR(g)
     /**
      * Settings/Options page link
      */
-    /*function LinkButton(){}
+    /* LinkButton is being disabled because I am not sure what
+     * URL to use. This is so because typically the login pages
+     * from where the credentials (and URL) are capatured has a
+     * URL with a lot of session information embedded in it, in
+     * the form of url params normally. Hence including those
+     * URL params in the URL link would be a bad idea. However,
+     * in some cases url-params maybe essential in order to land
+     * on the correct page. Secondly, the scheme is important and we're
+     * not capturing the scheme currently. Thirdly, many sites
+     * use (potentially temporary) hostnames like 'www2' for load-balancing.
+     * Including such domain names in the link is a bad idea since
+     * the hosts can sometimes disappear altogether resulting in the
+     * browser throwing an error, or we would end up circumventing
+     * their load-balancing scheme. Hence, at this time it is not
+     * clear what URL to save and what to use in the link. This will
+     * require more work (perhaps detection of a login URL).
+     */
+    /*
+    function LinkButton(){}
     LinkButton.wdt = function (w$ctx)
     {
         var url = w$ctx.ioItem ? w$ctx.ioItem.url : undefined;
+
+        if (!url) { return w$undefined; }
 
         return {
         tag: 'a',
@@ -580,15 +602,16 @@ function BP_GET_EDITOR(g)
             rec = acns? acns.curr: undefined,
             loc = w$ctx.loc,
             panel = w$ctx.panel,
-            bInp = w$ctx.io_bInp,
-            url = (rec && rec.l) ? MOD_CONNECT.L.prototype.toURL.apply(rec.l) : undefined;
+            bInp = w$ctx.io_bInp;
+            //url = (rec && rec.l) ? MOD_CONNECT.L.prototype.toURL.apply(rec.l) : undefined;
+            //url = (rec && rec.l) ? MOD_CONNECT.L.prototype.getURL.apply(rec.l) : undefined;
             //autoFill = panel.autoFill;
         return {
         cons: IoItem,
         tag:'div',
         //addClass: "span8",
         ctx:{ w$:{ ioItem:'w$el' } },
-        iface: { 'acns':acns, 'rec':rec, 'loc':loc, 'url':url, 'panel':panel, 'bInp':bInp },
+        iface: { 'acns':acns, 'rec':rec, 'loc':loc, 'panel':panel, 'bInp':bInp /*,'url':url*/ },
         on: {mousedown:stopPropagation},
             children:[
             //LinkButton.wdt,
@@ -874,7 +897,7 @@ function BP_GET_EDITOR(g)
             if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
                 return;
             }
-            BP_ERROR.loginfo("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //BP_ERROR.loginfo("handleDrag invoked. effectAllowed/dropEffect =" + e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             //if (e.dataTransfer.effectAllowed !== 'copy') {e.preventDefault();} // Someone has intercepted our drag operation.
             e.stopImmediatePropagation();
         }},

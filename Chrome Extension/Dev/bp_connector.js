@@ -126,8 +126,7 @@ function BP_GET_CONNECT(g)
                 value: (loc.hostname || undefined)},
             P: {enumerable:true,
                 value: (DICT_TRAITS[dt].url_path && loc.pathname && (loc.pathname !== "/"))?loc.pathname:undefined}
-            //U: {enumerable:true,
-                //value: loc.href}
+            //_U: {enumerable:true, value: loc.href}
         });
         Object.seal(this);
     }
@@ -141,17 +140,18 @@ function BP_GET_CONNECT(g)
      */
     L.prototype.toLoc = function ()
     {
-        if (this.U) {
-            return BP_COMMON.parseURL(this.U);
+        if (this._U) {
+            return BP_COMMON.parseURL(this._U);
         }
         else {
             return {hostname:this.H, pathname:(this.P||"/")};
         }
     };
+    //L.prototype.getURL = function () { return this._U; };
     L.prototype.toURL = function ()
     {
         var url;
-        if (this.U) {return this.U;}
+        if (this._U) {return this._U;}
 
         url = "http://";
         if (this.H) {

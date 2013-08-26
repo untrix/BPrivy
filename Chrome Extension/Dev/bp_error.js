@@ -277,9 +277,17 @@ function BP_GET_ERROR(g)
 
     function alert (arg)
     {
-        var be = new BPError(arg);
+        var be = new BPError(arg),
+            str = be.message || "Something went wrong :(";
+
         logwarn(be.toString());
-        g_win.alert(be.message || "Something went wrong :(");
+
+        if (BP_NTFN_CNTR) {
+            BP_NTFN_CNTR.alert(str);
+        }
+        else {
+            g_win.alert(str);
+        }
     }
 
     function success (str)
@@ -288,7 +296,7 @@ function BP_GET_ERROR(g)
             return BP_NTFN_CNTR.success(str);
         }
         else {
-            alert(str);
+            g_win.alert(str);
         }
     }
 

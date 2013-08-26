@@ -1028,7 +1028,7 @@ function BP_GET_WDL (g)
         handleDragStart: {value: function handleDragStart (e)
         {   // CAUTION: 'this' is bound to e.target
 
-            //BP_ERROR.loginfo("DragStartHandler entered");
+            BP_ERROR.loginfo("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
             var data = this.value;
             if (this.fn === fn_pass) {
@@ -1050,7 +1050,7 @@ function BP_GET_WDL (g)
         }},
         handleDragEnd: {value: function handleDragEnd(e)
         {   // CAUTION: 'this' is bound to e.target
-            //BP_ERROR.loginfo("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            BP_ERROR.loginfo("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //return true;
         }},

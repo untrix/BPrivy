@@ -150,7 +150,7 @@ function BP_GET_WALLET_FORM(g)
         // The following is the structure of stored dbNames.
         // 1. A property in localStorage with key = dbNames. Its value is
         // a JSON.stringify'd object whose keys are db names and values are the DB-Paths.
-        // 2. Another propety in localStorage with key = dbKeys. Its value
+        // 2. Another property in localStorage with key = dbKeys. Its value
         //    is a JSON.stringify'd object whose keys are db paths and values are
         //    the key-file paths (if the key-file was stored outside the DB).
         // 3. Another property in localStorage is called lastDBName that carries name of
@@ -246,6 +246,8 @@ function BP_GET_WALLET_FORM(g)
                     localStorage['db.masterkey.' + dbPath] = keyPath;
                     mod.getKeyPaths()[dbPath] = keyPath;
                 }
+
+                return dbName;
             },
             setDB :  function (dbName, dbPath, keyPath)
             {
@@ -1346,13 +1348,14 @@ function BP_GET_WALLET_FORM(g)
                         self.fieldsetChooseKey.val(),
                         self.fieldsetPassword.val(), function (resp)
                 {
+                    var dbName;
                     spinner.stop();
                     if (resp.result === true) {
-                        SETTINGS.setPaths(null,
+                        dbName = SETTINGS.setPaths(null,
                                                self.fieldsetChooseDB.val(),
                                                self.fieldsetChooseKey.val());
                         self.updateDash(resp);
-                        BP_ERROR.success('Merged with Keyring at ' + self.fieldsetChooseDB.val());
+                        BP_ERROR.success('Synchronized with Keyring ' + dbName);
                         modalDialog.destroy();
                     }
                     else {
@@ -1366,13 +1369,14 @@ function BP_GET_WALLET_FORM(g)
                         self.fieldsetChooseKey.val(),
                         self.fieldsetPassword.val(), function (resp)
                 {
+                    var dbName;
                     spinner.stop();
                     if (resp.result === true) {
-                        SETTINGS.setPaths(null,
+                        dbName = SETTINGS.setPaths(null,
                                                self.fieldsetChooseDB.val(),
                                                self.fieldsetChooseKey.val());
                         self.updateDash(resp);
-                        BP_ERROR.success('Merged In Keyring at ' + self.fieldsetChooseDB.val());
+                        BP_ERROR.success('Imported Keyring ' + dbName);
                         modalDialog.destroy();
                     }
                     else {
@@ -1386,14 +1390,14 @@ function BP_GET_WALLET_FORM(g)
                         self.fieldsetChooseKey.val(),
                         self.fieldsetPassword.val(), function (resp)
                 {
+                    var dbName;
                     spinner.stop();
                     if (resp.result === true) {
-                        SETTINGS.setPaths(null,
+                        dbName = SETTINGS.setPaths(null,
                                           self.fieldsetChooseDB.val(),
                                           self.fieldsetChooseKey.val());
                         //self.updateDash(resp);
-                        BP_ERROR.success('Merged out to Keyring at ' +
-                                         self.fieldsetChooseDB.val());
+                        BP_ERROR.success('Exported to Keyring ' + dbName);
                         modalDialog.destroy();
                     }
                     else {
