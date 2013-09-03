@@ -13,149 +13,7 @@
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true,
   regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true */
 
-/**
- * @ModuleBegin NTNF_CNTR
- * This module manages end-user notifications UI.
- */
-function BP_GET_NTNF_CNTR(g)
-{   'use strict';
-    var window = null, document = null, console = null;
-
-    /** @import-module-begin */
-    var BP_ERROR    = IMPORT(g.BP_ERROR),
-        BPError     = IMPORT(BP_ERROR.BPError);
-    var BP_COMMON   = IMPORT(g.BP_COMMON);
-    var MEMSTORE    = IMPORT(g.BP_MEMSTORE);
-    var BP_LISTENER = IMPORT(g.BP_LISTENER);
-    var BP_CONNECT  = IMPORT(g.BP_CONNECT),
-        dt_pRecord  = IMPORT(BP_CONNECT.dt_pRecord);
-    var BP_PLAT     = IMPORT(g.BP_PLAT);
-    var BP_CS_PLAT	= IMPORT(g.BP_CS_PLAT);
-    var MAIN_EVENTS  = IMPORT_LATER(); // delayed import at init time.
-
-    /** @import-module-end **/
-
-    /** @globals-begin */
-    var g_notification;
-    /** @globals-end **/
-
-    function onClose(ev)
-    {
-        g_notification = null;
-    }
-
-	function close()
-	{
-		if (g_notification) {
-			g_notification.cancel();
-			g_notification = null;
-		}
-	}
-
-    /*function create()
-    {
-        g_notification = BP_PLAT.notifications.createHTMLNotification(
-          'bp_notification.html'  // html url - can be relative
-        );
-        g_notification.onerror = onClose;
-        g_notification.onclose = onClose;
-        g_notification.onclick = onClose;
-        g_notification.show();
-    }*/
-
-    function notify(title, text, cbackFunc)
-    {
-    	close();
-
-        g_notification = BP_PLAT.notifications.createNotification(
-          BP_CS_PLAT.getURL('icons/icon48.png'), // ICON URL
-          title || "",
-          text || ""
-        );
-        g_notification.ondisplay = function(ev)
-        {	// close after a few seconds
-        	g.g_win.setTimeout(close, 10000);
-        };
-        g_notification.onclose = onClose;
-        g_notification.onclick = function(ev) {
-        	try {
-        		if (cbackFunc) { cbackFunc(ev); }
-        		close();
-        	}
-        	catch (e) {
-        		BP_ERROR.logwarn(e);
-        		close();
-        	}
-        };
-        g_notification.show();
-    }
-
-    function onChange(ev)
-    {
-        /*if (!g_notification) {
-            if (ev.detail.drec && ev.detail.drec.actn && ev.detail.drec.actn.a !== 'd') {
-                create();
-            }
-        }*/
-    }
-
-    function onMainEvent(ev)
-    {
-        var eventType = ev.type,
-            detail = ev.detail;
-
-        switch(eventType)
-        {
-            case 'bp_boot_loaded':
-                if (!detail.loc.protocol || (detail.loc.protocol.indexOf('http')!==0)) {break;}
-                if (MEMSTORE.numTRecs(detail.loc, true)) {
-                    BP_PLAT.showBadge({tabId:detail.tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
-                }
-                break;
-            case 'bp_saved_temp':
-                if (MEMSTORE.numTRecs(detail.loc, true)) {
-                    BP_PLAT.showBadge({tabId:detail.tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
-                }
-                else {
-                    BP_PLAT.removeBadge({tabId:detail.tabId});
-                }
-                break;
-        }
-    }
-
-    // is chrome specific.
-    function onTabUpdated( tabId, changeInfo, tab )
-    {
-        if (changeInfo.url || (changeInfo.status==='loading')) {
-            //BP_ERROR.logdebug('onTabUpdated@MOD_WIN: tabId = ' + tabId + ' url = ' + changeInfo.url);
-            // if the tab has navigated to another page, then delete all previous
-            // data.
-            var loc = BP_COMMON.parseURL(tab.url);
-            if (loc && MEMSTORE.numTRecs(loc, true)) {
-                    BP_PLAT.showBadge({tabId:tabId, title:"You have unsaved passwords. Click here to see them.", text:'save'});
-                }
-        }
-    }
-
-    function init()
-    {
-        MAIN_EVENTS = IMPORT(BP_MAIN.EVENTS); // Delayed bind.
-
-        BPError.push('InitNotifications');
-        // var scope = new BP_LISTENER.Scope('temp_' + dt_pRecord, dt_pRecord);
-        // var cback = new BP_LISTENER.CallbackInfo(onChange);
-        //MEMSTORE.Event.listen('bp_change', scope, cback);
-        chrome.tabs.onUpdated.addListener(onTabUpdated);
-        //MAIN_EVENTS.listen('bp_boot_loaded', new BP_LISTENER.CallbackInfo(onMainEvent));
-        MAIN_EVENTS.listen('bp_saved_temp', new BP_LISTENER.CallbackInfo(onMainEvent));
-    }
-
-    return Object.freeze(
-    {
-        init: init,
-        notify: notify
-    });
-}
+/** @globals-begin */
 var BP_PLUGIN;
 /** @globals-end */
 
@@ -174,6 +32,7 @@ var BP_MAIN = (function()
     g.BP_CONFIG = BP_CONFIG;
     g.BP_ERROR = BP_GET_ERROR(g);
     g.BP_COMMON = BP_GET_COMMON(g);
+    g.BP_SETTINGS = BP_GET_SETTINGS(g);
     g.BP_TRAITS = BP_GET_TRAITS(g);
     g.BP_PLAT = BP_GET_PLAT(g);
     g.BP_LISTENER = BP_GET_LISTENER(g);
@@ -201,12 +60,12 @@ var BP_MAIN = (function()
     var BP_COMMON = IMPORT(g.BP_COMMON);
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;
-    var BP_CONNECT = IMPORT(g.BP_CONNECT);
-    var cm_getRecs = IMPORT(m.cm_getRecs);
-    var cm_loadDB = IMPORT(m.cm_loadDB);
-    var cm_mergeInDB = IMPORT(m.cm_mergeInDB);
-    var cm_createDB = IMPORT(m.cm_createDB);
-    var cm_getDBPath = IMPORT(m.cm_getDBPath);
+    var BP_CONNECT = IMPORT(g.BP_CONNECT),
+        cm_getRecs = IMPORT(m.cm_getRecs),
+        cm_loadDB = IMPORT(m.cm_loadDB),
+        cm_mergeInDB = IMPORT(m.cm_mergeInDB),
+        cm_createDB = IMPORT(m.cm_createDB),
+        cm_getDBPath = IMPORT(m.cm_getDBPath);
     /** @import-module-begin MemStore */
     m = g.BP_MEMSTORE;
     var MEMSTORE = IMPORT(m),
@@ -220,10 +79,11 @@ var BP_MAIN = (function()
     /** @import-module-begin */
     var DBFS = IMPORT(g.BP_DBFS);
     var BP_LISTENER = IMPORT(g.BP_LISTENER);
-    var BP_NTFN_CNTR = IMPORT(g.BP_NTFN_CNTR);
+    var BP_NTFN_CNTR = IMPORT(g.BP_NTFN_CNTR),
+        BP_SETTINGS = IMPORT(g.BP_SETTINGS);
     /** @import-module-end **/    m = null;
 
-    var MOD_WIN,    // defined later.
+    var MOD_WIN,    // defined further down
         EVENTS = BP_LISTENER.newListeners(),
         g_forms = {}; // Form submissions to watch for
 
@@ -272,12 +132,18 @@ var BP_MAIN = (function()
     function getRecs (loc, callback)
     {
         var recs, resp={loc:loc};
-        recs = MEMSTORE.getRecs(loc);
+
         resp.dbInfo = {
             dbName : DBFS.getDBName(),
             dbPath : DBFS.getDBPath()
         };
+
+        if (resp.dbInfo.dbPath) {
+            recs = MEMSTORE.getRecs(loc);
+        }
+
         resp.db = recs;
+        resp.site = MEMSTORE.getSite(loc, dt_pRecord);
         resp.result = true;
         if (callback) {
             callback(resp);
@@ -351,7 +217,7 @@ var BP_MAIN = (function()
             //delete g_forms[details.url];
         }
         // else {
-            // console.log("onBefReq: " + details.url);
+            // BP_ERROR.logdebug("onBefReq: " + details.url);
         // }
     }
 
@@ -383,23 +249,24 @@ var BP_MAIN = (function()
                 case BP_CONNECT.cm_saveRec:
                     BPError.push("SaveRecord" + rq.dt);
                     bSaveRec = true;
+                    // In this case we assume that sender.tab will be present
                     saveRecord(rq.rec, rq.dt, funcSendResponse, rq.dontGet, sender.tab.id);
                     break;
                 case BP_CONNECT.cm_tempRec:
                     BPError.push("SaveTempRecord" + rq.dt);
+                    // In this case we assume that sender.tab will be present
                     saveTempRec(rq.rec, rq.dt, funcSendResponse, rq.dontGet, sender.tab.id);
-
                     break;
                 case 'cm_bootLoaded':
                     BPError.push("CSBootLoaded");
-                    //BP_PLAT.showPageAction(sender.tab.id);
                     //funcSendResponse({result:true, cm:((MEMSTORE.numTRecs(rq.loc, true)) ? 'cm_loadDll' : undefined) });
                     funcSendResponse({result:true});
-                    EVENTS.dispatch('bp_boot_loaded', {tabId:sender.tab.id, loc:rq.loc});
+                    if (sender.tab) {
+                        EVENTS.dispatch('bp_boot_loaded', {tabId:sender.tab.id, loc:rq.loc});
+                    }
                     break;
                 case cm_getRecs:
                     BPError.push("GetRecs");
-                    //chrome.pageAction.show(sender.tab.id);
                     funcSendResponse(getRecs(rq.loc));
                     break;
                 case cm_loadDB:
@@ -482,14 +349,14 @@ var BP_MAIN = (function()
                     break;
                 case "form":
                     BPError.push("FormSubmit");
-                    console.log("Form Submitted: " + JSON.stringify(rq.form));
+                    BP_ERROR.logdebug("Form Submitted: " + JSON.stringify(rq.form));
                     try
                     {
                         // Needed because the page would've reloaded by now and therefore
                         // we'll get a invalid-port exception.
                         funcSendResponse({result:true});
                     }
-                    catch (err) {BP_ERROR.log(err);}
+                    catch (err) {BP_ERROR.logwarn(err);}
                     break;
                 // case "watchF":
                     // BPError.push("WatchForm");
@@ -498,21 +365,26 @@ var BP_MAIN = (function()
                     // break;
                 case 'cm_onFocus':
                     BPError.push("cmOnFocus");
-                    rq.tabId = sender.tab.id;
-                    EVENTS.dispatch('bp_on_focus', rq);
+                    if (sender.tab) {
+                        rq.tabId = sender.tab.id;
+                        EVENTS.dispatch('bp_on_focus', rq);
+                    }
                     //BP_ERROR.logdebug('onRequest@bp_main.js received ' + cm + ": " + JSON.stringify(rq));
                     break;
                 case 'cm_onUnload':
                     BPError.push("cmOnUnload");
-                    rq.tabId = sender.tab.id;
-                    EVENTS.dispatch('bp_on_unload', rq);
+                    if (sender.tab) {
+                        rq.tabId = sender.tab.id;
+                        EVENTS.dispatch('bp_on_unload', rq);
+                    }
                     //BP_ERROR.logdebug('onRequest@bp_main.js received ' + cm + ": " + JSON.stringify(rq));
                     break;
                 case 'cm_autoFillable':
                 	BPError.push("cmAutoFillable");
-                    rq.tabId = sender.tab.id;
-                    EVENTS.dispatch('bp_autoFillable', rq);
-                    //BPError.push("cmOnFocus");
+                	if (sender.tab) {
+                	   rq.tabId = sender.tab.id;
+                	   EVENTS.dispatch('bp_autoFillable', rq);
+                	}
                     //BP_ERROR.logdebug('onRequest@bp_main.js received ' + cm + ": " + JSON.stringify(rq));
                     break;
                 case 'cm_openPath':
@@ -528,6 +400,7 @@ var BP_MAIN = (function()
             if (bSaveRec) {FILE_STORE.unloadDB();} // Seems that we lost DB-connection
             var resp = makeDashResp(false);
             resp.err = new BPError(err);
+            BPError.atvt = null;
             funcSendResponse(resp);
         }
     }
@@ -542,12 +415,18 @@ var BP_MAIN = (function()
 
         function makeTabInfo(tabId)
         {
+            var url;
             if (!tabId) {return;}
             if (!g_tabs[tabId]) {
                 g_tabs[tabId] = {
+                    'tabId': tabId,
                     lastFocused: undefined,
                     autoFillable: {}
                 };
+                BP_PLAT.getTabUrl(tabId, function(tab)
+                {
+                    g_tabs[tabId].site = MEMSTORE.getSite(BP_COMMON.parseURL(tab.url), dt_pRecord);
+                });
             }
             return g_tabs[tabId];
         }
@@ -579,9 +458,12 @@ var BP_MAIN = (function()
 
         function onFocus(ev)
         {
-            var tabInfo = makeTabInfo(ev.detail.tabId);
-            //BP_ERROR.logdebug('onFocus@MOD_WIN: ' + JSON.stringify(ev.detail));
-            if (tabInfo) {tabInfo.lastFocused = ev.detail;}
+            var tabInfo;
+            if (ev.detail.tabId) {
+                tabInfo = makeTabInfo(ev.detail.tabId);
+                //BP_ERROR.logdebug('onFocus@MOD_WIN: ' + JSON.stringify(ev.detail));
+                if (tabInfo) {tabInfo.lastFocused = ev.detail;}
+            }
         }
 
         function onUnload(ev)
@@ -658,6 +540,28 @@ var BP_MAIN = (function()
             });
         }
 
+        /**
+         * Iterates tabInfo objects calling 'func' for each. Like Array.forEach, but
+         * with different arguments. 'this' is bound to the tabInfo object being
+         * iterated. func should have a signature func(tabInfo, [ctx])
+         */
+        function iterTabs(func, site, ctx)
+        {
+            var keys = Object.keys(g_tabs),
+            i = keys.length-1,
+            id, tab;
+            for (i; i>=0; i--)
+            {
+                id = keys[i];
+                tab = g_tabs[id];
+
+                if (site && (site !== tab.site)) { continue; }
+                else if (tab && (func.apply(tab, [tab]) === true)) {
+                    break;
+                }
+            }
+        }
+
         chrome.tabs.onUpdated.addListener(onTabUpdated);
         chrome.tabs.onRemoved.addListener(onTabRemoved);        MAIN_EVENTS.listen('bp_on_focus', new BP_LISTENER.CallbackInfo(onFocus));
         MAIN_EVENTS.listen('bp_on_unload', new BP_LISTENER.CallbackInfo(onUnload));
@@ -669,7 +573,8 @@ var BP_MAIN = (function()
             clickResp: clickResp,
             getLastFocused: getLastFocused,
             getAutoFillable: getAutoFillable,
-            openPath: openPath
+            openPath: openPath,
+            iterTabs: iterTabs
         });
     }());
 
@@ -701,31 +606,97 @@ var BP_MAIN = (function()
                cmp(ver1[2], ver2[2]) || cmp(ver1[3], ver2[3]);
     }
 
+    function makeVerStr(arr)
+    {
+        var i, n, str="";
+        if (arr && (typeof arr === "object") && (arr.constructor===Array))
+        {
+            n = (arr.length < 4) ? arr.length : 4;
+            for (i=0; i<n; i++) {
+                if (i>0) str += ".";
+                str += arr[i];
+            }
+        }
+        else {
+            str = "0";
+        }
+
+        return str;
+    }
+
+    function isWindows()
+    {
+        return (g_win.navigator.appVersion.indexOf("Win")!=-1);
+    }
+
+    function eulaAccepted()
+    {
+        var eula = localStorage['l.v'] || "0",
+            tpl  = localStorage['tpl.v'] || "0",
+            eulaCurr= BP_CONFIG.eulaVer,
+            tplCurr = BP_CONFIG.tplVer;
+
+        // Check EULA accepted.
+        if ((cmpVersion(eula,eulaCurr) < 0) || (cmpVersion(tpl,tplCurr) < 0)) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+    function acceptEula()
+    {
+        localStorage['l.v'] = makeVerStr(BP_CONFIG.eulaVer);
+        localStorage['tpl.v'] = makeVerStr(BP_CONFIG.tplVer);
+    }
+
     function init()
     {
-        var dbPath;
+        var dbPath, pluginLoaded;
 
+        /**
+         * Returns true if plugin is setup correctly.
+         */
         function loadPlugin ()
         {
-          BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');
-          if (!BP_PLUGIN.getpid) {
-              MOD_WIN.openPath('/bp_dialog.html?action=installPlugin');
-              BP_ERROR.logwarn("Plugin Not Loaded");
-          }
-          else {
-            if (cmpVersion(BP_PLUGIN.version, BP_CONFIG.pluginVer) < 0) {
-                MOD_WIN.openPath('/bp_dialog.html?action=upgradePlugin');
-                BP_ERROR.logwarn("Plugin Needs Upgrade");
+            var retVal = false;
+            BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');
+            if (!BP_MAIN.isWindows()) {
+                //MOD_WIN.openPath('/bp_dialog.html?action=unsupportedOS');
+                BP_ERROR.logwarn("Unsupported Operating System");
+                retVal = false;
+            }
+            else if (!BP_PLUGIN.getpid) {
+                MOD_WIN.openPath('/bp_dialog.html?action=installPlugin');
+                BP_ERROR.logwarn("Plugin Not Loaded");
+                retVal = false;
             }
             else {
-                BP_ERROR.logdebug("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+                if (cmpVersion(BP_PLUGIN.version, BP_CONFIG.pluginVer) < 0) {
+                    MOD_WIN.openPath('/bp_dialog.html?action=upgradePlugin');
+                    BP_ERROR.logwarn("Plugin Needs Upgrade");
+                    retVal = false;
+                }
+                else {
+                    BP_ERROR.logdebug("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+                    retVal = true;
+                }
             }
-          }
-          //BP_PLUGIN.clearCryptCtx();
+            //BP_PLUGIN.clearCryptCtx();
+            return retVal;
+        }
+
+        function checkEula()
+        {
+            if (!eulaAccepted()) {
+                g_win.open('bp_license.html', 'bp_license', null, false);
+                throw new BPError("EULA not accepted yet");
+            }
         }
 
         try
         {
+            checkEula(); // throws.
             BP_PLAT.init(g_doc, MOD_WIN);
             registerMsgListener(onRequest);
             MEMSTORE.loadETLD();
@@ -733,11 +704,38 @@ var BP_MAIN = (function()
             // Initialize notifications only after all modules
             // that it listens to have been inited.
             BP_NTFN_CNTR.init();
-            loadPlugin();
-            // BP_NTFN_CNTR.notify('', 'Click here to open a keyring', function()
-            // {
-            	// MOD_WIN.openPath('/bp_manage.html?action=open');
-            // });
+            pluginLoaded = loadPlugin();
+
+            if (pluginLoaded)
+            {
+                if (!BP_SETTINGS.getInited())
+                {
+                    // Display a splash-screen for all users that just installed the extension.
+                    if (!BP_SETTINGS.hasDBPaths()) {
+                        MOD_WIN.openPath('/bp_manage.html');
+                    }
+                    else {
+                        BP_NTFN_CNTR.notify('', 'Click here to load a Keyring', function()
+                        {
+                            MOD_WIN.openPath('/bp_manage.html?action=open');
+                        }, 0);
+                    }
+
+                    BP_SETTINGS.setInited();
+                }
+                else if (BP_SETTINGS.hasDBPaths()) {
+                    BP_NTFN_CNTR.notify('', 'Click here to load a Keyring', function()
+                    {
+                        MOD_WIN.openPath('/bp_manage.html?action=open');
+                    }, 0);
+                }
+                else {
+                    BP_NTFN_CNTR.notify('', 'Click here to load or create a Keyring', function()
+                    {
+                        MOD_WIN.openPath('/bp_manage.html');
+                    }, 0);
+                }
+            }
         }
         catch (e)
         {
@@ -745,6 +743,8 @@ var BP_MAIN = (function()
             MEMSTORE.clear();
             BP_ERROR.logwarn(e);
         }
+
+        EVENTS.dispatch('unloadDB', {'dbPath':''});
     }
 
     BP_ERROR.logdebug("constructed mod_main");
@@ -761,12 +761,15 @@ var BP_MAIN = (function()
         unloadDB: unloadDB,
         off: off,
         cmpVersion: cmpVersion,
+        isWindows: isWindows,
+        eulaAccepted: eulaAccepted,
+        acceptEula: acceptEula,
         MOD_WIN: MOD_WIN,
         EVENTS: EVENTS
     });
 }());
 
-BP_MAIN.g.BP_CS_PLAT.addEventListener(window, 'load', function(e)
+BP_MAIN.g.BP_COMMON.addEventListener(window, 'load', function(e)
 { "use strict";
   BP_MAIN.init();
   BP_MAIN.g.BP_ERROR.logdebug("inited main");

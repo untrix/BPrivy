@@ -166,7 +166,7 @@ bool BPrivyAPI::createCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, 
 	bp::normalizePath(path); // cryptInfoFile is used as ctxId, hence needs to be normalized.
 	bfs::path dbPath(dbDir); 
 	bp::normalizePath(dbPath); // dbPath is used as ctx-handle, hence needs to be normalized.
-	return _createCryptCtx($, path, dbPath, &o);
+	return _createCryptCtx($, path, dbPath, o);
 }
 bool BPrivyAPI::loadCryptCtx(const bp::utf8& $, const bp::ucs& cryptInfoFile, const bp::ucs& dbDir, FB::JSObjectPtr in_out)
 {

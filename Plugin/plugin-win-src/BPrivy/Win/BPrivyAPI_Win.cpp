@@ -318,7 +318,7 @@ HANDLEGuard::OpenFileForRead(const bfs::path& path)
 			FILE_SHARE_READ, // Read Lock. Allow readers,
 				// but not writers/deleters/renamers.
 			NULL, 
-			OPEN_EXISTING, 
+			OPEN_EXISTING, // fails if the file does not exist.
 			FILE_FLAG_SEQUENTIAL_SCAN, 
 			NULL);
 }
@@ -334,7 +334,7 @@ HANDLE HANDLEGuard::OpenFileForDeleteOrRenameLocking(const bfs::path& pth)
 					// bay by write-locking the entire file plus a few bytes beyond
 					// that.
 				NULL, 
-				OPEN_EXISTING, 
+				OPEN_EXISTING, // fails if the file does not exist.
 				FILE_ATTRIBUTE_NORMAL, 
 				NULL);
 }
@@ -352,7 +352,7 @@ HANDLE HANDLEGuard::OpenFileForCopyOutLocking(const bfs::path& pth)
 					// read-lock the entire file before calling CopyFile and that will
 					// ensure that there are no existing or future writers.
 				NULL, 
-				OPEN_EXISTING, 
+				OPEN_EXISTING, // fails if the file does not exist.
 				FILE_ATTRIBUTE_NORMAL, 
 				NULL);
 }
@@ -374,8 +374,26 @@ HANDLE HANDLEGuard::OpenFileForCopyInLocking(const bfs::path& pth)
 				NULL);
 }
 
+DWORD GetFileAttribHidden(bp::JSObject* inOut, DWORD defaultVal = 0)
+{
+    DWORD attrib_hidden = defaultVal;
+    bool bVal;
+
+    if (inOut && inOut->GetProperty(PROP_HIDDEN, bVal)) {
+        if (bVal) {
+            attrib_hidden = FILE_ATTRIBUTE_HIDDEN;
+        }
+        else {
+            attrib_hidden = 0;
+        }
+    }
+
+    return attrib_hidden;
+}
+
 HANDLE HANDLEGuard::OpenFileForOverwrite(const bfs::path& pth, bool exists, bp::JSObject* inOut)
 {
+    DWORD attrib_hidden = GetFileAttribHidden(inOut, 0);
 	HANDLE h= CreateFileW(pth.c_str(),
 		// Windows documentation advises using GENERIC_READ | GENERIC_WRITE over just
 		// GENERIC_WRITE. They say it works better and faster for remote (SMB) file-systems.
@@ -383,17 +401,17 @@ HANDLE HANDLEGuard::OpenFileForOverwrite(const bfs::path& pth, bool exists, bp::
 		GENERIC_READ | GENERIC_WRITE, // GENERIC_READ or GENERIC_WRITE required by LockFile
 		0, // Exclusive/Write Lock
 		NULL, 
-		// We maybe creating a file here and we prefer to keep it hidden. However,
+		// We maybe creating a file here and we prefer to keep it un-hidden unless overridden. Note that,
 		// as per Windows documentation, (on XP and Win 2003) if you specify CREATE_ALWAYS 
 		// on an already existing file (even if only for reading) you'll need to supply
 		// FILE_ATTRIBUTE_HIDDEN along with that, otherwise the call will fail with
 		// ERROR_ACCESS_DENIED. This maybe a problem (not sure) if the file is created on - say
-		// Linux or MacOS and won't have the hidden attribute.
+		// Linux or MacOS and won't have the hidden attribute when it is transferred to Windows.
 		// Update: Keeping FILE_ATTRIBUTE_HIDDEN anyway. Will use filenames starting
 		// with a dot (.) so that files stay hidden on Linux and OSX.
 		(exists ? TRUNCATE_EXISTING // file must exist and will be truncated.
 				: CREATE_NEW),	   // file must not already exist. new one will be created.
-		FILE_ATTRIBUTE_HIDDEN | FILE_FLAG_WRITE_THROUGH,
+		attrib_hidden | FILE_FLAG_WRITE_THROUGH,
 		NULL);
 
 	if ((h != INVALID_HANDLE_VALUE) && exists && (0 == GetLastError())) {
@@ -406,6 +424,7 @@ HANDLE HANDLEGuard::OpenFileForOverwrite(const bfs::path& pth, bool exists, bp::
 
 HANDLE HANDLEGuard::OpenFileForAppend(const bfs::path& path, bp::JSObject* inOut)
 {
+    DWORD attrib_hidden = GetFileAttribHidden(inOut, 0);
 	// Open file in exclusive mode for appending.
 	// If file doesn't exist then create it as a normal file.
 	// In Windows, the file is opened using limited share-modes. However,
@@ -425,15 +444,7 @@ HANDLE HANDLEGuard::OpenFileForAppend(const bfs::path& path, bp::JSObject* inOut
 		0,// Exclusive/Write Lock
 		NULL,
 		OPEN_ALWAYS,
-		// We maybe creating a file here and we prefer to keep it hidden. However,
-		// as per Windows documentation, (on XP and Win 2003) if you specify CREATE_ALWAYS
-		// on an already existing file (even if only for reading) you'll need to supply
-		// FILE_ATTRIBUTE_HIDDEN along with that, otherwise the call will fail with
-		// ERROR_ACCESS_DENIED. This maybe a problem (not sure) if the file is created on - say
-		// Linux or MacOS and won't have the hidden attribute.
-		// Update: Keeping FILE_ATTRIBUTE_HIDDEN anyway. Will use filenames starting
-		// with a dot (.) so that files stay hidden on Linux and OSX.
-		FILE_ATTRIBUTE_HIDDEN | FILE_FLAG_WRITE_THROUGH,
+		attrib_hidden | FILE_FLAG_WRITE_THROUGH,
 		NULL);
 		
 	// OPEN_ALWAYS
@@ -1186,7 +1197,7 @@ unsigned long long BPrivyAPI::_appendLock(bfs::path& path, bp::JSObject* out)
 			FILE_SHARE_PROMISCUOUS, // This method is only used for debugging purposes hence
 				// we're being lax with the FILE_SHARE mode here.
 			NULL, 
-			OPEN_EXISTING, 
+			OPEN_EXISTING, // fails if the file does not exist.
 			FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 
 			NULL);
 		THROW_IF2((h==INVALID_HANDLE_VALUE), path);
@@ -1223,7 +1234,7 @@ unsigned long long BPrivyAPI::_readLock(bfs::path& path, bp::JSObject* out)
 			FILE_SHARE_PROMISCUOUS, // This method is only used for debugging purposes hence
 				// we're being lax with the FILE_SHARE mode here.
 			NULL, 
-			OPEN_EXISTING, 
+			OPEN_EXISTING, // fails if the file does not exist.
 			FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 
 			NULL);
 		THROW_IF2((h==INVALID_HANDLE_VALUE), path);

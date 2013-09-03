@@ -21,13 +21,16 @@ var BP_MANAGE = (function ()
         g_doc = document,
         g_win = window;
     g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
+    // Reference existing mods
     g.MAIN_PAGE = g.BP_CS_PLAT.getBackgroundPage();
     g.BP_CONFIG = g.MAIN_PAGE.BP_CONFIG;
-    //var BP_CS_PLAT = IMPORT(g.BP_CS_PLAT);
     g.BP_MEMSTORE = g.MAIN_PAGE.BP_MAIN.g.BP_MEMSTORE;
+    g.BP_NTFN_CNTR= g.MAIN_PAGE.BP_MAIN.g.BP_NTFN_CNTR;
+    // Construct MODS
     g.BP_ERROR = g.MAIN_PAGE.BP_GET_ERROR(g);
     g.BP_COMMON = g.MAIN_PAGE.BP_GET_COMMON(g);
     g.BP_PLAT = g.MAIN_PAGE.BP_GET_PLAT(g);
+    g.BP_LISTENER = g.MAIN_PAGE.BP_GET_LISTENER(g);
     g.BP_TRAITS = g.MAIN_PAGE.BP_GET_TRAITS(g);
     g.BP_CONNECT = g.MAIN_PAGE.BP_GET_CONNECT(g);
     g.BP_W$ = g.MAIN_PAGE.BP_GET_W$(g);
@@ -37,13 +40,13 @@ var BP_MANAGE = (function ()
     /** @globals-end */
 
     /** @import-module-begin */
-    var BP_COMMON = IMPORT(g.BP_COMMON);
+    var BP_COMMON = IMPORT(g.BP_COMMON),
+        addEventListeners = IMPORT(BP_COMMON.addEventListeners),
+        addEventListener = IMPORT(BP_COMMON.addEventListener);
     /** @import-module-begin CSPlatform */
     var m = IMPORT(g.BP_CS_PLAT);
     var CS_PLAT = IMPORT(g.BP_CS_PLAT),
         rpcToMothership = IMPORT(CS_PLAT.rpcToMothership);
-    var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
-    var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     /** @import-module-begin */
     var DBFS = IMPORT(g.BP_DBFS);
     var cullDBName = IMPORT(DBFS.cullDBName);
@@ -58,6 +61,8 @@ var BP_MANAGE = (function ()
     m = IMPORT(g.BP_ERROR);
     var BP_ERROR = IMPORT(m),
         BPError = IMPORT(m.BPError);
+    var BP_MAIN = IMPORT(g.MAIN_PAGE.BP_MAIN);
+    var BP_CONFIG = IMPORT(g.MAIN_PAGE.BP_CONFIG);
     /** @import-module-end **/ m = null;
 
     /** @globals-begin */
@@ -103,8 +108,8 @@ var BP_MANAGE = (function ()
     function chooseWalletFolder(o)
     {
         BP_COMMON.clear(o);
-        o.dtitle = "K3YRING: Select keyring Folder";
-        o.dbutton = "Select keyring Folder";
+        o.dtitle = "K3YRING: Select Keyring Folder";
+        o.dbutton = "Select Keyring Folder";
         o.clrHist = true;
 
         return chooseFolder(o);
@@ -125,10 +130,10 @@ var BP_MANAGE = (function ()
     	rpcToMothership({cm:BP_CONNECT.cm_deleteDB, dbPath:db}, function(resp)
     	{
     		if (resp.result === true) {
-    			BP_ERROR.success('Deleted keyring at: ' + db);
+    			BP_ERROR.success('Deleted Keyring at: ' + db);
     		}
     		else {
-    			BP_ERROR.warn(resp.err || 'Some problems were encountered. The keyring may not have been completely removed. Please try again.');
+    			BP_ERROR.warn(resp.err || 'Some problems were encountered. The Keyring may not have been completely removed. Please check and try again if needed.');
     		}
     	});
     }
@@ -209,12 +214,12 @@ var BP_MANAGE = (function ()
         if (resp && resp.result)
         {
             resp.dbPath = resp.dbPath || "";
-            if ($('#dbSaveLocation:checked').length)
-            {
-                if (localStorage['db.path'] !== resp.dbPath) {
-                    localStorage['db.path'] = resp.dbPath;
-                }
-            }
+            // if ($('#dbSaveLocation:checked').length)
+            // {
+                // if (localStorage['db.path'] !== resp.dbPath) {
+                    // localStorage['db.path'] = resp.dbPath;
+                // }
+            // }
 
             g_dbName = cullDBName(resp.dbPath);
             g_dbPath = resp.dbPath;
@@ -226,8 +231,8 @@ var BP_MANAGE = (function ()
                 clearEditor();
             }
 
-            $('[data-dbName]').text(g_dbName||"No Keyring Opened").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
-            $('[data-db-path]').text(resp.dbPath||"No Keyring Opened").attr('data-path', resp.dbPath);
+            $('[data-dbName]').text(g_dbName||"No Keyring Loaded").attr('data-original-title', resp.dbPath).attr('data-path', resp.dbPath);
+            $('[data-db-path]').text(resp.dbPath||"No Keyring Loaded").attr('data-path', resp.dbPath);
 
             if (resp.memStats && resp.dbPath)
             {
@@ -264,7 +269,7 @@ var BP_MANAGE = (function ()
                 }
                 else {
                     if (resp.dbStats.dbPath) {
-                        $('#qclean-stats').val("sparkling clean!");
+                        $('#qclean-stats').val("is already clean!");
                     }
                     else {
                         $('#qclean-stats').val("");
@@ -277,15 +282,28 @@ var BP_MANAGE = (function ()
                 $('#dbClean').removeClass('btn-primary').prop('disabled', true);
             }
 
-            // if (resp.dbPath) {
+            if (resp.dbPath) {
             	// $('#btnChngPass').prop('disabled',false);
-            // }
+            	$('#csvImport').prop('disabled', false);
+            	$('#csvExport').prop('disabled', false);
+            	$('#btnMergeIn').prop('disabled', false);
+            	$('#btnMergeOut').prop('disabled', false);
+            	$('#btnMerge').prop('disabled', false);
+            }
+            else {
+                // $('#btnChngPass').prop('disabled',true);
+                $('#csvImport').prop('disabled', true);
+                $('#csvExport').prop('disabled', true);
+                $('#btnMergeIn').prop('disabled', true);
+                $('#btnMergeOut').prop('disabled', true);
+                $('#btnMerge').prop('disabled', true);
+            }
         }
         else
         {
             g_dbName = resp ? cullDBName(resp.dbPath) : null;
             g_dbPath = resp ? resp.dbPath : null;
-            $('[data-dbName]').text("No Keyring Opened").attr('data-original-title', '').attr('data-path', null);
+            $('[data-dbName]').text("No Keyring Loaded").attr('data-original-title', '').attr('data-path', null);
             $('[data-db-path]').text(null).attr('data-original-title', '').attr('data-path', null);
             $('#stats').val('');
             $('#dbCompact').removeClass('btn-warning').removeClass('btn-primary').prop('disabled', true);
@@ -328,7 +346,7 @@ var BP_MANAGE = (function ()
 
         //$('#refreshEditor').button('reset');
         spinner.stop();
-        $('#editItems *').tooltip(); // seemed to leak DOM nodes in 2.0.4 :(. I wonder what else in bootstrap leaks.
+        $('#editItems *').tooltip({container:'body'}); // seemed to leak DOM nodes in 2.0.4 :(. I wonder what else in bootstrap leaks.
     }
 
     function getCallbacks()
@@ -347,7 +365,9 @@ var BP_MANAGE = (function ()
 
     function onload()
     {
-        var actionOpt = BP_COMMON.getQueryObj(g.g_win.location)['action'];
+        var queryObj = BP_COMMON.getQueryObj(g.g_win.location),
+            actionOpt = queryObj['action'],
+            showOpt = queryObj['show'];
 
         BP_CONNECT.getDBPath(function(resp)
         {
@@ -381,7 +401,7 @@ var BP_MANAGE = (function ()
         addEventListeners('#csvImport', 'click', function (e)
         {
             var o={filter:['CSV File','*.csv'],
-                   dtitle: "BPrivy: Import CSV File",
+                   dtitle: "K3YRING [beta]: Import CSV File",
                    dbutton: "Import"};
             $('#csvImportSpinner').show();
             if (BP_PLUGIN.chooseFile(o)) {
@@ -402,18 +422,18 @@ var BP_MANAGE = (function ()
             }
             else {
                 $('#csvImportSpinner').hide();
-                console.log("ChooseFile Failed");
+                BP_ERROR.logwarn("ChooseFile Failed");
             }
         });
 
         addEventListeners('#csvExport', 'click', function (e)
         {
-            var o={dtitle:"BPrivy: CSV Export",
+            var o={dtitle:"K3YRING [beta]: CSV Export",
                    dbutton: "Select Folder",
                    clrHist: true};
             $('#csvExportSpinner').show();
             if (BP_PLUGIN.chooseFolder(o)) {
-                console.log("ChooseFolder returned:" + o.path);
+                BP_ERROR.logdebug("ChooseFolder returned:" + o.path);
                 exportCSV(o.path, false, function (resp)
                 {
                     var msg;
@@ -429,7 +449,7 @@ var BP_MANAGE = (function ()
             }
             else {
                 $('#csvExportSpinner').hide();
-                console.log("ChooseFolder returned false");
+                BP_ERROR.logdebug("ChooseFolder returned false");
             }
         });
 
@@ -441,7 +461,7 @@ var BP_MANAGE = (function ()
                 if (resp.result === true)
                 {
                     updateDash(resp);
-                    BP_ERROR.success('keyring has been compacted: ' + resp.dbPath);
+                    BP_ERROR.success('Keyring has been compacted: ' + resp.dbPath);
                 }
                 else {
                     callbackHandleError(resp);
@@ -458,7 +478,7 @@ var BP_MANAGE = (function ()
                 if (resp.result === true)
                 {
                     updateDash(resp);
-                    BP_ERROR.success('keyring has been cleaned: ' + resp.dbPath);
+                    BP_ERROR.success('Keyring has been cleaned: ' + resp.dbPath);
                 }
                 else {
                     callbackHandleError(resp);
@@ -479,7 +499,7 @@ var BP_MANAGE = (function ()
                     if (id === 'dbClose2') {
                         clearEditor();
                     }
-                    BP_ERROR.success('keyring has been closed');
+                    BP_ERROR.success('Keyring has been closed');
                 }
                 else
                 {
@@ -533,13 +553,13 @@ var BP_MANAGE = (function ()
                 }
             }
             else {
-                BP_ERROR.alert("Please open a keyring first");
+                BP_ERROR.alert("Please open a Keyring first");
             }
         });
 
         addEventListeners('#dnSearch', 'input', function(e)
         {
-            //console.log("#dnSearch: oninput invoked");
+            //BP_ERROR.logdebug("#dnSearch: oninput invoked");
             if (g_editor) {
                 g_editor.filter(this.value);
             }
@@ -595,7 +615,11 @@ var BP_MANAGE = (function ()
 
 		addEventListeners('#dbDelete', 'click', deleteDB);
 
-        $('#content *').tooltip();
+        $('#content *').tooltip({container:'body'});
+        //$('#nav-list').affix({y: 100});
+
+        // NOTE: These should've been showOpts because they allow the page to fully
+        // initialize and then set its state
         switch (actionOpt)
         {
             case 'edit':
@@ -605,13 +629,17 @@ var BP_MANAGE = (function ()
                 $("#nav-settings").tab('show');
         }
 
+        switch (showOpt)
+        {
+            case 'create':
+                launchCreate({closeWin:false});
+                break;
+        }
+
     }
 
     function loadPlugin ()
     {
-        var BP_CONFIG = g.MAIN_PAGE.BP_CONFIG,
-            BP_MAIN = g.MAIN_PAGE.BP_MAIN;
-
         function launchInstallPlugin(o)
         {
             var BP_PLUGIN_INSTALLER = g.MAIN_PAGE.BP_GET_PLUGIN_INSTALLER(g);
@@ -626,6 +654,19 @@ var BP_MANAGE = (function ()
             o = o || {closeWin:true};
             o.mode = 'upgradePlugin';
             BP_PLUGIN_INSTALLER.launch(o);
+        }
+
+        function launchUnsupportedOS(o)
+        {
+            var BP_PLUGIN_INSTALLER = g.MAIN_PAGE.BP_GET_PLUGIN_INSTALLER(g);
+            o = o || {closeWin:true};
+            o.mode = 'unsupportedOS';
+            BP_PLUGIN_INSTALLER.launch(o);
+        }
+
+        if (!BP_MAIN.isWindows()) {
+            launchUnsupportedOS();
+            throw new BPError("Unsupported Operating System");
         }
 
         BP_PLUGIN = g_doc.getElementById('com-untrix-bpplugin');
@@ -644,17 +685,27 @@ var BP_MANAGE = (function ()
         }
     }
 
+    function checkEula ()
+    {
+        // Check EULA accepted. If not, then don't allow any functionality.
+        if (!BP_MAIN.eulaAccepted()) {
+            g_win.open('bp_license.html', '_self', null, true);
+            throw new BPError("EULA not accepted yet");
+        }
+    }
+
     // Assemble the interface
     var iface = {};
     Object.defineProperties(iface,
     {
         onload: {value: onload},
         g: {value: g},
-        loadPlugin: {value: loadPlugin}
+        loadPlugin: {value: loadPlugin},
+        checkEula: {value: checkEula}
     });
     Object.freeze(iface);
 
-    console.log("constructed mod_manage");
+    BP_ERROR.logdebug("constructed mod_manage");
     return iface;
 }());
 
@@ -662,14 +713,15 @@ var BP_MANAGE = (function ()
 // function loadPlugin2 ()
 // { "use strict";
   // BP_PLUGIN = document.getElementById('com-untrix-bpplugin');
-  // console.log("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
+  // BP_ERROR.logdebug("BP Plugin loaded. PID = " + BP_PLUGIN.getpid());
 //
 // }
 
 // $(document).ready(function (e)
-BP_MANAGE.g.BP_CS_PLAT.addEventListener(window, 'load', function(e)
+BP_MANAGE.g.BP_COMMON.addEventListener(window, 'load', function(e)
 { "use strict";
+  BP_MANAGE.checkEula();
   BP_MANAGE.loadPlugin();
   BP_MANAGE.onload();
-  console.log("inited mod_manage");
+  BP_MANAGE.g.BP_ERROR.logdebug("inited mod_manage");
 });

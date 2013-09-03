@@ -20,7 +20,7 @@ function BP_GET_PLAT(gg)
     {
         throw "BP_MAIN_PLAT_STUB: This is a stub function - not intended to be ever invoked."
     }
-    
+
     var module =
     {
         registerMsgListener: throwException,
@@ -33,8 +33,8 @@ function BP_GET_PLAT(gg)
         removeBadge: throwException,
         sendMessage: throwException
     };
-    
+
     Object.seal(module);
-    console.log("constructed mod_main_plat_stub");
+    gg.BP_ERROR.logdebug("constructed mod_main_plat_stub");
     return module;
 }

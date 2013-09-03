@@ -41,98 +41,33 @@ function BP_GET_PLUGIN_INSTALLER(g)
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
-    var g_installText = "Keys@Untrix&trade; requires a plugin. Please follow these steps to install it:",
-        g_upgradeText = "Please follow these steps to update the plugin:";
+    var g_installText = "K3YRING [beta] requires a plugin. Please follow these steps to install it:",
+        g_upgradeText = "Please follow these steps to update the plugin:",
+        g_unsupportedOSText = "We're terribly sorry, at this time we only support Windows operating system :( "+
+            "We're working on supporting other operating systems and the software will automatically update.";
     /** @globals-end **/
-    function modalBody(){}
-    modalBody.wdt = function(ctx)
+
+    function Installer(){}
+    Installer.wdt = function(ctx)
     {
         var text, bText,
-            url = 'https://commondatastorage.googleapis.com/www.untrix.com/downloads/UntrixPlugin.msi';
+            url = 'https://commondatastorage.googleapis.com/download.untrix.com/K3YRING.msi';
         switch (ctx.mode)
         {
             case 'installPlugin':
                 text = g_installText;
-                bText = 'Download';
+                bText = 'Install';
                 break;
             case 'upgradePlugin':
                 text = g_upgradeText;
-                bText = 'Download';
+                bText = 'Upgrade';
                 break;
+            default:
+                return w$undefined;
         }
 
-        /*return {
-        tag:'div', ref:'modalBody',
-        addClass:'modal-body',
-            children:[
-            {html:'<label>' + text + '</label>'},
-            {tag:'ol',
-                children:[
-                {tag:'li',
-                    children:[
-                    {tag:'button',
-                     text:bText,
-                     addClass: 'btn btn-info ',
-                     //css:{margin:'5px'},
-                     attr:{type:'button', title:url},
-                     prop:{download:true},
-                     on:{'click':function(e){ g_win.open(url, '_self');}}
-                    }
-                    ]
-                },
-                {tag:'li', text:'Install the plugin you just downloaded. Just double click on it and follow the instructions.'},
-                {tag:'li',
-                    children:[
-                    {tag:'button',
-                     text:'Reload the App',
-                     addClass: 'btn btn-info ',
-                     //css:{margin:'5px'},
-                     attr:{type:'button'},
-                     on:{'click':function(e){
-                         reload();
-                         modalDialog.destroy();
-                         }}
-                    }
-                    ]
-                }
-                ]
-            }
-            ]
-        };*/
-        /*
-         *
-         return {
-        tag:'div', ref:'modalBody',
-        addClass:'modal-body',
-            children:[
-            {html:'<label>' + text + '</label>'},
-            {tag:'div',
-                children:[
-                {tag:'button',
-                 text:bText,
-                 addClass: 'btn btn-info',
-                 attr:{type:'button'},
-                 on:{'click':function(e){ g_win.open(url, '_self');}}
-                },
-                {tag:'span', text:' '},
-                {tag:'button',
-                 text:'Restart Browser',
-                 addClass: 'btn btn-info',
-                 attr:{type:'button'}
-                 //on:{'click':function(e){ modalDialog.destroy();}}
-                }
-                ]
-            },
-            {tag:'p',
-                children:[
-                ]
-            }
-            ]
-        };
-         *
-         */
         return {
-        tag:'form', ref:'modalBody',
+        tag:'form',
         addClass:'modal-body form-horizontal',
             children:[
             {html:'<legend><small>' + text + '</small></legend>'},
@@ -191,6 +126,47 @@ function BP_GET_PLUGIN_INSTALLER(g)
         };
     }
 
+    function Text(){}
+    Text.wdt = function(ctx)
+    {
+        var text;
+        switch (ctx.mode)
+        {
+            case 'unsupportedOS':
+                text = g_unsupportedOSText;
+                break;
+            default:
+                return w$undefined;
+        }
+
+        ctx.bNeedFooter = true;
+
+        return {
+        tag:'p',
+        addClass:'modal-body',
+        text: text
+        };
+    }
+
+    function Footer(){}
+    Footer.wdt = function(ctx)
+    {
+        if (!ctx.bNeedFooter) { return w$undefined; }
+        else {
+            return {
+            tag:'div', addClass:'modal-footer',
+                children:[
+                {tag:'button',
+                addClass:'btn btn-info',
+                attr:{'data-dismiss':'modal', tabindex:1},
+                text:'Ok',
+                on:{ 'click': function(e){modalDialog.destroy();}}
+                }
+                ]
+            };
+        }
+    }
+
     function modalDialog() {}
     modalDialog.wdt = function(ctx)
     {
@@ -203,13 +179,13 @@ function BP_GET_PLUGIN_INSTALLER(g)
         iface:{ mode:ctx.mode, closeWin:ctx.closeWin },
         on:{  },
         _final:{ appendTo:ctx.appendTo, show:false },
-        _cull:['modalHeader', 'modalBody'],
+        _cull:['modalHeader'],
             children:[
             {tag:'div', addClass:'modal-header',
                 children:[
                 {tag:'img',
                  addClass:'pull-left',
-                 attr:{src:'icons/icon128.png',width:'24px', height:'24px'}
+                 attr:{src:'icons/icon48.png',width:'24px', height:'24px'}
                 },
                 {tag:'button', addClass:'close',
                  text:'x',
@@ -221,27 +197,8 @@ function BP_GET_PLUGIN_INSTALLER(g)
                 }
                 ]
             },
-            modalBody.wdt
-            //, {tag:'div', addClass:'modal-footer',
-                // children:[
-                // checkDontSaveLocation.wdt,
-                // {tag:'button',
-                // addClass:'btn',
-                // attr:{'data-dismiss':'modal', tabindex:-1},
-                // text:'Cancel',
-                // on:{ 'click': function(e){modalDialog.destroy();}}
-                // },
-                // {tag:'button', addClass:'btn btn-primary', text:'Submit',
-                 // ref:'btnSubmit',
-                 // attr:{ 'type':'submit', form:'walletForm' },
-                 // save:['walletForm']
-                 // // on:{ 'click': function(e) {
-                     // // this.walletForm.onSubmit();
-                 // // }
-                 // // }
-                // }
-                // ]
-            // }
+            Installer.wdt, Text.wdt, // All but one will return w$undefined
+            Footer.wdt // Returns non-w$undefined only if ctx.bNeedFooter
             ]
         };
     }
@@ -255,10 +212,13 @@ function BP_GET_PLUGIN_INSTALLER(g)
 
             switch (this.mode)
             {
-                case 'upgrade':
+                case 'unsupportedOS':
+                    this.modalHeader.$().text('Unsupported Operating System');
+                    break;
+                case 'upgradePlugin':
                     this.modalHeader.$().text('Plugin Upgrade Required');
                     break;
-                case 'install':
+                case 'installPlugin':
                 default:
                     this.modalHeader.$().text('Plugin Install Required');
             }
@@ -282,7 +242,7 @@ function BP_GET_PLUGIN_INSTALLER(g)
     {
         var dialog = BP_W$.w$get('#modalDialog');
         if (!dialog) { return; }
-        $('#modalDialog *').tooltip(); // used to leak DOM nodes in version 2.0.4.
+        $('#modalDialog *').tooltip({container:'body'}); // used to leak DOM nodes in version 2.0.4.
     };
     modalDialog.onHidden = function(e)
     {
@@ -331,7 +291,7 @@ function BP_GET_PLUGIN_INSTALLER(g)
         }
     };
 
-    BP_ERROR.loginfo("constructed mod_wallet_form");
+    BP_ERROR.logdebug("constructed mod_wallet_form");
     return Object.freeze(
     {
         launch: modalDialog.create

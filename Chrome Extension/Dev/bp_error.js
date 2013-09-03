@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2013. All Rights Reserved, Untrix Inc
  */
 /* Global declaration for JSLint */
-/*global */
+/*global  RELEASE */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -15,10 +15,12 @@ function BP_GET_ERROR(g)
     var window = null, document = null, console = null, $ = g.$, jQuery = g.jQuery,
         g_win = g.g_win,
         g_console = g.g_console,
+        NO_OP = function(){},
         _log = g_console.log.bind(g_console),
-        debug = g_console.debug.bind(g_console) || _log,
-        info = g_console.info.bind(g_console) || debug,
-        warn = g_console.error.bind(g_console) || info;
+        debug = RELEASE ? NO_OP : (g_console.debug.bind(g_console) || _log),
+        info = RELEASE ? NO_OP : (g_console.info.bind(g_console) || debug),
+        warn = g_console.error.bind(g_console) || _log,
+        BP_NTFN_CNTR = g.BP_NTFN_CNTR;//Maybe undefined
 
    /** @begin-class-def BPError
     o: {//Object returned by the plugin
@@ -126,7 +128,7 @@ function BP_GET_ERROR(g)
     {
         /***********Action Codes and Corresponding Messages ****************/
         BadPathArgument:"Bad Path Argument.",
-        BadDBPath:"The selected folder is not a keyring",
+        BadDBPath:"The selected folder is not a Keyring",
         Unsupported:'Unsupported Feature.', //Unsupported URL etc.
         Diag:'', // Diagnostic Message
         BadWDL: 'Bad WDL argument.',
@@ -137,9 +139,9 @@ function BP_GET_ERROR(g)
         ETLDLoadFailed: 'ETLD Load Failed',
         ExistingStore: "The selected folder seems to already be part of an existing DB.",
         NotJSObject: "Argument is not a javascript object.",
-        NoDBLoaded: "Please open a keyring first.",
-        DBAlreadyLoaded: "This keyring is already opened. Please select a different one.",
-        NoDBSelected: "Please choose a keyring first.",
+        NoDBLoaded: "Please open a Keyring first.",
+        DBAlreadyLoaded: "This Keyring is already opened. Please select a different one.",
+        NoDBSelected: "Please choose a Keyring first.",
         InternalError: "InternalError",
         CryptError: 'Encryption/Decryption Error: Perhaps an incorrect password or encryption-key-file.',
         KeyNotLoaded: 'The Key file has not been loaded. Could be an error in the software. Please close the window and retry.'
@@ -275,19 +277,47 @@ function BP_GET_ERROR(g)
 
     function alert (arg)
     {
-        var be = new BPError(arg);
-        g_console.log(be.toString());
-        g_win.alert(be.message || "Something went wrong :(");
+        var be = new BPError(arg),
+            str = be.message || "Something went wrong :(";
+
+        logwarn(be.toString());
+
+        if (BP_NTFN_CNTR) {
+            BP_NTFN_CNTR.alert(str);
+        }
+        else {
+            g_win.alert(str);
+        }
+    }
+
+    function success (str)
+    {
+        if (BP_NTFN_CNTR) {
+            return BP_NTFN_CNTR.success(str);
+        }
+        else {
+            g_win.alert(str);
+        }
     }
 
     function confirm (str)
     {
-        return g_win.confirm(str);
+        if (BP_NTFN_CNTR) {
+            return BP_NTFN_CNTR.confirm(str);
+        }
+        else {
+            return g_win.confirm(str);
+        }
     }
 
     function prompt (msg)
     {
-        return g_win.prompt(msg);
+        if (BP_NTFN_CNTR) {
+            return BP_NTFN_CNTR.prompt(str);
+        }
+        else {
+            return g_win.prompt(msg);
+        }
     }
 
     function logdebug (arg)
@@ -324,7 +354,7 @@ function BP_GET_ERROR(g)
         Activity: Activity,
         alert: alert,
         warn: alert,
-        success: alert,
+        success: success,
         confirm: confirm,
         prompt: prompt,
         log: loginfo,
@@ -334,7 +364,7 @@ function BP_GET_ERROR(g)
         msg: msg
     };
     Object.freeze(iface);
-    g_console.log("constructed mod_error");
+    debug("constructed mod_error");
     return iface;
     /** @end-class-def BPError **/
 }

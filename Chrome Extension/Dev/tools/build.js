@@ -1,5 +1,4 @@
 /**
-
  * @author Sumeet Singh
  * @mail sumeet@untrix.com
  * Copyright (c) 2012-2013. All Rights Reserved, Untrix Inc
@@ -7,9 +6,8 @@
 
 /* JSLint directives */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
-  undef:false, vars:true, white:true, continue: true, nomen:true,
-  stupid:true,
-  sloppy:true */
+  undef:false, vars:true, white:true, continue: true, nomen:true, stupid:true, sloppy:true */
+
 /*global require, process, __filename */
 
 var fs = require('fs.extra'),
@@ -98,6 +96,7 @@ var src = abs(argv[0]),
     'bp_main.cat.js',
     'bp_manage.cat.js',
     'bp_dialog.cat.js',
+    'bp_license.cat.js',
     'bp_cs_boot.cat.js',
     'bp_panel.cat.js'
     ],
@@ -108,13 +107,15 @@ var src = abs(argv[0]),
        "bp_cs_chrome.js", "bp_connector.js", "bp_w$.js", "bp_panel.wdl.js",
        "bp_cs.js"
     ],
-    release_main_js=["bp_build.js", 'bp_config.js', 'bp_error.js', 'bp_common.js', 'bp_uitraits.js',
+    lib_wdl_js = ["bp_build.js", "bp_error.js", "bp_common.js", "bp_cs_plat.stub.js", "bp_w$.js"],
+    release_main_js=["bp_build.js", 'bp_config.js', 'bp_error.js', 'bp_common.js', 'bp_settings.js', 'bp_uitraits.js',
                      "bp_main_chrome.js", "bp_cs_chrome.js",
                      "bp_listener.js", "bp_connector.js", "bp_memstore.js", "bp_db_fs.js",
-                     "bp_filestore.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js",
+                     "bp_filestore.js", "bp_ntfncntr.js", "bp_main.js", "bp_w$.js", "bp_panel.wdl.js",
                      "bp_wallet_form.wdl.js", "bp_plugin_installer.wdl.js", "bp_editor.wdl.js"],
     release_manage_js=["bp_build.js", "bp_cs_chrome.js", "bp_manage.js"],
     release_dialog_js=["bp_build.js", "bp_cs_chrome.js", "bp_dialog.js"],
+    release_license_js=["bp_build.js", "bp_cs_chrome.js", "bp_license.js"],
     release_panel_js=["bp_build.js", "bp_panel.js"],
     release_tools_js=["bp_build.js", 'bp_error.js', 'bp_common.js', 'bp_uitraits.js',
                      "bp_main_plat.stub.js", "bp_cs_plat.stub.js",
@@ -126,9 +127,11 @@ var src = abs(argv[0]),
     'bp_manage.html',
     'BP_Main.html',
     'bp_panel.html',
-    'bp_dialog.html'].
-    concat(qualify('data', 'etld.json')).
-    concat(lsDir(abs(src,'icons'), src)).    concat(lsDir(abs(src,'tp'), src)),
+    'bp_dialog.html',
+    'bp_license.html'].
+    concat(lsDir(abs(src,'data'), src)).
+    concat(lsDir(abs(src,'icons'), src)).
+    concat(lsDir(abs(src,'tp'), src)),
     release_json = ['manifest.json'];
 
 fs.mkdirpSync(bld);
@@ -177,9 +180,11 @@ catIfNeeded(qualifyA(src,release_cs_js), src + path.sep + 'bp_cs.cat.js', force)
 catIfNeeded(qualifyA(src,release_main_js), src + path.sep + 'bp_main.cat.js', force);
 catIfNeeded(qualifyA(src,release_manage_js), src + path.sep + 'bp_manage.cat.js', force);
 catIfNeeded(qualifyA(src,release_dialog_js), src + path.sep + 'bp_dialog.cat.js', force);
+catIfNeeded(qualifyA(src,release_license_js), src + path.sep + 'bp_license.cat.js', force);
 catIfNeeded(qualifyA(src,release_panel_js), src + path.sep + 'bp_panel.cat.js', force);
 catIfNeeded(qualifyA(src,release_tools_js), src + path.sep + 'bp_tools.cat.js', force);
 //catIfNeeded(qualifyA(src,release_notification_js), src + path.sep + 'bp_notification.cat.js', force);
+catIfNeeded(qualifyA(src,lib_wdl_js), src + path.sep + 'bp_wdl.lib.js', force);
 
 if (all)
 {

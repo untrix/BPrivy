@@ -67,7 +67,7 @@ function BP_GET_TRAITS(g)
     var eid_pfx = "com-untrix-";
 
     var CT_TEXT_PLAIN = 'text/plain',
-        CT_BP_PREFIX = 'application/x-untrix-',
+        CT_BP_PREFIX = 'application/x-k3yring-',
         CT_BP_FN = CT_BP_PREFIX + 'fn',
         CT_BP_PASS = CT_BP_PREFIX + fn_pass,
         CT_BP_USERID = CT_BP_PREFIX + fn_userid;
@@ -180,6 +180,6 @@ function BP_GET_TRAITS(g)
         isTopLevelTag: {value: function(elName) {return (dom_topLevelTags.indexOf(elName) !== -1);} }
     }); Object.freeze(iface);
 
-    BP_ERROR.log("constructed mod_traits");
+    BP_ERROR.logdebug("constructed mod_traits");
     return iface;
 }
