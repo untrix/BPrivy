@@ -183,7 +183,9 @@ function cleanJson(err, data, ctx)
             if (k.charAt(0)==='#') {delete o[k];}
         });
         console.log("Creating JSON file " + ctx.df);
-        fs.writeFile(ctx.df, JSON.stringify(o, undefined, 4), ctx.async.runHere(throwErr));
+        fs.writeFile(ctx.df, JSON.stringify(o, undefined, 4), ctx.async.runHere(function(err){
+            if (err){throw err;} else {console.log("Created JSON file " + ctx.df);}
+        }));
     }
 }
 

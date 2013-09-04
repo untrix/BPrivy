@@ -18,6 +18,7 @@ function BP_GET_NTFN_WDL(g)
         g_doc = g.g_win.document;
 
     /** @import-module-begin */
+    var BP_ERROR    = IMPORT(g.BP_ERROR);
     var BP_CONNECT  = IMPORT(g.BP_CONNECT),
         dt_pRecord  = IMPORT(BP_CONNECT.dt_pRecord);
     var BP_W$       = IMPORT(g.BP_W$),
@@ -113,9 +114,9 @@ function BP_GET_NTFN_WDL(g)
     };
     IoItem.prototype = w$defineProto(IoItem,
     {
-        doDelete: {value:function(){console.log('click');}},
-        doSave: {value:function(){console.log('click');}},
-        filterSite: {value:function(){console.log('click');}}
+        doDelete: {value:function(){BP_ERROR.logdebug('click');}},
+        doSave: {value:function(){BP_ERROR.logdebug('click');}},
+        filterSite: {value:function(){BP_ERROR.logdebug('click');}}
     });
 
     FieldPass.wdt = function(ctx, args)
@@ -289,7 +290,7 @@ function BP_GET_NTFN_WDL(g)
             if (this.item) {
                 e.stopPropagation(); // We don't want the enclosing web-page to interefere
                 e.preventDefault(); // Causes event to get cancelled if cancellable
-                console.log('click');
+                BP_ERROR.logdebug('click');
                 return false; // Causes the event to be cancelled (except mouseover event).
             }
         }}
@@ -319,7 +320,7 @@ function BP_GET_NTFN_WDL(g)
             if (this.item) {
                 e.stopPropagation(); // We don't want the enclosing web-page to interefere
                 e.preventDefault(); // Causes event to get cancelled if cancellable
-                console.log('click');
+                BP_ERROR.logdebug('click');
                 return false; // Causes the event to be cancelled (except mouseover event).
             }
         }}

@@ -30,6 +30,7 @@
     if (false) {
         g.BP_ERROR = BP_GET_ERROR(g);
         g.BP_COMMON = BP_GET_COMMON(g);
+        g.BP_NTFN_CNTR = g.BP_MAIN.g.BP_NTFN_CNTR;
         g.BP_TRAITS = BP_GET_TRAITS(g);
         g.BP_CONNECT = BP_GET_CONNECT(g);
         g.BP_W$ = BP_GET_W$(g);
@@ -37,13 +38,16 @@
         g.BP_MEMSTORE = g.BP_MAIN.g.BP_MEMSTORE;
     }
     else {
+        // Reference existing modules
         g.BP_ERROR = g.BP_MAIN.g.BP_ERROR;
         g.BP_COMMON = g.BP_MAIN.g.BP_COMMON;
+        g.BP_NTFN_CNTR = g.BP_MAIN.g.BP_NTFN_CNTR;
         g.BP_TRAITS = g.BP_MAIN.g.BP_TRAITS;
         g.BP_CONNECT = g.BP_MAIN.g.BP_CONNECT;
+        g.BP_MEMSTORE = g.BP_MAIN.g.BP_MEMSTORE;
+        // Instantiate modules
         g.BP_W$ = BP_CS_PLAT.getBackgroundPage().BP_GET_W$(g);
         g.BP_WDL = BP_CS_PLAT.getBackgroundPage().BP_GET_WDL(g);
-        g.BP_MEMSTORE = g.BP_MAIN.g.BP_MEMSTORE;
     }
 
     var m;
@@ -109,7 +113,8 @@
         sel_ct_p = "[data-"+data_ct+"="+CT_BP_PASS+']',
         MOD_DB = new MiniDB(true), // create a read-only db.
         MOD_PANEL,
-        MOD_CS;
+        MOD_CS,
+        g_win = g.g_win;
     /** @globals-end **/
 
     MOD_PANEL = (function()
@@ -158,8 +163,8 @@
             close();
             m_bUserClosed = false;
             var ctx = {
-                it: new ItemIterator(MOD_DB.pRecsMap, true),
-                it2: new ItemIterator(MOD_DB.tRecsMap, true),
+                it: new ItemIterator(MOD_DB.pRecsMap, true, true),
+                it2: new ItemIterator(MOD_DB.tRecsMap, true, true),
                 reload:MOD_PANEL.create, // this function
                 onClosed:onClosed,
                 saveRec: MOD_CS.saveRec,
@@ -171,6 +176,7 @@
                 dbPath:MOD_DB.dbPath,
                 popup:true,
                 loc:MOD_DB.loc,
+                site:MOD_DB.site,
                 openPath: BP_MAIN.MOD_WIN.openPath,
                 off: BP_MAIN.off
             };
@@ -214,7 +220,7 @@
                     var db = resp.db;
                     //BP_ERROR.loginfo("cbackShowPanel@bp_panel.js received DB-Records\n"/* + JSON.stringify(db)*/);
                     try { // failure here shouldn't block rest of the call-flow
-                        MOD_DB.ingest(resp.db, resp.dbInfo, resp.loc);
+                        MOD_DB.ingest(resp.db, resp.dbInfo, resp.loc, resp.site);
                     }
                     catch (err) {
                         BP_ERROR.logwarn(err);
@@ -264,7 +270,7 @@
                             fillableUrls = Object.keys(autoFillable);
 
                             if (fillableUrls.length) {
-                                //BP_ERROR.logdebug('heuristicFrameUrl: force returning first autoFillable frameUrl = ' + fillableUrl);
+                                //BP_ERROR.logdebug('heuristicFrameUrl: force returning first autoFillable frameUrl = ' + fillableUrls[0]);
                                 return fillableUrls[0];
                             }
                             else {
@@ -281,8 +287,20 @@
             }
         }
 
+        function checkEula ()
+        {
+            // Check EULA accepted. If not, then don't allow any functionality.
+            if (!BP_MAIN.eulaAccepted()) {
+                g_win.open('bp_license.html', 'bp_license', null, true);
+                g_win.close();
+                throw new BPError("EULA not accepted yet");
+            }
+        }
+
         function onLoad()
         {
+            checkEula();
+
             document.body.style.margin = '2px';
             chrome.tabs.query({currentWindow:true, highlighted:!DEBUG, index:DEBUG?0:undefined}, function(tabs)
             {
@@ -333,7 +351,7 @@
                         // }
                         if (MOD_PANEL.isAutoFillable() !== Boolean(resp2.autoFillable)) {
                             MOD_PANEL.putAutoFillable(Boolean(resp2.autoFillable));
-                            bRepaint = true;;
+                            bRepaint = true;
                         }
 
                         if (!bReload && bRepaint) {
@@ -391,5 +409,5 @@
     }());
 
     MOD_CS.onLoad();
-    BP_ERROR.log("loaded panel.js");
+    BP_ERROR.logdebug("loaded panel.js");
 }());

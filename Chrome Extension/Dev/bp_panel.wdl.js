@@ -29,7 +29,8 @@ function BP_GET_WDL (g)
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
         preventDefault = IMPORT(m.preventDefault),
-        newInherited = IMPORT(m.newInherited);
+        newInherited = IMPORT(m.newInherited),
+        addHandlers = IMPORT(m.addHandlers);
     /** @import-module-begin W$ */
     m = IMPORT(g.BP_W$);
     var w$exec = IMPORT(m.w$exec),
@@ -39,8 +40,7 @@ function BP_GET_WDL (g)
     /** @import-module-begin CSPlatform */
     m = g.BP_CS_PLAT;
     var BP_CS_PLAT = IMPORT(m),
-        getURL = IMPORT(m.getURL),
-        addHandlers = IMPORT(m.addHandlers); // Compatibility function
+        getURL = IMPORT(m.getURL);
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;
     var newPAction = IMPORT(m.newPAction),
@@ -63,7 +63,7 @@ function BP_GET_WDL (g)
         CT_BP_USERID = IMPORT(m.CT_BP_USERID),
         CT_TEXT_PLAIN = IMPORT(m.CT_TEXT_PLAIN),
         CT_BP_PREFIX = IMPORT(m.CT_BP_PREFIX);
-        /** @import-module-end **/    m = null;
+    /** @import-module-end **/    m = null;
 
     /** @globals-begin */
     // Names used in the code. A mapping is being defined here because
@@ -119,14 +119,15 @@ function BP_GET_WDL (g)
     {
         this.clear();
         // property 'readOnly' is enumerable:false, writable:false, configurable:false
-        Object.defineProperty(this, readOnly, {value:readOnly});
+        Object.defineProperty(this, 'readOnly', {value:readOnly}); //enumerable:false, writable:false, configurable:false
+        //Object.defineProperty(this, 'site', {value:undefined, enumerable:true, writable:true, configurable:true});
         if (!readOnly) {
             BP_COMMON.bindProto(this, MiniDB.wProto);
         }
     }
     MiniDB.prototype = Object.freeze(
     {
-        ingest: function(db, dbInfo, loc)
+        ingest: function(db, dbInfo, loc, site)
         {
             if (db)
             {
@@ -142,6 +143,7 @@ function BP_GET_WDL (g)
                     if (dbInfo.dbName) {this.dbName = dbInfo.dbName;}
                     if (dbInfo.dbPath) {this.dbPath = dbInfo.dbPath;}
                 }
+                this.site = site;
             }
             else
             {
@@ -270,7 +272,8 @@ function BP_GET_WDL (g)
         return {
             tag:"div",
             attr:{ id: eid_panelTitleText, title:ctx.dbPath },
-            text:ctx.dbName || "No keyring open"
+            text: ctx.dbName || "No Keyring loaded",
+            children: (ctx.dbName && ctx.site) ? [{tag:'div', text:('('+ctx.site+')'), css:{'font-weight':'normal'}}] : w$undefined
         };
     }
 
@@ -280,7 +283,7 @@ function BP_GET_WDL (g)
             tag:"div",
             attr:{ id: eid_panelTitleText },
             css:{ display: 'block'},
-            text: "Unsaved Passwords"
+            text: "Unsaved Passwords (Verify then Save)"
         };
     }
 
@@ -341,7 +344,7 @@ function BP_GET_WDL (g)
         return {
         cons: NButton,
         html:'<button type="button"></button>',
-        attr:{ class:css_class_nButton},
+        attr:{ class:css_class_nButton, title:'New entry'},
         on:{ click:NButton.prototype.newItem },
         css:{ width:'20px', float:'left' },
             children:[
@@ -354,7 +357,7 @@ function BP_GET_WDL (g)
     };
 
     /**
-     * Control Panel/Home page link
+     * Home page link
      */
     function SButton(){}
     SButton.wdt = function (w$ctx)
@@ -367,7 +370,7 @@ function BP_GET_WDL (g)
         attr:{ 'class':css_class_xButton,
         	   href:'#',
         	   //href:BP_CS_PLAT.getURL("/bp_manage.html"),
-               target:"_blank", title:'Control Panel' },
+               target:"_blank", title:'Home / Settings' },
         iface:{ panel:panel },
         css:{ width:'20px' },
             children:[
@@ -432,7 +435,7 @@ function BP_GET_WDL (g)
         on:{ click:OButton.prototype.onClick },
         attr:{ 'class':css_class_xButton,
         	   href:'#',
-               title:'(Re)Open keyring' },
+               title:'(Re)Load Keyring' },
         iface:{ panel:panel },
         css:{ width:'20px' },
             children:[
@@ -466,7 +469,7 @@ function BP_GET_WDL (g)
         on:{ click:CButton.prototype.onClick },
         attr:{ 'class':css_class_xButton,
         	   href:'#',
-               title:'Close keyring' },
+               title:'Unload Keyring' },
         iface:{ panel:panel, off:off },
         css:{ width:'20px' },
             children:[
@@ -485,7 +488,7 @@ function BP_GET_WDL (g)
             try {
 	            this.off(function ()
 	            {
-	                BP_ERROR.success('keyring has been closed');
+	                BP_ERROR.success('Keyring has been closed');
 	            });
             }
             catch (ex) {
@@ -603,33 +606,46 @@ function BP_GET_WDL (g)
         cons: VButton,
         html:'<button type="button"></button>',
         css:{ float:'right', width:'20px' },
-        attr:{ title:'View password' },
+        attr:{ title:VButton.prototype.titleView },
         on:{ click:VButton.prototype.toggleView },
         iface:{ field:w$ctx.pwdField },
             children:[
-            {tag:"i",
+            {tag:"i", ref:'icon',
             css:{ 'vertical-align':'middle' },
-            addClass:"icon-eye-open",
-            }]
+            addClass:"icon-eye-open"
+            }],
+        _cull:['icon']
         };
     };
     VButton.prototype = w$defineProto(VButton,
     {
+        titleView: {value:'View password'},
+        titleUnview: {value:'Hide password'},
         viewField: {value: function(ev)
         {
             if (!this.field) {return;}
-            else this.field.view();
+            else {
+                this.field.view();
+                this.icon.removeClass('icon-eye-open');
+                this.icon.addClass('icon-eye-close');
+                this.el.title = this.titleUnview;
+            }
         }},
         unViewField: {value: function(ev)
         {
             if (!this.field) {return;}
-            else this.field.unView();
+            else {
+                this.field.unView();
+                this.icon.removeClass('icon-eye-close');
+                this.icon.addClass('icon-eye-open');
+                this.el.title = this.titleView;
+            }
         }},
         toggleView: {value: function(ev)
         {
             if (!this.field) {return;}
-            if (this.field.viewing) { this.field.unView(); }
-            else {this.field.view();}
+            if (this.field.viewing) { this.unViewField(); }
+            else {this.viewField();}
         }}
     });
 
@@ -641,8 +657,8 @@ function BP_GET_WDL (g)
         var bInp = w$ctx.io_bInp;
         return {
          cons: TButton,
-         html:'<button type="button">',
-         attr:{ class:css_class_tButton, title:'Edit/Submit' },
+         html:'<button type="submit">',
+         attr:{ class:css_class_tButton, title:(bInp ? 'Submit' : 'Edit') },
          on:{ click:TButton.prototype.toggleIO2 },
          css:{ width:'20px' },
             children:[
@@ -662,10 +678,12 @@ function BP_GET_WDL (g)
             if (bInp) {
                 this.icon.removeClass('icon-pencil');
                 this.icon.addClass('icon-ok');
+                this.el.title = 'Submit';
             }
             else {
                 this.icon.removeClass('icon-ok');
                 this.icon.addClass('icon-pencil');
+                this.el.title = 'Edit';
             }
         }}
     });
@@ -673,7 +691,7 @@ function BP_GET_WDL (g)
     function IItemP () {}
     IItemP.wdt = function (w$ctx)
     {
-        var u, p,
+        var u, p, disableU,
         ioItem = w$ctx.ioItem,
         pRec = ioItem.rec,
         isTRec = ioItem.isTRec;
@@ -687,28 +705,35 @@ function BP_GET_WDL (g)
             pRec = newPAction(ioItem.loc);
             ioItem.rec = pRec; // Save this back to ioItem.
         }*/
+
+        disableU = Boolean(u&&(!isTRec));
+
         return {
         cons: IItemP,
-        tag:'div', addClass:css_class_ioFields,
-        attr:{ 'data-untrix':true },
+        tag:'form',
+        addClass:css_class_ioFields,
+        attr:{ 'data-untrix':'true', action:"#" },
         ctx:{ w$:{iItem:'w$el'} },
-        //on:{ 'submit':ioItem.toggleIO },
-        iface:{ ioItem:ioItem },
+        on:{ 'submit':IItemP.prototype.onSubmit },
+        save:[ 'ioItem' ],
             children: [
             {tag:'input',
-             attr:{ type:'text', value:u, placeholder:'Username', 'data-untrix':true },
-             prop:{ disabled:(u&&(!isTRec))?true:false },
+             attr:{ type:'text', value:u, placeholder:'Username', 'data-untrix':'true', tabindex:1 },
+             prop:{ disabled:disableU, required:true, autofocus:(!disableU) },
              addClass:css_class_field+css_class_userIn,
              ctx:{ w$:{ u:'w$el' } },
              _iface:{ value: u }
             },
-            {tag:'input', ref:'pwdField',
-             attr:{ type:'password', value:p, placeholder:'Password', 'data-untrix':true },
+            {tag:'input', ref:'pwdField', save:['ioItem'],
+             attr:{ type:'password', value:p, placeholder:'Password', 'data-untrix':'true', tabindex:2 },
+             prop:{ required:true, autofocus:disableU },
              addClass:css_class_field+css_class_passIn,
              ctx:{ w$:{p:'w$el'} },
+             //on:{ 'change':function(){this.ioItem.toggleIO();} },
              _iface:{ value: p },
             },
-            VButton.wdt
+            VButton.wdt,
+            TButton.wdt // submit button
             ],
         _iface:{ w$ctx:{ u:'u', p:'p' } },
         //_final:{show:true}
@@ -716,6 +741,11 @@ function BP_GET_WDL (g)
     };
     IItemP.prototype = w$defineProto (IItemP,
     {
+        onSubmit: {value: function(e){
+            this.ioItem.toggleIO();
+            e.stopPropagation();
+            e.preventDefault();
+        }},
         checkInput: {value: function()
         {
             var ioItem = this.ioItem,
@@ -792,32 +822,44 @@ function BP_GET_WDL (g)
             return {
             cons: OItemP,
             tag:'div',
-            attr:{ 'data-untrix':true },
+            attr:{ 'data-untrix':'true' },
             addClass:css_class_ioFields,
+            on:{ dblclick:OItemP.prototype.onDblClick },
             ctx:{ w$:{ oItem:'w$el' } },
                 children:[
                 {tag:'data',
-                 attr:{ draggable:true, 'data-untrix':true },
+                 attr:{ draggable:'true', 'data-untrix':'true' },
                  addClass:css_class_field+css_class_userOut,
                  text:u,
                  ctx:{ w$:{ u:'w$el' } },
                  _iface:{ fn:fn_userid, value:u }
                 },
                 {tag:'data', ref:'pwdField',
-                 attr:{ draggable:true, 'data-untrix':true },
+                 attr:{ draggable:'true', 'data-untrix':'true' },
                  addClass:css_class_field+css_class_passOut,
                  text: p ? '*****' : '',
                  ctx:{ w$:{p:'w$el' } },
                  _iface:{ fn:fn_pass, value:p }
                 },
-                VButton.wdt
+                VButton.wdt,
+                TButton.wdt
                 ],
-            _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } },
+            _iface:{ ioItem:ioItem, w$ctx:{ u:'u', p:'p' } }
             //_final:{show:true}
             };
         }
     };
-    OItemP.prototype = w$defineProto (OItemP, {});
+    OItemP.prototype = w$defineProto (OItemP,
+    {
+        onDblClick: {value: function(e)
+        {
+            //BP_ERROR.logdebug("OITemP.onDblClick invoked");
+            this.ioItem.toggleIO();
+            e.stopPropagation();
+            e.preventDefault();
+        }}
+
+    });
 
     function IoItem () {}
     IoItem.wdi = function (w$ctx)
@@ -836,14 +878,14 @@ function BP_GET_WDL (g)
         return {
         cons: IoItem,
         tag:'div',
-        attr:{ class:css_class_li, 'data-untrix':true },
+        attr:{ class:css_class_li, 'data-untrix':'true' },
         ctx:{ w$:{ ioItem:'w$el' }, trash:IoItem.prototype.toggleIO },
         iface: { rec:rec, loc:loc, panel:panel, bInp:bInp, isTRec:isTRec,
                  isNewItem:isNewItem, itemList:itemList },
         on: {mousedown:stopPropagation}, // Needed to allow dragging.
             children:[
             FButton.wdt,
-            TButton.wdt,
+            //TButton.wdt,
             bInp ? IItemP.wdt : OItemP.wdt,
             DButton.wdt
             ],
@@ -863,6 +905,7 @@ function BP_GET_WDL (g)
                 panel = this.panel;
             if (iI)
             { // Create output element
+                ctx.io_bInp = false;
                 res = iI.checkInput();
                 if (res===undefined)
                 {
@@ -896,6 +939,7 @@ function BP_GET_WDL (g)
             }
             else if (oI)
             { // Create input element, destroy output element
+                ctx.io_bInp = true;
                 this.iItem = w$exec(IItemP.wdt, ctx);
                 BP_COMMON.delProps(ctx); // Clear DOM refs inside the ctx to aid GC
                 if (this.iItem) {
@@ -984,7 +1028,7 @@ function BP_GET_WDL (g)
         handleDragStart: {value: function handleDragStart (e)
         {   // CAUTION: 'this' is bound to e.target
 
-            //BP_ERROR.loginfo("DragStartHandler entered");
+            BP_ERROR.loginfo("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
             var data = this.value;
             if (this.fn === fn_pass) {
@@ -994,9 +1038,8 @@ function BP_GET_WDL (g)
             e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
             e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
-            e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon48.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
-            //BP_ERROR.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+            //BP_ERROR.logdebug("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
             //return true;
         }},
         handleDrag: {value: function handleDrag(e)
@@ -1007,7 +1050,7 @@ function BP_GET_WDL (g)
         }},
         handleDragEnd: {value: function handleDragEnd(e)
         {   // CAUTION: 'this' is bound to e.target
-            //BP_ERROR.loginfo("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            BP_ERROR.loginfo("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //return true;
         }},
@@ -1045,7 +1088,7 @@ function BP_GET_WDL (g)
         return {
         cons:Panel,
         tag:"article",
-        attr:{ id:eid_panel, 'data-untrix':true/*, tabindex:-1*/ },
+        attr:{ id:eid_panel, 'data-untrix':'true'/*, tabindex:-1*/ },
         css: popup ? {border:"none"} : { position:'fixed', top:'0px', right:'0px', padding:'4px', 'border-radius':'4px'},
         // Post w$el creation steps
         ctx:{ w$:{ panel:"w$el" }, loc:loc },
@@ -1064,9 +1107,9 @@ function BP_GET_WDL (g)
                 showRecs ? NButton.wdt : w$undefined,
                 cs_panelTitleText_wdt,
                 XButton.wdt,
-                SButton.wdt,
                 ctx.dbName? EButton.wdt: w$undefined,
-                ctx.dbName? CButton.wdt: w$undefined,                OButton.wdt
+                ctx.dbName? CButton.wdt: w$undefined,                OButton.wdt,
+                SButton.wdt
                 ]
             },
             showRecs ? PanelList.wdt : w$undefined,
@@ -1110,6 +1153,6 @@ function BP_GET_WDL (g)
        cs_panel_wdt: Panel.wdt
     };
 
-    BP_ERROR.log("constructed mod_wdl");
+    BP_ERROR.logdebug("constructed mod_wdl");
     return Object.freeze(iface);
 }

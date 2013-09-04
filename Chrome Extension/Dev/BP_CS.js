@@ -33,13 +33,13 @@
         encrypt = IMPORT(m.encrypt),
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
-        preventDefault = IMPORT(m.preventDefault);
-    /** @import-module-begin CSPlatform */
-    m = g.BP_CS_PLAT;
-    var registerMsgListener = IMPORT(m.registerMsgListener),
-        addEventListener = IMPORT(m.addEventListener), // Compatibility function
+        preventDefault = IMPORT(m.preventDefault),
+        addEventListener = IMPORT(m.addEventListener),
         addEventListeners = IMPORT(m.addEventListeners),
         trigger = IMPORT(m.trigger);
+    /** @import-module-begin CSPlatform */
+    m = g.BP_CS_PLAT;
+    var registerMsgListener = IMPORT(m.registerMsgListener);
     /** @import-module-begin Traits */
     m = IMPORT(g.BP_TRAITS);
     var dt_eRecord = IMPORT(m.dt_eRecord),
@@ -171,7 +171,7 @@
         {
             BP_ERROR.logdebug("FormInfo.onSubmit invoked");
             if (ev.currentTarget!==ev.target) {
-                BP_ERROR.log("FormInfo.onSubmit: current target and target are different");
+                BP_ERROR.logdebug("FormInfo.onSubmit: current target and target are different");
             }
             var fInfo = $(ev.target).data(data_finfo);
             if (fInfo) {
@@ -180,9 +180,9 @@
         };
         FormInfo.onClick = function(ev)
         {
-            BP_ERROR.log("FormInfo.onClick event received");
+            //BP_ERROR.logdebug("FormInfo.onClick event received");
             if (ev.currentTarget!==ev.target) {
-                BP_ERROR.log("onClick: current target and target are different");
+                BP_ERROR.logdebug("onClick: current target and target are different");
             }
         };
         FormInfo.onMousedown = function(ev)
@@ -190,9 +190,9 @@
             if (ev.button!==0) {
                 return;
             }
-            BP_ERROR.log("FormInfo.onMousedown: Primary Mouse Button Depressed");
+            //BP_ERROR.logdebug("FormInfo.onMousedown: Primary Mouse Button Depressed");
             if (ev.currentTarget!==ev.target) {
-                BP_ERROR.log("onMousedown: current target and target are different");
+                BP_ERROR.logdebug("onMousedown: current target and target are different");
             }
         };
         FormInfo.isSubmitEl = function (el)
@@ -285,6 +285,18 @@
             else if (fn===fn_btn) {
                 return (this.btns.indexOf(el) !== -1);
             }
+        };
+        FormInfo.prototype.filter = function(els, fn)
+        {
+            var rels = [];
+            iterArray2(els, this, function(el, fn2)
+            {
+                if (!this.hasEl(el, fn2)) {
+                    rels.push(el);
+                }
+            }, fn);
+
+            return rels;
         };
         FormInfo.prototype.isContainerOf = function (el, fn)
         {
@@ -1054,17 +1066,17 @@
             if (pair)
             {
                 if (!uid || !pass) {
-                    console.log("partial user input received");
+                    BP_ERROR.logdebug("partial user input received");
                     return;
                 }
                 else // both uid and pass are available
                 {
                     if (MOD_DB.matches(uid, pass)) {
-                        console.log("Exiting password was input " + uid);
+                        BP_ERROR.logdebug("Exiting password was input " + uid);
                     }
                     else {
                         bSave = true;
-                        console.log("New password was input: " + uid + "/" + pass);
+                        BP_ERROR.logdebug("New password was input: " + uid + "/" + pass);
                     }
                 }
             }
@@ -1073,21 +1085,21 @@
                 if (uEl)
                 {
                     if (!MOD_DB.has(uid)) {
-                        console.log("New userid was input without password: " + uid);
+                        BP_ERROR.logdebug("New userid was input without password: " + uid);
                         bSave = true;
                     }
                     else {
-                        console.log("Existing userid was input without password: " + uid);
+                        BP_ERROR.logdebug("Existing userid was input without password: " + uid);
                     }
                 }
                 else if (pEl)
                 {
                     if (!MOD_DB.hasPass(pass)) {
-                        console.log("A new password was entered without userid. Saving it: " + encrypt(pass));
+                        BP_ERROR.logdebug("A new password was entered without userid. Saving it: " + encrypt(pass));
                         bSave = true;
                     }
                     else {
-                        console.log("Existing password was input without password: " + uid);
+                        BP_ERROR.logdebug("Existing password was input without password: " + uid);
                     }
                 }
             }
@@ -1371,7 +1383,8 @@
         // element is found. This is useful in cases where there was only one text field
         // besides the password field in a form (e.g. type===email) in which case, that
         // is probably the username field.
-        // @param stage Unused for now.
+        // @param stage Stage of execution. 1 or 2. In stage 1 strict filters are used,
+        //      in stage 2, lax filters are used.
         // IMPORTANT: Results must be sorted in tree-order.
         //
         //function uCandidates(cntxt, passEl, form)
@@ -1390,7 +1403,7 @@
                 $el1 = $(cntxt.elements).filter(function(){return this.webkitMatchesSelector(g_uSel);}).not('[data-untrix]').filter(':visible');
             }
             else {
-                $el1 = $(g_uSel, $(cntxt)).not('data-untrix').filter(':visible');
+                $el1 = $(g_uSel, $(cntxt)).not('[data-untrix]').filter(':visible');
             }
 
             if ((!fInfo) || fInfo.isEmpty() || (stage<2)) {
@@ -1428,6 +1441,13 @@
                     $el = $el1;
                 }
             }
+
+            // if (m_info.k.fmInfo) {
+                // $el = $(m_info.k.fmInfo.filter($el, fn_pass));
+            // }
+            // if (m_info.k.fmInfo2) {
+                // $el = $(m_info.k.fmInfo2.filter($el, fn_pass));
+            // }
 
             if (!fInfo) {
                 fInfo = new FormInfo(cntxt);
@@ -1508,6 +1528,12 @@
                         // we'll just have to include them now.
                     }
                 }
+            }
+
+            // input[type=password] fields may actually be overridden to be userid fields by the
+            // knowledge-db. e.g. ingplans.com. Therefore check in the knowledge fmInfo.
+            if (m_info.k.fmInfo) {
+                $candids = $(m_info.k.fmInfo.filter($candids, fn_userid));
             }
 
             if (!fInfo) {
@@ -1888,7 +1914,7 @@
         }
 
         // Scans the document to heuristically detect signin/signup forms as needed.
-        // ctxEl argument binds the extent of the search to a single element. Used for
+        // ctxEl argument bounds the extent of the search to a single element. Used for
         // incremental scans when an element is dynamically added into a page.
         function scrape(ctxEl)
         {
@@ -2158,7 +2184,8 @@
     {
         var g_bInited;
 
-        /** Intelligently returns true if the input element is a userid/username input field */
+        /** Probably not being used.
+         * Intelligently returns true if the input element is a userid/username input field */
         function isUserid(el)
          {
              var tagName = el.localName, rval = false;
@@ -2174,13 +2201,15 @@
              return rval;
          }
 
-        /** Intelligently returns true if the element is a password field */
+        /** Probably not being used.
+         * Intelligently returns true if the element is a password field */
         function isPassword (el)
          {
              if (el.localName !== 'input') {return false;}
             return (el.type === "password") && (!el.dataset.untrix);
          }
 
+        /** Probably not being used. */
         function isField (ft, el)
         {
             switch (ft)
@@ -2196,13 +2225,17 @@
             var dtMatched = false, isBPDrag = false,
             items = e.dataTransfer.items,
             w$el=w$get(e.target),
-            n, len;
+            n, len, iType;
             for (n=0, len=items.length; n<len; n++)
             {
                 if (items[n] && items[n].type === w$el.ct) {
                     dtMatched = true; isBPDrag = true;
                     //console.info("Matched BP Drag w/ Field !");
                     break;
+                }
+                // Handle the case when userid field is type=password (ingplans.com)
+                else if (items[n] && (items[n].type === CT_BP_USERID) && (w$el.ct === CT_BP_PASS)) {
+                    dtMatched = true; isBPDrag = true;
                 }
                 else if ((!isBPDrag) && items[n] && items[n].type === CT_BP_FN) {
                     isBPDrag = true;
@@ -2216,7 +2249,7 @@
         function dragoverHandler(e)
         {
             // console.info("dragoverHandler(type = " + e.type + ") invoked ! effectAllowed/dropEffect = " +
-                            // e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            //                e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
 
             var r = matchDTwField(e);
             if (r.isBPDrag)
@@ -2264,18 +2297,29 @@
                     // Tell browser to set vlaue of 'current drag operation' to 'copy'
                     e.dataTransfer.dropEffect = 'copy';
 
-                    //console.log("dropHandler:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
-                    // Save an EAction.
-                    var eRec = newEAction(e.target.ownerDocument.location,
-                                          Date.now(),
-                                          e.dataTransfer.getData(CT_BP_FN), // fieldName
-                                          el.tagName,
-                                          el.id,
-                                          el.name,
-                                          el.type,
-                                          ((form&&form.getAttribute('id'))? form.getAttribute('id') : undefined),
-                                          ((form&&form.getAttribute('name'))? form.getAttribute('name'):undefined));
-                    MOD_CS.saveRec(eRec, dt_eRecord);
+                    // Save and E-Rec if the ctrl or alt key was pressed
+                    if (e.ctrlKey || e.altKey)
+                    {
+                        //BP_ERROR.logdebug("dropHandler:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+                        // Save an EAction.
+                        var eRec = newEAction(e.target.ownerDocument.location,
+                                              Date.now(),
+                                              e.dataTransfer.getData(CT_BP_FN), // fieldName
+                                              el.tagName,
+                                              el.id,
+                                              el.name,
+                                              el.type,
+                                              ((form&&form.getAttribute('id'))? form.getAttribute('id') : undefined),
+                                              ((form&&form.getAttribute('name'))? form.getAttribute('name'):undefined));
+
+                        // Generate a delete action if the alt key is pressed
+                        if (e.altKey) {
+                            MOD_CS.delRec(eRec, dt_eRecord);
+                        }
+                        else {
+                            MOD_CS.saveRec(eRec, dt_eRecord);
+                        }
+                    }
 
                     data = e.dataTransfer.getData(CT_TEXT_PLAIN);
                     if (data)
@@ -2305,8 +2349,8 @@
                 addEventListener(el, "dragenter", dragoverHandler);
                 addEventListener(el, "dragover", dragoverHandler);
                 addEventListener(el, "drop", dropHandler);
-                //addEventListener(el, "input", function(e){console.log("Watching Input event");});
-                //addEventListener(el, "change", function(e){console.log("Waching Change event");});
+                //addEventListener(el, "input", function(e){BP_ERROR.logdebug("Watching Input event");});
+                //addEventListener(el, "change", function(e){BP_ERROR.logdebug("Waching Change event");});
                 if (this.type==='password') {
                     w.ct = CT_BP_PASS;
                     el.dataset[data_ct] = CT_BP_PASS;
@@ -2393,8 +2437,8 @@
             close();
             m_bUserClosed = false;
             var ctx = {
-                it: new ItemIterator(MOD_DB.pRecsMap, true),
-                it2: new ItemIterator(MOD_DB.tRecsMap, true),
+                it: new ItemIterator(MOD_DB.pRecsMap, true, true),
+                it2: new ItemIterator(MOD_DB.tRecsMap, true, true),
                 reload:MOD_PANEL.create, // this function
                 onClosed:onClosed,
                 saveRec: MOD_CS.saveRec,
@@ -2403,6 +2447,7 @@
                 autoFill: (MOD_FILL.info().autoFillable()?MOD_FILL.autoFill:undefined),
                 dbName:MOD_DB.dbName,
                 dbPath:MOD_DB.dbPath,
+                site:MOD_DB.site,
                 openPath: BP_CONNECT.openPath,
                 off: BP_CONNECT.off
                 // onBlur: close
@@ -2452,7 +2497,7 @@
                     var db = resp.db;
                     BP_ERROR.loginfo("onGotRecs@bp_cs.js received DB-Records\n"/* + JSON.stringify(db)*/);
                     try { // failure here shouldn't block rest of the call-flow
-                        MOD_DB.ingest(resp.db, resp.dbInfo);
+                        MOD_DB.ingest(resp.db, resp.dbInfo, resp.loc, resp.site);
                     }
                     catch (err) {
                         BP_ERROR.logwarn(err);
@@ -2596,7 +2641,7 @@
                 com.dataset.untrix = true;
                 head.insertBefore(com, head.firstChild);
 
-                console.log("bp_cs: Instrumented Command");
+                BP_ERROR.logdebug("bp_cs: Instrumented Command");
             }
         }
 

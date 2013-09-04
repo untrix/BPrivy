@@ -29,6 +29,7 @@ namespace bp
 	//const bp::ustring PROP_DB_PATH2				(L"dbPath2");
 
 	const bp::ustring PROP_HIDE					(L"hide");
+    const bp::ustring PROP_HIDDEN				(L"hidden");
 	const bp::ustring PROP_FILE_FILTER			(L"filter");
 	const bp::ustring PROP_DIALOG_TITLE			(L"dtitle");
 	const bp::ustring PROP_DIALOG_BUTTON		(L"dbutton");

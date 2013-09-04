@@ -24,13 +24,13 @@ function BP_GET_WALLET_FORM(g)
     var m;
     /** @import-module-begin Common */
     m = g.BP_COMMON;
-    var BP_COMMON = IMPORT(m);
+    var BP_COMMON = IMPORT(m),
+        addEventListeners = IMPORT(m.addEventListeners),
+        addEventListener = IMPORT(m.addEventListener),
+        customEvent = IMPORT(m.customEvent);
     /** @import-module-begin CSPlatform */
         m = IMPORT(g.BP_CS_PLAT);
-    var CS_PLAT = IMPORT(g.BP_CS_PLAT),
-        //rpcToMothership = IMPORT(CS_PLAT.rpcToMothership),
-        addEventListeners = IMPORT(m.addEventListeners), // Compatibility function
-        addEventListener = IMPORT(m.addEventListener); // Compatibility function
+    var CS_PLAT = IMPORT(g.BP_CS_PLAT);
     /** @import-module-begin W$ */
     m = IMPORT(g.BP_W$);
     var BP_W$ = m,
@@ -45,14 +45,16 @@ function BP_GET_WALLET_FORM(g)
     /** @import-module-begin */
     var BP_DBFS = IMPORT(g.BP_DBFS);
     var DB_FS = IMPORT(BP_DBFS.DB_FS);
+    /** @import-module-begin */
+    var BP_NTFN_CNTR = IMPORT(g.BP_NTFN_CNTR);
     /** @import-module-end **/    m = null;
 
     /** @globals-begin */
     var g_counter = 1,
         g_text =
 	    {
-	    	keyOptionsHelpText: 'For more security: Do not store the Master Key file on the same device as the keyring. A thief will need three things to steal your data: 1) keyring, 2) Master Key and 3) Master Password. '+
-	    	'Therefore, store the keyring and Master Key in separate locations. The Master Key could be stored on a memory-stick and carried with you always.'
+	    	keyOptionsHelpText: 'For more security: Do not store the Master Key file on the same device as the Keyring. A thief will need three things to steal your data: 1) Keyring, 2) Master Key and 3) Master Password. '+
+	    	'Therefore, store the Keyring and Master Key in separate locations. The Master Key could be stored on a memory-stick and carried with you always.'
 	    };
     /** @globals-end **/
 
@@ -88,8 +90,8 @@ function BP_GET_WALLET_FORM(g)
     function chooseWalletFolder(o)
     {
         BP_COMMON.clear(o);
-        o.dtitle = "K3YRING: Select keyring Folder";
-        o.dbutton = "Select keyring Folder";
+        o.dtitle = "K3YRING: Select Keyring Folder";
+        o.dbutton = "Select Keyring Folder";
         o.clrHist = true;
 
         return chooseFolder(o);
@@ -148,7 +150,7 @@ function BP_GET_WALLET_FORM(g)
         // The following is the structure of stored dbNames.
         // 1. A property in localStorage with key = dbNames. Its value is
         // a JSON.stringify'd object whose keys are db names and values are the DB-Paths.
-        // 2. Another propety in localStorage with key = dbKeys. Its value
+        // 2. Another property in localStorage with key = dbKeys. Its value
         //    is a JSON.stringify'd object whose keys are db paths and values are
         //    the key-file paths (if the key-file was stored outside the DB).
         // 3. Another property in localStorage is called lastDBName that carries name of
@@ -200,6 +202,7 @@ function BP_GET_WALLET_FORM(g)
         }
 
         var mod = {
+            // NOTE: getDBPaths has been copied to bp_settings as well.
             getDBPaths : function ()
             {
                 if (!dbPaths) { dbPaths = construct('db.path.'); }
@@ -215,7 +218,7 @@ function BP_GET_WALLET_FORM(g)
             },
             getKeyPaths : function ()
             {
-                if (!keyPaths) { keyPaths = construct('db.key.'); }
+                if (!keyPaths) { keyPaths = construct('db.masterkey.'); }
                 return keyPaths;
             },
             getKeyPath : function (dbPath)
@@ -240,9 +243,11 @@ function BP_GET_WALLET_FORM(g)
                 mod.getDBPaths()[dbName] = dbPath;
 
                 if (keyPath) {
-                    localStorage['db.key.' + dbPath] = keyPath;
+                    localStorage['db.masterkey.' + dbPath] = keyPath;
                     mod.getKeyPaths()[dbPath] = keyPath;
                 }
+
+                return dbName;
             },
             setDB :  function (dbName, dbPath, keyPath)
             {
@@ -312,34 +317,32 @@ function BP_GET_WALLET_FORM(g)
         return {
         tag:'form', addClass:'pull-left',
             children:[
-            {tag:'label', _text:'  Remember keyring Locations',
+            {tag:'label', _text:'  Remember Keyring Locations',
              css:{ 'text-align':'left' },
                 children:[
-                {tag:'input', attr:{ type:'radio', tabindex:-1, name:'dontSaveLocation' },
+                {tag:'input', attr:{ type:'checkbox', tabindex:-1, name:'doSaveLocation' },
                  prop:{ checked:Boolean(!SETTINGS.dontSaveLocation()) },
                  save:['walletForm'],
                  on:{'change': function(e) {
                         SETTINGS.dontSaveLocation(!this.el.checked);
-                        if (!this.el.checked) {
-                            SETTINGS.clear();
-                            this.walletForm.clearDBPaths();
-                        }
+                        // if (!this.el.checked) {
+                            // SETTINGS.clear();
+                            // this.walletForm.clearDBPaths();
+                        // }
                       }}
                 },
                 ]
             },
-            {tag:'label', _text:'  Forget Wallet Locations',
+            {tag:'label', _text:'  Erase Keyring Locations',
              css:{ 'text-align':'left' },
                 children:[
-                {tag:'input', attr:{ type:'radio', tabindex:-1, name:'dontSaveLocation' },
-                 prop:{ checked:Boolean(SETTINGS.dontSaveLocation()) },
+                {tag:'i', attr:{ type:'button', tabindex:-1, name:'eraseLocations' },
                  save:['walletForm'],
-                 on:{'change': function(e) {
-                        SETTINGS.dontSaveLocation(this.el.checked);
-                        if (this.el.checked) {
-                            SETTINGS.clear();
-                            this.walletForm.clearDBPaths();
-                        }
+                 addClass:'icon-trash',
+                 css: {cursor:'pointer'},
+                 on:{'click': function(e) {
+                        SETTINGS.clear();
+                        this.walletForm.clearDBPaths();
                       }}
                 },
                 ]
@@ -401,7 +404,7 @@ function BP_GET_WALLET_FORM(g)
                         if (this.fieldsetDBName) {
                             this.fieldsetDBName.inputDBName.el.value = this.dbName;
                         }
-                        CS_PLAT.customEvent(this.el, 'dbNameChosen', {dbName:this.dbName});
+                        customEvent(this.el, 'dbNameChosen', {dbName:this.dbName});
                     }}
             }
             ]
@@ -473,13 +476,13 @@ function BP_GET_WALLET_FORM(g)
                     children:[
                     {tag:'input',
                      ref:'inputDBName', addClass:"input-medium",
-                     attr:{ type:'text', placeholder:"Enter keyring Name", pattern:".{1,}",
-                     title:"Please enter a name for the new keyring that you would like to create. "+
-                           "Example: <i>Work keyring</i>"
+                     attr:{ type:'text', placeholder:"Enter Keyring Name", pattern:".{1,}",
+                     title:"Please enter a name for the new Keyring that you would like to create. "+
+                           "Example: <i>Work Keyring</i>"
                      },
                      prop:{ required: true },
                      on:{ 'change': function(e) {
-                                    CS_PLAT.customEvent(this.el, 'dbNameChosen', {dbName:this.el.value});
+                                    customEvent(this.el, 'dbNameChosen', {dbName:this.el.value});
                                     }}
                     }
                     ]
@@ -530,7 +533,7 @@ function BP_GET_WALLET_FORM(g)
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
                     this.fieldsetChooseDB.inputDBPath.el.value = path;
-                    CS_PLAT.customEvent(this.fieldsetChooseDB.inputDBPath.el, 'dbChosen',
+                    customEvent(this.fieldsetChooseDB.inputDBPath.el, 'dbChosen',
                         {dbPath:path});
                 }
             }}
@@ -543,7 +546,7 @@ function BP_GET_WALLET_FORM(g)
         addClass:'control-group',
         save:['walletForm'],
             children:[
-            {html:'<label class="control-label">keyring Location</label>'},
+            {html:'<label class="control-label">Keyring Location</label>'},
             {tag:'div', addClass:'controls form-inline',
                 children:[
                 {tag:'div', addClass:'input-prepend',
@@ -552,14 +555,14 @@ function BP_GET_WALLET_FORM(g)
                     btnChooseDB.wdt,
                     {tag:'input',
                      ref:'inputDBPath',
-                     attr:{ type:'text', placeholder:"keyring Folder Location" },
+                     attr:{ type:'text', placeholder:"Keyring Folder Location" },
                      prop:{ required:true },
                      addClass:"input-large",
                      save:['fieldsetChooseDB'],
                      on:{'change':function(e)
                          {
                             //if (this.fieldsetChooseDB.checkValidity(this)) {
-                                CS_PLAT.customEvent(this.el, 'dbChosen', {dbPath:this.el.value});
+                                customEvent(this.el, 'dbChosen', {dbPath:this.el.value});
                             //}
                          }
                      }
@@ -598,7 +601,7 @@ function BP_GET_WALLET_FORM(g)
 	            path = SETTINGS.getDBPath(dbName);
 	            if (path) {
 	                this.inputDBPath.el.value = path;
-	                CS_PLAT.customEvent(this.inputDBPath.el, 'dbChosen', {dbPath:path});
+	                customEvent(this.inputDBPath.el, 'dbChosen', {dbPath:path});
 	            }
            	}
 
@@ -635,7 +638,7 @@ function BP_GET_WALLET_FORM(g)
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
                     this.fieldsetChooseKey.inputKeyPath.el.value = path;
-                    CS_PLAT.customEvent(this.fieldsetChooseKey.inputKeyPath.el, 'keyPathChosen', {keyPath:path});
+                    customEvent(this.fieldsetChooseKey.inputKeyPath.el, 'keyPathChosen', {keyPath:path});
                 }
             }}
         });
@@ -664,7 +667,7 @@ function BP_GET_WALLET_FORM(g)
                      save:['fieldsetChooseKey'],
                      on:{ 'change': function(e) {
                          //if (this.fieldsetChooseKey.checkValidity(this)) {
-                            CS_PLAT.customEvent(this.el, 'keyPathChosen', {keyPath:this.el.value});
+                            customEvent(this.el, 'keyPathChosen', {keyPath:this.el.value});
                          //}
                          }
                         }
@@ -696,7 +699,7 @@ function BP_GET_WALLET_FORM(g)
             if (keyPath) {
                 this.inputKeyPath.el.value = null;
                 this.disable();
-                CS_PLAT.customEvent(this.inputKeyPath.el, 'keyPathChosen', {keyPath:keyPath});
+                customEvent(this.inputKeyPath.el, 'keyPathChosen', {keyPath:keyPath});
             }
             else
             {
@@ -704,7 +707,7 @@ function BP_GET_WALLET_FORM(g)
                 keyPath = SETTINGS.getKeyPath(dbPath);
                 if (keyPath) {
                     this.inputKeyPath.el.value = keyPath;
-                    CS_PLAT.customEvent(this.inputKeyPath.el, 'keyPathChosen', {keyPath:keyPath});
+                    customEvent(this.inputKeyPath.el, 'keyPathChosen', {keyPath:keyPath});
                 }
                 else {
                 	this.enable();
@@ -735,9 +738,9 @@ function BP_GET_WALLET_FORM(g)
 	        	{tag:'label',
 	        	_text:'  Do not use a Master Key (Least Secure Option)',
 	        	 attr:{ title: 'Not recommended for cloud-drives - use one of the other options for cloud-drives. '+
-	        	 			   'If you create multiple keyrings with this option then you\'ll have to separately change '+
+	        	 			   'If you create multiple Keyrings with this option then you\'ll have to separately change '+
 	        	 			   'the master-password for each. If you want the convenience of a single master-password '+
-	        	 			   'for multiple keyrings then use a Master Key (following options).' },
+	        	 			   'for multiple Keyrings then use a Master Key (following options).' },
 	             css:{ 'text-align':'left' },
 	                children:[
 	                {tag:'input',
@@ -753,7 +756,7 @@ function BP_GET_WALLET_FORM(g)
 	            },
 	            {tag:'label',
 	             _text:'  I already have a Master Key',
-	             attr:{ title:'Use an existing Master Key to encrypt/decrypt this keyring. '+
+	             attr:{ title:'Use an existing Master Key to encrypt/decrypt this Keyring. '+
 	             			   g_text.keyOptionsHelpText},
 	             css:{ 'text-align':'left' },
 	                children:[
@@ -770,8 +773,8 @@ function BP_GET_WALLET_FORM(g)
 	            },
 	            {tag:'label',
 	             _text:'  I do not have a Master Key - create one.',
-	        	 attr:{ title: 'Create an encryption Key (Master Key) to encrypt this keyring. This Master Key may also be used for keyrings created later. ' +
-	        	 			   'For more security advanced users may choose to create a new Master Key per keyring, but while doing so be aware that a '+
+	        	 attr:{ title: 'Create an encryption Key (Master Key) to encrypt this Keyring. This Master Key may also be used for Keyrings created later. ' +
+	        	 			   'For more security advanced users may choose to create a new Master Key per Keyring, but while doing so be aware that a '+
 	        	 			   'new Master Key file implies a separate master-password to remember (and to change periodically). If you have too many '+
 	        	 			   'Master Key files, then keeping track of individual master-passwords can get difficult.'+
 	        	 			   g_text.keyOptionsHelpText },
@@ -795,7 +798,7 @@ function BP_GET_WALLET_FORM(g)
         {
         	onChoose: {value: function(option)
         	{
-        		CS_PLAT.customEvent(this.el, 'keyOptionChosen', {option:option});
+        		customEvent(this.el, 'keyOptionChosen', {option:option});
         	}},
 
         	reset: {value: function()
@@ -841,7 +844,7 @@ function BP_GET_WALLET_FORM(g)
                 if (o.err) { BP_ERROR.alert(o.err); }
                 else if (path) {
                     this.controlsKeyFile.inputKeyFile.el.value = path;
-                    CS_PLAT.customEvent(this.controlsKeyFile.inputKeyFile.el, 'keyPathChosen', {keyPath:path});
+                    customEvent(this.controlsKeyFile.inputKeyFile.el, 'keyPathChosen', {keyPath:path});
                 }
             }}
         }, fieldsetProto);
@@ -871,7 +874,7 @@ function BP_GET_WALLET_FORM(g)
                 else if (path && this.fieldsetKeyDirOrPath.validateKeyFolder(path))
                 {
                     this.controlsKeyFolder.inputKeyFolder.el.value = path;
-                    CS_PLAT.customEvent(this.controlsKeyFolder.inputKeyFolder.el,
+                    customEvent(this.controlsKeyFolder.inputKeyFolder.el,
                         'keyFolderChosen', {keyFolder:path});
                 }
             }}
@@ -923,7 +926,7 @@ function BP_GET_WALLET_FORM(g)
                      on:{ 'change': function(e)
                           {
                               if (this.fieldsetKeyDirOrPath.validateKeyFolder(this.el.value)) {
-                                CS_PLAT.customEvent(this.el, 'keyFolderChosen',
+                                customEvent(this.el, 'keyFolderChosen',
                                                     {keyFolder:this.el.value});
                               }
                           }}
@@ -961,7 +964,7 @@ function BP_GET_WALLET_FORM(g)
                      on:{ 'change': function(e)
                           {
                               //if (this.fieldsetKeyDirOrPath.checkValidity(this)) {
-                                CS_PLAT.customEvent(this.el, 'keyPathChosen',
+                                customEvent(this.el, 'keyPathChosen',
                                                     {keyFile:this.el.value});
                               //}
                           }}
@@ -982,7 +985,7 @@ function BP_GET_WALLET_FORM(g)
     		if (BP_PLUGIN.exists(keyPath, {})) {
     			this.controlsKeyFolder.inputKeyFolder.el.setCustomValidity('A Master Key file called ' + fName + ' already exists at this location');
     			this.controlsKeyFolder.inputKeyFolder.el.checkValidity();
-    			BP_ERROR.warn('A Master Key file called ' + fName + ' already exists at this location. Choose a different folder or a different keyring name.');
+    			BP_ERROR.warn('A Master Key file called ' + fName + ' already exists at this location. Choose a different folder or a different Keyring name.');
     			return false;
     		}
     		else {
@@ -1023,7 +1026,7 @@ function BP_GET_WALLET_FORM(g)
         		default:
         			this.controlsKeyFolder.disable();
         			this.controlsKeyFile.disable();
-        			CS_PLAT.customEvent(this.el, 'keyFolderChosen', {keyFolder:null});
+        			customEvent(this.el, 'keyFolderChosen', {keyFolder:null});
         			break;
         	}
         }}
@@ -1040,8 +1043,8 @@ function BP_GET_WALLET_FORM(g)
         {
             return {
             tag:'input', cons: inputPassword,
-            attr:{ type:'password', placeholder:bPass2?"Re-Enter Master Password":"Enter Master Password",
-                   title:'10 or more characters required', pattern:'.{10,}' },
+            attr:{ type:'password', placeholder:"10 characters or more",
+                   pattern:'.{10,}' },
             iface:{ 'bPass2':bPass2 },
             prop:{ required:true },
             ref:'inputPassword',
@@ -1061,13 +1064,13 @@ function BP_GET_WALLET_FORM(g)
                      }
                      else {
                      	 this.el.setCustomValidity('');
-                         CS_PLAT.customEvent(this.el, 'passwordChosen');
+                         customEvent(this.el, 'passwordChosen');
                      }
                  }
                  else {
 	                 //if (this.walletForm.mode !== 'create') {
 	                 if (this.walletForm.fieldsetPassword2.inputPassword.el.disabled) {
-	                     CS_PLAT.customEvent(this.el, 'passwordChosen');
+	                     customEvent(this.el, 'passwordChosen');
 	                 }
 	                 else if (this.el.value === this.walletForm.fieldsetPassword2.inputPassword.el.value) {
 	                 	this.walletForm.fieldsetPassword2.inputPassword.el.setCustomValidity('');
@@ -1086,7 +1089,10 @@ function BP_GET_WALLET_FORM(g)
         save:['walletForm'],
             children:[
             {tag:'label', addClass:'control-label',
-             text:bPass2?'Re-Enter Master Password':'Master Password'
+             text:bPass2?'Re-Enter Master Password ':'Master Password ',
+                children:[
+                {tag:'i', addClass:'icon-question-sign', attr:{title:'10 or more characters required'}}
+                ]
             },
             {tag:'div', addClass:'controls',
                 children:[inputPassword.wdt]
@@ -1120,7 +1126,7 @@ function BP_GET_WALLET_FORM(g)
             		// CryptContext is loaded, therefore do not
             		// ask for password.
             		this.disable();
-            		CS_PLAT.customEvent(this.el, 'passwordChosen');
+            		customEvent(this.el, 'passwordChosen');
             	}
            	}
            	else {
@@ -1290,7 +1296,7 @@ function BP_GET_WALLET_FORM(g)
                                             resp.dbPath,
                                             self.fieldsetChooseKey.val());
                         self.updateDash(resp);
-                        BP_ERROR.success('Opened keyring at ' + resp.dbPath);
+                        BP_ERROR.success('Loaded Keyring at ' + resp.dbPath);
                         modalDialog.destroy();
                     }
                     else {
@@ -1334,7 +1340,7 @@ function BP_GET_WALLET_FORM(g)
             }
             else if (this.getDBPath() === self.fieldsetChooseDB.val()) {
                 spinner.stop();
-                BP_ERROR.warn('The chosen keyring is already open! Please choose another keyring.');
+                BP_ERROR.warn('The chosen Keyring is already open! Please choose another Keyring.');
             }
             else if (self.mode === 'merge')
             {
@@ -1342,13 +1348,14 @@ function BP_GET_WALLET_FORM(g)
                         self.fieldsetChooseKey.val(),
                         self.fieldsetPassword.val(), function (resp)
                 {
+                    var dbName;
                     spinner.stop();
                     if (resp.result === true) {
-                        SETTINGS.setPaths(null,
+                        dbName = SETTINGS.setPaths(null,
                                                self.fieldsetChooseDB.val(),
                                                self.fieldsetChooseKey.val());
                         self.updateDash(resp);
-                        BP_ERROR.success('Merged with keyring at ' + self.fieldsetChooseDB.val());
+                        BP_ERROR.success('Synchronized with Keyring ' + dbName);
                         modalDialog.destroy();
                     }
                     else {
@@ -1362,13 +1369,14 @@ function BP_GET_WALLET_FORM(g)
                         self.fieldsetChooseKey.val(),
                         self.fieldsetPassword.val(), function (resp)
                 {
+                    var dbName;
                     spinner.stop();
                     if (resp.result === true) {
-                        SETTINGS.setPaths(null,
+                        dbName = SETTINGS.setPaths(null,
                                                self.fieldsetChooseDB.val(),
                                                self.fieldsetChooseKey.val());
                         self.updateDash(resp);
-                        BP_ERROR.success('Merged In keyring at ' + self.fieldsetChooseDB.val());
+                        BP_ERROR.success('Imported Keyring ' + dbName);
                         modalDialog.destroy();
                     }
                     else {
@@ -1382,14 +1390,14 @@ function BP_GET_WALLET_FORM(g)
                         self.fieldsetChooseKey.val(),
                         self.fieldsetPassword.val(), function (resp)
                 {
+                    var dbName;
                     spinner.stop();
                     if (resp.result === true) {
-                        SETTINGS.setPaths(null,
+                        dbName = SETTINGS.setPaths(null,
                                           self.fieldsetChooseDB.val(),
                                           self.fieldsetChooseKey.val());
                         //self.updateDash(resp);
-                        BP_ERROR.success('Merged out to keyring at ' +
-                                         self.fieldsetChooseDB.val());
+                        BP_ERROR.success('Exported to Keyring ' + dbName);
                         modalDialog.destroy();
                     }
                     else {
@@ -1469,20 +1477,20 @@ function BP_GET_WALLET_FORM(g)
             switch (this.mode)
             {
                 case 'merge':
-                    this.modalHeader.$().text('Sync/Merge keyring: ');
+                    this.modalHeader.$().text('Sync/Merge Keyring: ');
                     break;
                 case 'mergeIn':
-                    this.modalHeader.$().text('Import keyring:');
+                    this.modalHeader.$().text('Import Keyring:');
                     break;
                 case 'mergeOut':
-                    this.modalHeader.$().text('Export to keyring:');
+                    this.modalHeader.$().text('Export to Keyring:');
                     break;
                 case 'create':
-                    this.modalHeader.$().text('Create keyring:');
+                    this.modalHeader.$().text('Create Keyring:');
                     break;
                 case 'open':
                 default:
-                    this.modalHeader.$().text('Open keyring:');
+                    this.modalHeader.$().text('Load Keyring:');
             }
 
             return this;
@@ -1552,7 +1560,7 @@ function BP_GET_WALLET_FORM(g)
                 }
         }
 
-        $('#modalDialog *').tooltip(); // used to leak DOM nodes in version 2.0.4.
+        $('#modalDialog *').tooltip({container:'body'}); // used to leak DOM nodes in version 2.0.4.
     };
     modalDialog.onHidden = function(e)
     {
@@ -1601,7 +1609,7 @@ function BP_GET_WALLET_FORM(g)
         }
     };
 
-    BP_ERROR.loginfo("constructed mod_wallet_form");
+    BP_ERROR.logdebug("constructed mod_wallet_form");
     return Object.freeze(
     {
         launch: modalDialog.create

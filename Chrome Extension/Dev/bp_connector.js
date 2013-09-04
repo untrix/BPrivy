@@ -126,8 +126,7 @@ function BP_GET_CONNECT(g)
                 value: (loc.hostname || undefined)},
             P: {enumerable:true,
                 value: (DICT_TRAITS[dt].url_path && loc.pathname && (loc.pathname !== "/"))?loc.pathname:undefined}
-            //U: {enumerable:true,
-                //value: loc.href}
+            //_U: {enumerable:true, value: loc.href}
         });
         Object.seal(this);
     }
@@ -141,17 +140,18 @@ function BP_GET_CONNECT(g)
      */
     L.prototype.toLoc = function ()
     {
-        if (this.U) {
-            return BP_COMMON.parseURL(this.U);
+        if (this._U) {
+            return BP_COMMON.parseURL(this._U);
         }
         else {
             return {hostname:this.H, pathname:(this.P||"/")};
         }
     };
+    //L.prototype.getURL = function () { return this._U; };
     L.prototype.toURL = function ()
     {
         var url;
-        if (this.U) {return this.U;}
+        if (this._U) {return this._U;}
 
         url = "http://";
         if (this.H) {
@@ -187,7 +187,7 @@ function BP_GET_CONNECT(g)
             // ingest thousands of records (ETLD has about 7K records)
             l: {value: newL(loc, dt), enumerable: true},
             // Type of action. Can have one of the following enumerated values:
-            // 1. undefined: insert action
+            // 1. undefined: insert/assert action
             // 2. 'd': delete action
             // 3. 'pd': Permanent delete (empty recycle-bin) action.
             a: {value:type, enumerable: true}
@@ -446,7 +446,7 @@ function BP_GET_CONNECT(g)
         return iface;
     }
 
-    BP_ERROR.log("constructed mod_connector");
+    BP_ERROR.logdebug("constructed mod_connector");
     return getModuleInterface();
 
 }

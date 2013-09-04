@@ -36,6 +36,9 @@ SET( SOURCES
     ${GENERATED}
     )
 
+# Following was added by Sumeet
+set (CERT_DIR ${FireBreath_SOURCE_DIR}/../../../cert)
+
 # This will include Win/projectDef.cmake, X11/projectDef.cmake, Mac/projectDef 
 # depending on the platform
 include_platform()

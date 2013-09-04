@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Website</name>
+	<name>Web</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -13,12 +13,58 @@
 	</buildSpec>
 	<natures>
 		<nature>com.aptana.projects.webnature</nature>
+		<nature>com.aptana.ruby.core.rubynature</nature>
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Website</name>
+			<name>help.html</name>
+			<type>1</type>
+			<location>D:/Dev/marketing-master/help.html</location>
+		</link>
+		<link>
+			<name>index.html</name>
+			<type>1</type>
+			<location>D:/Dev/marketing-master/index.html</location>
+		</link>
+		<link>
+			<name>k3yring.html</name>
+			<type>1</type>
+			<location>D:/Dev/marketing-master/k3yring.html</location>
+		</link>
+		<link>
+			<name>k3yring.untrix.com</name>
 			<type>2</type>
-			<location>D:/Dev/BPrivy/Website</location>
+			<location>D:/Dev/marketing-master/k3yring.untrix.com</location>
+		</link>
+		<link>
+			<name>tools</name>
+			<type>2</type>
+			<location>D:/Dev/marketing-master/tools</location>
+		</link>
+		<link>
+			<name>web</name>
+			<type>2</type>
+			<location>D:/Dev/marketing-master/web</location>
 		</link>
 	</linkedResources>
+	<filteredResources>
+		<filter>
+			<id>0</id>
+			<name>tools</name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-node_modules</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1367533999853</id>
+			<name>web/css</name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.css</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>

@@ -1,0 +1,1 @@
+.\firebreath\prep2012.cmd .\plugin-win-src .\plugin-win-build-VS2012 -C D:\Dev\BPrivy\Plugin\plugin-win-src\BPrivy\CMakeInitialCache_Win32_Dynamic.txt

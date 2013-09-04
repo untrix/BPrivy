@@ -38,7 +38,7 @@ function minify(SRC, DST, FORCE)
         f = files[i];
         ext = f.slice(f.lastIndexOf(".cat.")).toLowerCase();
         ext2= f.slice(f.lastIndexOf(".out.")).toLowerCase();
-        if ((ext===".cat.js") || (ext2===".out.js"))
+        if ((ext===".cat.js") || (ext2===".out.js") || (ext2===".lib.js"))
         {
             df = DST + f;
             sf = SRC + f;

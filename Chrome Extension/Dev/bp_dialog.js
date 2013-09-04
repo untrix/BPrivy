@@ -18,8 +18,11 @@ var BP_DIALOG = (function ()
     var g = {g_win:window, g_console:console, g_chrome:chrome, $:$, jQuery:jQuery},
         g_doc = document;
     g.BP_CS_PLAT = BP_GET_CS_PLAT(g);
+    // Reference existence mods
     g.MAIN_PAGE = g.BP_CS_PLAT.getBackgroundPage();
     g.BP_MEMSTORE = g.MAIN_PAGE.BP_MAIN.g.BP_MEMSTORE;
+    g.BP_NTFN_CNTR = g.BP_MAIN.g.BP_NTFN_CNTR;
+    // Instantiate mods.
     g.BP_ERROR = g.MAIN_PAGE.BP_GET_ERROR(g);
     g.BP_COMMON = g.MAIN_PAGE.BP_GET_COMMON(g);
     g.BP_TRAITS = g.MAIN_PAGE.BP_GET_TRAITS(g);
@@ -37,12 +40,12 @@ var BP_DIALOG = (function ()
     var BP_MAIN = IMPORT(g.MAIN_PAGE.BP_MAIN);
     /** @import-module-begin */
     var BP_COMMON = IMPORT(g.BP_COMMON);
+    var addEventListeners = IMPORT(BP_COMMON.addEventListeners);
+    var addEventListener = IMPORT(BP_COMMON.addEventListener);
     /** @import-module-begin CSPlatform */
     var m = IMPORT(g.BP_CS_PLAT);
     var CS_PLAT = IMPORT(g.BP_CS_PLAT),
         rpcToMothership = IMPORT(CS_PLAT.rpcToMothership);
-    var addEventListeners = IMPORT(m.addEventListeners); // Compatibility function
-    var addEventListener = IMPORT(m.addEventListener); // Compatibility function
     /** @import-module-begin */
     var DBFS = IMPORT(g.BP_DBFS);
     var cullDBName = IMPORT(DBFS.cullDBName);
@@ -197,31 +200,52 @@ var BP_DIALOG = (function ()
         BP_PLUGIN_INSTALLER.launch(o);
     }
 
+    function launchUnsupportedOS(o)
+    {
+        var BP_PLUGIN_INSTALLER = g.MAIN_PAGE.BP_GET_PLUGIN_INSTALLER(g);
+        o = o || {};
+        o.mode = 'unsupportedOS';
+        BP_PLUGIN_INSTALLER.launch(o);
+    }
+
+    // function checkEula ()
+    // {
+        // // Check EULA accepted. If not, then don't allow any functionality.
+        // if (!BP_MAIN.eulaAccepted()) {
+            // g_win.open('bp_license.html', '_self', null, true);
+            // throw new BPError("EULA not accepted yet");
+        // }
+    // }
+
     function onload()
     {
+        //checkEula();
         switch (BP_COMMON.getQueryObj(g.g_win.location)['action'])
         {
-            case 'open':
-                launchOpen({closeWin:true});
-                return;
-            case 'close':
-                closeDB();
-                g.g_win.close();
-                return;
-            case 'merge':
-                launchMerge({closeWin:true});
-                return;
-            case 'mergeIn':
-                launchMergeIn({closeWin:true});
-                return;
-            case 'mergeOut':
-                launchMergeOut({closeWin:true});
-                return;
+            // case 'open':
+                // launchOpen({closeWin:true});
+                // return;
+            // case 'close':
+                // closeDB();
+                // g.g_win.close();
+                // return;
+            // case 'merge':
+                // launchMerge({closeWin:true});
+                // return;
+            // case 'mergeIn':
+                // launchMergeIn({closeWin:true});
+                // return;
+            // case 'mergeOut':
+                // launchMergeOut({closeWin:true});
+                // return;
             case 'installPlugin':
                 launchInstallPlugin({closeWin:true});
                 return;
             case 'upgradePlugin':
                 launchUpgradePlugin({closeWin:true});
+                return;
+            case 'unsupportedOS':
+                launchUnsupportedOS({closeWin:true});
                 return;
             default:
         }
@@ -236,12 +260,12 @@ var BP_DIALOG = (function ()
     });
     Object.freeze(iface);
 
-    console.log("constructed mod_dialog");
+    BP_ERROR.logdebug("constructed mod_dialog");
     return iface;
 })();
 
 // $(document).ready(function (e)
-BP_DIALOG.g.BP_CS_PLAT.addEventListener(window, 'load', function(e)
+BP_DIALOG.g.BP_COMMON.addEventListener(window, 'load', function(e)
 { "use strict";
   BP_DIALOG.onload();
   BP_DIALOG.g.BP_ERROR.logdebug("inited mod_dialog");

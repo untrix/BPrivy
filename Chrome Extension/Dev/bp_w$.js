@@ -32,8 +32,8 @@
      *             If neither of cons or proto are present, then a simple WidgetElement will be constructed.
      *     ref  == Causes creation of a property in ctx whose value is a JavaScript reference/pointer
      *             to the WidgetElement object. This property will then be collected by
-     *             another WidgetElement downstream (usually an ancestor) using the '_cull'
-     *             directive.
+     *             another WidgetElement downstream (usually an ancestor) using the '_cull' or 'save'
+     *             directives.
      *     attr == same as in jquery
      *     text == same as in jquery - run before child nodes are inserted
      *     prop == same as in jquery
@@ -46,8 +46,7 @@
      *     ctx == Object that holds name:value pairs to be populated into the context (ctx/w$ctx).
      *            Meant for passing properties down to descendants, back up to parents or onto
      *            elements further down the time-line. The elements will catch these properties
-     *            using iface and _iface properties. These properties are inserted into ctx
-     *            before children are processed. The property values may be directly specified
+     *            using iface, _iface, _cull and save directives. The property values may be directly specified
      *            in the wdl (maybe dynamically created by a wdt or wdi function but ultimately
      *            hard-bound into the resulting wdl object), or w$exec may be instructed to pick
      *            them up from the context of from the lexical-environment denoted by 'w$'.
@@ -86,6 +85,12 @@
      *              that is expected to be executed at runtime and with each iteration w$ctx.w$rec property is
      *              populated with the record obtained by iterator.next(). The iteration number (starting with 1)
      *              is populated into w$ctx.w$i.
+     *     walk:    { walker:walker-func, wdi:wdl-template-func-or-plain-object }
+     *              Same purpose as the iterate directive, except that instead of an iterator, pass in a function (walker-func)
+     *              with the following signature: walker-func(foo) with foo having the signature foo(rec) where rec
+     *              is the record being iterated. walker-func should iterate over recs and call foo(rec) for each
+     *              rec (similar to Array.forEach). foo(rec) is implemented internally and it calls wdi after
+     *              populating w$ctx.w$rec and w$ctx.w$i as with the iterate directive.
      *     _iface: Same as iface, except that this directive is processed after children are created. Meant
      *              to catch values thrown by children.
      *     _cull:  Value should be an array of property name strings. Properties with these
@@ -113,7 +118,6 @@ function BP_GET_W$(g)
     /** @import-module-begin CSPlatform */
     m = g.BP_CS_PLAT;
     var getURL = IMPORT(m.getURL);
-    var addHandlers = IMPORT(m.addHandlers); // Compatibility function
     /** @import-module-begin Error */
     m = g.BP_ERROR;
     var BP_ERROR = IMPORT(m),
@@ -121,8 +125,8 @@ function BP_GET_W$(g)
         logwarn = IMPORT(m.logwarn);
     /** @import-module-begin */
     m = g.BP_COMMON;
-    var MOD_COMMON = IMPORT(m);
-    var newInherited = IMPORT(m.newInherited);
+    var MOD_COMMON = IMPORT(m),
+        addHandlers = IMPORT(m.addHandlers);
     /** @import-module-end **/    m = null;
 
     /********************** WDL Interpretor ************************/
@@ -552,10 +556,11 @@ function BP_GET_W$(g)
             {try {
                 _cwdl = wdi;
                 if (isFunc) {
+                    // compile wdi to wdl
                     ctx.w$rec = rec;
                     ctx.w$i = j;
                     _cwdl = wdi(ctx);
-                } // compile wdi to wdl
+                }
                 if (_cwdl !== w$undefined) {
                     w$el.append(w$exec(_cwdl, ctx, true));
                     j++;
@@ -613,6 +618,6 @@ function BP_GET_W$(g)
        Widget: WidgetElement,
        WidgetElement: WidgetElement
    });
-   BP_ERROR.log("constructed mod_w$");
+   BP_ERROR.logdebug("constructed mod_w$");
    return iface;
 }

@@ -35,7 +35,6 @@ function BP_GET_FILESTORE(g)
         stripQuotes = IMPORT(m.stripQuotes),
         iterObj     = IMPORT(m.iterObj),
         iterArray2  = IMPORT(m.iterArray2);
-    /** @import-module-begin **/
     /** @import-module-begin UI Traits **/
     m = g.BP_TRAITS;
     var dt_eRecord = IMPORT(m.dt_eRecord),
@@ -49,15 +48,19 @@ function BP_GET_FILESTORE(g)
     /** @import-module-begin **/
     m = g.BP_DBFS;
     var newDBMap = IMPORT(m.newDBMap),
-        DB_FS = IMPORT(m.DB_FS);
+        DB_FS = IMPORT(m.DB_FS),
+        DB_EVENTS = IMPORT(m.EVENTS);
+    /** @import-module-begin **/
+    var BP_LISTENER = IMPORT(g.BP_LISTENER);
     /** @import-module-end **/    m = null;
 
-    /** @constant ID of BP-Plugin HtmlEmbedElement*/
+    /** @constant ID of BP-Plugin HtmlEmbedElement */
     var eid_bp = eid_pfx + "bpplugin",
         /** Record Separator in the files */
         rec_sep = '\r\n\r\n,',
         dtl_null = null,
-        this_null = null;
+        this_null = null,
+        EVENTS = BP_LISTENER.newListeners();
 
     var UC_TRAITS = Object.freeze(
     {
@@ -105,6 +108,7 @@ function BP_GET_FILESTORE(g)
         }
         MEMSTORE.clear(); // unload the previous DB.
         DB_FS.setDBPath(null);
+        EVENTS.dispatch('unloadDB', {'dbPath':(dbPath||'')});
     }
 
     /**
@@ -190,12 +194,12 @@ function BP_GET_FILESTORE(g)
                 catch (e)
                 {
                     var bpe = new BPError(e);
-                    BP_ERROR.log("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
+                    BP_ERROR.logdebug("loadFile@bp_filestore.js (Skipping record) " + bpe.toString());
                     MEMSTORE.getStats().bad++;
                 }
             },0);
 
-            BP_ERROR.log("Loaded file " + filePath);
+            BP_ERROR.logdebug("Loaded file " + filePath);
 
 	        if (o.inf && (o.inf.gcode === 'EncryptionCorrupted'))
 	        {
@@ -225,7 +229,7 @@ function BP_GET_FILESTORE(g)
         }
         else
         {
-            BP_ERROR.log("loadFile@filestore: Empty file?: " + filePath);
+            BP_ERROR.logdebug("loadFile@filestore: Empty file?: " + filePath);
         }
     }
 
@@ -233,7 +237,7 @@ function BP_GET_FILESTORE(g)
     {
         if (!dbPath) {return;}
 
-        return BP_ERROR.prompt("Please enter password for keyring at: " + dbPath);
+        return BP_ERROR.prompt("Please enter password for Keyring at: " + dbPath);
     }
 
     function ensureKeyLoaded(dbPath, cryptInfoPath, k)
@@ -350,17 +354,23 @@ function BP_GET_FILESTORE(g)
         // EXPERIMENTAL: The following line was moved to loadDB.
         // dbPath = DB_FS.verifyDBForLoad(dbPath);
 
-        BP_ERROR.log("loadingDB " + dbPath);
+        BP_ERROR.loginfo("loadingDB " + dbPath);
        	MEMSTORE.clear(); // unload the previous DB.
        	DB_FS.setDBPath(null); // EXPERIMENTAL
 
         ensureKeyLoaded(dbPath, keyPath, k);
 
-        loadDBFiles(dbPath, dbStats, exclude);
+        try {
+            loadDBFiles(dbPath, dbStats, exclude);
+        }
+        catch (e) {
+            MEMSTORE.clear(); // unload the previous DB.
+        }
+
         memStats = MEMSTORE.getStats();
         DB_FS.setDBPath(dbPath, dbStats);
 
-        BP_ERROR.log("Loaded DB " + dbPath + ". files loaded: "+dbStats.numLoaded()+
+        BP_ERROR.loginfo("Loaded DB " + dbPath + ". files loaded: "+dbStats.numLoaded()+
                       ", files bad: "+dbStats.numBad()+
                       ", recs loaded: "+memStats.loaded + ", recs bad: " +memStats.bad +
                       ", recs fluff: " +memStats.fluff);
@@ -391,7 +401,11 @@ function BP_GET_FILESTORE(g)
       		// DB_FS.setDBPath(null);
       	// }
 
-        return loadDBInt(dbPath, undefined, undefined, keyPath, k);
+        dbPath = loadDBInt(dbPath, undefined, undefined, keyPath, k);
+        if (dbPath) {
+            EVENTS.dispatch('loadDB', {'dbPath':dbPath});
+        }
+        return dbPath;
     }
 
     /**
@@ -525,9 +539,9 @@ function BP_GET_FILESTORE(g)
             dnIt = MEMSTORE.newDNodeIterator(dt);
             buf = new RecsBuf();
 
-            // TODO: turning off doGC for collecting data for a rarely occuring issue. Turn it
+            // TODO: turning off doGC for collecting data for a rarely occurring issue. Turn it
             // back on afterwards.
-            dnIt.walk(writeAction, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted}, {doGC:false});
+            dnIt.walk(writeAction, {'buf':buf, 'dt':dt, 'dbStats':dbStatsCompacted}, {doGC:true});
 
             if (buf.length)
             {
@@ -542,6 +556,24 @@ function BP_GET_FILESTORE(g)
         // We have to reload again just to populate accurate mem-stats :(
         loadDBInt(dbPath);
         return dbPath;    }
+
+    function compactDBEx()
+    {
+        try {
+            compactDB();
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+        }
+        catch (exp) {
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+            throw exp;
+        }
+
+        return DB_FS.getDBPath();
+    }
 
     /**
      * Import records from files supplied in dbStats of categories specified in cats
@@ -630,7 +662,19 @@ function BP_GET_FILESTORE(g)
 
     function cleanLoadDB()
     {
-        cleanLoadInternal(DB_FS.getDBPath());
+        try {
+            cleanLoadInternal(DB_FS.getDBPath());
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+        }
+        catch (exp)
+        {
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+            throw exp;
+        }
     }
 
     function deleteDB(db)
@@ -640,9 +684,9 @@ function BP_GET_FILESTORE(g)
 
 		db = DB_FS.verifyDBForLoad(db);
 		if (db === DB_FS.getDBPath()) {
-			throw new BPError('This keyring is currently open. Please close it and retry');
+			throw new BPError('This Keyring is currently open. Please close it and retry');
 		}
-		else if (!BP_ERROR.confirm('Are you sure you want to delete all contents of the keyring at: ' + db + "?")) {
+		else if (!BP_ERROR.confirm('Are you sure you want to delete all contents of the Keyring at: ' + db + "?")) {
 			return;
 		}
 
@@ -748,17 +792,52 @@ function BP_GET_FILESTORE(g)
 
     function mergeInDB(db2, keyPath, k)
     {
-        return mergeMain(db2, true, keyPath, k);
+        var rVal;
+        try {
+            rVal = mergeMain(db2, true, keyPath, k);
+        }
+        catch (exp) {
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+            throw exp;
+        }
+        return rVal;
+        if (!DB_FS.getDBPath()) {
+            EVENTS.dispatch('unloadDB', {'dbPath':''});
+        }
     }
 
     function mergeOutDB(db2, keyPath, k)
     {
-        return mergeMain(db2, false, keyPath, k);
+        var rVal;
+        try {
+            rVal = mergeMain(db2, false, keyPath, k);
+        }
+        catch (exp) {
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+            throw exp;
+        }
+
+        return rVal;
     }
 
     function mergeDB(db2, keyPath, k)
     {
-        return mergeMain(db2, undefined, keyPath, k);
+        var rVal;
+        try {
+            rVal = mergeMain(db2, undefined, keyPath, k);
+        }
+        catch (exp) {
+            if (!DB_FS.getDBPath()) {
+                EVENTS.dispatch('unloadDB', {'dbPath':''});
+            }
+            throw exp;
+        }
+
+        return rVal;
     }
 
     function writeCSV(actn, ctx)
@@ -883,6 +962,9 @@ function BP_GET_FILESTORE(g)
 
             unloadDB(); //MEMSTORE.clear(); // unload the previous DB.
             DB_FS.setDBPath(dbPath); // The DB is deemed loaded (though it is empty)
+            if (dbPath) {
+                EVENTS.dispatch('createDB', {'dbPath':dbPath});
+            }
         }
         catch (exp) {
             o = {};
@@ -952,7 +1034,7 @@ function BP_GET_FILESTORE(g)
         }
         var rval = this.regex.exec(this.buf);
         if (rval!==null) {
-            //BP_ERROR.log("getDataLine-->" + rval[1]);
+            //BP_ERROR.logdebug("getDataLine-->" + rval[1]);
             return rval[1];
         }
     };
@@ -1097,7 +1179,7 @@ function BP_GET_FILESTORE(g)
                                           csv[pidx.pass]);
                         if (!MEMSTORE.PREC_TRAITS.isValidCSV(prec))
                         {
-                            BP_ERROR.log("Discarding invalid csv record - " + JSON.stringify(csv));
+                            BP_ERROR.logwarn("Discarding invalid csv record - " + JSON.stringify(csv));
                             prec = null; continue;
                         }
                         else
@@ -1113,7 +1195,7 @@ function BP_GET_FILESTORE(g)
                                 }
                             } catch (e) {
                                 var bpe = new BPError(e);
-                                BP_ERROR.log("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());
+                                BP_ERROR.logwarn("importCSV@bp_filestore.js (Skipping record) " + bpe.toString());
                             }
                         }
                     }
@@ -1132,23 +1214,25 @@ function BP_GET_FILESTORE(g)
     var iface = {};
     Object.defineProperties(iface,
     {
-        importCSV: {value: importCSV},
-        exportCSV: {value: exportCSV},
-        CSVFile: {value: CSVFile},
-        createDB: {value: createDB},
-        loadDB: {value: loadDB},
+        importCSV:  {value: importCSV},
+        exportCSV:  {value: exportCSV},
+        CSVFile:    {value: CSVFile},
+        createDB:   {value: createDB},
+        loadDB:     {value: loadDB},
         unloadDB:   {value: unloadDB},
-        deleteDB: {value: deleteDB},
+        deleteDB:   {value: deleteDB},
         cleanLoadDB:{value: cleanLoadDB},
-        compactDB:  {value: compactDB},
+        compactDB:  {value: compactDBEx},
         mergeDB:    {value: mergeDB},
         mergeInDB:  {value: mergeInDB},
         mergeOutDB: {value: mergeOutDB},
         insertRec:  {value: insertRec},
-        UC_TRAITS: {value: UC_TRAITS}
+        UC_TRAITS:  {value: UC_TRAITS},
+        EVENTS:     {value: EVENTS},
+        DB_EVENTS:  {value: DB_EVENTS}
     });
     Object.freeze(iface);
 
-    BP_ERROR.log("constructed mod_filestore");
+    BP_ERROR.logdebug("constructed mod_filestore");
     return iface;
 }

@@ -203,6 +203,9 @@ namespace bp
 		void			SetProperty				(const ustring& name, uintmax_t n) {
 			m_p->SetProperty(name, n);
 		}
+        void            SetPropertyBool         (const ustring& name, bool b) {
+            m_p->SetProperty(name, b);
+        }
 		void			RemoveProperty			(const ustring& name) {
 			m_p->RemoveProperty(name);
 		}

@@ -29,6 +29,7 @@ function BP_GET_EDITOR(g)
         decrypt = IMPORT(m.decrypt),
         stopPropagation = IMPORT(m.stopPropagation),
         preventDefault = IMPORT(m.preventDefault),
+        addHandlers = IMPORT(m.addHandlers),
         newInherited = IMPORT(m.newInherited);
     /** @import-module-begin W$ */
     m = IMPORT(g.BP_W$);
@@ -39,7 +40,6 @@ function BP_GET_EDITOR(g)
     /** @import-module-begin CSPlatform */
     m = g.BP_CS_PLAT;
     var getURL = IMPORT(m.getURL),
-        addHandlers = IMPORT(m.addHandlers), // Compatibility function
         rpcToMothership = IMPORT(m.rpcToMothership);
     /** @import-module-begin Connector */
     m = g.BP_CONNECT;
@@ -361,9 +361,9 @@ function BP_GET_EDITOR(g)
     {
         onsubmit: {value: function(e)
         {
-            BP_ERROR.log("NewRecord.onsubmit invoked");
+            //BP_ERROR.logdebug("NewRecord.onsubmit invoked");
             var loc = MOD_COMMON.parseURL($(this.urlF.el).val());
-            BP_ERROR.log("NewRecord.onsubmit: url=" + JSON.stringify(loc));
+            //BP_ERROR.logdebug("NewRecord.onsubmit: url=" + JSON.stringify(loc));
             e.stopPropagation();
             e.preventDefault();// Prevents default action and causes event to get cancelled if cancellable
             this.destroy();
@@ -415,7 +415,7 @@ function BP_GET_EDITOR(g)
             TButton.wdt,
             {tag:'input',
              attr:{ type:'text', value:u, placeholder:'Username', name:'u' },
-             prop:{ required:true /*,disabled:(u?true:false)*/},
+             prop:{ required:true, autofocus:true },
              //addClass:css_class_field+css_class_userIn,
              addClass: "input-large",
              ctx:{ w$:{u:'w$el' } },
@@ -484,7 +484,7 @@ function BP_GET_EDITOR(g)
         }},
         onSubmit: {value: function(e)
         {
-            BP_ERROR.log("IITemP.onSubmit invoked");
+            //BP_ERROR.logdebug("IITemP.onSubmit invoked");
             this.tButton.toggle.apply(this.tButton,[e]);
             e.stopPropagation();
             e.preventDefault();
@@ -516,7 +516,8 @@ function BP_GET_EDITOR(g)
                 //autoFill ? FButton.wdt : w$undefined,
                 TButton.wdt,
                 {tag:'span',
-                 attr:{ draggable:true },
+                 attr:{ draggable:'true' },
+                 //css:{'-webkit-user-drag': 'element'},
                  //addClass:css_class_field+css_class_userOut,
                  addClass: "input-large uneditable-input com-untrix-oItem",
                  text:u,
@@ -524,7 +525,8 @@ function BP_GET_EDITOR(g)
                  _iface:{ fn:fn_userid, value:u }
                 },
                 {tag:'span', ref:'pwdField',
-                 attr:{ draggable:true },
+                 attr:{ draggable:'true' },
+                 //css:{'-webkit-user-drag': 'element'},
                  //addClass:css_class_field+css_class_passOut,
                  addClass: "input-large uneditable-input com-untrix-oItem",
                  text:'*****',
@@ -545,7 +547,7 @@ function BP_GET_EDITOR(g)
     {
         onDblClick: {value: function(e)
         {
-            BP_ERROR.log("OITemP.onDblClick invoked");
+            //BP_ERROR.logdebug("OITemP.onDblClick invoked");
             this.tButton.toggle.apply(this.tButton,[e]);
             e.stopPropagation();
             e.preventDefault();
@@ -555,10 +557,30 @@ function BP_GET_EDITOR(g)
     /**
      * Settings/Options page link
      */
-    /*function LinkButton(){}
+    /* LinkButton is being disabled because I am not sure what
+     * URL to use. This is so because typically the login pages
+     * from where the credentials (and URL) are capatured has a
+     * URL with a lot of session information embedded in it, in
+     * the form of url params normally. Hence including those
+     * URL params in the URL link would be a bad idea. However,
+     * in some cases url-params maybe essential in order to land
+     * on the correct page. Secondly, the scheme is important and we're
+     * not capturing the scheme currently. Thirdly, many sites
+     * use (potentially temporary) hostnames like 'www2' for load-balancing.
+     * Including such domain names in the link is a bad idea since
+     * the hosts can sometimes disappear altogether resulting in the
+     * browser throwing an error, or we would end up circumventing
+     * their load-balancing scheme. Hence, at this time it is not
+     * clear what URL to save and what to use in the link. This will
+     * require more work (perhaps detection of a login URL).
+     */
+    /*
+    function LinkButton(){}
     LinkButton.wdt = function (w$ctx)
     {
         var url = w$ctx.ioItem ? w$ctx.ioItem.url : undefined;
+
+        if (!url) { return w$undefined; }
 
         return {
         tag: 'a',
@@ -580,15 +602,16 @@ function BP_GET_EDITOR(g)
             rec = acns? acns.curr: undefined,
             loc = w$ctx.loc,
             panel = w$ctx.panel,
-            bInp = w$ctx.io_bInp,
-            url = (rec && rec.l) ? MOD_CONNECT.L.prototype.toURL.apply(rec.l) : undefined;
+            bInp = w$ctx.io_bInp;
+            //url = (rec && rec.l) ? MOD_CONNECT.L.prototype.toURL.apply(rec.l) : undefined;
+            //url = (rec && rec.l) ? MOD_CONNECT.L.prototype.getURL.apply(rec.l) : undefined;
             //autoFill = panel.autoFill;
         return {
         cons: IoItem,
         tag:'div',
         //addClass: "span8",
         ctx:{ w$:{ ioItem:'w$el' } },
-        iface: { 'acns':acns, 'rec':rec, 'loc':loc, 'url':url, 'panel':panel, 'bInp':bInp },
+        iface: { 'acns':acns, 'rec':rec, 'loc':loc, 'panel':panel, 'bInp':bInp /*,'url':url*/ },
         on: {mousedown:stopPropagation},
             children:[
             //LinkButton.wdt,
@@ -781,7 +804,7 @@ function BP_GET_EDITOR(g)
                     }
                     self.destroy();
             });
-            BP_ERROR.log("DNode->reload invoked");
+            //BP_ERROR.logdebug("DNode->reload invoked");
         }},
         createList: {value: function()
         {
@@ -855,7 +878,7 @@ function BP_GET_EDITOR(g)
             if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
                 return;
             }
-            //BP_ERROR.loginfo("DragStartHandler entered");
+            BP_ERROR.loginfo("DragStartHandler entered");
             e.dataTransfer.effectAllowed = "copy";
             var data = this.value;
             if (this.fn === fn_pass) {
@@ -865,9 +888,8 @@ function BP_GET_EDITOR(g)
             e.dataTransfer.items.add('', CT_BP_PREFIX + this.fn); // Keep this on top for quick matching later
             e.dataTransfer.items.add(this.fn, CT_BP_FN); // Keep this second for quick matching later
             e.dataTransfer.items.add(data, CT_TEXT_PLAIN); // Keep this last
-            e.dataTransfer.setDragImage(w$exec(image_wdt,{imgPath:"/icons/icon48.png"}).el, 0, 0);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
-            //BP_ERROR.log("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
+            //BP_ERROR.logdebug("handleDragStart:dataTransfer.getData("+CT_BP_FN+")="+e.dataTransfer.getData(CT_BP_FN));
             //return true;
         }},
         handleDrag: {value: function handleDrag(e)
@@ -884,7 +906,7 @@ function BP_GET_EDITOR(g)
             if ((!this) || (!this.fn)) { // Ignore if event didn't originate at an oItem
                 return;
             }
-            //BP_ERROR.loginfo("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
+            BP_ERROR.loginfo("DragEnd received ! effectAllowed/dropEffect = "+ e.dataTransfer.effectAllowed + '/' + e.dataTransfer.dropEffect);
             e.stopImmediatePropagation(); // We don't want the enclosing web-page to interefere
             //return true;
         }},
@@ -915,7 +937,7 @@ function BP_GET_EDITOR(g)
         }},
         filter: {value: function(site)
         {
-            //BP_ERROR.log("g_editor: filter invoked on " + site);
+            //BP_ERROR.logdebug("g_editor: filter invoked on " + site);
             var $coll = $('.com-untrix-dnode', this.el),
                 $show = site ? $coll.filter('[id*="'+site.toLowerCase()+'"]') : $coll,
                 $hide = site ? $coll.not($show) : $();
@@ -927,7 +949,7 @@ function BP_GET_EDITOR(g)
         }}
     });
 
-    BP_ERROR.log("constructed mod_editor");
+    BP_ERROR.logdebug("constructed mod_editor");
     return Object.freeze(
     {
         EditorWdl_wdt: EditorWdl.wdt

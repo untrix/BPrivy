@@ -11,7 +11,7 @@
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
 /**
- * @ModuleBegin FileStore
+ * @ModuleBegin DBFS
  */
 function BP_GET_DBFS(g)
 {
@@ -31,11 +31,14 @@ function BP_GET_DBFS(g)
     var BP_TRAITS = IMPORT(m),
         dt_eRecord = IMPORT(m.dt_eRecord),
         dt_pRecord = IMPORT(m.dt_pRecord);
+    /** @import-module-begin **/
+    var BP_LISTENER = IMPORT(g.BP_LISTENER);
     /** @import-module-end **/ m = null;
 
     var dtl_null = null,
         this_null = null,
-        cats_null = null;
+        cats_null = null,
+        EVENTS = BP_LISTENER.newListeners();
 
     function parseSegment (sgmnt)
     {
@@ -264,26 +267,44 @@ function BP_GET_DBFS(g)
             setDBPath: function (dbPath, dbStats)
             {
                 var i;
-                if (dbPath)
-                {
-                    g_dbPath = dbPath;
-                    for (i=dtl.length-1; i>=0; --i) //TODO: Not tested yet - 8/22
-                    //dtl.forEach(function (dt, i)
+                try {
+                    if (dbPath)
                     {
-                        g_path_dt[dtl[i]] = g_dbPath + path_sep + dir_dt[dtl[i]]+ path_sep + file_dt[dtl[i]];
+                        g_dbPath = dbPath;
+                        for (i=dtl.length-1; i>=0; --i) //TODO: Not tested yet - 8/22
+                        //dtl.forEach(function (dt, i)
+                        {
+                            g_path_dt[dtl[i]] = g_dbPath + path_sep + dir_dt[dtl[i]]+ path_sep + file_dt[dtl[i]];
+                        }
                     }
+                    else {
+                        g_dbPath = null;
+                        for (i=dtl.length-1; i>=0; --i) //TODO: Not tested yet - 8/22
+                        //dtl.forEach(function (dt, i)
+                        {
+                            g_path_dt[dtl[i]] = null;
+                        }
+                    }
+
+                    g_dbStats = dbStats;
+                    if (g_dbStats) {Object.freeze(g_dbStats);}
                 }
-                else {
-                    g_dbPath = null;
-                    for (i=dtl.length-1; i>=0; --i) //TODO: Not tested yet - 8/22
-                    //dtl.forEach(function (dt, i)
-                    {
-                        g_path_dt[dtl[i]] = null;
+                catch (exp) {
+                    if (g_dbPath) {
+                        EVENTS.dispatch('loadDB', {'dbPath':g_dbPath});
                     }
+                    else {
+                        EVENTS.dispatch('unloadDB', {'dbPath':''});
+                    }
+                    throw exp;
                 }
 
-                g_dbStats = dbStats;
-                if (g_dbStats) {Object.freeze(g_dbStats);}
+                if (g_dbPath) {
+                    EVENTS.dispatch('loadDB', {'dbPath':g_dbPath});
+                }
+                else {
+                    EVENTS.dispatch('unloadDB', {'dbPath':''});
+                }
             },
             getDTFilePath: function (dt)
             {
@@ -946,7 +967,7 @@ function BP_GET_DBFS(g)
         //DB_FS.putPathSep(BP_PLUGIN.pathSeparator());
     }
 
-    BP_ERROR.log("constructed mod_dbfs");
+    BP_ERROR.logdebug("constructed mod_dbfs");
     return Object.freeze(
     {
         init: init,
@@ -956,6 +977,7 @@ function BP_GET_DBFS(g)
         getDBStats: DB_FS.getDBStats,
         cullDBName: DB_FS.cullDBName,
         getDBName: DB_FS.getDBName,
-        newDBMap: newDBMap
+        newDBMap: newDBMap,
+        EVENTS: EVENTS
     });
 }
