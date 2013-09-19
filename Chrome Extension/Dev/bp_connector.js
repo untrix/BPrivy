@@ -125,8 +125,8 @@ function BP_GET_CONNECT(g)
             H: {enumerable:true,
                 value: (loc.hostname || undefined)},
             P: {enumerable:true,
-                value: (DICT_TRAITS[dt].url_path && loc.pathname && (loc.pathname !== "/"))?loc.pathname:undefined}
-            //_U: {enumerable:true, value: loc.href}
+                value: (DICT_TRAITS[dt].url_path && loc.pathname && (loc.pathname !== "/"))?loc.pathname:undefined},
+            _U: {enumerable:true, value: loc.href} // added in v1.0.13
         });
         Object.seal(this);
     }
@@ -153,7 +153,7 @@ function BP_GET_CONNECT(g)
         var url;
         if (this._U) {return this._U;}
 
-        url = "http://";
+        url = "https://";
         if (this.H) {
             url += this.H;
         }
