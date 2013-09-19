@@ -107,15 +107,15 @@ function BP_GET_EDITOR(g)
             site_url = MOD_COMMON.locToURL(loc),
             i = ctx.panel ? ctx.panel.dNIdx : undefined; //ctx.editor ? ++(ctx.editor.i): undefined
         return {
-            tag:'a',
-            attr:{ href:site_url, target:"_blank" },
+            tag:'span',
+            //attr:{ href:site_url, target:"_blank" },
             addClass: "com-untrix-dNodeTitle",
             iface:{ "site_url":site_url },
             on:{ click: function (e)
             {
                 //window.open(this.site_url);
                 //e.preventDefault();
-                e.stopPropagation();
+                //e.stopPropagation();
             }},
                 children:[
                 {
@@ -557,7 +557,7 @@ function BP_GET_EDITOR(g)
     /**
      * Settings/Options page link
      */
-    /* LinkButton is being disabled because I am not sure what
+    /* LinkButton was disabled because I am not sure what
      * URL to use. This is so because typically the login pages
      * from where the credentials (and URL) are capatured has a
      * URL with a lot of session information embedded in it, in
@@ -574,7 +574,7 @@ function BP_GET_EDITOR(g)
      * clear what URL to save and what to use in the link. This will
      * require more work (perhaps detection of a login URL).
      */
-    /*
+
     function LinkButton(){}
     LinkButton.wdt = function (w$ctx)
     {
@@ -593,7 +593,7 @@ function BP_GET_EDITOR(g)
             addClass:'icon-globe'
             }]
         };
-    };*/
+    };
 
     function IoItem () {}
     IoItem.wdi = function (w$ctx)
@@ -602,8 +602,8 @@ function BP_GET_EDITOR(g)
             rec = acns? acns.curr: undefined,
             loc = w$ctx.loc,
             panel = w$ctx.panel,
-            bInp = w$ctx.io_bInp;
-            //url = (rec && rec.l) ? MOD_CONNECT.L.prototype.toURL.apply(rec.l) : undefined;
+            bInp = w$ctx.io_bInp,
+            url = (rec && rec.l) ? MOD_CONNECT.L.prototype.toURL.apply(rec.l) : undefined;
             //url = (rec && rec.l) ? MOD_CONNECT.L.prototype.getURL.apply(rec.l) : undefined;
             //autoFill = panel.autoFill;
         return {
@@ -611,10 +611,10 @@ function BP_GET_EDITOR(g)
         tag:'div',
         //addClass: "span8",
         ctx:{ w$:{ ioItem:'w$el' } },
-        iface: { 'acns':acns, 'rec':rec, 'loc':loc, 'panel':panel, 'bInp':bInp /*,'url':url*/ },
+        iface: { 'acns':acns, 'rec':rec, 'loc':loc, 'panel':panel, 'bInp':bInp,'url':url },
         on: {mousedown:stopPropagation},
             children:[
-            //LinkButton.wdt,
+            LinkButton.wdt,
             bInp ? IItemP.wdt : OItemP.wdt,
             DButton.wdt
             ],
@@ -745,7 +745,7 @@ function BP_GET_EDITOR(g)
         rIt = new MOD_CONNECT.ItemIterator(recs, true);
         if ((!emptyOk) && (!rIt.num())) {return w$undefined;}
 
-        loc = MOD_COMMON.parseURL('http://' + dNode[DNODE_TAG.URL]);
+        loc = MOD_COMMON.parseURL('https://' + dNode[DNODE_TAG.URL]);
         H = loc.hostname;
 
         return {
