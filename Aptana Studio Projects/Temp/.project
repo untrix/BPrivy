@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Sumeet-Temp</name>
+	<name>Temp</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -18,7 +18,7 @@
 		<link>
 			<name>Temp</name>
 			<type>2</type>
-			<locationURI>PARENT-3-PROJECT_LOC/Chrome%20Extension/Temp</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/Chrome%20Extension/Temp</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
