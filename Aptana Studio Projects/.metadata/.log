@@ -1,0 +1,15 @@
+!SESSION 2013-12-28 19:14:09.387 -----------------------------------------------
+eclipse.buildId=3.4.2.201308081805
+java.version=1.6.0_24
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86 -data D:\Dev\BPrivy\Aptana Studio Projects
+
+!ENTRY org.eclipse.ui 4 4 2013-12-28 19:14:39.758
+!MESSAGE Invalid preference page path: JSP Syntax
+
+!ENTRY org.eclipse.ui 4 4 2013-12-28 19:14:39.761
+!MESSAGE Invalid preference page path: HTML Syntax
+
+!ENTRY org.eclipse.ui 4 4 2013-12-28 19:14:39.761
+!MESSAGE Invalid preference page path: XML Syntax
