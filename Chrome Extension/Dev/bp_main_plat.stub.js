@@ -28,7 +28,7 @@ function BP_GET_PLAT(gg)
         init: throwException,
         bpClick: throwException,
         showPageAction: throwException,
-        notifications: throwException,
+        //notifications: throwException,
         showBadge: throwException,
         removeBadge: throwException,
         sendMessage: throwException

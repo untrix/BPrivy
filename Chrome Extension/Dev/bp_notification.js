@@ -344,7 +344,7 @@ function BP_GET_NTFN_WDL(g)
         g_win:window,
         g_console:console,
         g_chrome:chrome,
-        webkitNotifications: webkitNotifications,
+        //webkitNotifications: webkitNotifications,
         $:$, jQuery:jQuery
     };
 

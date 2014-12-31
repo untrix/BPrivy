@@ -9,7 +9,7 @@
 /*global $, BP_MOD_PLAT, BP_GET_CONNECT, BP_GET_COMMON, IMPORT, IMPORT_LATER, localStorage,
   BP_GET_MEMSTORE, BP_GET_DBFS, BP_GET_FILESTORE, BP_GET_ERROR, BP_GET_TRAITS,
   BP_GET_CS_PLAT, BP_GET_PLAT, BP_GET_LISTENER, BP_GET_W$, BP_GET_WDL, chrome,
-  webkitNotifications, BP_MAIN */
+  BP_MAIN */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true,
   regexp:true, undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -52,7 +52,7 @@ function BP_GET_NTNF_CNTR(g)
     function close()
     {
         if (g_notification) {
-            g_notification.cancel();
+            g_notification.close();
             g_notification = null;
         }
     }
@@ -71,14 +71,20 @@ function BP_GET_NTNF_CNTR(g)
     function notify(title, text, cbackFunc, timeout)
     {
         close();
-        var iconPath = DB_FS.getDBPath() ? 'icons/icon48.png' : 'icons/greyIcon48.png';
+        var iconPath = DB_FS.getDBPath() ? 'icons/icon48.png' : 'icons/greyIcon48.png',
+            notificationOptions = {icon:BP_CS_PLAT.getURL(iconPath),
+                                   body: text || ""};
 
+/*
         g_notification = BP_PLAT.notifications.createNotification(
           BP_CS_PLAT.getURL(iconPath), // ICON URL
           title || "",
           text || ""
         );
-        g_notification.ondisplay = function(ev)
+*/
+        g_notification = new g_win.Notification(title || "", notificationOptions);
+
+        g_notification.onshow = function(ev)
         {   // close after a few seconds
             if (timeout) {
                 g.g_win.setTimeout(close, timeout*1000);
@@ -95,7 +101,7 @@ function BP_GET_NTNF_CNTR(g)
                 close();
             }
         };
-        g_notification.show();
+        //g_notification.show();
     }
 
     function onChange(ev)

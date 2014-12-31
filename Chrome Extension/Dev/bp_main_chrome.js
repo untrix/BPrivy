@@ -162,7 +162,7 @@ function BP_GET_PLAT(gg)
         init: init,
         bpClick: bpClick,
         showPageAction: function(tabId) {chrome.pageAction.show(tabId);},
-        notifications: gg.webkitNotifications,
+        //notifications: gg.webkitNotifications,
         showBadge: showBadge,
         removeBadge: removeBadge,
         sendMessage: sendMessage,

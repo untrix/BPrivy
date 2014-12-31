@@ -8,7 +8,7 @@
 /* JSLint directives */
 /*global $, console, window, BP_GET_CONNECT, BP_GET_CS_PLAT, IMPORT, BP_GET_COMMON, BP_GET_ERROR,
   ls, BP_PLUGIN, BP_GET_EDITOR, BP_GET_W$, BP_GET_TRAITS, chrome, BP_GET_DBFS,
-  BP_GET_WALLET_FORM */
+  BP_GET_WALLET_FORM, jQuery */
 /*jslint browser:true, devel:true, es5:true, maxlen:150, passfail:false, plusplus:true, regexp:true,
   undef:false, vars:true, white:true, continue: true, nomen:true */
 
@@ -485,7 +485,7 @@ var BP_MANAGE = (function ()
                 }
                 $('#dbClean').button('reset');
             });
-        });
+        });
         function closeDB(e)
         {
             //capture the id in the closure for using from callback
