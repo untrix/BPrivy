@@ -4,7 +4,10 @@ Released under GNU AGPL license version 3 - http://www.gnu.org/licenses/agpl.txt
 
 For usage and download information see the [website](http://www.untrix.com/w3/html/web.html). Instructions for setting up the dev environment are in Readme files in respective folders.
 
-    The project is not being actively maintained. If you want to resume development, fork it and off you go! Feel free to reach me if needed though. Specifically, since the NPAPI plugin got desupported by Goole back in 2014, I need someone to port this entire code to [electronjs](https://electronjs.org/). Then it will be a self contained browser+keyring that will work on Windows, Mac and Linux (but not iOS or Android).
+    The project is not being actively maintained. If you want to resume development, fork it and off you go!
+    Feel free to reach me if needed though. Specifically, since the NPAPI API was desupported by Goole Chrome
+    back in 2014, I need someone to port this entire code to [electronjs](https://electronjs.org/). Then it
+    will be a self contained browser+keyring that will work on Windows, Mac and Linux (but not iOS or Android).
 
 I started this project back in 2012 with an aim to solve the follwing problems:
 1. A ubiquitous and secure password-wallet that I could use to access my credentials wherever I went. I coined the three P's 1) **Personal**, 2) **Private** and 3) **Portable**.
