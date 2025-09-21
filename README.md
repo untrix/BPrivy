@@ -3,7 +3,7 @@
 Released under [GNU AGPL license version 3](http://www.gnu.org/licenses/agpl.txt).
 
 <p align="center">
-  <b>Please cite this repository if you use the code!</b>
+  <b>Please cite this repository if you use the code or any part of it!</b>
   <br />
   <a href="CITATION.cff">
     <img src="https://img.shields.io/badge/Cite%20this%20repository-blue" alt="Cite this repository badge" />
