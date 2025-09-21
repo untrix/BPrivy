@@ -7,7 +7,7 @@ For usage and download information see the [website](http://www.untrix.com/w3/ht
 Released under [GNU AGPL license version 3](http://www.gnu.org/licenses/agpl.txt).
 
 **Please cite this repository if you use the code or any part of it!</b><br/>**
-See the [citation file](CITATION.cff) for details, or use the following BibTeX entry:
+See the [citation file](CITATION.cff) for details, or use the following BibTeX entry
 
 ```
 @misc{YourReferenceHere,
@@ -16,6 +16,8 @@ title = {K3YRING: An Open Source Password Manager with Decentralized Data Synchr
 url = {https://untrix.com}
 }
 ```
+or APA citation:
+`S Singh S. K3YRING: An Open Source Password Manager with Decentralized Data Synchronization URL: https://untrix.com`
 
 ```
 The project is not being actively maintained. If you want to resume development, fork it and off you go!
