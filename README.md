@@ -13,11 +13,11 @@ See the [citation file](CITATION.cff) for details, or use the following BibTeX e
 @misc{YourReferenceHere,
 author = {S Singh, Sumeet},
 title = {K3YRING: An Open Source Password Manager with Decentralized Data Synchronization},
-url = {https://untrix.com}
+url = {https://github.com/untrix/BPrivy}
 }
 ```
 or APA citation:
-`S Singh S. K3YRING: An Open Source Password Manager with Decentralized Data Synchronization URL: https://untrix.com`
+`S Singh S. K3YRING: An Open Source Password Manager with Decentralized Data Synchronization URL: https://github.com/untrix/BPrivy`
 
 ```
 The project is not being actively maintained. If you want to resume development, fork it and off you go!
