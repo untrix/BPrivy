@@ -1,16 +1,22 @@
 # K3YRING
-[An Open Source Password Manager with Decentralized Data Synchronization (not Blockchiain related)](http://www.untrix.com/w3/html/web.html).
-Released under [GNU AGPL license version 3](http://www.gnu.org/licenses/agpl.txt).
-
-<p align="center">
-  <b>Please cite this repository if you use the code or any part of it!</b>
-  <br />
-  <a href="CITATION.cff">
-    <img src="https://img.shields.io/badge/Cite%20this%20repository-blue" alt="Cite this repository badge" />
-  </a>
-</p>
+An Open Source Password Manager with Decentralized Data Synchronization (not Blockchiain related).
 
 For usage and download information see the [website](http://www.untrix.com/w3/html/web.html). Instructions for setting up the dev environment are in Readme files in respective folders.
+
+## Open Source License
+Released under [GNU AGPL license version 3](http://www.gnu.org/licenses/agpl.txt).
+
+**Please cite this repository if you use the code or any part of it!</b><br/>**
+See the [citation file](CITATION.cff) for details, or use the following BibTeX entry:
+
+```
+@misc{YourReferenceHere,
+author = {S Singh, Sumeet},
+title = {K3YRING: An Open Source Password Manager with Decentralized Data Synchronization},
+url = {https://untrix.com}
+}
+```
+
 ```
 The project is not being actively maintained. If you want to resume development, fork it and off you go!
 Feel free to reach me if needed though. Specifically, since the NPAPI API was desupported by Goole Chrome
