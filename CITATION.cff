@@ -1,0 +1,26 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  K3YRING: An Open Source Password Manager with
+  Decentralized Data Synchronization
+message: >-
+  Released under GNU AGPL license version 3. If you use this
+  software, please cite it using the metadata from this
+  file.
+type: software
+authors:
+  - given-names: Sumeet
+    family-names: Singh
+    name-particle: S
+    email: sumeet@singhonline.info
+    orcid: 'https://orcid.org/0000-0002-5323-9678'
+repository-code: 'https://github.com/untrix/BPrivy'
+url: 'https://untrix.com'
+abstract: >-
+  K3YRING (pronounced ‘key ring’) is a decentralized
+  password manager (no relation to blockchain) that allows
+  you to securely store but freely access your usernames and
+  passwords from a web browser.
+license: AGPL-3.0
